@@ -343,21 +343,23 @@ function getStageConfig(stage) {
   ];
   const pressureStage = stage === 3 || stage === 5 || stage === 8 || stage === 10;
   const burstStage = stage === 4 || stage === 7 || stage === 9;
+  const midStage = Math.max(0, stage - 6);
+  const lateStage = Math.max(0, stage - 10);
   return {
     name: names[Math.min(names.length - 1, stage - 1)],
-    duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2,
-    totalEnemies: 22 + stage * 10 + Math.max(0, stage - 6) * 7,
-    maxConcurrent: Math.round((15 + stage * 3.7 + Math.max(0, stage - 6) * 2.2) * (pressureStage ? 1.12 : 1)),
-    spawnInterval: Math.max(0.22, 0.86 - stage * 0.052 - Math.max(0, stage - 6) * 0.025),
-    batchSize: Math.min(7, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
-    eliteTotal: Math.max(0, Math.floor((stage - 1) / 2) + (stage >= 7 ? 1 : 0) + (stage >= 10 ? 1 : 0)),
-    healthMult: 1 + stage * 0.18 + Math.max(0, stage - 6) * 0.12,
-    speedMult: 0.98 + stage * 0.045 + (burstStage ? 0.04 : 0),
-    damageMult: (1 + stage * 0.105 + Math.max(0, stage - 6) * 0.04) * (pressureStage ? 1.08 : 1),
-    materialMult: 0.68 + stage * 0.042,
+    duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2 + lateStage,
+    totalEnemies: Math.round(24 + stage * 8.4 + midStage * 4.2 + lateStage * 3.2),
+    maxConcurrent: Math.round((14 + stage * 3.1 + midStage * 1.35 + lateStage * 1.45) * (pressureStage ? 1.08 : 1)),
+    spawnInterval: Math.max(0.24, 0.9 - stage * 0.044 - midStage * 0.013),
+    batchSize: Math.min(6, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
+    eliteTotal: Math.max(0, Math.floor((stage - 1) / 2) + (stage >= 8 ? 1 : 0) + (stage >= 12 ? 1 : 0)),
+    healthMult: 1 + stage * 0.145 + midStage * 0.075 + lateStage * 0.055,
+    speedMult: 0.98 + stage * 0.034 + lateStage * 0.018 + (burstStage ? 0.03 : 0),
+    damageMult: (1 + stage * 0.078 + midStage * 0.022) * (pressureStage ? 1.055 : 1),
+    materialMult: 0.76 + stage * 0.047 + lateStage * 0.018,
     enemyMix: mixes[Math.min(mixes.length - 1, stage - 1)],
-    clearBonusMult: burstStage || stage === 10 ? 1.32 : 1,
-    survivalPressure: pressureStage ? 1.16 : burstStage ? 1.08 : 1,
+    clearBonusMult: burstStage || stage === 10 ? 1.22 : 1,
+    survivalPressure: pressureStage ? 1.1 : burstStage ? 1.05 : 1,
   };
 }
 
@@ -1903,6 +1905,7 @@ function updateEnemies(dt) {
 
 function takeDamage(rawDamage) {
   const p = game.player;
+  const ramp = game.stage <= 1 ? 0.72 : game.stage === 2 ? 0.84 : game.stage === 3 ? 0.92 : 1;
   const dodgeChance = clamp(p.dodge, 0, 60) / 100;
   if (Math.random() < dodgeChance) {
     p.invuln = 0.38 + p.invulnBonus;
@@ -1913,7 +1916,7 @@ function takeDamage(rawDamage) {
 
   const reduction = 100 / (100 + Math.max(0, p.armor + getClassBonus("armor")) * 7);
   const anchorReduction = 1 - getAnchorDamageReduction();
-  const damage = Math.max(1, Math.round(rawDamage * reduction));
+  const damage = Math.max(1, Math.round(rawDamage * ramp * reduction));
   const finalDamage = Math.max(1, Math.round(damage * anchorReduction));
   p.hp -= finalDamage;
   if (p.fortify > 0 || game.weapons.headset.level > 0 || game.weapons.report.level > 0) {
@@ -2233,9 +2236,9 @@ function spawnEnemy(elite) {
   if (elite) {
     const boss = enemy.type === "boss";
     enemy.r += boss ? 24 : 12;
-    enemy.hp *= boss ? 2.6 : 4.2;
-    enemy.speed *= boss ? 0.7 : 0.78;
-    enemy.damage += boss ? 18 : 10;
+    enemy.hp *= boss ? 2.35 : 3.45;
+    enemy.speed *= boss ? 0.66 : 0.82;
+    enemy.damage += boss ? 16 : 8;
     enemy.xp *= 5;
     enemy.materialValue *= 5;
     enemy.color = boss ? "#ff2a60" : "#ff6b6b";
@@ -2838,10 +2841,12 @@ function getOwnedWeaponCount() {
 
 function getShopOfferCost(entry) {
   const aligned = isEntryAlignedWithBuild(entry);
-  if (entry.shopType === "item") return Math.max(16, 18 + game.stage * 6 + game.boughtItems.size * 3 - (aligned ? 4 : 0));
+  if (entry.shopType === "item") return Math.max(16, Math.round(18 + game.stage * 5.2 + game.boughtItems.size * 3.2 - (aligned ? 4 : 0)));
   const weaponId = getUpgradeWeaponId(entry.id);
   const level = weaponId ? game.weapons[weaponId].level : 0;
-  return Math.max(14, 16 + level * 10 + game.stage * 5 - (aligned ? 4 : 0));
+  const owned = weaponId && game.weapons[weaponId].level > 0;
+  const firstBuyDiscount = owned ? 0 : 4;
+  return Math.max(14, Math.round(16 + level * 11 + game.stage * 4.6 - firstBuyDiscount - (aligned ? 5 : 0)));
 }
 
 function buyShopOffer(index) {
