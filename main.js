@@ -23,6 +23,8 @@ const ui = {
   itemList: document.querySelector("#itemList"),
   startPanel: document.querySelector("#startPanel"),
   upgradePanel: document.querySelector("#upgradePanel"),
+  upgradeRerollButton: document.querySelector("#upgradeRerollButton"),
+  upgradeRerollCount: document.querySelector("#upgradeRerollCount"),
   weaponPanel: document.querySelector("#weaponPanel"),
   resultPanel: document.querySelector("#resultPanel"),
   upgradeChoices: document.querySelector("#upgradeChoices"),
@@ -56,6 +58,7 @@ const ui = {
   fusionNoticeTitle: document.querySelector("#fusionNoticeTitle"),
   fusionNoticeText: document.querySelector("#fusionNoticeText"),
   fusionNoticeClose: document.querySelector("#fusionNoticeClose"),
+  guideOverlay: document.querySelector("#guideOverlay"),
   startButton: document.querySelector("#startButton"),
   restartButton: document.querySelector("#restartButton"),
   continueButton: document.querySelector("#continueButton"),
@@ -63,7 +66,7 @@ const ui = {
 
 const TAU = Math.PI * 2;
 const WORLD = { w: 4800, h: 3000 };
-const WAVE_SECONDS = 45;
+const WAVE_SECONDS = 50;
 const RECOVERY_SECONDS = 10;
 const MAX_STAGE = 14;
 const SPRITE_ATLAS_SRC = "assets/office-rogue-atlas.png";
@@ -210,7 +213,7 @@ const weaponClassBonuses = {
   support: [
     { count: 2, pickupRange: 22 },
     { count: 3, pickupRange: 45, luck: 8 },
-    { count: 4, pickupRange: 70, luck: 15, materialBonus: 0.08 },
+    { count: 4, pickupRange: 70, luck: 24 },
   ],
   close: [
     { count: 1, armor: 1 },
@@ -253,7 +256,7 @@ const routeDefinitions = [
     color: "#9ee37d",
     accent: "#ffd15c",
     weapons: ["sticky", "calculator"],
-    stats: ["luck", "pickupRange", "trapPower"],
+    stats: ["luck", "pickupRange"],
     itemPattern: /经济|拾取|恢复|控制|陷阱|布线/,
     stages: ["未启动", "起手", "双武器", "布网", "终局"],
     unlockText: "便签 + 计算器，幸运/拾取把资源和电流一起滚起来。",
@@ -300,13 +303,9 @@ const statLabels = [
   { key: "crit", label: "暴击" },
   { key: "range", label: "射程" },
   { key: "luck", label: "幸运" },
-  { key: "materialBonus", label: "材料" },
   { key: "pickupRange", label: "拾取" },
   { key: "regen", label: "恢复" },
   { key: "fortify", label: "站场" },
-  { key: "trapPower", label: "陷阱" },
-  { key: "languagePower", label: "语言" },
-  { key: "boozePower", label: "酒意" },
 ];
 
 const statDropPool = [
@@ -322,9 +321,6 @@ const statDropPool = [
   { key: "pickupRange", label: "拾取", amount: 8, apply: (g) => { g.player.pickupRange += 8; } },
   { key: "regen", label: "恢复", amount: 1, apply: (g) => { g.player.regen += 1; } },
   { key: "fortify", label: "站场", amount: 1, apply: (g) => { g.player.fortify += 1; } },
-  { key: "trapPower", label: "陷阱", amount: 1, apply: (g) => { g.player.trapPower += 1; } },
-  { key: "languagePower", label: "语言", amount: 1, apply: (g) => { g.player.languagePower += 1; } },
-  { key: "boozePower", label: "酒意", amount: 1, apply: (g) => { g.player.boozePower += 1; } },
 ];
 
 function getStageConfig(stage) {
@@ -349,7 +345,7 @@ function getStageConfig(stage) {
   const burstStage = stage === 4 || stage === 7 || stage === 9;
   return {
     name: names[Math.min(names.length - 1, stage - 1)],
-    duration: WAVE_SECONDS,
+    duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2,
     totalEnemies: 22 + stage * 10 + Math.max(0, stage - 6) * 7,
     maxConcurrent: Math.round((15 + stage * 3.7 + Math.max(0, stage - 6) * 2.2) * (pressureStage ? 1.12 : 1)),
     spawnInterval: Math.max(0.22, 0.86 - stage * 0.052 - Math.max(0, stage - 6) * 0.025),
@@ -398,10 +394,10 @@ function rollOfficeIncident(stage) {
     {
       id: "languageDoc",
       title: "外语需求文档",
-      text: "语言 +1，审计和变更压力更高。",
+      text: "射程和幸运提升，审计和变更压力更高。",
       apply: (g) => {
-        g.player.languagePower += 1;
-        g.player.range += 6;
+        g.player.range += 10;
+        g.player.luck += 4;
         g.stageConfig.enemyMix.audit = (g.stageConfig.enemyMix.audit || 0) + (stage >= 5 ? 0.1 : 0);
         g.stageConfig.enemyMix.change = (g.stageConfig.enemyMix.change || 0) + 0.06;
       },
@@ -409,10 +405,10 @@ function rollOfficeIncident(stage) {
     {
       id: "afterWorkWine",
       title: "下班酒局邀约",
-      text: "酒意 +1，短期输出更高但容错更低。",
+      text: "伤害和暴击提升，但容错更低。",
       apply: (g) => {
-        g.player.boozePower += 1;
-        g.player.damageMult += 0.03;
+        g.player.damageMult += 0.04;
+        g.player.crit = Math.min(75, g.player.crit + 2);
         g.player.maxHp = Math.max(60, g.player.maxHp - 3);
         g.player.hp = Math.min(g.player.hp, g.player.maxHp);
       },
@@ -606,6 +602,103 @@ const weaponUpgradePool = [
     },
     available: (g) => g.weapons.calculator.level >= 2 && g.weapons.calculator.level < g.weapons.calculator.max,
   },
+  {
+    id: "coffeeThermos",
+    title: "保温杯续航",
+    tag: "武器 / 直射频率",
+    text: "咖啡冷却明显缩短，攻速收益更高。",
+    apply: (g) => {
+      g.weapons.coffee.level += 1;
+      g.player.coffeeCooldown *= 0.84;
+      g.player.attackSpeed += 4;
+    },
+    available: (g) => g.weapons.coffee.level >= 3 && g.weapons.coffee.level < g.weapons.coffee.max,
+  },
+  {
+    id: "keyboardMacro",
+    title: "宏录制",
+    tag: "武器 / 弹幕数量",
+    text: "键盘额外弹片增加，弹幕覆盖更稳定。",
+    apply: (g) => {
+      g.weapons.keyboard.level += 1;
+      g.player.keyboardShots += 2;
+      g.player.attackSpeed += 3;
+    },
+    available: (g) => g.weapons.keyboard.level >= 3 && g.weapons.keyboard.level < g.weapons.keyboard.max,
+  },
+  {
+    id: "headsetMetronome",
+    title: "降噪节拍器",
+    tag: "武器 / 领域频率",
+    text: "安静领域脉冲更频繁，站场流更容易控住近身怪。",
+    apply: (g) => {
+      g.weapons.headset.level += 1;
+      g.player.auraPulse += 1;
+      g.player.fortify += 1;
+    },
+    available: (g) => g.weapons.headset.level >= 3 && g.weapons.headset.level < g.weapons.headset.max,
+  },
+  {
+    id: "reportBinder",
+    title: "装订报表",
+    tag: "武器 / 轨道厚度",
+    text: "报表轨道半径、速度和碰撞范围提升。",
+    apply: (g) => {
+      g.weapons.report.level += 1;
+      g.player.orbitRadius += 10;
+      g.player.orbitSpeed += 0.45;
+    },
+    available: (g) => g.weapons.report.level >= 3 && g.weapons.report.level < g.weapons.report.max,
+  },
+  {
+    id: "staplerMagazine",
+    title: "连发钉仓",
+    tag: "武器 / 近距频率",
+    text: "订书机冷却缩短，并增加钉弹数量。",
+    apply: (g) => {
+      g.weapons.stapler.level += 1;
+      g.player.staplerPellets += 2;
+      g.player.staplerCooldown *= 0.9;
+    },
+    available: (g) => g.weapons.stapler.level >= 3 && g.weapons.stapler.level < g.weapons.stapler.max,
+  },
+  {
+    id: "stickyCopyPaste",
+    title: "复制粘贴",
+    tag: "武器 / 工程布场",
+    text: "便签布置更快，范围更大。",
+    apply: (g) => {
+      g.weapons.sticky.level += 1;
+      g.player.stickyCooldown *= 0.84;
+      g.player.stickyRadius += 10;
+    },
+    available: (g) => g.weapons.sticky.level >= 3 && g.weapons.sticky.level < g.weapons.sticky.max,
+  },
+  {
+    id: "markerWide",
+    title: "荧光宽头",
+    tag: "武器 / 贯穿范围",
+    text: "马克笔射线更宽，释放更快。",
+    apply: (g) => {
+      g.weapons.marker.level += 1;
+      g.player.markerWidth += 5;
+      g.player.markerCooldown *= 0.86;
+    },
+    available: (g) => g.weapons.marker.level >= 3 && g.weapons.marker.level < g.weapons.marker.max,
+  },
+  {
+    id: "calculatorLedger",
+    title: "审计台账",
+    tag: "武器 / 连锁距离",
+    text: "计算器连锁距离、跳数和幸运收益提升。",
+    apply: (g) => {
+      g.weapons.calculator.level += 1;
+      g.player.chainRange += 42;
+      g.player.chainJumps += 1;
+      g.player.luck += 4;
+    },
+    available: (g) => g.weapons.calculator.level >= 3 && g.weapons.calculator.level < g.weapons.calculator.max,
+  },
 ];
 
 const statUpgradePool = [
@@ -751,14 +844,13 @@ const statUpgradePool = [
   {
     id: "compound",
     title: "预算复利",
-    tag: "属性 / 经济",
-    text: "材料收益 +18%，幸运 +8，伤害 -5%。适合前中期滚雪球。",
+    tag: "属性 / 幸运",
+    text: "幸运 +18，拾取 +16。幸运现在同时提升材料和额外掉落。",
     apply: (g) => {
-      g.player.materialBonus += 0.18;
-      g.player.luck += 8;
-      g.player.damageMult = Math.max(0.65, g.player.damageMult - 0.05);
+      g.player.luck += 18;
+      g.player.pickupRange += 16;
     },
-    available: (g) => g.stage <= 7 && g.player.materialBonus < 0.85,
+    available: (g) => g.stage <= 7 && g.player.luck < 180,
   },
   {
     id: "evasive",
@@ -798,14 +890,13 @@ const statUpgradePool = [
   {
     id: "trapManual",
     title: "工位布线手册",
-    tag: "属性 / 陷阱",
-    text: "陷阱伤害和持续时间提升，便签与计算器的连锁更适合控场。",
+    tag: "属性 / 工程",
+    text: "幸运 +10，拾取 +18。工程职业会把这些转化为便签和计算器收益。",
     apply: (g) => {
-      g.player.trapPower += 3;
-      g.player.pickupRange += 14;
-      g.player.luck += 4;
+      g.player.luck += 10;
+      g.player.pickupRange += 18;
     },
-    available: (g) => g.player.trapPower < 36,
+    available: (g) => g.player.luck < 190 || g.player.pickupRange < 450,
   },
   {
     id: "shieldProtocol",
@@ -823,51 +914,50 @@ const statUpgradePool = [
   {
     id: "glossary",
     title: "黑话术语表",
-    tag: "属性 / 语言",
-    text: "语言 +3，射程 +18。更容易看懂变更、审计和跨组需求。",
+    tag: "属性 / 射程 幸运",
+    text: "射程 +24，幸运 +8。更容易看懂变更、审计和跨组需求。",
     apply: (g) => {
-      g.player.languagePower += 3;
-      g.player.range += 18;
-      g.player.luck += 3;
+      g.player.range += 24;
+      g.player.luck += 8;
     },
-    available: (g) => g.stage <= 8 && g.player.languagePower < 32,
+    available: (g) => g.stage <= 8 && (g.player.range < 330 || g.player.luck < 170),
   },
   {
     id: "afterWorkDrink",
     title: "下班小酒",
-    tag: "属性 / 酒",
-    text: "酒意 +3，伤害 +8%，闪避 -3%。短线爆发更猛。",
+    tag: "属性 / 爆发",
+    text: "伤害 +10%，暴击 +4%，闪避 -3%。短线爆发更猛。",
     apply: (g) => {
-      g.player.boozePower += 3;
-      g.player.damageMult += 0.08;
+      g.player.damageMult += 0.1;
+      g.player.crit = Math.min(75, g.player.crit + 4);
       g.player.dodge = Math.max(0, g.player.dodge - 3);
     },
-    available: (g) => g.player.boozePower < 30,
+    available: (g) => g.player.damageMult < 2.4 || g.player.crit < 75,
   },
   {
     id: "bilingualMinutes",
     title: "双语会议纪要",
-    tag: "属性 / 语言 后期",
-    text: "语言 +5，计算器连锁更远，马马克笔更容易打到弱点。",
+    tag: "属性 / 射程 幸运 后期",
+    text: "射程 +34，幸运 +10，计算器连锁更远，马克笔更容易打到弱点。",
     apply: (g) => {
-      g.player.languagePower += 5;
+      g.player.range += 34;
+      g.player.luck += 10;
       g.player.chainRange += 24;
-      g.player.range += 26;
     },
-    available: (g) => g.stage >= 5 && g.player.languagePower < 42,
+    available: (g) => g.stage >= 5 && (g.player.range < 380 || g.player.luck < 190),
   },
   {
     id: "wineTableReview",
     title: "酒局复盘",
-    tag: "属性 / 酒 后期",
-    text: "酒意 +5，暴击 +8%，生命 -8。后半程极端输出选择。",
+    tag: "属性 / 爆发 后期",
+    text: "伤害 +10%，暴击 +8%，生命 -8。后半程极端输出选择。",
     apply: (g) => {
-      g.player.boozePower += 5;
+      g.player.damageMult += 0.1;
       g.player.crit = Math.min(75, g.player.crit + 8);
       g.player.maxHp = Math.max(55, g.player.maxHp - 8);
       g.player.hp = Math.min(g.player.hp, g.player.maxHp);
     },
-    available: (g) => g.stage >= 6 && g.player.boozePower < 42,
+    available: (g) => g.stage >= 6 && (g.player.damageMult < 2.6 || g.player.crit < 75),
   },
   {
     id: "laserCalibration",
@@ -886,8 +976,8 @@ const statUpgradePool = [
     tag: "属性 / 武器专属",
     text: "报表和计算器会更克制审计、警报和老板类压力。",
     apply: (g) => {
-      g.player.languagePower += 2;
-      g.player.trapPower += 2;
+      g.player.range += 12;
+      g.player.luck += 8;
       g.player.orbitSpeed += 0.3;
       g.player.chainRange += 18;
     },
@@ -923,40 +1013,39 @@ const statUpgradePool = [
   {
     id: "deskMinePermit",
     title: "工位地雷许可",
-    tag: "属性 / 武器专属 陷阱",
+    tag: "属性 / 武器专属 工程",
     text: "便签陷阱更大更久，适合把高速怪牵进工位雷区。",
     apply: (g) => {
-      g.player.trapPower += 5;
+      g.player.luck += 12;
+      g.player.pickupRange += 28;
       g.player.stickyRadius += 10;
       g.player.stickyLife += 0.7;
-      g.player.pickupRange += 14;
     },
-    available: (g) => g.stage >= 3 && g.weapons.sticky.level >= 2 && g.player.trapPower < 50,
+    available: (g) => g.stage >= 3 && g.weapons.sticky.level >= 2 && (g.player.luck < 210 || g.player.pickupRange < 480),
   },
   {
     id: "contractLanguage",
     title: "合同语言学",
-    tag: "属性 / 语言 后期",
-    text: "语言大幅提升，并强化激光笔、报表和审计克制。",
+    tag: "属性 / 射程 幸运 后期",
+    text: "射程和幸运大幅提升，并强化激光笔、报表和审计克制。",
     apply: (g) => {
-      g.player.languagePower += 7;
-      g.player.range += 18;
+      g.player.range += 42;
+      g.player.luck += 18;
       g.player.chainRange += 16;
     },
-    available: (g) => g.stage >= 8 && g.player.languagePower < 52,
+    available: (g) => g.stage >= 8 && (g.player.range < 430 || g.player.luck < 230),
   },
   {
     id: "socialDrinking",
     title: "酒桌破局",
-    tag: "属性 / 酒 后期",
-    text: "酒意和暴击大幅提升，但护甲下降。适合用爆发压过后半程压力。",
+    tag: "属性 / 爆发 后期",
+    text: "伤害和暴击大幅提升，但护甲下降。适合用爆发压过后半程压力。",
     apply: (g) => {
-      g.player.boozePower += 7;
+      g.player.damageMult += 0.12;
       g.player.crit = Math.min(75, g.player.crit + 10);
-      g.player.damageMult += 0.06;
       g.player.armor = Math.max(-8, g.player.armor - 2);
     },
-    available: (g) => g.stage >= 8 && g.player.boozePower < 52,
+    available: (g) => g.stage >= 8 && (g.player.damageMult < 2.8 || g.player.crit < 75),
   },
 ];
 
@@ -986,10 +1075,9 @@ const itemPool = [
     id: "luckyBadge",
     title: "幸运工牌贴",
     tag: "道具 / 经济",
-    text: "幸运 +10，材料掉落 +10%。",
+    text: "幸运 +16。幸运会同时提升材料和额外掉落。",
     apply: (g) => {
-      g.player.luck += 10;
-      g.player.materialBonus += 0.1;
+      g.player.luck += 16;
     },
   },
   {
@@ -1155,12 +1243,12 @@ const itemPool = [
   {
     id: "whiteboardWall",
     title: "白板防线",
-    tag: "道具 / 陷阱 领域",
-    text: "站场 +2，陷阱 +3，拾取提升。适合边守边布网。",
+    tag: "道具 / 工程 领域",
+    text: "站场 +2，幸运 +8，拾取提升。适合边守边布网。",
     apply: (g) => {
       g.player.fortify += 2;
-      g.player.trapPower += 3;
-      g.player.pickupRange += 18;
+      g.player.luck += 8;
+      g.player.pickupRange += 24;
     },
   },
   {
@@ -1177,22 +1265,21 @@ const itemPool = [
   {
     id: "cableNest",
     title: "线缆巢穴",
-    tag: "道具 / 陷阱 控制",
-    text: "陷阱 +4，拾取 +20，幸运 +6。便签和电流更容易滚起来。",
+    tag: "道具 / 工程 控制",
+    text: "幸运 +12，拾取 +28。便签和电流更容易滚起来。",
     apply: (g) => {
-      g.player.trapPower += 4;
-      g.player.pickupRange += 20;
-      g.player.luck += 6;
+      g.player.pickupRange += 28;
+      g.player.luck += 12;
     },
   },
   {
     id: "liquorCoffee",
     title: "咖啡利口酒",
     tag: "道具 / 酒 爆发",
-    text: "酒意 +4，伤害 +10%，攻速 +8%，护甲 -1。",
+    text: "伤害 +12%，暴击 +5%，攻速 +8%，护甲 -1。",
     apply: (g) => {
-      g.player.boozePower += 4;
-      g.player.damageMult += 0.1;
+      g.player.damageMult += 0.12;
+      g.player.crit = Math.min(75, g.player.crit + 5);
       g.player.attackSpeed += 8;
       g.player.armor = Math.max(-6, g.player.armor - 1);
     },
@@ -1200,23 +1287,22 @@ const itemPool = [
   {
     id: "translationHeadset",
     title: "同传耳麦",
-    tag: "道具 / 语言 控制",
-    text: "语言 +4，拾取 +20，领域和连锁更容易读懂场面。",
+    tag: "道具 / 翻译 控制",
+    text: "射程 +18，拾取 +20，幸运 +6。领域和连锁更容易读懂场面。",
     apply: (g) => {
-      g.player.languagePower += 4;
       g.player.pickupRange += 20;
-      g.player.range += 12;
+      g.player.range += 18;
+      g.player.luck += 6;
     },
   },
   {
     id: "foreignContract",
     title: "外文合同",
-    tag: "道具 / 语言 经济",
-    text: "语言 +3，幸运 +10，材料收益 +8%。审计压力会更好处理。",
+    tag: "道具 / 翻译 经济",
+    text: "射程 +24，幸运 +16。审计压力会更好处理。",
     apply: (g) => {
-      g.player.languagePower += 3;
-      g.player.luck += 10;
-      g.player.materialBonus += 0.08;
+      g.player.range += 24;
+      g.player.luck += 16;
     },
   },
 ];
@@ -1244,10 +1330,16 @@ function createGame() {
     rerollCount: 0,
     shopOffers: [],
     lockedShopOffers: [],
+    currentUpgradeChoices: [],
+    upgradeRerolls: 0,
+    weaponUpgradeCounts: {},
     boughtItems: new Set(),
     boughtItemNames: [],
     boughtItemTags: [],
     fusionHintsSeen: new Set(),
+    fusionLog: [],
+    evolutionHintsSeen: new Set(),
+    evolvedWeapons: new Set(),
     kills: 0,
     level: 1,
     upgradesTaken: 0,
@@ -1263,6 +1355,7 @@ function createGame() {
     floatingTexts: [],
     pickups: [],
     damageZones: [],
+    delayedBlasts: [],
     orbitAngle: 0,
     camera: { x: 0, y: 0 },
     player: {
@@ -1279,14 +1372,10 @@ function createGame() {
       crit: 0,
       range: 0,
       luck: 0,
-      materialBonus: 0,
       pickupRange: 150,
       regen: 0,
       regenTimer: 0,
       fortify: 0,
-      trapPower: 0,
-      languagePower: 0,
-      boozePower: 0,
       anchorTime: 0,
       fieldTextTimer: 0,
       slow: 1,
@@ -1295,6 +1384,7 @@ function createGame() {
       facingX: 1,
       facingY: 0,
       coffeeTimer: 0,
+      coffeeShotCount: 0,
       coffeeCooldown: 0.62,
       coffeePierce: 1,
       keyboardTimer: 0,
@@ -1308,6 +1398,7 @@ function createGame() {
       stickyRadius: 54,
       stickyLife: 4.2,
       markerTimer: 0,
+      markerShotCount: 0,
       markerCooldown: 2.8,
       markerWidth: 10,
       calculatorTimer: 0,
@@ -1372,6 +1463,7 @@ function updateGame(dt) {
   updateWeapons(dt);
   updateEnemies(dt);
   updateDamageZones(dt);
+  updateDelayedBlasts(dt);
   updateProjectiles(dt);
   updatePickups(dt);
   updateParticles(dt);
@@ -1407,9 +1499,12 @@ function updatePlayer(dt) {
   if (standingStill) {
     p.anchorTime = Math.min(anchorMax, p.anchorTime + dt * (1 + getEffectiveStat("fortify") * 0.025));
   } else if (fieldKit) {
-    const decay = Math.max(0.22, 0.64 - getEffectiveStat("fortify") * 0.014);
-    const carryFloor = Math.min(anchorMax * 0.58, 0.18 + getEffectiveStat("fortify") * 0.04);
+    const fieldLevel = game.weapons.headset.level + game.weapons.report.level;
+    const nearbyPressure = game.enemies.filter((e) => Math.hypot(e.x - p.x, e.y - p.y) < 170).length;
+    const decay = Math.max(0.12, 0.46 - getEffectiveStat("fortify") * 0.012 - fieldLevel * 0.012);
+    const carryFloor = Math.min(anchorMax * 0.72, 0.42 + getEffectiveStat("fortify") * 0.045 + fieldLevel * 0.05);
     p.anchorTime = Math.max(carryFloor, p.anchorTime - dt * decay);
+    if (nearbyPressure >= 5) p.anchorTime = Math.min(anchorMax, p.anchorTime + dt * Math.min(0.42, nearbyPressure * 0.028));
   } else {
     p.anchorTime = Math.max(0, p.anchorTime - dt * 1.4);
   }
@@ -1452,8 +1547,25 @@ function updateWeapons(dt) {
   if (game.weapons.coffee.level > 0 && p.coffeeTimer <= 0 && target) {
     const level = game.weapons.coffee.level;
     const angle = Math.atan2(target.y - p.y, target.x - p.x);
-    const damage = hitDamage((14 + level * 4.2) * getWeaponStatScale("precise") * (precision ? 1.12 : 1));
-    fireAt(target, 520, damage, "#f4c95d", p.coffeePierce + getClassBonus("pierce") + (precision ? 1 : 0), 4, 1.15 + rangeBonus(0.004), "coffee");
+    p.coffeeShotCount += 1;
+    const bigShot = level >= 5 && p.coffeeShotCount % 5 === 0;
+    const damage = hitDamage((14 + level * 4.2) * getWeaponStatScale("precise") * (precision ? 1.12 : 1) * (bigShot ? 1.75 : 1));
+    fireAt(target, bigShot ? 620 : 520, damage, bigShot ? "#fff07a" : "#f4c95d", p.coffeePierce + getClassBonus("pierce") + (precision ? 1 : 0) + (bigShot ? 2 : 0), bigShot ? 7 : 4, 1.15 + rangeBonus(0.004), "coffee");
+    if (level >= 3) {
+      game.delayedBlasts.push({
+        x: target.x,
+        y: target.y,
+        r: 44 + level * 3,
+        delay: hasWeaponEvolution("coffee") ? 1.2 : 0.18,
+        damage: damage * (hasWeaponEvolution("coffee") ? 2 : 0.55),
+        source: "coffee",
+        color: "#f4c95d",
+        text: hasWeaponEvolution("coffee") ? "咖啡渍" : "溅射",
+      });
+    }
+    if (level >= 7 && Math.random() < clamp(getEffectiveStat("crit"), 10, 75) / 140) {
+      chainLightning(target, 1 + (hasWeaponEvolution("coffee") ? 1 : 0), 210 + rangeBonus(0.35), damage * 0.55, "coffee");
+    }
     if (precision) {
       fireBeam(angle, 420 + rangeBonus(0.9), 3 + Math.floor(level / 2), hitDamage(5 + game.weapons.marker.level * 2.2), "#b282ff", "marker");
     }
@@ -1465,7 +1577,7 @@ function updateWeapons(dt) {
       fireAt({ x: target.x + 26, y: target.y - 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003), "coffee");
       fireAt({ x: target.x - 26, y: target.y + 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003), "coffee");
     }
-    p.coffeeTimer = cooldown(p.coffeeCooldown * (precision ? 0.88 : 1));
+    p.coffeeTimer = weaponCooldown(p.coffeeCooldown * (precision ? 0.88 : 1), "coffee");
   }
 
   p.keyboardTimer -= dt;
@@ -1507,7 +1619,25 @@ function updateWeapons(dt) {
         });
       }
     }
-    p.keyboardTimer = cooldown(Math.max(0.42, 1.18 - level * 0.07 - (barrage ? 0.08 : 0)));
+    if (level >= 5 || hasWeaponEvolution("keyboard")) {
+      const ringCount = hasWeaponEvolution("keyboard") ? 10 : 6;
+      for (let i = 0; i < ringCount; i += 1) {
+        const angle = baseAngle + (i / ringCount) * TAU;
+        spawnProjectile({
+          x: p.x,
+          y: p.y,
+          vx: Math.cos(angle) * 315,
+          vy: Math.sin(angle) * 315,
+          r: 3,
+          life: 0.42 + rangeBonus(0.001),
+          damage: hitDamage(4 + level * 1.65),
+          color: hasWeaponEvolution("keyboard") ? "#52ffe1" : "#6ea8ff",
+          pierce: level >= 7 ? 2 : 1,
+          source: "keyboard",
+        });
+      }
+    }
+    p.keyboardTimer = weaponCooldown(Math.max(0.42, 1.18 - level * 0.07 - (barrage ? 0.08 : 0)), "keyboard");
   }
 
   p.staplerTimer -= dt;
@@ -1531,48 +1661,84 @@ function updateWeapons(dt) {
         source: "stapler",
       });
     }
-    p.staplerTimer = cooldown(Math.max(0.5, p.staplerCooldown - level * 0.04 - (barrage ? 0.08 : 0)));
+    if (level >= 5 || hasWeaponEvolution("stapler")) {
+      const blastRadius = hasWeaponEvolution("stapler") ? 96 : 64;
+      for (const e of game.enemies) {
+        if (Math.hypot(e.x - p.x, e.y - p.y) < blastRadius + e.r) {
+          applyEnemyDamage(e, hitDamage((10 + level * 3.2) * getWeaponStatScale("barrage")), "stapler");
+          e.slow = Math.min(e.slow || 1, 0.72);
+        }
+      }
+      pulse(p.x, p.y, blastRadius, "#d7d0c2");
+    }
+    p.staplerTimer = weaponCooldown(Math.max(0.5, p.staplerCooldown - level * 0.04 - (barrage ? 0.08 : 0)), "stapler");
   }
 
   p.stickyTimer -= dt;
   if (game.weapons.sticky.level > 0 && p.stickyTimer <= 0) {
     const level = game.weapons.sticky.level;
-    game.damageZones.push({
-      x: p.x,
-      y: p.y,
-      r: p.stickyRadius + level * 4 + Math.floor(getEffectiveStat("pickupRange") / 28) + getTrapRadiusBonus(),
-      life: p.stickyLife + getEffectiveStat("trapPower") * 0.05,
-      maxLife: p.stickyLife + getEffectiveStat("trapPower") * 0.05,
-      damage: continuousDamage((7 + level * 2.8) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering"))),
-      source: "sticky",
-      tick: 0,
-      chainTick: conductor ? (conductorTier >= 4 ? 0.08 : 0.14) : Infinity,
-      textTick: 0,
-      color: conductorTier >= 4 ? "#52ffe1" : "#fff07a",
-    });
-    p.stickyTimer = cooldown(Math.max(0.8, p.stickyCooldown - level * 0.05));
+    const trapCount = level >= 7 || hasWeaponEvolution("sticky") ? 2 : 1;
+    for (let i = 0; i < trapCount; i += 1) {
+      const angle = i === 0 ? 0 : game.time * 2.1;
+      const offset = i === 0 ? 0 : 46;
+      game.damageZones.push({
+        x: p.x + Math.cos(angle) * offset,
+        y: p.y + Math.sin(angle) * offset,
+        r: p.stickyRadius + level * 4 + Math.floor(getEffectiveStat("pickupRange") / 28) + getTrapRadiusBonus(),
+        life: p.stickyLife + getEngineeringUtility() * 0.08,
+        maxLife: p.stickyLife + getEngineeringUtility() * 0.08,
+        damage: continuousDamage((7 + level * 2.8) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering"))),
+        source: "sticky",
+        tick: 0,
+        chainTick: conductor ? (conductorTier >= 4 ? 0.08 : 0.14) : Infinity,
+        textTick: 0,
+        explodeOnEnd: level >= 5,
+        color: conductorTier >= 4 ? "#52ffe1" : "#fff07a",
+      });
+    }
+    p.stickyTimer = weaponCooldown(Math.max(0.8, p.stickyCooldown - level * 0.05), "sticky");
   }
 
   p.markerTimer -= dt;
   if (game.weapons.marker.level > 0 && p.markerTimer <= 0 && target) {
     const level = game.weapons.marker.level;
     const angle = Math.atan2(target.y - p.y, target.x - p.x);
-    fireBeam(angle, 700 + rangeBonus(1.25), p.markerWidth + level + Math.floor(getEffectiveStat("crit") / 18) + (precision ? 3 : 0), hitDamage((24 + level * 7.6) * getWeaponStatScale("precise") * (precision ? 1.12 : 1)), "#b282ff", "marker");
-    p.markerTimer = cooldown(Math.max(0.94, p.markerCooldown - level * 0.1 - (precision ? 0.16 : 0)));
+    p.markerShotCount += 1;
+    const grandBeam = level >= 5 && (p.markerShotCount % 4 === 0 || hasWeaponEvolution("marker"));
+    fireBeam(angle, 700 + rangeBonus(1.25) + (grandBeam ? 180 : 0), p.markerWidth + level + Math.floor(getEffectiveStat("crit") / 18) + (precision ? 3 : 0) + (grandBeam ? 12 : 0), hitDamage((24 + level * 7.6) * getWeaponStatScale("precise") * (precision ? 1.12 : 1) * (grandBeam ? 1.45 : 1)), grandBeam ? "#52ffe1" : "#b282ff", "marker");
+    if (level >= 7) {
+      fireBeam(angle + 0.5, 560 + rangeBonus(0.8), Math.max(6, p.markerWidth * 0.55), hitDamage(12 + level * 3.4), "#b282ff", "marker");
+      fireBeam(angle - 0.5, 560 + rangeBonus(0.8), Math.max(6, p.markerWidth * 0.55), hitDamage(12 + level * 3.4), "#b282ff", "marker");
+    }
+    p.markerTimer = weaponCooldown(Math.max(0.94, p.markerCooldown - level * 0.1 - (precision ? 0.16 : 0)), "marker");
   }
 
   p.calculatorTimer -= dt;
   if (game.weapons.calculator.level > 0 && p.calculatorTimer <= 0 && target) {
     const level = game.weapons.calculator.level;
-    chainLightning(target, p.chainJumps + Math.floor(level / 2) + Math.floor(getEffectiveStat("luck") / 42) + getClassBonus("chain") + (conductor ? 1 : 0) + (conductorTier >= 4 ? 2 : 0), p.chainRange + rangeBonus(0.8) + (conductor ? 36 : 0) + (conductorTier >= 4 ? 54 : 0), hitDamage((17 + level * 5.6) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering")) * (conductor ? 1.1 : 1) * (conductorTier >= 4 ? 1.12 : 1)), "calculator");
-    p.calculatorTimer = cooldown(Math.max(0.88, p.calculatorCooldown - level * 0.07));
+    const jumps = p.chainJumps + Math.floor(level / 2) + Math.floor(getEffectiveStat("luck") / 42) + getClassBonus("chain") + (conductor ? 1 : 0) + (conductorTier >= 4 ? 2 : 0) + (hasWeaponEvolution("calculator") ? 2 : 0);
+    const chainDamage = hitDamage((17 + level * 5.6) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering")) * (conductor ? 1.1 : 1) * (conductorTier >= 4 ? 1.12 : 1));
+    chainLightning(target, jumps, p.chainRange + rangeBonus(0.8) + (conductor ? 36 : 0) + (conductorTier >= 4 ? 54 : 0), chainDamage, "calculator");
+    if (level >= 5 || hasWeaponEvolution("calculator")) {
+      game.delayedBlasts.push({
+        x: target.x,
+        y: target.y,
+        r: hasWeaponEvolution("calculator") ? 88 : 56,
+        delay: 0.28,
+        damage: chainDamage * (hasWeaponEvolution("calculator") ? 1.2 : 0.7),
+        source: "calculator",
+        color: "#52ffe1",
+        text: "复核",
+      });
+    }
+    p.calculatorTimer = weaponCooldown(Math.max(0.88, p.calculatorCooldown - level * 0.07), "calculator");
   }
 
   const auraLevel = game.weapons.headset.level;
   if (auraLevel > 0) {
     const auraRadius = getAuraRadius();
     let auraHits = 0;
-    const auraDps = continuousDamage(p.auraDamage * getWeaponStatScale("field") * (perimeter ? 1.14 : 1) * (perimeterTier >= 4 ? 1.12 : 1));
+    const auraDps = continuousDamage(p.auraDamage * getWeaponStatScale("field") * (perimeter ? 1.14 : 1) * (perimeterTier >= 4 ? 1.12 : 1) * (hasWeaponEvolution("headset") ? 1.18 : 1));
     for (const e of game.enemies) {
       const dist = Math.hypot(e.x - p.x, e.y - p.y);
       if (dist < auraRadius + e.r) {
@@ -1588,19 +1754,21 @@ function updateWeapons(dt) {
       p.fieldTextTimer = 0.72;
     }
     p.auraPulseTimer -= dt;
-    if (p.auraPulse > 0 && p.auraPulseTimer <= 0) {
+    if ((p.auraPulse > 0 || auraLevel >= 5 || hasWeaponEvolution("headset")) && p.auraPulseTimer <= 0) {
+      const pulsePower = p.auraPulse + (auraLevel >= 5 ? 1 : 0) + (hasWeaponEvolution("headset") ? 2 : 0);
       for (const e of game.enemies) {
         const dx = e.x - p.x;
         const dy = e.y - p.y;
         const dist = Math.hypot(dx, dy) || 1;
         if (dist < auraRadius + 40) {
-          e.x += (dx / dist) * (26 + p.auraPulse * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
-          e.y += (dy / dist) * (26 + p.auraPulse * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
-          applyEnemyDamage(e, continuousDamage((8 + p.auraPulse * 4) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1) * (perimeterTier >= 4 ? 1.18 : 1)), "headset");
+          e.x += (dx / dist) * (26 + pulsePower * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
+          e.y += (dy / dist) * (26 + pulsePower * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
+          e.slow = Math.min(e.slow || 1, hasWeaponEvolution("headset") ? 0.36 : 0.58);
+          applyEnemyDamage(e, continuousDamage((8 + pulsePower * 4) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1) * (perimeterTier >= 4 ? 1.18 : 1)), "headset");
         }
       }
       pulse(p.x, p.y, auraRadius + 28, "#42d7b8");
-      p.auraPulseTimer = Math.max(1.1, 2.6 - p.auraPulse * 0.22);
+      p.auraPulseTimer = weaponCooldown(Math.max(0.82, 2.6 - pulsePower * 0.22), "headset");
     }
   }
 
@@ -1611,9 +1779,18 @@ function updateWeapons(dt) {
       for (const e of game.enemies) {
         if (Math.hypot(e.x - orb.x, e.y - orb.y) < e.r + orb.r) {
           applyEnemyDamage(e, continuousDamage((17 + orbitLevel * 4.6) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1)) * dt, "report", false);
+          if (orbitLevel >= 5 || hasWeaponEvolution("report")) e.slow = Math.min(e.slow || 1, hasWeaponEvolution("report") ? 0.54 : 0.7);
           e.hitFlash = 0.08;
         }
       }
+    }
+    if (hasWeaponEvolution("report") && Math.floor(game.time * 2.2) !== Math.floor((game.time - dt) * 2.2)) {
+      for (const e of game.enemies) {
+        if (Math.hypot(e.x - p.x, e.y - p.y) < p.orbitRadius + 90 + e.r) {
+          applyEnemyDamage(e, continuousDamage(9 + orbitLevel * 2.6), "report");
+        }
+      }
+      pulse(p.x, p.y, p.orbitRadius + 90, "#ffd15c");
     }
   }
 }
@@ -1835,8 +2012,8 @@ function updateDamageZones(dt) {
       if (chainSeed && zone.chainTick <= 0 && game.weapons.calculator.level > 0) {
         chainLightning(
           chainSeed,
-          1 + Math.floor(game.weapons.calculator.level / 3) + Math.floor(getEffectiveStat("trapPower") / 12),
-          game.player.chainRange * 0.78 + rangeBonus(0.45) + getEffectiveStat("trapPower") * 2,
+          1 + Math.floor(game.weapons.calculator.level / 3) + Math.floor(getEngineeringUtility() / 18),
+          game.player.chainRange * 0.78 + rangeBonus(0.45) + getEngineeringUtility() * 1.4,
           continuousDamage(8 + game.weapons.calculator.level * 2.4),
           "calculator",
         );
@@ -1845,17 +2022,46 @@ function updateDamageZones(dt) {
       zone.tick = 0.22;
     }
   }
+  for (const zone of game.damageZones) {
+    if (zone.life <= 0 && zone.explodeOnEnd) {
+      game.delayedBlasts.push({
+        x: zone.x,
+        y: zone.y,
+        r: zone.r * 0.78,
+        delay: 0,
+        damage: zone.damage * 2.2,
+        source: zone.source || "sticky",
+        color: zone.color || "#fff07a",
+        text: "便签爆",
+      });
+      zone.explodeOnEnd = false;
+    }
+  }
   game.damageZones = game.damageZones.filter((zone) => zone.life > 0);
+}
+
+function updateDelayedBlasts(dt) {
+  for (const blast of game.delayedBlasts) {
+    blast.delay -= dt;
+    if (blast.delay > 0) continue;
+    for (const e of game.enemies) {
+      if (Math.hypot(e.x - blast.x, e.y - blast.y) < e.r + blast.r) {
+        applyEnemyDamage(e, blast.damage, blast.source || "generic");
+        e.hitFlash = Math.max(e.hitFlash || 0, 0.12);
+      }
+    }
+    floatingText(blast.x, blast.y - blast.r * 0.35, blast.text || "爆裂", blast.color || "#ffd15c");
+    pulse(blast.x, blast.y, blast.r, blast.color || "#ffd15c");
+    blast.done = true;
+  }
+  game.delayedBlasts = game.delayedBlasts.filter((blast) => !blast.done);
 }
 
 function pickWeightedStatDrop() {
   const candidates = statDropPool.filter((stat) => {
     if (stat.key === "dodge") return game.player.dodge < 60;
-    if (stat.key === "luck") return game.player.luck < 160;
+    if (stat.key === "luck") return game.player.luck < 240;
     if (stat.key === "fortify") return game.player.fortify < 42;
-    if (stat.key === "trapPower") return game.player.trapPower < 42;
-    if (stat.key === "languagePower") return game.player.languagePower < 36;
-    if (stat.key === "boozePower") return game.player.boozePower < 36;
     return true;
   });
   return candidates[Math.floor(Math.random() * candidates.length)];
@@ -2223,9 +2429,16 @@ function collectLooseMaterials() {
 function openUpgrade(returnState = "playing") {
   state = "upgrade";
   game.upgradeReturnState = returnState;
+  game.upgradeRerolls = 1;
+  game.currentUpgradeChoices = pickUpgrades(4);
+  renderUpgradeChoices();
+  ui.upgradePanel.classList.remove("hidden");
+  ui.upgradeRerollButton?.classList.toggle("hidden", false);
+}
+
+function renderUpgradeChoices() {
   ui.upgradeChoices.replaceChildren();
-  const choices = pickUpgrades(3);
-  for (const choice of choices) {
+  for (const choice of game.currentUpgradeChoices) {
     const button = document.createElement("button");
     button.className = "choice";
     button.innerHTML = `
@@ -2236,32 +2449,72 @@ function openUpgrade(returnState = "playing") {
       <strong>${choice.title}</strong>
       <span>${choice.text}</span>
     `;
-    button.addEventListener("click", () => {
-      choice.apply(game);
-      game.upgradesTaken += 1;
-      ui.upgradePanel.classList.add("hidden");
-      if (game.upgradeReturnState === "armory") {
-        if (game.pendingLevelUps > 0) {
-          game.pendingLevelUps -= 1;
-          openUpgrade("armory");
-        } else {
-          openWeaponArmory();
-        }
-      } else {
-        state = "playing";
-        lastTime = performance.now();
-        requestAnimationFrame(loop);
-      }
-    });
+    button.addEventListener("click", () => chooseUpgrade(choice));
     ui.upgradeChoices.append(button);
   }
-  ui.upgradePanel.classList.remove("hidden");
+  if (ui.upgradeRerollCount) ui.upgradeRerollCount.textContent = game.upgradeRerolls;
+  if (ui.upgradeRerollButton) ui.upgradeRerollButton.disabled = game.upgradeRerolls <= 0;
+}
+
+function chooseUpgrade(choice) {
+  choice.apply(game);
+  game.upgradesTaken += 1;
+  checkWeaponEvolutions();
+  ui.upgradePanel.classList.add("hidden");
+  game.currentUpgradeChoices = [];
+  game.upgradeRerolls = 0;
+  markBuildHint();
+  if (game.upgradeReturnState === "armory") {
+    if (game.pendingLevelUps > 0) {
+      game.pendingLevelUps -= 1;
+      openUpgrade("armory");
+    } else {
+      openWeaponArmory();
+    }
+  } else {
+    state = "playing";
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+}
+
+function rerollUpgradeChoices() {
+  if (state !== "upgrade" || game.upgradeRerolls <= 0) return;
+  game.upgradeRerolls -= 1;
+  game.currentUpgradeChoices = pickUpgrades(4);
+  renderUpgradeChoices();
 }
 
 function pickUpgrades(count) {
   const available = statUpgradePool.filter((upgrade) => upgrade.available(game));
-  shuffle(available);
-  return available.slice(0, count);
+  const choices = [];
+  const aligned = available.filter(isUpgradeAlignedWithBuild);
+  if (aligned.length) {
+    shuffle(aligned);
+    choices.push(aligned[0]);
+  }
+  const weighted = [];
+  for (const upgrade of available) {
+    if (choices.includes(upgrade)) continue;
+    weighted.push(upgrade);
+    if (isUpgradeAlignedWithBuild(upgrade)) weighted.push(upgrade, upgrade);
+  }
+  shuffle(weighted);
+  for (const upgrade of weighted) {
+    if (choices.length >= count) break;
+    if (!choices.includes(upgrade)) choices.push(upgrade);
+  }
+  return choices;
+}
+
+function isUpgradeAlignedWithBuild(upgrade) {
+  const counts = getWeaponClassCounts();
+  const tag = upgrade.tag || "";
+  if ((counts.precise || counts.ranged) && /暴击|射程|输出|爆发|武器专属/.test(tag)) return true;
+  if ((counts.barrage || counts.close) && /攻速|闪避|爆发|武器专属/.test(tag)) return true;
+  if ((counts.engineering || counts.support) && /幸运|拾取|经济|工程|布线|翻译|武器专属/.test(tag)) return true;
+  if ((counts.field || counts.close) && /防御|恢复|站场|领域|生存|武器专属/.test(tag)) return true;
+  return false;
 }
 
 function openWeaponArmory() {
@@ -2349,12 +2602,9 @@ function maybeShowFusionHint(weaponId) {
   if (!weapon || weapon.level < 5 || game.fusionHintsSeen.has(weaponId)) return;
   game.fusionHintsSeen.add(weaponId);
   const classText = (weapon.classes || []).map((className) => weaponClassLabels[className] || className).join(" / ");
-  ui.fusionNoticeMeta.textContent = "终局改造";
-  ui.fusionNoticeTitle.textContent = `${weapon.label} 已接近最终形态`;
-  ui.fusionNoticeText.textContent = `${classText} 相关武器、属性和道具会让它更容易发生特殊变化。`;
-  ui.fusionNotice.classList.remove("hidden");
-  window.clearTimeout(maybeShowFusionHint.timer);
-  maybeShowFusionHint.timer = window.setTimeout(() => ui.fusionNotice.classList.add("hidden"), 5200);
+  const message = `${weapon.label} 已接近最终形态。${classText} 相关武器、属性和道具会让它更容易发生特殊变化。`;
+  game.fusionLog.push(message);
+  showFusionNotice("终局改造", `${weapon.label} 已接近最终形态`, message);
 }
 
 function renderArmoryBuildStrip() {
@@ -2435,7 +2685,28 @@ function getOfferComparisonText(entry) {
 
 function getEntryRouteHint(entry) {
   const weaponId = getUpgradeWeaponId(entry.id);
-  if (weaponId) return game.weapons[weaponId].archetype;
+  if (weaponId) {
+    const routes = {
+      coffee: "精准贯穿路线",
+      marker: "精准贯穿路线",
+      keyboard: "键盘风暴路线",
+      stapler: "键盘风暴路线",
+      headset: "会议结界路线",
+      report: "会议结界路线",
+      sticky: "工位雷网路线",
+      calculator: "工位雷网路线",
+    };
+    const recommendation = {
+      marker: "适合远程穿透和暴击",
+      keyboard: "适合高攻速弹幕",
+      headset: "适合防守站场",
+      sticky: "适合陷阱控场",
+    };
+    const suffix = game.stage === 1 && game.weapons[weaponId].level <= 0 && recommendation[weaponId]
+      ? ` · ${recommendation[weaponId]}`
+      : "";
+    return `${routes[weaponId] || game.weapons[weaponId].archetype}${suffix}`;
+  }
   return (entry.tag || "道具").replace("道具 / ", "").replace("属性 / ", "");
 }
 
@@ -2462,8 +2733,8 @@ function getItemBuildHint(entry) {
   const tag = entry.tag || "";
   if (/暴击|输出|射程/.test(tag)) return "偏精准/远程，适合马克笔和咖啡射线。";
   if (/攻速|闪避|爆发/.test(tag)) return "偏弹幕/近距，适合键盘和订书机。";
-  if (/经济|拾取|恢复|陷阱|布线|语言/.test(tag)) return "偏工程/支援，适合计算器、便签和长线发育。";
-  if (/酒/.test(tag)) return "偏高风险爆发，适合咖啡、订书机和想快速清场的打法。";
+  if (/经济|拾取|恢复|工程|布线|翻译/.test(tag)) return "偏工程/支援，适合计算器、便签和长线发育。";
+  if (/酒|爆发/.test(tag)) return "偏高风险爆发，适合咖啡、订书机和想快速清场的打法。";
   if (/防御|生存|控制|站场|站桩|领域/.test(tag)) return "偏领域/生存，适合耳机和报告领域。";
   return "通用补强，但会挤压武器升级节奏。";
 }
@@ -2539,9 +2810,9 @@ function isItemAlignedWithBuild(entry) {
   const tag = entry.tag || "";
   if ((counts.precise || counts.ranged) && /暴击|射程|输出|爆发/.test(tag)) return true;
   if ((counts.barrage || counts.close) && /攻速|闪避|爆发/.test(tag)) return true;
-  if ((counts.engineering || counts.support) && /经济|拾取|恢复|控制|陷阱|布线|语言/.test(tag)) return true;
-  if ((counts.precise || counts.barrage) && /酒/.test(tag)) return true;
-  if ((counts.field || counts.close) && /防御|生存|控制|站场|站桩|领域/.test(tag)) return true;
+  if ((counts.engineering || counts.support) && /经济|拾取|恢复|控制|工程|布线|翻译/.test(tag)) return true;
+  if ((counts.precise || counts.barrage) && /酒|爆发|暴击|输出/.test(tag)) return true;
+  if ((counts.field || counts.close) && /防御|生存|控制|站场|站桩|领域|恢复/.test(tag)) return true;
   return false;
 }
 
@@ -2579,8 +2850,12 @@ function buyShopOffer(index) {
   game.materials -= offer.cost;
   offer.entry.apply(game);
   if (offer.entry.shopType === "weapon") {
+    game.weaponUpgradeCounts[offer.entry.id] = (game.weaponUpgradeCounts[offer.entry.id] || 0) + 1;
     syncWeaponDerivedStats();
+    applyWeaponUpgradeModifiers();
     maybeShowFusionHint(getUpgradeWeaponId(offer.entry.id));
+    checkWeaponEvolutions();
+    markBuildHint();
   }
   offer.purchased = true;
   offer.locked = false;
@@ -2588,6 +2863,7 @@ function buyShopOffer(index) {
     game.boughtItems.add(offer.entry.id);
     game.boughtItemNames.push(offer.entry.title);
     game.boughtItemTags.push(offer.entry.tag || "");
+    checkWeaponEvolutions();
   }
   updateBuildHud();
   updateStatHud();
@@ -2617,6 +2893,12 @@ function sellWeapon(weaponId) {
   game.materials += getWeaponSellValue(weaponId);
   weapon.level = 0;
   syncWeaponDerivedStats();
+  if (game.weaponUpgradeCounts) {
+    for (const id of Object.keys(game.weaponUpgradeCounts)) {
+      if (getUpgradeWeaponId(id) === weaponId) delete game.weaponUpgradeCounts[id];
+    }
+  }
+  applyWeaponUpgradeModifiers();
   game.shopOffers = game.shopOffers.filter((offer) => getUpgradeWeaponId(offer.entry.id) !== weaponId || offer.locked);
   updateHud();
   renderShop();
@@ -2659,6 +2941,31 @@ function syncWeaponDerivedStats() {
   p.orbitCount = 1 + Math.max(0, report - 1);
   p.orbitRadius = 86 + Math.floor(report / 2) * 6;
   p.orbitSpeed = 2.4 + Math.floor(report / 2) * 0.45;
+}
+
+function applyWeaponUpgradeModifiers() {
+  const counts = game.weaponUpgradeCounts || {};
+  const p = game.player;
+  const n = (id) => counts[id] || 0;
+  p.coffeeCooldown *= Math.pow(0.9, n("coffee")) * Math.pow(0.84, n("coffeeThermos"));
+  p.coffeePierce += n("coffeePierce");
+  p.keyboardShots += n("keyboard") + n("keyboardMacro") * 2;
+  p.keyboardLife += n("keyboardBounce") * 0.22;
+  p.staplerPellets += n("stapler") + n("staplerMagazine") * 2;
+  p.staplerCooldown *= Math.pow(0.88, n("staplerPunch")) * Math.pow(0.9, n("staplerMagazine"));
+  p.stickyRadius += n("sticky") * 8 + n("stickyCopyPaste") * 10;
+  p.stickyCooldown *= Math.pow(0.9, n("stickyStack")) * Math.pow(0.84, n("stickyCopyPaste"));
+  p.stickyLife += n("stickyStack") * 0.8;
+  p.markerWidth += n("marker") * 2 + n("markerWide") * 5;
+  p.markerCooldown *= Math.pow(0.9, n("markerInk")) * Math.pow(0.86, n("markerWide"));
+  p.chainJumps += n("calculator") + n("calculatorLedger");
+  p.chainRange += n("calculatorTax") * 28 + n("calculatorLedger") * 42;
+  p.auraRadius += n("headset") * 16;
+  p.auraDamage += n("headset") * 2;
+  p.auraPulse += n("headsetPulse") + n("headsetMetronome");
+  p.orbitCount += n("report");
+  p.orbitRadius += n("reportSpeed") * 8 + n("reportBinder") * 10;
+  p.orbitSpeed += n("reportSpeed") * 0.75 + n("reportBinder") * 0.45;
 }
 
 function rerollShop() {
@@ -2711,7 +3018,7 @@ function getWeaponIconClass(id) {
   const map = {
     coffee: 8,
     keyboard: 9,
-    headset: 12,
+    headset: 15,
     report: 14,
     stapler: 10,
     sticky: 11,
@@ -2735,23 +3042,23 @@ function getStatIconClass(idOrKey) {
     magnet: "pickupRange",
     overclock: "attackSpeed",
     glassBuild: "damageMult",
-    compound: "materialBonus",
+    compound: "luck",
     evasive: "dodge",
     fortifiedDesk: "fortify",
     quietField: "fortify",
-    trapManual: "trapPower",
+    trapManual: "luck",
     shieldProtocol: "armor",
-    glossary: "languagePower",
-    afterWorkDrink: "boozePower",
-    bilingualMinutes: "languagePower",
-    wineTableReview: "boozePower",
+    glossary: "range",
+    afterWorkDrink: "damageMult",
+    bilingualMinutes: "range",
+    wineTableReview: "crit",
     laserCalibration: "range",
-    reportAuditTrail: "languagePower",
+    reportAuditTrail: "luck",
     noiseCancelFort: "fortify",
     paperOrbitDrill: "fortify",
-    deskMinePermit: "trapPower",
-    contractLanguage: "languagePower",
-    socialDrinking: "boozePower",
+    deskMinePermit: "pickupRange",
+    contractLanguage: "range",
+    socialDrinking: "crit",
   }[idOrKey] || idOrKey;
   const map = {
     maxHp: 0,
@@ -2763,13 +3070,9 @@ function getStatIconClass(idOrKey) {
     crit: 6,
     range: 7,
     luck: 8,
-    materialBonus: 9,
     pickupRange: 10,
     regen: 11,
     fortify: 1,
-    trapPower: 7,
-    languagePower: 12,
-    boozePower: 11,
   };
   return uiIconClass(map[normalized] ?? 12);
 }
@@ -2849,6 +3152,68 @@ function nearestEnemy() {
 
 function cooldown(base) {
   return Math.max(0.18, base * (100 / (100 + Math.max(-60, game.player.attackSpeed + getClassBonus("attackSpeed")))));
+}
+
+function weaponCooldown(base, weaponId) {
+  const attackSpeed = Math.max(-60, getEffectiveStat("attackSpeed"));
+  const coefficients = {
+    coffee: 0.78,
+    keyboard: 1.1,
+    stapler: 0.92,
+    sticky: 0.42,
+    marker: 1.25,
+    calculator: 0.58,
+    headset: 1.35,
+    report: 0.7,
+  };
+  const coefficient = coefficients[weaponId] ?? 1;
+  const floor = weaponId === "marker" ? 0.42 : weaponId === "coffee" ? 0.16 : 0.22;
+  return Math.max(floor, base * (100 / (100 + attackSpeed * coefficient)));
+}
+
+function hasWeaponEvolution(weaponId) {
+  return Boolean(game?.evolvedWeapons?.has(weaponId));
+}
+
+function checkWeaponEvolutions() {
+  if (!game) return;
+  for (const route of routeDefinitions) {
+    if (getRouteTier(route.id) < 4) continue;
+    for (const weaponId of route.weapons) {
+      const weapon = game.weapons[weaponId];
+      if (!weapon || weapon.level < weapon.max || game.evolvedWeapons.has(weaponId)) continue;
+      game.evolvedWeapons.add(weaponId);
+      const message = getEvolutionText(weaponId, route);
+      game.fusionLog.push(message);
+      showFusionNotice("终极进化", `${weapon.label} 完成最终改造`, message);
+      pulse(game.player.x, game.player.y, 150, route.color || "#52ffe1");
+    }
+  }
+}
+
+function getEvolutionText(weaponId, route) {
+  const data = {
+    coffee: "浓缩风暴咖啡：射线命中留下咖啡渍，短暂延迟后爆开并连带附近目标。",
+    marker: "审稿激光笔：马克笔周期性改为宽幅审稿光束，并分裂两条侧向标记线。",
+    keyboard: "键盘风暴：主弹幕后追加一圈快捷键碎片，近身包围时更容易清场。",
+    stapler: "装订爆破器：订书机近距爆发附带回旋订针，贴脸怪会被二次撕开。",
+    headset: "静音会议室：安静领域的脉冲变成大范围沉默爆震，短暂定住压力源。",
+    report: "旋转报表塔：报表轨道加速并周期性切割附近目标，站场收益更明显。",
+    sticky: "工位雷网：便签陷阱变成双重布置，结束时引爆残留需求。",
+    calculator: "财务连锁器：计算器连锁会对首个目标追加复核爆点，适合点杀精英。",
+  };
+  const routeName = route?.name ? `${route.name}终局` : "终局";
+  return `${routeName} · ${data[weaponId] || "该武器获得行为变化。"}`;
+}
+
+function showFusionNotice(meta, title, text) {
+  if (!ui.fusionNotice) return;
+  ui.fusionNoticeMeta.textContent = meta;
+  ui.fusionNoticeTitle.textContent = title;
+  ui.fusionNoticeText.textContent = text;
+  ui.fusionNotice.classList.remove("hidden");
+  window.clearTimeout(maybeShowFusionHint.timer);
+  maybeShowFusionHint.timer = window.setTimeout(() => ui.fusionNotice.classList.add("hidden"), 6200);
 }
 
 function hasWeaponPair(a, b, minLevel = 2) {
@@ -2939,9 +3304,6 @@ function getRouteStatUnit(key) {
   if (key === "armor") return value * 2.8;
   if (key === "regen") return value * 3.2;
   if (key === "fortify") return value * 2.6;
-  if (key === "trapPower") return value * 2.4;
-  if (key === "languagePower") return value * 2.2;
-  if (key === "boozePower") return value * 2.2;
   return value / 5;
 }
 
@@ -2974,7 +3336,18 @@ function getAuraRadius() {
 }
 
 function getTrapRadiusBonus() {
-  return Math.round(getEffectiveStat("trapPower") * 1.6 + getAnchorCharge() * getEffectiveStat("fortify"));
+  return Math.round(
+    clamp(getEffectiveStat("luck"), 0, 240) * 0.32
+    + Math.max(0, getEffectiveStat("pickupRange") - 150) * 0.08
+    + getClassBonus("engineering") * 42
+    + getAnchorCharge() * getEffectiveStat("fortify"),
+  );
+}
+
+function getEngineeringUtility() {
+  return clamp(getEffectiveStat("luck"), 0, 260) * 0.18
+    + Math.max(0, getEffectiveStat("pickupRange") - 150) * 0.07
+    + getClassBonus("engineering") * 38;
 }
 
 function getAnchorCharge() {
@@ -3017,13 +3390,11 @@ function getBuildFocusDamageBonus() {
   const late = game.stage >= 8;
   if (topCount >= 4) return late ? 0.2 : 0.14;
   if (topCount >= 3) return late ? 0.11 : 0.08;
-  if (topCount < 2) return late ? -0.18 : owned >= game.weaponSlots ? -0.12 : -0.07;
-  if (late && owned >= 5) return -0.1;
   return 0;
 }
 
 function getMaterialMult() {
-  return 1 + game.player.materialBonus + getClassBonus("materialBonus");
+  return 1 + clamp(getEffectiveStat("luck"), 0, 260) * 0.0026;
 }
 
 function getEffectiveStat(key) {
@@ -3038,9 +3409,6 @@ function getEffectiveStat(key) {
     pickupRange: p.pickupRange + getClassBonus("pickupRange"),
     regen: p.regen,
     fortify: p.fortify,
-    trapPower: p.trapPower,
-    languagePower: p.languagePower,
-    boozePower: p.boozePower,
   };
   return values[key] || 0;
 }
@@ -3049,9 +3417,7 @@ function getWeaponStatScale(kind) {
   if (kind === "precise") {
     return 1
       + clamp(getEffectiveStat("crit"), 0, 90) * 0.0025
-      + Math.max(0, getEffectiveStat("range")) * 0.0009
-      + getEffectiveStat("languagePower") * 0.01
-      + getEffectiveStat("boozePower") * 0.012;
+      + Math.max(0, getEffectiveStat("range")) * 0.00115;
   }
   if (kind === "barrage") {
     return 1 + clamp(getEffectiveStat("attackSpeed"), 0, 180) * 0.0015 + clamp(getEffectiveStat("dodge"), 0, 60) * 0.002;
@@ -3060,8 +3426,7 @@ function getWeaponStatScale(kind) {
     return 1
       + clamp(getEffectiveStat("luck"), 0, 180) * 0.0018
       + Math.max(0, getEffectiveStat("pickupRange") - 150) * 0.0008
-      + Math.max(0, getEffectiveStat("trapPower")) * 0.015
-      + getEffectiveStat("languagePower") * 0.012;
+      + getClassBonus("engineering") * 0.55;
   }
   if (kind === "field") {
     return 1
@@ -3667,6 +4032,17 @@ function drawPixelEnemy(e) {
   const s = e.elite ? 1.45 : e.r > 18 ? 1.2 : 1;
   const x = e.x;
   const y = e.y;
+  if (e.charging > 0 || e.type === "boss" || (e.type === "manager" && e.specialTimer < 1.1)) {
+    const pulseSize = 8 + Math.sin(game.time * 14) * 4;
+    ctx.save();
+    ctx.strokeStyle = e.type === "boss" ? "rgba(255, 42, 96, 0.86)" : "rgba(255, 209, 92, 0.78)";
+    ctx.lineWidth = e.type === "boss" ? 4 : 3;
+    ctx.setLineDash([10, 6]);
+    ctx.beginPath();
+    ctx.arc(x, y, e.r + pulseSize + (e.type === "boss" ? 16 : 8), 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  }
   if (e.type === "meeting" || e.type === "manager" || e.type === "boss") {
     ctx.fillStyle = "rgba(110, 168, 255, 0.07)";
     ctx.beginPath();
@@ -3819,6 +4195,20 @@ function shadeColor(hex, amount) {
 
 function drawPlayer() {
   const p = game.player;
+  const aura = 28 + Math.sin(game.time * 5.6) * 3;
+  ctx.save();
+  ctx.globalAlpha = 0.76;
+  ctx.strokeStyle = getAnchorCharge() > 0.55 ? "#ffd15c" : "#52ffe1";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y + 2, aura, 0, TAU);
+  ctx.stroke();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = getAnchorCharge() > 0.55 ? "#ffd15c" : "#52ffe1";
+  ctx.beginPath();
+  ctx.arc(p.x, p.y + 2, aura + 4, 0, TAU);
+  ctx.fill();
+  ctx.restore();
   ctx.save();
   ctx.globalAlpha = p.invuln > 0 ? 0.62 + Math.sin(game.time * 34) * 0.22 : 1;
   drawPixelWorker(p.x, p.y, game.time, p);
@@ -3957,7 +4347,7 @@ function drawOrbiters() {
 function drawParticles() {
   for (const part of game.particles) {
     const t = Math.max(0, part.life / part.maxLife);
-    ctx.globalAlpha = t;
+    ctx.globalAlpha = part.kind === "beam" ? Math.min(0.86, t) : Math.min(0.62, t * 0.78);
     if (part.kind === "beam") {
       ctx.save();
       ctx.translate(part.x, part.y);
@@ -4058,6 +4448,13 @@ function updateHud() {
   updateBuildHud();
   updateStatHud();
   updateItemHud();
+  updateGuideOverlay();
+}
+
+function updateGuideOverlay() {
+  if (!ui.guideOverlay || !game) return;
+  const show = state === "playing" && game.stage === 1 && game.waveTime < 10;
+  ui.guideOverlay.classList.toggle("hidden", !show);
 }
 
 function updateObjectiveHud(timeText, remaining) {
@@ -4105,14 +4502,38 @@ function showStageBanner() {
   const isBoss = game.stage >= game.maxStage || game.stageConfig.eliteTotal >= 3;
   ui.stageBannerMeta.textContent = `第 ${game.stage} 关`;
   ui.stageBannerTitle.textContent = game.stageConfig.name;
-  const incident = game.currentIncident ? `｜${game.currentIncident.title}：${game.currentIncident.text}` : "";
-  ui.stageBannerText.textContent = `${stageBriefs[Math.min(stageBriefs.length - 1, game.stage - 1)]}${incident}`;
+  const incident = game.currentIncident ? `随机事件：${game.currentIncident.title}，${game.currentIncident.text}` : "";
+  const threat = getStageThreatText();
+  ui.stageBannerText.innerHTML = `
+    <span>${stageBriefs[Math.min(stageBriefs.length - 1, game.stage - 1)]}</span>
+    <em>${threat}</em>
+    ${incident ? `<small>${incident}</small>` : ""}
+  `;
   ui.stageBanner.classList.toggle("boss", isBoss);
   ui.stageBanner.classList.remove("hidden");
   window.clearTimeout(showStageBanner.timer);
   showStageBanner.timer = window.setTimeout(() => {
     ui.stageBanner.classList.add("hidden");
   }, isBoss ? 2600 : 1900);
+}
+
+function getStageThreatText() {
+  const entries = Object.entries(game.stageConfig.enemyMix || {}).filter(([, weight]) => weight > 0.06);
+  const labels = {
+    bug: "Bug 虫",
+    change: "需求变更",
+    meeting: "会议怪",
+    deadline: "Deadline 冲刺",
+    intern: "实习生事故",
+    alarm: "警报",
+    audit: "审计",
+    manager: "老板检查",
+    boss: "终局总监",
+  };
+  const previous = game.stage > 1 ? getStageConfig(game.stage - 1).enemyMix : {};
+  const newOnes = entries.filter(([type]) => !previous[type]).map(([type]) => labels[type] || type);
+  const major = entries.sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type]) => labels[type] || type);
+  return newOnes.length ? `新威胁：${newOnes.join(" + ")}` : `本关压力：${major.join(" + ")}`;
 }
 
 function showBossArrival() {
@@ -4187,8 +4608,7 @@ function renderRouteMap(target) {
 
 function renderBuildHud(weapons, summary) {
   ui.buildSummary.textContent = summary;
-  ui.buildList.replaceChildren(
-    ...buildOrder.map((id) => {
+  const weaponRows = buildOrder.map((id) => {
       const weapon = weapons[id];
       const row = document.createElement("div");
       row.className = "build-row";
@@ -4198,8 +4618,54 @@ function renderBuildHud(weapons, summary) {
         <strong>Lv.${weapon.level}</strong>
       `;
       return row;
-    }),
-  );
+    });
+  const resonanceRows = game ? getClassResonanceRows().map((entry) => {
+    const row = document.createElement("div");
+    row.className = "build-row resonance-row";
+    row.innerHTML = `
+      <span class="build-dot resonance-dot"></span>
+      <span>${entry.label} ×${entry.count}</span>
+      <strong>${entry.text}</strong>
+    `;
+    return row;
+  }) : [];
+  ui.buildList.replaceChildren(...weaponRows, ...resonanceRows);
+}
+
+function getClassResonanceRows() {
+  const counts = getWeaponClassCounts();
+  return Object.entries(counts)
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .map(([className, count]) => {
+      const tiers = weaponClassBonuses[className] || [];
+      let active = null;
+      for (const tier of tiers) {
+        if (count >= tier.count) active = tier;
+      }
+      return {
+        label: weaponClassLabels[className] || className,
+        count,
+        text: active ? formatClassBonus(active) : "待共鸣",
+      };
+    });
+}
+
+function formatClassBonus(tier) {
+  const parts = [];
+  if (tier.crit) parts.push(`暴击 +${tier.crit}%`);
+  if (tier.damageMult) parts.push(`伤害 +${Math.round(tier.damageMult * 100)}%`);
+  if (tier.range) parts.push(`射程 +${tier.range}`);
+  if (tier.attackSpeed) parts.push(`攻速 +${tier.attackSpeed}%`);
+  if (tier.projectileMult) parts.push(`弹量 +${tier.projectileMult}`);
+  if (tier.fieldRadius) parts.push(`领域 +${tier.fieldRadius}`);
+  if (tier.armor) parts.push(`护甲 +${tier.armor}`);
+  if (tier.engineering) parts.push(`工程 +${Math.round(tier.engineering * 100)}%`);
+  if (tier.chain) parts.push(`连锁 +${tier.chain}`);
+  if (tier.pickupRange) parts.push(`拾取 +${tier.pickupRange}`);
+  if (tier.luck) parts.push(`幸运 +${tier.luck}`);
+  if (tier.pierce) parts.push(`贯穿 +${tier.pierce}`);
+  return parts.slice(0, 2).join("，") || "共鸣中";
 }
 
 function updateStatHud() {
@@ -4214,13 +4680,9 @@ function updateStatHud() {
     crit: `${Math.round(p.crit + getClassBonus("crit"))}%`,
     range: Math.round(p.range + getClassBonus("range")),
     luck: Math.round(p.luck + getClassBonus("luck")),
-    materialBonus: `${Math.round((game.player.materialBonus + getClassBonus("materialBonus")) * 100)}%`,
     pickupRange: Math.round(p.pickupRange + getClassBonus("pickupRange")),
     regen: `${Math.round(p.regen)}/s`,
     fortify: Math.round(p.fortify),
-    trapPower: Math.round(p.trapPower),
-    languagePower: Math.round(p.languagePower),
-    boozePower: Math.round(p.boozePower),
   };
   const signature = statLabels.map(({ key }) => values[key]).join(",");
   if (signature === statHudSignature) return;
@@ -4303,6 +4765,13 @@ window.addEventListener("keydown", (event) => {
     togglePause();
     return;
   }
+  if (event.key.toLowerCase() === "b" || event.key.toLowerCase() === "tab") {
+    if (game && state !== "menu") {
+      event.preventDefault();
+      toggleBuildPanel();
+      return;
+    }
+  }
   keys.add(event.key.toLowerCase());
 });
 
@@ -4366,12 +4835,18 @@ function renderPauseSheet() {
     return `<span><b>${weapon.label}</b> Lv.${weapon.level}/${weapon.max}</span>`;
   }).filter(Boolean).join("");
   const statRows = statLabels.map(({ key, label }) => `<span><b>${label}</b>${values[key]}</span>`).join("");
+  const resonance = getClassResonanceRows().map((entry) => `<span><b>${entry.label} ×${entry.count}</b>${entry.text}</span>`).join("");
+  const fusionNotes = game.fusionLog.length
+    ? game.fusionLog.slice(-5).map((note) => `<span>${note}</span>`).join("")
+    : "<span>武器 Lv.5 后会出现终局改造线索</span>";
   const items = game.boughtItemNames.length
     ? game.boughtItemNames.slice(-8).map((name) => `<span>${name}</span>`).join("")
     : "<span>暂无道具</span>";
   ui.pauseStats.innerHTML = `
     <div class="pause-meta">第 ${game.stage} 关 ${game.stageConfig.name} · 等级 ${game.level} · 材料 ${game.materials} · 击破 ${game.stageKills}/${game.stageConfig.totalEnemies}</div>
     <section><h3>武器</h3><div class="pause-chips">${weapons || "<span>初始装备</span>"}</div></section>
+    <section><h3>职业共鸣</h3><div class="pause-stats">${resonance || "<span><b>暂无</b>同职业武器达到 2 个后激活</span>"}</div></section>
+    <section><h3>终局线索</h3><div class="pause-chips">${fusionNotes}</div></section>
     <section><h3>属性</h3><div class="pause-stats">${statRows}</div></section>
     <section><h3>道具</h3><div class="pause-chips">${items}</div></section>
   `;
@@ -4389,24 +4864,27 @@ function getPauseStatValues() {
     crit: `${Math.round(p.crit + getClassBonus("crit"))}%`,
     range: Math.round(p.range + getClassBonus("range")),
     luck: Math.round(p.luck + getClassBonus("luck")),
-    materialBonus: `${Math.round((game.player.materialBonus + getClassBonus("materialBonus")) * 100)}%`,
     pickupRange: Math.round(p.pickupRange + getClassBonus("pickupRange")),
     regen: `${Math.round(p.regen)}/s`,
     fortify: Math.round(p.fortify),
-    trapPower: Math.round(p.trapPower),
-    languagePower: Math.round(p.languagePower),
-    boozePower: Math.round(p.boozePower),
   };
 }
 
 function toggleBuildPanel() {
   const collapsed = ui.buildPanel.classList.toggle("collapsed");
-  ui.buildToggle.textContent = collapsed ? "Build" : "收起";
+  ui.buildToggle.textContent = collapsed ? "⚙" : "×";
+  ui.buildToggle.classList.remove("attention");
+}
+
+function markBuildHint() {
+  if (!ui.buildPanel || !ui.buildPanel.classList.contains("collapsed")) return;
+  ui.buildToggle?.classList.add("attention");
 }
 
 ui.startButton.addEventListener("click", startGame);
 ui.restartButton.addEventListener("click", startGame);
 ui.continueButton.addEventListener("click", startNextStage);
+ui.upgradeRerollButton?.addEventListener("click", rerollUpgradeChoices);
 ui.refreshButton.addEventListener("click", rerollShop);
 ui.pauseButton.addEventListener("click", togglePause);
 ui.resumeButton.addEventListener("click", resumeGame);
@@ -4426,13 +4904,9 @@ renderStatHud({
   crit: "0%",
   range: 0,
   luck: 0,
-  materialBonus: "0%",
   pickupRange: 150,
   regen: "0/s",
   fortify: 0,
-  trapPower: 0,
-  languagePower: 0,
-  boozePower: 0,
 });
 renderItemHud([]);
 drawMenuBackground();

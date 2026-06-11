@@ -38,6 +38,7 @@
           <p id="fusionNoticeText">继续强化同体系武器和关键属性，可能触发特殊变化。</p>
           <button id="fusionNoticeClose" type="button">知道了</button>
         </div>
+        <div id="guideOverlay" class="guide-overlay hidden">WASD 移动 · 自动攻击 · B/Tab 查看 Build · 关后进工坊选择武器方向</div>
 
         <div class="hud top-left">
           <div class="stat">
@@ -80,7 +81,7 @@
           </div>
         </div>
 
-        <button id="buildToggle" class="build-toggle" type="button">Build</button>
+        <button id="buildToggle" class="build-toggle" type="button" aria-label="打开 Build 面板">⚙</button>
         <div id="buildPanel" class="build-panel collapsed" aria-label="当前技能等级">
           <div class="build-panel-head">
             <span>武器 Build</span>
@@ -108,6 +109,12 @@
             <p class="eyebrow">Prototype 01</p>
             <h1>工位幸存者</h1>
             <p class="subtitle">会议、Bug 和报表正在靠近。</p>
+            <div class="quick-guide">
+              <span>WASD / 方向键移动</span>
+              <span>自动攻击，优先躲开冲刺和 Boss 警告</span>
+              <span>升级选属性，关后进工坊换武器方向</span>
+              <span>B / Tab 查看武器、属性和职业共鸣</span>
+            </div>
             <button id="startButton" class="primary-button">开始加班</button>
           </div>
         </div>
@@ -117,6 +124,11 @@
             <p class="eyebrow">等级提升</p>
             <h2>选择个人属性</h2>
             <div id="upgradeChoices" class="choices"></div>
+            <div class="upgrade-actions">
+              <button id="upgradeRerollButton" class="primary-button tertiary-button" type="button">
+                免费刷新 <span id="upgradeRerollCount">1</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -163,6 +175,6 @@
       </section>
     </main>
 
-    <script src="main.js?v=20260611-office-depth"></script>
+    <script src="main.js?v=20260611-playability"></script>
   </body>
 </html>
