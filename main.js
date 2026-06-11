@@ -1,4 +1,4 @@
-const canvas = document.querySelector("#game");
+﻿const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 
@@ -51,6 +51,11 @@ const ui = {
   stageBannerMeta: document.querySelector("#stageBannerMeta"),
   stageBannerTitle: document.querySelector("#stageBannerTitle"),
   stageBannerText: document.querySelector("#stageBannerText"),
+  fusionNotice: document.querySelector("#fusionNotice"),
+  fusionNoticeMeta: document.querySelector("#fusionNoticeMeta"),
+  fusionNoticeTitle: document.querySelector("#fusionNoticeTitle"),
+  fusionNoticeText: document.querySelector("#fusionNoticeText"),
+  fusionNoticeClose: document.querySelector("#fusionNoticeClose"),
   startButton: document.querySelector("#startButton"),
   restartButton: document.querySelector("#restartButton"),
   continueButton: document.querySelector("#continueButton"),
@@ -233,7 +238,7 @@ const routeDefinitions = [
     name: "键盘风暴",
     fantasy: "弹幕加班流",
     color: "#52ffe1",
-    accent: "#ff4fd8",
+    accent: "#c35cff",
     weapons: ["keyboard", "stapler"],
     stats: ["attackSpeed", "dodge"],
     itemPattern: /攻速|闪避|爆发/,
@@ -300,6 +305,8 @@ const statLabels = [
   { key: "regen", label: "恢复" },
   { key: "fortify", label: "站场" },
   { key: "trapPower", label: "陷阱" },
+  { key: "languagePower", label: "语言" },
+  { key: "boozePower", label: "酒意" },
 ];
 
 const statDropPool = [
@@ -316,6 +323,8 @@ const statDropPool = [
   { key: "regen", label: "恢复", amount: 1, apply: (g) => { g.player.regen += 1; } },
   { key: "fortify", label: "站场", amount: 1, apply: (g) => { g.player.fortify += 1; } },
   { key: "trapPower", label: "陷阱", amount: 1, apply: (g) => { g.player.trapPower += 1; } },
+  { key: "languagePower", label: "语言", amount: 1, apply: (g) => { g.player.languagePower += 1; } },
+  { key: "boozePower", label: "酒意", amount: 1, apply: (g) => { g.player.boozePower += 1; } },
 ];
 
 function getStageConfig(stage) {
@@ -325,16 +334,16 @@ function getStageConfig(stage) {
     { bug: 0.72, change: 0.28 },
     { bug: 0.52, change: 0.24, meeting: 0.24 },
     { bug: 0.42, change: 0.28, meeting: 0.18, deadline: 0.12 },
-    { bug: 0.3, change: 0.28, meeting: 0.2, deadline: 0.22 },
-    { bug: 0.22, change: 0.25, meeting: 0.23, deadline: 0.3 },
-    { bug: 0.2, change: 0.22, meeting: 0.18, deadline: 0.4 },
-    { bug: 0.16, change: 0.34, meeting: 0.3, deadline: 0.2 },
-    { bug: 0.18, change: 0.24, meeting: 0.24, deadline: 0.34 },
-    { bug: 0.18, change: 0.27, meeting: 0.25, deadline: 0.3 },
-    { bug: 0.14, change: 0.24, meeting: 0.34, deadline: 0.28 },
-    { bug: 0.12, change: 0.36, meeting: 0.26, deadline: 0.26 },
-    { bug: 0.22, change: 0.2, meeting: 0.2, deadline: 0.38 },
-    { bug: 0.16, change: 0.28, meeting: 0.28, deadline: 0.28 },
+    { bug: 0.26, change: 0.24, meeting: 0.18, deadline: 0.18, intern: 0.14 },
+    { bug: 0.2, change: 0.22, meeting: 0.2, deadline: 0.24, alarm: 0.14 },
+    { bug: 0.18, change: 0.18, meeting: 0.16, deadline: 0.3, alarm: 0.18 },
+    { bug: 0.13, change: 0.28, meeting: 0.24, deadline: 0.16, intern: 0.12, manager: 0.07 },
+    { bug: 0.15, change: 0.2, meeting: 0.2, deadline: 0.26, audit: 0.12, alarm: 0.07 },
+    { bug: 0.14, change: 0.22, meeting: 0.22, deadline: 0.22, audit: 0.12, manager: 0.08 },
+    { bug: 0.1, change: 0.2, meeting: 0.28, deadline: 0.2, audit: 0.12, manager: 0.1 },
+    { bug: 0.1, change: 0.3, meeting: 0.2, deadline: 0.2, intern: 0.12, manager: 0.08 },
+    { bug: 0.18, change: 0.16, meeting: 0.16, deadline: 0.3, alarm: 0.1, audit: 0.1 },
+    { bug: 0.12, change: 0.22, meeting: 0.22, deadline: 0.22, alarm: 0.08, audit: 0.08, manager: 0.06 },
   ];
   const pressureStage = stage === 3 || stage === 5 || stage === 8 || stage === 10;
   const burstStage = stage === 4 || stage === 7 || stage === 9;
@@ -354,6 +363,67 @@ function getStageConfig(stage) {
     clearBonusMult: burstStage || stage === 10 ? 1.32 : 1,
     survivalPressure: pressureStage ? 1.16 : burstStage ? 1.08 : 1,
   };
+}
+
+function rollOfficeIncident(stage) {
+  const pool = [
+    {
+      id: "plusOne",
+      title: "+1 来下命令了",
+      text: "本关需求变多，但材料也更值钱。",
+      apply: (g) => {
+        g.stageConfig.totalEnemies += 6 + Math.floor(stage * 0.8);
+        g.stageConfig.materialMult += 0.08;
+      },
+    },
+    {
+      id: "bossCheck",
+      title: "老板来检查",
+      text: "精英压力上升，清场奖励提高。",
+      apply: (g) => {
+        g.stageConfig.eliteTotal += stage >= 3 ? 1 : 0;
+        g.elitesToSpawn = g.stageConfig.eliteTotal;
+        g.stageConfig.clearBonusMult += 0.08;
+      },
+    },
+    {
+      id: "internOops",
+      title: "实习生又闯祸了",
+      text: "实习生事故怪增多，陷阱更好处理。",
+      apply: (g) => {
+        g.stageConfig.enemyMix.intern = (g.stageConfig.enemyMix.intern || 0) + 0.16;
+        g.stageConfig.spawnInterval *= 0.96;
+      },
+    },
+    {
+      id: "languageDoc",
+      title: "外语需求文档",
+      text: "语言 +1，审计和变更压力更高。",
+      apply: (g) => {
+        g.player.languagePower += 1;
+        g.player.range += 6;
+        g.stageConfig.enemyMix.audit = (g.stageConfig.enemyMix.audit || 0) + (stage >= 5 ? 0.1 : 0);
+        g.stageConfig.enemyMix.change = (g.stageConfig.enemyMix.change || 0) + 0.06;
+      },
+    },
+    {
+      id: "afterWorkWine",
+      title: "下班酒局邀约",
+      text: "酒意 +1，短期输出更高但容错更低。",
+      apply: (g) => {
+        g.player.boozePower += 1;
+        g.player.damageMult += 0.03;
+        g.player.maxHp = Math.max(60, g.player.maxHp - 3);
+        g.player.hp = Math.min(g.player.hp, g.player.maxHp);
+      },
+    },
+  ];
+  return pool[(stage * 7 + Math.floor(Math.random() * pool.length)) % pool.length];
+}
+
+function applyOfficeIncident() {
+  if (!game.currentIncident) return;
+  game.currentIncident.apply(game);
 }
 
 const weaponUpgradePool = [
@@ -750,6 +820,144 @@ const statUpgradePool = [
     },
     available: (g) => g.player.armor < 28,
   },
+  {
+    id: "glossary",
+    title: "黑话术语表",
+    tag: "属性 / 语言",
+    text: "语言 +3，射程 +18。更容易看懂变更、审计和跨组需求。",
+    apply: (g) => {
+      g.player.languagePower += 3;
+      g.player.range += 18;
+      g.player.luck += 3;
+    },
+    available: (g) => g.stage <= 8 && g.player.languagePower < 32,
+  },
+  {
+    id: "afterWorkDrink",
+    title: "下班小酒",
+    tag: "属性 / 酒",
+    text: "酒意 +3，伤害 +8%，闪避 -3%。短线爆发更猛。",
+    apply: (g) => {
+      g.player.boozePower += 3;
+      g.player.damageMult += 0.08;
+      g.player.dodge = Math.max(0, g.player.dodge - 3);
+    },
+    available: (g) => g.player.boozePower < 30,
+  },
+  {
+    id: "bilingualMinutes",
+    title: "双语会议纪要",
+    tag: "属性 / 语言 后期",
+    text: "语言 +5，计算器连锁更远，马马克笔更容易打到弱点。",
+    apply: (g) => {
+      g.player.languagePower += 5;
+      g.player.chainRange += 24;
+      g.player.range += 26;
+    },
+    available: (g) => g.stage >= 5 && g.player.languagePower < 42,
+  },
+  {
+    id: "wineTableReview",
+    title: "酒局复盘",
+    tag: "属性 / 酒 后期",
+    text: "酒意 +5，暴击 +8%，生命 -8。后半程极端输出选择。",
+    apply: (g) => {
+      g.player.boozePower += 5;
+      g.player.crit = Math.min(75, g.player.crit + 8);
+      g.player.maxHp = Math.max(55, g.player.maxHp - 8);
+      g.player.hp = Math.min(g.player.hp, g.player.maxHp);
+    },
+    available: (g) => g.stage >= 6 && g.player.boozePower < 42,
+  },
+  {
+    id: "laserCalibration",
+    title: "激光笔校准",
+    tag: "属性 / 武器专属",
+    text: "马马克笔等级越高收益越高，射程和暴击提升。",
+    apply: (g) => {
+      g.player.range += 22 + g.weapons.marker.level * 5;
+      g.player.crit = Math.min(75, g.player.crit + 4 + g.weapons.marker.level);
+    },
+    available: (g) => g.weapons.marker.level >= 2 && g.player.range < 360,
+  },
+  {
+    id: "reportAuditTrail",
+    title: "报表审计链",
+    tag: "属性 / 武器专属",
+    text: "报表和计算器会更克制审计、警报和老板类压力。",
+    apply: (g) => {
+      g.player.languagePower += 2;
+      g.player.trapPower += 2;
+      g.player.orbitSpeed += 0.3;
+      g.player.chainRange += 18;
+    },
+    available: (g) => g.stage >= 4 && (g.weapons.report.level > 0 || g.weapons.calculator.level > 0),
+  },
+  {
+    id: "noiseCancelFort",
+    title: "降噪堡垒",
+    tag: "属性 / 武器专属 领域",
+    text: "耳机等级越高，站场、防御和恢复收益越高。被围住时更容易稳住阵地。",
+    apply: (g) => {
+      const headset = Math.max(1, g.weapons.headset.level);
+      g.player.fortify += 2 + headset;
+      g.player.armor += 1 + Math.floor(headset / 3);
+      g.player.regen += 1;
+    },
+    available: (g) => g.stage >= 3 && g.weapons.headset.level >= 2 && g.player.fortify < 48,
+  },
+  {
+    id: "paperOrbitDrill",
+    title: "报表环形演练",
+    tag: "属性 / 武器专属 站场",
+    text: "报表轨道更厚，站场越高越能挡住近身压力。",
+    apply: (g) => {
+      g.player.fortify += 3;
+      g.player.orbitRadius += 8;
+      g.player.orbitSpeed += 0.45;
+      g.player.maxHp += 6;
+      g.player.hp = Math.min(g.player.maxHp, g.player.hp + 12);
+    },
+    available: (g) => g.stage >= 4 && g.weapons.report.level >= 2 && g.player.fortify < 50,
+  },
+  {
+    id: "deskMinePermit",
+    title: "工位地雷许可",
+    tag: "属性 / 武器专属 陷阱",
+    text: "便签陷阱更大更久，适合把高速怪牵进工位雷区。",
+    apply: (g) => {
+      g.player.trapPower += 5;
+      g.player.stickyRadius += 10;
+      g.player.stickyLife += 0.7;
+      g.player.pickupRange += 14;
+    },
+    available: (g) => g.stage >= 3 && g.weapons.sticky.level >= 2 && g.player.trapPower < 50,
+  },
+  {
+    id: "contractLanguage",
+    title: "合同语言学",
+    tag: "属性 / 语言 后期",
+    text: "语言大幅提升，并强化激光笔、报表和审计克制。",
+    apply: (g) => {
+      g.player.languagePower += 7;
+      g.player.range += 18;
+      g.player.chainRange += 16;
+    },
+    available: (g) => g.stage >= 8 && g.player.languagePower < 52,
+  },
+  {
+    id: "socialDrinking",
+    title: "酒桌破局",
+    tag: "属性 / 酒 后期",
+    text: "酒意和暴击大幅提升，但护甲下降。适合用爆发压过后半程压力。",
+    apply: (g) => {
+      g.player.boozePower += 7;
+      g.player.crit = Math.min(75, g.player.crit + 10);
+      g.player.damageMult += 0.06;
+      g.player.armor = Math.max(-8, g.player.armor - 2);
+    },
+    available: (g) => g.stage >= 8 && g.player.boozePower < 52,
+  },
 ];
 
 const itemPool = [
@@ -977,6 +1185,40 @@ const itemPool = [
       g.player.luck += 6;
     },
   },
+  {
+    id: "liquorCoffee",
+    title: "咖啡利口酒",
+    tag: "道具 / 酒 爆发",
+    text: "酒意 +4，伤害 +10%，攻速 +8%，护甲 -1。",
+    apply: (g) => {
+      g.player.boozePower += 4;
+      g.player.damageMult += 0.1;
+      g.player.attackSpeed += 8;
+      g.player.armor = Math.max(-6, g.player.armor - 1);
+    },
+  },
+  {
+    id: "translationHeadset",
+    title: "同传耳麦",
+    tag: "道具 / 语言 控制",
+    text: "语言 +4，拾取 +20，领域和连锁更容易读懂场面。",
+    apply: (g) => {
+      g.player.languagePower += 4;
+      g.player.pickupRange += 20;
+      g.player.range += 12;
+    },
+  },
+  {
+    id: "foreignContract",
+    title: "外文合同",
+    tag: "道具 / 语言 经济",
+    text: "语言 +3，幸运 +10，材料收益 +8%。审计压力会更好处理。",
+    apply: (g) => {
+      g.player.languagePower += 3;
+      g.player.luck += 10;
+      g.player.materialBonus += 0.08;
+    },
+  },
 ];
 
 function createGame() {
@@ -987,10 +1229,12 @@ function createGame() {
     stage: 1,
     maxStage: MAX_STAGE,
     stageConfig,
+    currentIncident: null,
     stageKills: 0,
     stageSpawned: 0,
     enemiesToSpawn: stageConfig.totalEnemies,
     elitesToSpawn: stageConfig.eliteTotal,
+    bossSpawned: false,
     lastClearReason: "",
     lastStageBonus: 0,
     recoveryTime: 0,
@@ -1003,6 +1247,7 @@ function createGame() {
     boughtItems: new Set(),
     boughtItemNames: [],
     boughtItemTags: [],
+    fusionHintsSeen: new Set(),
     kills: 0,
     level: 1,
     upgradesTaken: 0,
@@ -1040,6 +1285,8 @@ function createGame() {
       regenTimer: 0,
       fortify: 0,
       trapPower: 0,
+      languagePower: 0,
+      boozePower: 0,
       anchorTime: 0,
       fieldTextTimer: 0,
       slow: 1,
@@ -1085,6 +1332,8 @@ function startGame() {
   statHudSignature = "";
   itemHudSignature = "";
   game = createGame();
+  game.currentIncident = rollOfficeIncident(game.stage);
+  applyOfficeIncident();
   state = "playing";
   ui.startPanel.classList.add("hidden");
   ui.resultPanel.classList.add("hidden");
@@ -1153,10 +1402,16 @@ function updatePlayer(dt) {
   }
 
   const standingStill = dx === 0 && dy === 0;
+  const fieldKit = game.weapons.headset.level > 0 || game.weapons.report.level > 0 || p.fortify > 0;
+  const anchorMax = getAnchorMaxTime();
   if (standingStill) {
-    p.anchorTime = Math.min(getAnchorMaxTime(), p.anchorTime + dt);
+    p.anchorTime = Math.min(anchorMax, p.anchorTime + dt * (1 + getEffectiveStat("fortify") * 0.025));
+  } else if (fieldKit) {
+    const decay = Math.max(0.22, 0.64 - getEffectiveStat("fortify") * 0.014);
+    const carryFloor = Math.min(anchorMax * 0.58, 0.18 + getEffectiveStat("fortify") * 0.04);
+    p.anchorTime = Math.max(carryFloor, p.anchorTime - dt * decay);
   } else {
-    p.anchorTime = Math.max(0, p.anchorTime - dt * 2.3);
+    p.anchorTime = Math.max(0, p.anchorTime - dt * 1.4);
   }
 
   const len = Math.hypot(dx, dy) || 1;
@@ -1198,17 +1453,17 @@ function updateWeapons(dt) {
     const level = game.weapons.coffee.level;
     const angle = Math.atan2(target.y - p.y, target.x - p.x);
     const damage = hitDamage((14 + level * 4.2) * getWeaponStatScale("precise") * (precision ? 1.12 : 1));
-    fireAt(target, 520, damage, "#f4c95d", p.coffeePierce + getClassBonus("pierce") + (precision ? 1 : 0), 4, 1.15 + rangeBonus(0.004));
+    fireAt(target, 520, damage, "#f4c95d", p.coffeePierce + getClassBonus("pierce") + (precision ? 1 : 0), 4, 1.15 + rangeBonus(0.004), "coffee");
     if (precision) {
-      fireBeam(angle, 420 + rangeBonus(0.9), 3 + Math.floor(level / 2), hitDamage(5 + game.weapons.marker.level * 2.2), "#b282ff");
+      fireBeam(angle, 420 + rangeBonus(0.9), 3 + Math.floor(level / 2), hitDamage(5 + game.weapons.marker.level * 2.2), "#b282ff", "marker");
     }
     if (precisionTier >= 4) {
-      fireBeam(angle - 0.18, 520 + rangeBonus(1.0), 3 + Math.floor(level / 2), hitDamage(7 + level * 2.4), "#52ffe1");
-      fireBeam(angle + 0.18, 520 + rangeBonus(1.0), 3 + Math.floor(level / 2), hitDamage(7 + level * 2.4), "#ff4fd8");
+      fireBeam(angle - 0.18, 520 + rangeBonus(1.0), 3 + Math.floor(level / 2), hitDamage(7 + level * 2.4), "#52ffe1", "marker");
+      fireBeam(angle + 0.18, 520 + rangeBonus(1.0), 3 + Math.floor(level / 2), hitDamage(7 + level * 2.4), "#c35cff", "marker");
     }
     if (level >= 4) {
-      fireAt({ x: target.x + 26, y: target.y - 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003));
-      fireAt({ x: target.x - 26, y: target.y + 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003));
+      fireAt({ x: target.x + 26, y: target.y - 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003), "coffee");
+      fireAt({ x: target.x - 26, y: target.y + 18 }, 500, hitDamage(9 + level * 2.2), "#f7dda0", 1, 3, 1.05 + rangeBonus(0.003), "coffee");
     }
     p.coffeeTimer = cooldown(p.coffeeCooldown * (precision ? 0.88 : 1));
   }
@@ -1230,8 +1485,9 @@ function updateWeapons(dt) {
         r: 4,
         life: p.keyboardLife + rangeBonus(0.002),
         damage: hitDamage((7 + level * 2.1) * getWeaponStatScale("barrage")),
-        color: barrageTier >= 4 && i % 2 ? "#ff4fd8" : "#6ea8ff",
+        color: barrageTier >= 4 && i % 2 ? "#c35cff" : "#6ea8ff",
         pierce: 1 + getClassBonus("pierce") + (barrage ? 1 : 0),
+        source: "keyboard",
       });
     }
     if (barrageTier >= 4) {
@@ -1247,6 +1503,7 @@ function updateWeapons(dt) {
           damage: hitDamage(5 + level * 1.6),
           color: "#52ffe1",
           pierce: 1,
+          source: "keyboard",
         });
       }
     }
@@ -1271,6 +1528,7 @@ function updateWeapons(dt) {
         damage: hitDamage((13 + level * 4.6) * getWeaponStatScale("barrage") * (barrage ? 1.08 : 1)),
         color: "#d7d0c2",
         pierce: 1,
+        source: "stapler",
       });
     }
     p.staplerTimer = cooldown(Math.max(0.5, p.staplerCooldown - level * 0.04 - (barrage ? 0.08 : 0)));
@@ -1286,6 +1544,7 @@ function updateWeapons(dt) {
       life: p.stickyLife + getEffectiveStat("trapPower") * 0.05,
       maxLife: p.stickyLife + getEffectiveStat("trapPower") * 0.05,
       damage: continuousDamage((7 + level * 2.8) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering"))),
+      source: "sticky",
       tick: 0,
       chainTick: conductor ? (conductorTier >= 4 ? 0.08 : 0.14) : Infinity,
       textTick: 0,
@@ -1298,14 +1557,14 @@ function updateWeapons(dt) {
   if (game.weapons.marker.level > 0 && p.markerTimer <= 0 && target) {
     const level = game.weapons.marker.level;
     const angle = Math.atan2(target.y - p.y, target.x - p.x);
-    fireBeam(angle, 700 + rangeBonus(1.25), p.markerWidth + level + Math.floor(getEffectiveStat("crit") / 18) + (precision ? 3 : 0), hitDamage((24 + level * 7.6) * getWeaponStatScale("precise") * (precision ? 1.12 : 1)), "#b282ff");
+    fireBeam(angle, 700 + rangeBonus(1.25), p.markerWidth + level + Math.floor(getEffectiveStat("crit") / 18) + (precision ? 3 : 0), hitDamage((24 + level * 7.6) * getWeaponStatScale("precise") * (precision ? 1.12 : 1)), "#b282ff", "marker");
     p.markerTimer = cooldown(Math.max(0.94, p.markerCooldown - level * 0.1 - (precision ? 0.16 : 0)));
   }
 
   p.calculatorTimer -= dt;
   if (game.weapons.calculator.level > 0 && p.calculatorTimer <= 0 && target) {
     const level = game.weapons.calculator.level;
-    chainLightning(target, p.chainJumps + Math.floor(level / 2) + Math.floor(getEffectiveStat("luck") / 42) + getClassBonus("chain") + (conductor ? 1 : 0) + (conductorTier >= 4 ? 2 : 0), p.chainRange + rangeBonus(0.8) + (conductor ? 36 : 0) + (conductorTier >= 4 ? 54 : 0), hitDamage((17 + level * 5.6) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering")) * (conductor ? 1.1 : 1) * (conductorTier >= 4 ? 1.12 : 1)));
+    chainLightning(target, p.chainJumps + Math.floor(level / 2) + Math.floor(getEffectiveStat("luck") / 42) + getClassBonus("chain") + (conductor ? 1 : 0) + (conductorTier >= 4 ? 2 : 0), p.chainRange + rangeBonus(0.8) + (conductor ? 36 : 0) + (conductorTier >= 4 ? 54 : 0), hitDamage((17 + level * 5.6) * getWeaponStatScale("engineering") * (1 + getClassBonus("engineering")) * (conductor ? 1.1 : 1) * (conductorTier >= 4 ? 1.12 : 1)), "calculator");
     p.calculatorTimer = cooldown(Math.max(0.88, p.calculatorCooldown - level * 0.07));
   }
 
@@ -1317,7 +1576,7 @@ function updateWeapons(dt) {
     for (const e of game.enemies) {
       const dist = Math.hypot(e.x - p.x, e.y - p.y);
       if (dist < auraRadius + e.r) {
-        e.hp -= auraDps * dt;
+        applyEnemyDamage(e, auraDps * dt, "headset", false);
         e.slow = perimeterTier >= 4 ? 0.54 : perimeter ? 0.66 : 0.72;
         e.hitFlash = Math.max(e.hitFlash || 0, 0.03);
         auraHits += 1;
@@ -1337,7 +1596,7 @@ function updateWeapons(dt) {
         if (dist < auraRadius + 40) {
           e.x += (dx / dist) * (26 + p.auraPulse * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
           e.y += (dy / dist) * (26 + p.auraPulse * 8 + (perimeter ? 10 : 0) + (perimeterTier >= 4 ? 18 : 0));
-          e.hp -= continuousDamage((8 + p.auraPulse * 4) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1) * (perimeterTier >= 4 ? 1.18 : 1));
+          applyEnemyDamage(e, continuousDamage((8 + p.auraPulse * 4) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1) * (perimeterTier >= 4 ? 1.18 : 1)), "headset");
         }
       }
       pulse(p.x, p.y, auraRadius + 28, "#42d7b8");
@@ -1351,7 +1610,7 @@ function updateWeapons(dt) {
     for (const orb of orbiters) {
       for (const e of game.enemies) {
         if (Math.hypot(e.x - orb.x, e.y - orb.y) < e.r + orb.r) {
-          e.hp -= continuousDamage((17 + orbitLevel * 4.6) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1)) * dt;
+          applyEnemyDamage(e, continuousDamage((17 + orbitLevel * 4.6) * getWeaponStatScale("field") * (perimeter ? 1.18 : 1)) * dt, "report", false);
           e.hitFlash = 0.08;
         }
       }
@@ -1379,15 +1638,62 @@ function updateEnemies(dt) {
       moveY /= len;
     }
 
+    if (e.type === "intern") {
+      const wobble = Math.sin(e.phase * 8.4 + e.id) * 0.95;
+      moveX = dx / dist + (-dy / dist) * wobble;
+      moveY = dy / dist + (dx / dist) * wobble;
+      const len = Math.hypot(moveX, moveY) || 1;
+      moveX /= len;
+      moveY /= len;
+      if (dist < 120) speed *= 1.28;
+    }
+
     if (e.type === "deadline") {
       e.chargeTimer -= dt;
       if (e.chargeTimer <= 0) {
         e.charging = 0.72;
+        e.chargeX = dx / dist;
+        e.chargeY = dy / dist;
         e.chargeTimer = 3.1 + Math.random() * 1.2;
       }
       if (e.charging > 0) {
         speed *= 2.35;
+        moveX = e.chargeX || moveX;
+        moveY = e.chargeY || moveY;
         e.charging -= dt;
+      }
+    }
+
+    if (e.type === "alarm") {
+      e.specialTimer -= dt;
+      if (e.specialTimer <= 0) {
+        for (const other of game.enemies) {
+          if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) < 210) {
+            other.slow = Math.max(other.slow || 1, 1.28);
+            other.hitFlash = Math.max(other.hitFlash || 0, 0.08);
+          }
+        }
+        floatingText(e.x, e.y - 28, "警报", "#ff5a7a");
+        pulse(e.x, e.y, 120, "#ff5a7a");
+        e.specialTimer = 3.4 + Math.random() * 1.4;
+      }
+    }
+
+    if (e.type === "audit") {
+      e.shield = 0.22 + Math.sin(e.phase * 2.2) * 0.12;
+      if (dist < 150) p.slow = Math.min(p.slow, 0.86);
+    }
+
+    if (e.type === "manager" || e.type === "boss") {
+      if (dist < (e.type === "boss" ? 210 : 142)) {
+        p.slow = Math.min(p.slow, e.type === "boss" ? 0.76 : 0.82);
+      }
+      e.specialTimer -= dt;
+      if (e.specialTimer <= 0) {
+        const radius = e.type === "boss" ? 170 : 108;
+        if (dist < radius && p.invuln <= 0) takeDamage(e.damage * (e.type === "boss" ? 0.42 : 0.28));
+        pulse(e.x, e.y, radius, e.type === "boss" ? "#ff2a60" : "#ffd15c");
+        e.specialTimer = e.type === "boss" ? 2.8 : 4.2;
       }
     }
 
@@ -1433,9 +1739,33 @@ function takeDamage(rawDamage) {
   const damage = Math.max(1, Math.round(rawDamage * reduction));
   const finalDamage = Math.max(1, Math.round(damage * anchorReduction));
   p.hp -= finalDamage;
+  if (p.fortify > 0 || game.weapons.headset.level > 0 || game.weapons.report.level > 0) {
+    p.anchorTime = Math.min(getAnchorMaxTime(), p.anchorTime + 0.48 + getEffectiveStat("fortify") * 0.014);
+  }
   p.invuln = 0.64 + p.invulnBonus;
   hitBurst(p.x, p.y, "#ff6b6b", 10);
   floatingText(p.x, p.y - 30, `-${finalDamage}`, getAnchorCharge() > 0.65 ? "#ffd15c" : "#ff8585");
+}
+
+function applyEnemyDamage(enemy, amount, source = "generic", showWeakText = true) {
+  let multiplier = 1;
+  if (enemy.type === "deadline" && (source === "marker" || source === "coffee")) multiplier *= 1.35;
+  if (enemy.type === "alarm" && source === "report") multiplier *= 1.55;
+  if (enemy.type === "intern" && source === "sticky") multiplier *= 1.45;
+  if (enemy.type === "audit" && (source === "calculator" || source === "report")) multiplier *= 1.38;
+  if (enemy.type === "manager" && (source === "calculator" || source === "coffee")) multiplier *= 1.25;
+  if (enemy.type === "boss" && (source === "marker" || source === "report" || source === "calculator")) multiplier *= 1.18;
+
+  const shield = enemy.shield ? 1 - clamp(enemy.shield, 0, 0.45) : 1;
+  const damage = amount * multiplier * shield;
+  enemy.hp -= damage;
+  if (multiplier > 1.05 && showWeakText) {
+    enemy.weakTextTimer = (enemy.weakTextTimer || 0) - 0.2;
+    if (enemy.weakTextTimer <= 0) {
+      floatingText(enemy.x, enemy.y - enemy.r - 10, "弱点", "#ffd15c");
+      enemy.weakTextTimer = 0.7;
+    }
+  }
 }
 
 function dropEnemyLoot(enemy) {
@@ -1491,7 +1821,7 @@ function updateDamageZones(dt) {
       for (const e of game.enemies) {
         const dist = Math.hypot(e.x - zone.x, e.y - zone.y);
         if (dist < e.r + zone.r) {
-          e.hp -= zone.damage * 0.32;
+          applyEnemyDamage(e, zone.damage * 0.32, zone.source || "sticky", false);
           e.slow = Math.min(e.slow || 1, 0.78);
           e.hitFlash = 0.06;
           hitCount += 1;
@@ -1508,6 +1838,7 @@ function updateDamageZones(dt) {
           1 + Math.floor(game.weapons.calculator.level / 3) + Math.floor(getEffectiveStat("trapPower") / 12),
           game.player.chainRange * 0.78 + rangeBonus(0.45) + getEffectiveStat("trapPower") * 2,
           continuousDamage(8 + game.weapons.calculator.level * 2.4),
+          "calculator",
         );
         zone.chainTick = 0.68;
       }
@@ -1523,6 +1854,8 @@ function pickWeightedStatDrop() {
     if (stat.key === "luck") return game.player.luck < 160;
     if (stat.key === "fortify") return game.player.fortify < 42;
     if (stat.key === "trapPower") return game.player.trapPower < 42;
+    if (stat.key === "languagePower") return game.player.languagePower < 36;
+    if (stat.key === "boozePower") return game.player.boozePower < 36;
     return true;
   });
   return candidates[Math.floor(Math.random() * candidates.length)];
@@ -1547,7 +1880,7 @@ function updateProjectiles(dt) {
       if (pr.hitIds.has(e.id)) continue;
       if (Math.hypot(e.x - pr.x, e.y - pr.y) < e.r + pr.r) {
         pr.hitIds.add(e.id);
-        e.hp -= pr.damage;
+        applyEnemyDamage(e, pr.damage, pr.source || "projectile");
         e.hitFlash = 0.08;
         pr.pierce -= 1;
         spark(pr.x, pr.y, pr.color);
@@ -1666,7 +1999,14 @@ function spawnEnemy(elite) {
   y = clamp(y, 20, WORLD.h - 20);
   const config = game.stageConfig;
   const stagePower = game.stage - 1;
-  const type = pickEnemyType(config.enemyMix);
+  let type = pickEnemyType(config.enemyMix);
+  if (elite && game.stage >= game.maxStage && !game.bossSpawned) {
+    type = "boss";
+    game.bossSpawned = true;
+    showBossArrival();
+    pulse(x, y, 240, "#ff2a60");
+    for (let i = 0; i < 28; i += 1) spark(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 70, i % 2 ? "#ffd15c" : "#ff5a7a");
+  }
   let enemy = createEnemyByType(type, stagePower, config);
   enemy = {
     ...enemy,
@@ -1678,24 +2018,29 @@ function spawnEnemy(elite) {
     chargeTimer: 1.2 + Math.random() * 2.2,
     charging: 0,
     slow: 1,
+    specialTimer: 1.2 + Math.random() * 2.4,
+    weakTextTimer: 0,
+    shield: type === "audit" ? 0.3 : 0,
     elite,
   };
 
   if (elite) {
-    enemy.r += 12;
-    enemy.hp *= 4.2;
-    enemy.speed *= 0.78;
-    enemy.damage += 10;
+    const boss = enemy.type === "boss";
+    enemy.r += boss ? 24 : 12;
+    enemy.hp *= boss ? 2.6 : 4.2;
+    enemy.speed *= boss ? 0.7 : 0.78;
+    enemy.damage += boss ? 18 : 10;
     enemy.xp *= 5;
     enemy.materialValue *= 5;
-    enemy.color = "#ff6b6b";
+    enemy.color = boss ? "#ff2a60" : "#ff6b6b";
   }
 
   game.enemies.push(enemy);
 }
 
 function pickEnemyType(mix) {
-  const roll = Math.random();
+  const total = Object.values(mix).reduce((sum, weight) => sum + weight, 0) || 1;
+  const roll = Math.random() * total;
   let cursor = 0;
   for (const [type, weight] of Object.entries(mix)) {
     cursor += weight;
@@ -1741,6 +2086,51 @@ function createEnemyByType(type, stagePower, config) {
       xp: 8,
       materialValue: 2,
       color: "#ffb45c",
+    },
+    intern: {
+      r: 15,
+      hp: 24 + stagePower * 6,
+      speed: 102 + stagePower * 3,
+      damage: 6,
+      xp: 6,
+      materialValue: 2,
+      color: "#62dfb4",
+    },
+    alarm: {
+      r: 18,
+      hp: 34 + stagePower * 8,
+      speed: 86 + stagePower * 2.4,
+      damage: 9,
+      xp: 8,
+      materialValue: 2,
+      color: "#ff5a7a",
+    },
+    audit: {
+      r: 20,
+      hp: 58 + stagePower * 12,
+      speed: 52 + stagePower * 1.6,
+      damage: 12,
+      xp: 10,
+      materialValue: 3,
+      color: "#a7dcd4",
+    },
+    manager: {
+      r: 21,
+      hp: 70 + stagePower * 14,
+      speed: 58 + stagePower * 1.8,
+      damage: 14,
+      xp: 12,
+      materialValue: 3,
+      color: "#ffd15c",
+    },
+    boss: {
+      r: 42,
+      hp: 420 + stagePower * 55,
+      speed: 42 + stagePower * 0.8,
+      damage: 22,
+      xp: 80,
+      materialValue: 18,
+      color: "#ff4f6f",
     },
   }[type];
 
@@ -1953,6 +2343,20 @@ function renderShop() {
   ui.material.textContent = game.materials;
 }
 
+function maybeShowFusionHint(weaponId) {
+  if (!weaponId || !ui.fusionNotice) return;
+  const weapon = game.weapons[weaponId];
+  if (!weapon || weapon.level < 5 || game.fusionHintsSeen.has(weaponId)) return;
+  game.fusionHintsSeen.add(weaponId);
+  const classText = (weapon.classes || []).map((className) => weaponClassLabels[className] || className).join(" / ");
+  ui.fusionNoticeMeta.textContent = "终局改造";
+  ui.fusionNoticeTitle.textContent = `${weapon.label} 已接近最终形态`;
+  ui.fusionNoticeText.textContent = `${classText} 相关武器、属性和道具会让它更容易发生特殊变化。`;
+  ui.fusionNotice.classList.remove("hidden");
+  window.clearTimeout(maybeShowFusionHint.timer);
+  maybeShowFusionHint.timer = window.setTimeout(() => ui.fusionNotice.classList.add("hidden"), 5200);
+}
+
 function renderArmoryBuildStrip() {
   if (!ui.armoryBuildStrip) return;
   const counts = getWeaponClassCounts();
@@ -2058,12 +2462,28 @@ function getItemBuildHint(entry) {
   const tag = entry.tag || "";
   if (/暴击|输出|射程/.test(tag)) return "偏精准/远程，适合马克笔和咖啡射线。";
   if (/攻速|闪避|爆发/.test(tag)) return "偏弹幕/近距，适合键盘和订书机。";
-  if (/经济|拾取|恢复|陷阱|布线/.test(tag)) return "偏工程/支援，适合计算器、便签和长线发育。";
+  if (/经济|拾取|恢复|陷阱|布线|语言/.test(tag)) return "偏工程/支援，适合计算器、便签和长线发育。";
+  if (/酒/.test(tag)) return "偏高风险爆发，适合咖啡、订书机和想快速清场的打法。";
   if (/防御|生存|控制|站场|站桩|领域/.test(tag)) return "偏领域/生存，适合耳机和报告领域。";
   return "通用补强，但会挤压武器升级节奏。";
 }
 
 function generateShopOffers(count, existing = []) {
+  if (game.stage === 1 && getOwnedWeaponCount() === 1 && existing.length === 0) {
+    return ["marker", "keyboard", "headset", "sticky"]
+      .map((id) => weaponUpgradePool.find((entry) => entry.id === id))
+      .filter(Boolean)
+      .map((entry) => {
+        const shopEntry = { ...entry, shopType: "weapon" };
+        return {
+          entry: shopEntry,
+          cost: Math.max(10, getShopOfferCost(shopEntry) - 6),
+          locked: false,
+          purchased: false,
+        };
+      })
+      .slice(0, count);
+  }
   const offers = [...existing];
   while (offers.length < count) {
     const weaponCount = offers.filter((offer) => offer.entry.shopType === "weapon").length;
@@ -2119,7 +2539,8 @@ function isItemAlignedWithBuild(entry) {
   const tag = entry.tag || "";
   if ((counts.precise || counts.ranged) && /暴击|射程|输出|爆发/.test(tag)) return true;
   if ((counts.barrage || counts.close) && /攻速|闪避|爆发/.test(tag)) return true;
-  if ((counts.engineering || counts.support) && /经济|拾取|恢复|控制|陷阱|布线/.test(tag)) return true;
+  if ((counts.engineering || counts.support) && /经济|拾取|恢复|控制|陷阱|布线|语言/.test(tag)) return true;
+  if ((counts.precise || counts.barrage) && /酒/.test(tag)) return true;
   if ((counts.field || counts.close) && /防御|生存|控制|站场|站桩|领域/.test(tag)) return true;
   return false;
 }
@@ -2157,7 +2578,10 @@ function buyShopOffer(index) {
   if (!offer || !canBuyShopOffer(offer)) return;
   game.materials -= offer.cost;
   offer.entry.apply(game);
-  if (offer.entry.shopType === "weapon") syncWeaponDerivedStats();
+  if (offer.entry.shopType === "weapon") {
+    syncWeaponDerivedStats();
+    maybeShowFusionHint(getUpgradeWeaponId(offer.entry.id));
+  }
   offer.purchased = true;
   offer.locked = false;
   if (offer.entry.shopType === "item") {
@@ -2317,6 +2741,17 @@ function getStatIconClass(idOrKey) {
     quietField: "fortify",
     trapManual: "trapPower",
     shieldProtocol: "armor",
+    glossary: "languagePower",
+    afterWorkDrink: "boozePower",
+    bilingualMinutes: "languagePower",
+    wineTableReview: "boozePower",
+    laserCalibration: "range",
+    reportAuditTrail: "languagePower",
+    noiseCancelFort: "fortify",
+    paperOrbitDrill: "fortify",
+    deskMinePermit: "trapPower",
+    contractLanguage: "languagePower",
+    socialDrinking: "boozePower",
   }[idOrKey] || idOrKey;
   const map = {
     maxHp: 0,
@@ -2333,6 +2768,8 @@ function getStatIconClass(idOrKey) {
     regen: 11,
     fortify: 1,
     trapPower: 7,
+    languagePower: 12,
+    boozePower: 11,
   };
   return uiIconClass(map[normalized] ?? 12);
 }
@@ -2360,6 +2797,9 @@ function getItemIconClass(id) {
     whiteboardWall: 7,
     deskLamp: 11,
     cableNest: 10,
+    liquorCoffee: 11,
+    translationHeadset: 12,
+    foreignContract: 9,
   };
   return uiIconClass(map[id] ?? 9);
 }
@@ -2367,11 +2807,14 @@ function getItemIconClass(id) {
 function startNextStage() {
   game.stage += 1;
   game.stageConfig = getStageConfig(game.stage);
+  game.currentIncident = rollOfficeIncident(game.stage);
+  applyOfficeIncident();
   game.waveTime = 0;
   game.stageKills = 0;
   game.stageSpawned = 0;
   game.enemiesToSpawn = game.stageConfig.totalEnemies;
   game.elitesToSpawn = game.stageConfig.eliteTotal;
+  game.bossSpawned = false;
   game.lastClearReason = "";
   game.lastStageBonus = 0;
   game.pendingLevelUps = 0;
@@ -2497,6 +2940,8 @@ function getRouteStatUnit(key) {
   if (key === "regen") return value * 3.2;
   if (key === "fortify") return value * 2.6;
   if (key === "trapPower") return value * 2.4;
+  if (key === "languagePower") return value * 2.2;
+  if (key === "boozePower") return value * 2.2;
   return value / 5;
 }
 
@@ -2543,7 +2988,7 @@ function getAnchorMaxTime() {
 
 function getAnchorDamageReduction() {
   const fortify = Math.max(0, getEffectiveStat("fortify"));
-  return clamp(getAnchorCharge() * (0.08 + fortify * 0.009), 0, 0.34);
+  return clamp(getAnchorCharge() * (0.1 + fortify * 0.011), 0, 0.42);
 }
 
 function rangeBonus(scale = 1) {
@@ -2569,9 +3014,11 @@ function getBuildFocusDamageBonus() {
   const owned = getOwnedWeaponCount();
   if (owned < 3) return 0;
   const topCount = Math.max(0, ...Object.values(getWeaponClassCounts()));
-  if (topCount >= 4) return 0.14;
-  if (topCount >= 3) return 0.08;
-  if (topCount < 2) return owned >= game.weaponSlots ? -0.12 : -0.07;
+  const late = game.stage >= 8;
+  if (topCount >= 4) return late ? 0.2 : 0.14;
+  if (topCount >= 3) return late ? 0.11 : 0.08;
+  if (topCount < 2) return late ? -0.18 : owned >= game.weaponSlots ? -0.12 : -0.07;
+  if (late && owned >= 5) return -0.1;
   return 0;
 }
 
@@ -2592,13 +3039,19 @@ function getEffectiveStat(key) {
     regen: p.regen,
     fortify: p.fortify,
     trapPower: p.trapPower,
+    languagePower: p.languagePower,
+    boozePower: p.boozePower,
   };
   return values[key] || 0;
 }
 
 function getWeaponStatScale(kind) {
   if (kind === "precise") {
-    return 1 + clamp(getEffectiveStat("crit"), 0, 90) * 0.0025 + Math.max(0, getEffectiveStat("range")) * 0.0009;
+    return 1
+      + clamp(getEffectiveStat("crit"), 0, 90) * 0.0025
+      + Math.max(0, getEffectiveStat("range")) * 0.0009
+      + getEffectiveStat("languagePower") * 0.01
+      + getEffectiveStat("boozePower") * 0.012;
   }
   if (kind === "barrage") {
     return 1 + clamp(getEffectiveStat("attackSpeed"), 0, 180) * 0.0015 + clamp(getEffectiveStat("dodge"), 0, 60) * 0.002;
@@ -2607,19 +3060,20 @@ function getWeaponStatScale(kind) {
     return 1
       + clamp(getEffectiveStat("luck"), 0, 180) * 0.0018
       + Math.max(0, getEffectiveStat("pickupRange") - 150) * 0.0008
-      + Math.max(0, getEffectiveStat("trapPower")) * 0.015;
+      + Math.max(0, getEffectiveStat("trapPower")) * 0.015
+      + getEffectiveStat("languagePower") * 0.012;
   }
   if (kind === "field") {
     return 1
       + Math.max(0, getEffectiveStat("armor")) * 0.018
-      + Math.max(0, getEffectiveStat("regen")) * 0.022
-      + Math.max(0, getEffectiveStat("fortify")) * 0.014
-      + getAnchorCharge() * 0.22;
+      + Math.max(0, getEffectiveStat("regen")) * 0.024
+      + Math.max(0, getEffectiveStat("fortify")) * 0.017
+      + getAnchorCharge() * 0.34;
   }
   return 1;
 }
 
-function fireAt(target, speed, damage, color, pierce, radius, life = 1.25) {
+function fireAt(target, speed, damage, color, pierce, radius, life = 1.25, source = "projectile") {
   const p = game.player;
   const angle = Math.atan2(target.y - p.y, target.x - p.x);
   spawnProjectile({
@@ -2632,6 +3086,7 @@ function fireAt(target, speed, damage, color, pierce, radius, life = 1.25) {
     damage,
     color,
     pierce,
+    source,
   });
 }
 
@@ -2640,7 +3095,7 @@ function spawnProjectile(projectile) {
   game.projectiles.push(projectile);
 }
 
-function fireBeam(angle, length, width, damage, color) {
+function fireBeam(angle, length, width, damage, color, source = "beam") {
   const p = game.player;
   const ax = Math.cos(angle);
   const ay = Math.sin(angle);
@@ -2651,7 +3106,7 @@ function fireBeam(angle, length, width, damage, color) {
     if (along < 0 || along > length) continue;
     const perp = Math.abs(dx * ay - dy * ax);
     if (perp < width + e.r) {
-      e.hp -= damage;
+      applyEnemyDamage(e, damage, source);
       e.hitFlash = 0.08;
     }
   }
@@ -2672,12 +3127,12 @@ function fireBeam(angle, length, width, damage, color) {
   });
 }
 
-function chainLightning(start, jumps, range, damage) {
+function chainLightning(start, jumps, range, damage, source = "calculator") {
   let current = start;
   const hit = new Set();
   for (let i = 0; i < jumps && current; i += 1) {
     hit.add(current.id);
-    current.hp -= damage * Math.pow(0.82, i);
+    applyEnemyDamage(current, damage * Math.pow(0.82, i), source);
     current.hitFlash = 0.1;
     spark(current.x, current.y, "#9ee37d");
 
@@ -2799,13 +3254,13 @@ function drawProceduralFloor(cam, stageTint) {
       const seed = hashCell(wx, wy);
       const shade = seed > 0.72 ? "rgba(255, 240, 189, 0.018)" : seed < 0.18 ? "rgba(3, 5, 12, 0.18)" : "rgba(255,255,255,0.006)";
       pixelRect(x + (seed > 0.5 ? 2 : 0), y + (seed < 0.42 ? 2 : 0), tile - 2, tile - 2, shade);
-      if (seed > 0.78) pixelRect(x + 7, y + 9, 11, 3, "rgba(255, 79, 216, 0.16)");
+      if (seed > 0.78) pixelRect(x + 7, y + 9, 11, 3, "rgba(141, 116, 255, 0.1)");
       if (seed > 0.9) pixelRect(x + 12, y + 17, 3, 12, "rgba(82, 255, 225, 0.15)");
       if (seed < 0.13) pixelRect(x + 20, y + 23, 13, 3, "rgba(82, 255, 225, 0.12)");
       if (seed > 0.64 && seed < 0.7) pixelRect(x + 5, y + 30, 24, 2, "rgba(255, 209, 92, 0.055)");
       if (seed > 0.49 && seed < 0.53) {
         pixelRect(x + 4, y + 5, 4, 4, "rgba(255, 255, 255, 0.035)");
-        pixelRect(x + 24, y + 18, 5, 5, "rgba(255, 79, 216, 0.075)");
+        pixelRect(x + 24, y + 18, 5, 5, "rgba(141, 116, 255, 0.05)");
       }
     }
   }
@@ -2815,7 +3270,7 @@ function drawProceduralFloor(cam, stageTint) {
   const laneStartY = -(cam.y % lane);
   for (let x = laneStartX; x < canvas.width; x += lane) {
     pixelRect(x - 2, 0, 4, canvas.height, "rgba(82, 255, 225, 0.035)");
-    pixelRect(x + 22, 0, 3, canvas.height, "rgba(255, 79, 216, 0.032)");
+    pixelRect(x + 22, 0, 3, canvas.height, "rgba(141, 116, 255, 0.026)");
   }
   for (let y = laneStartY; y < canvas.height; y += lane) {
     pixelRect(0, y - 2, canvas.width, 4, "rgba(255, 209, 92, 0.035)");
@@ -2832,7 +3287,7 @@ function drawProceduralFloor(cam, stageTint) {
       const sx = x + 90 + (seed * 70) % 80;
       const sy = y + 78 + (seed * 113) % 90;
       for (let i = 0; i < 5; i += 1) {
-        pixelRect(sx + i * 18, sy + i * 10, 22, 5, i % 2 ? "rgba(82, 255, 225, 0.18)" : "rgba(255, 79, 216, 0.17)");
+        pixelRect(sx + i * 18, sy + i * 10, 22, 5, i % 2 ? "rgba(82, 255, 225, 0.18)" : "rgba(141, 116, 255, 0.11)");
       }
       pixelRect(sx - 8, sy - 9, 128, 2, "rgba(255,255,255,0.035)");
       pixelRect(sx + 4, sy + 58, 88, 2, "rgba(255, 209, 92, 0.08)");
@@ -2858,7 +3313,7 @@ function drawProceduralFloor(cam, stageTint) {
     const seed = hashCell(i, Math.floor(cam.x / 200) + Math.floor(cam.y / 200));
     const x = (seed * 1949) % canvas.width;
     const y = (hashCell(i + 17, Math.floor(cam.y / 160)) * 911) % canvas.height;
-    const color = seed > 0.66 ? "rgba(255, 79, 216, 0.12)" : seed > 0.36 ? "rgba(82, 255, 225, 0.11)" : "rgba(255, 209, 92, 0.09)";
+    const color = seed > 0.66 ? "rgba(141, 116, 255, 0.075)" : seed > 0.36 ? "rgba(82, 255, 225, 0.11)" : "rgba(255, 209, 92, 0.09)";
     pixelRect(x, y, 2 + seed * 16, seed > 0.5 ? 3 : 2, color);
   }
 }
@@ -2876,7 +3331,7 @@ function drawRoomGlow(camX, camY) {
   ctx.globalCompositeOperation = "screen";
   const anchors = [
     { x: canvas.width * 0.22 - (camX * 0.02) % 140, y: canvas.height * 0.28, color: "rgba(82, 255, 225, 0.055)", r: 260 },
-    { x: canvas.width * 0.74 + (camY * 0.015) % 120, y: canvas.height * 0.38, color: "rgba(255, 79, 216, 0.05)", r: 300 },
+    { x: canvas.width * 0.74 + (camY * 0.015) % 120, y: canvas.height * 0.38, color: "rgba(141, 116, 255, 0.035)", r: 300 },
     { x: canvas.width * 0.5, y: canvas.height * 0.72, color: "rgba(255, 209, 92, 0.035)", r: 240 },
   ];
   for (const light of anchors) {
@@ -2902,7 +3357,7 @@ function drawNeonSkyline(camX, camY) {
     const x = (i * 86 - (camX * 0.12)) % (canvas.width + 120) - 60;
     const y = horizon - h * 0.2 + hashCell(i, 93) * 16;
     pixelRect(x, y, w, h, "rgba(9, 10, 31, 0.74)");
-    pixelRect(x + 4, y + 8, w - 8, 3, seed > 0.5 ? "rgba(255, 79, 216, 0.55)" : "rgba(82, 255, 225, 0.5)");
+    pixelRect(x + 4, y + 8, w - 8, 3, seed > 0.5 ? "rgba(82, 255, 225, 0.46)" : "rgba(82, 255, 225, 0.5)");
     for (let j = 0; j < 4; j += 1) {
       pixelRect(x + 8 + j * 10, y + 20 + (j % 2) * 11, 5, 5, "rgba(255, 209, 92, 0.42)");
     }
@@ -2912,7 +3367,7 @@ function drawNeonSkyline(camX, camY) {
 
 function drawHandPaintedPatch(x, y, w, h, seed) {
   const palette = seed > 0.86
-    ? ["rgba(68, 25, 86, 0.62)", "rgba(255, 79, 216, 0.22)", "rgba(82, 255, 225, 0.12)"]
+    ? ["rgba(28, 35, 65, 0.62)", "rgba(141, 116, 255, 0.12)", "rgba(82, 255, 225, 0.12)"]
     : ["rgba(13, 86, 92, 0.48)", "rgba(82, 255, 225, 0.18)", "rgba(255, 209, 92, 0.11)"];
   ctx.save();
   ctx.beginPath();
@@ -2965,6 +3420,7 @@ function drawStaticOffice(camX, camY) {
       if (seed > 0.58) drawDeskClutter(sx, sy, w, h, seed);
       if (seed > 0.68) drawNeonOfficeAccent(sx, sy, w, h, seed);
       if (seed > 0.82) drawTinyStickerSign(sx + w * 0.5, sy - 12, seed);
+      if (seed > 0.74 && seed < 0.86) drawCulturePoster(sx + w - 18, sy + 8, seed);
     }
   }
 }
@@ -3029,7 +3485,7 @@ function drawAtlasRect(index, x, y, w, h, options = {}) {
 }
 
 function drawOfficeDesk(x, y, w, h, seed) {
-  if (drawPropCell(4, x + w / 2, y + h / 2 - 4, Math.max(122, w * 0.88), Math.max(84, h * 1.35), { alpha: 0.95, ground: "rgba(4,8,13,0.35)", glow: "rgba(255, 79, 216, 0.28)" })) return;
+  if (drawPropCell(4, x + w / 2, y + h / 2 - 4, Math.max(122, w * 0.88), Math.max(84, h * 1.35), { alpha: 0.95, ground: "rgba(4,8,13,0.35)", glow: "rgba(141, 116, 255, 0.12)" })) return;
   if (drawAtlasRect(15, x - 18, y - 44, Math.max(132, w + 36), Math.max(112, h + 60), { alpha: 0.9 })) return;
   pixelRect(x - 3, y + 5, w + 8, h + 5, "rgba(20, 9, 32, 0.7)");
   pixelRect(x, y, w, h, "rgba(219, 177, 110, 0.2)");
@@ -3070,7 +3526,7 @@ function drawCoffeeCorner(x, y, w, h, seed) {
 }
 
 function drawMeetingTable(x, y, w, h, seed) {
-  if (drawPropCell(seed > 0.62 ? 3 : 2, x + w / 2, y + h / 2, Math.max(108, w * 0.9), 84, { alpha: 0.88, ground: "rgba(4,8,13,0.24)", glow: "rgba(255, 79, 216, 0.22)" })) return;
+  if (drawPropCell(seed > 0.62 ? 3 : 2, x + w / 2, y + h / 2, Math.max(108, w * 0.9), 84, { alpha: 0.88, ground: "rgba(4,8,13,0.24)", glow: "rgba(141, 116, 255, 0.12)" })) return;
   pixelRect(x + 8, y + 8, w - 16, h - 4, "rgba(58, 78, 94, 0.24)");
   pixelRect(x + 18, y + 18, w - 36, h - 28, "rgba(177, 134, 74, 0.24)");
   pixelRect(x + 28, y + 25, 30, 16, "rgba(244, 240, 232, 0.13)");
@@ -3122,13 +3578,13 @@ function drawDeskClutter(x, y, w, h, seed) {
       pixelRect(px - 2, py + 7, 8, 3, "rgba(255, 209, 92, 0.22)");
     } else if (type === 1) {
       pixelRect(px - 5, py - 7, 12, 16, "rgba(255, 240, 189, 0.22)");
-      pixelRect(px - 3, py - 4, 8, 2, "rgba(255, 79, 216, 0.28)");
+      pixelRect(px - 3, py - 4, 8, 2, "rgba(141, 116, 255, 0.12)");
       pixelRect(px - 3, py + 2, 7, 2, "rgba(82, 255, 225, 0.2)");
     } else if (type === 2) {
       pixelRect(px - 7, py - 6, 14, 12, "rgba(255, 209, 92, 0.26)");
       pixelRect(px - 3, py - 2, 6, 3, "rgba(13, 5, 24, 0.55)");
     } else if (type === 3) {
-      ctx.strokeStyle = "rgba(255, 79, 216, 0.2)";
+      ctx.strokeStyle = "rgba(141, 116, 255, 0.11)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(px - 11, py - 3);
@@ -3137,7 +3593,7 @@ function drawDeskClutter(x, y, w, h, seed) {
       ctx.stroke();
     } else {
       pixelRect(px - 8, py - 8, 16, 16, "rgba(82, 255, 225, 0.18)");
-      pixelRect(px - 4, py - 4, 8, 8, "rgba(255, 79, 216, 0.18)");
+      pixelRect(px - 4, py - 4, 8, 8, "rgba(141, 116, 255, 0.1)");
     }
   }
 }
@@ -3146,9 +3602,26 @@ function drawTinyStickerSign(x, y, seed) {
   const w = 54 + (seed * 23) % 22;
   const h = 20;
   pixelRect(x - w / 2 - 3, y - 3, w + 6, h + 6, "rgba(13, 5, 24, 0.78)");
-  pixelRect(x - w / 2, y, w, h, seed > 0.9 ? "rgba(255, 79, 216, 0.25)" : "rgba(82, 255, 225, 0.22)");
+  pixelRect(x - w / 2, y, w, h, seed > 0.9 ? "rgba(141, 116, 255, 0.14)" : "rgba(82, 255, 225, 0.22)");
   pixelRect(x - w / 2 + 5, y + 5, w - 10, 4, "rgba(255, 240, 189, 0.34)");
   pixelRect(x - w / 2 + 9, y + 13, w * 0.42, 3, "rgba(13, 5, 24, 0.46)");
+}
+
+function drawCulturePoster(x, y, seed) {
+  const wine = seed > 0.8;
+  const w = wine ? 62 : 72;
+  const h = 34;
+  pixelRect(x - w, y - 6, w + 7, h + 9, "rgba(5, 7, 15, 0.68)");
+  pixelRect(x - w + 3, y - 3, w, h, wine ? "rgba(80, 25, 36, 0.56)" : "rgba(17, 70, 82, 0.52)");
+  pixelRect(x - w + 9, y + 3, w - 18, 4, wine ? "rgba(255, 209, 92, 0.34)" : "rgba(82, 255, 225, 0.34)");
+  pixelRect(x - w + 12, y + 13, w * 0.5, 3, "rgba(255, 240, 189, 0.24)");
+  pixelRect(x - w + 12, y + 21, w * 0.36, 3, "rgba(255, 240, 189, 0.18)");
+  ctx.save();
+  ctx.font = "900 9px ui-sans-serif, system-ui";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = wine ? "rgba(255, 209, 92, 0.74)" : "rgba(82, 255, 225, 0.74)";
+  ctx.fillText(wine ? "WINE" : "LANG", Math.round(x - w + 38), Math.round(y + 18));
+  ctx.restore();
 }
 
 function drawPixelWorker(x, y, time, player) {
@@ -3168,7 +3641,7 @@ function drawPixelWorker(x, y, time, player) {
   pixelRect(x + 2, y + 15 + bob, 8, 11, "#253556");
   pixelRect(x - 20, y - 2 + bob, 6, 16, "#f4d7b6");
   pixelRect(x + 14, y - 2 + bob, 6, 16, "#f4d7b6");
-  pixelRect(x - 9, y - 10 + bob, 18, 11, "#ff4fd8");
+  pixelRect(x - 9, y - 10 + bob, 18, 11, "#c35cff");
   pixelRect(x - 7, y - 8 + bob, 14, 8, "#52ffe1");
   pixelRect(x - 3, y - 4 + bob, 6, 2, back ? "#42d7b8" : "#14282c");
   pixelRect(x - 9, y - 24 + bob, 18, 5, "#2b2522");
@@ -3183,7 +3656,7 @@ function drawPixelWorker(x, y, time, player) {
     pixelRect(x - 8, y - 24 + bob, 16, 8, "#2b2522");
   }
   pixelRect(x + 6, y - 1 + bob, 5, 5, "#ffd15c");
-  pixelRect(x - 17, y - 8 + bob, 4, 13, "#ff4fd8");
+  pixelRect(x - 17, y - 8 + bob, 4, 13, "#c35cff");
   pixelRect(x + 13, y - 8 + bob, 4, 13, "#52ffe1");
 }
 
@@ -3194,16 +3667,16 @@ function drawPixelEnemy(e) {
   const s = e.elite ? 1.45 : e.r > 18 ? 1.2 : 1;
   const x = e.x;
   const y = e.y;
-  if (e.type === "meeting") {
+  if (e.type === "meeting" || e.type === "manager" || e.type === "boss") {
     ctx.fillStyle = "rgba(110, 168, 255, 0.07)";
     ctx.beginPath();
-    ctx.arc(x, y, 118, 0, TAU);
+    ctx.arc(x, y, e.type === "boss" ? 210 : e.type === "manager" ? 142 : 118, 0, TAU);
     ctx.fill();
   }
   const atlasEnemy = { bug: 1, change: 2, meeting: 3, deadline: 4 }[e.type];
   if (atlasEnemy !== undefined) {
     const drawSize = e.r * (e.type === "meeting" ? 4.1 : 3.8);
-    if (drawAtlasCell(atlasEnemy, x, y - e.r * 0.2, drawSize * 0.94, drawSize * 0.94, { flash, ground: "rgba(4, 8, 13, 0.55)", glow: e.elite ? "rgba(255, 209, 92, 0.38)" : "rgba(255, 79, 216, 0.2)", glowBlur: e.elite ? 18 : 9 })) {
+    if (drawAtlasCell(atlasEnemy, x, y - e.r * 0.2, drawSize * 0.94, drawSize * 0.94, { flash, ground: "rgba(4, 8, 13, 0.55)", glow: e.elite ? "rgba(255, 209, 92, 0.34)" : "rgba(82, 255, 225, 0.13)", glowBlur: e.elite ? 18 : 8 })) {
       drawOfficeEnemyDetail(e, x, y, s);
       return;
     }
@@ -3234,6 +3707,28 @@ function drawPixelEnemy(e) {
     pixelRect(x - 17 * s, y - 7 * s, 34 * s, 20 * s, base);
     pixelRect(x - 21 * s, y + 1 * s, 8 * s, 8 * s, base);
     pixelRect(x + 13 * s, y - 8 * s, 8 * s, 8 * s, base);
+  } else if (e.type === "alarm") {
+    pixelRect(x - 18 * s, y - 12 * s, 36 * s, 27 * s, base);
+    pixelRect(x - 8 * s, y - 26 * s, 16 * s, 12 * s, "#ffdf8a");
+    pixelRect(x - 18 * s, y - 20 * s, 8 * s, 9 * s, dark);
+    pixelRect(x + 10 * s, y - 20 * s, 8 * s, 9 * s, dark);
+    pixelRect(x - 10 * s, y - 2 * s, 20 * s, 5 * s, "#100719");
+  } else if (e.type === "intern") {
+    pixelRect(x - 12 * s, y - 22 * s, 24 * s, 12 * s, "#fff1cf");
+    pixelRect(x - 18 * s, y - 9 * s, 36 * s, 25 * s, base);
+    pixelRect(x - 21 * s, y + 4 * s, 9 * s, 7 * s, "#6ea8ff");
+    pixelRect(x + 12 * s, y - 10 * s, 9 * s, 7 * s, "#ffd15c");
+  } else if (e.type === "audit") {
+    pixelRect(x - 20 * s, y - 18 * s, 40 * s, 35 * s, "#e8f8ff");
+    pixelRect(x - 16 * s, y - 13 * s, 32 * s, 27 * s, base);
+    pixelRect(x - 11 * s, y - 7 * s, 22 * s, 3 * s, "#100719");
+    pixelRect(x - 11 * s, y + 2 * s, 16 * s, 3 * s, "#100719");
+  } else if (e.type === "manager" || e.type === "boss") {
+    const scale = e.type === "boss" ? 1.25 : 1;
+    pixelRect(x - 20 * s * scale, y - 28 * s * scale, 40 * s * scale, 16 * s * scale, "#211b21");
+    pixelRect(x - 24 * s * scale, y - 12 * s * scale, 48 * s * scale, 36 * s * scale, base);
+    pixelRect(x - 16 * s * scale, y - 2 * s * scale, 32 * s * scale, 5 * s * scale, "#fff1cf");
+    pixelRect(x - 26 * s * scale, y + 9 * s * scale, 52 * s * scale, 7 * s * scale, "#100719");
   } else {
     pixelRect(x - 13 * s, y - 14 * s, 26 * s, 10 * s, dark);
     pixelRect(x - 17 * s, y - 4 * s, 34 * s, 22 * s, base);
@@ -3257,7 +3752,7 @@ function drawOfficeEnemyDetail(e, x, y, s) {
     pixelRect(x + 2 * s, y - 20 * s, 7 * s, 3 * s, "rgba(255, 90, 122, 0.82)");
   } else if (e.type === "change") {
     pixelRect(x - 16 * s, y - 26 * s, 32 * s, 18 * s, "rgba(255, 241, 207, 0.82)");
-    pixelRect(x - 11 * s, y - 21 * s, 20 * s, 3 * s, "rgba(255, 79, 216, 0.58)");
+    pixelRect(x - 11 * s, y - 21 * s, 20 * s, 3 * s, "rgba(141, 116, 255, 0.46)");
     pixelRect(x - 11 * s, y - 14 * s, 14 * s, 3 * s, "rgba(82, 255, 225, 0.5)");
   } else if (e.type === "meeting") {
     pixelRect(x - 24 * s, y - 31 * s, 48 * s, 18 * s, "rgba(16, 7, 25, 0.86)");
@@ -3267,6 +3762,27 @@ function drawOfficeEnemyDetail(e, x, y, s) {
     const blink = Math.sin(game.time * 12 + e.id) > 0 ? "rgba(255, 42, 96, 0.95)" : "rgba(255, 209, 92, 0.75)";
     pixelRect(x - 6 * s, y - 33 * s, 12 * s, 10 * s, blink);
     pixelRect(x - 18 * s, y - 20 * s, 36 * s, 5 * s, "rgba(16, 7, 25, 0.82)");
+  } else if (e.type === "alarm") {
+    const blink = Math.sin(game.time * 14 + e.id) > 0 ? "rgba(255, 90, 122, 0.96)" : "rgba(82, 255, 225, 0.54)";
+    pixelRect(x - 20 * s, y - 30 * s, 40 * s, 8 * s, blink);
+    pixelRect(x - 12 * s, y - 18 * s, 24 * s, 4 * s, "rgba(16, 7, 25, 0.88)");
+  } else if (e.type === "intern") {
+    pixelRect(x - 18 * s, y - 30 * s, 36 * s, 14 * s, "rgba(255, 241, 207, 0.86)");
+    pixelRect(x - 13 * s, y - 25 * s, 26 * s, 3 * s, "rgba(98, 223, 180, 0.75)");
+    pixelRect(x - 13 * s, y - 19 * s, 16 * s, 3 * s, "rgba(255, 209, 92, 0.65)");
+  } else if (e.type === "audit") {
+    pixelRect(x - 20 * s, y - 32 * s, 40 * s, 17 * s, "rgba(232, 248, 255, 0.9)");
+    pixelRect(x - 15 * s, y - 27 * s, 30 * s, 3 * s, "rgba(16, 7, 25, 0.72)");
+    if (e.shield > 0.24) {
+      ctx.strokeStyle = "rgba(167, 220, 212, 0.55)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(Math.round(x - 25 * s), Math.round(y - 25 * s), Math.round(50 * s), Math.round(48 * s));
+    }
+  } else if (e.type === "manager" || e.type === "boss") {
+    const scale = e.type === "boss" ? 1.2 : 1;
+    pixelRect(x - 28 * s * scale, y - 40 * s * scale, 56 * s * scale, 18 * s * scale, "rgba(16, 7, 25, 0.9)");
+    pixelRect(x - 20 * s * scale, y - 35 * s * scale, 40 * s * scale, 4 * s * scale, "rgba(255, 209, 92, 0.75)");
+    pixelRect(x - 14 * s * scale, y - 28 * s * scale, 28 * s * scale, 3 * s * scale, "rgba(82, 255, 225, 0.42)");
   }
 }
 
@@ -3558,6 +4074,9 @@ function updateObjectiveHud(timeText, remaining) {
 function getObjectiveAlert(remaining) {
   if (state === "recovery") return { text: "战斗结束，尽快拾取遗留材料和经验", boss: false };
   if (game.stage >= game.maxStage) return { text: "Boss 评审压场，保留爆发和移动空间", boss: true };
+  if (game.waveTime < 7 && game.currentIncident) return { text: `${game.currentIncident.title}：${game.currentIncident.text}`, boss: game.currentIncident.id === "bossCheck" };
+  const pressureHint = getBuildPressureHint();
+  if (pressureHint) return { text: pressureHint, boss: false };
   if (game.stageConfig.eliteTotal > 0 && game.stageSpawned > game.stageConfig.totalEnemies * 0.35) {
     return { text: "精英即将入场，注意冲刺怪和会议减速", boss: true };
   }
@@ -3565,17 +4084,47 @@ function getObjectiveAlert(remaining) {
   return { text: stageBriefs[Math.min(stageBriefs.length - 1, game.stage - 1)], boss: false };
 }
 
+function getBuildPressureHint() {
+  if (game.waveTime < 12 || game.stage < 5) return "";
+  const owned = getOwnedWeaponCount();
+  const topCount = Math.max(0, ...Object.values(getWeaponClassCounts()));
+  if (owned >= 4 && topCount < 3 && Math.floor(game.waveTime) % 17 < 4) {
+    return "后半程会检验同标签武器和关键属性，分散购买会越来越吃力";
+  }
+  const maxWeaponLevel = Math.max(0, ...buildOrder.map((id) => game.weapons[id].level));
+  if (game.stage >= 7 && maxWeaponLevel < 4 && Math.floor(game.waveTime) % 19 < 4) {
+    return "高压关需要至少一把主武器持续升级，留意同类强化和弱点克制";
+  }
+  if ((game.weapons.headset.level > 0 || game.weapons.report.level > 0) && Math.floor(game.waveTime) % 23 < 4) {
+    return "领域武器不用完全站死，短暂停留和被围时都会积累守场优势";
+  }
+  return "";
+}
+
 function showStageBanner() {
   const isBoss = game.stage >= game.maxStage || game.stageConfig.eliteTotal >= 3;
   ui.stageBannerMeta.textContent = `第 ${game.stage} 关`;
   ui.stageBannerTitle.textContent = game.stageConfig.name;
-  ui.stageBannerText.textContent = stageBriefs[Math.min(stageBriefs.length - 1, game.stage - 1)];
+  const incident = game.currentIncident ? `｜${game.currentIncident.title}：${game.currentIncident.text}` : "";
+  ui.stageBannerText.textContent = `${stageBriefs[Math.min(stageBriefs.length - 1, game.stage - 1)]}${incident}`;
   ui.stageBanner.classList.toggle("boss", isBoss);
   ui.stageBanner.classList.remove("hidden");
   window.clearTimeout(showStageBanner.timer);
   showStageBanner.timer = window.setTimeout(() => {
     ui.stageBanner.classList.add("hidden");
   }, isBoss ? 2600 : 1900);
+}
+
+function showBossArrival() {
+  ui.stageBannerMeta.textContent = "终局评审";
+  ui.stageBannerTitle.textContent = "总监亲自下场";
+  ui.stageBannerText.textContent = "会议室灯全亮了。报表、激光笔和计算器会更容易打穿他的节奏。";
+  ui.stageBanner.classList.add("boss");
+  ui.stageBanner.classList.remove("hidden");
+  window.clearTimeout(showStageBanner.timer);
+  showStageBanner.timer = window.setTimeout(() => {
+    ui.stageBanner.classList.add("hidden");
+  }, 3600);
 }
 
 function updateBuildHud() {
@@ -3670,6 +4219,8 @@ function updateStatHud() {
     regen: `${Math.round(p.regen)}/s`,
     fortify: Math.round(p.fortify),
     trapPower: Math.round(p.trapPower),
+    languagePower: Math.round(p.languagePower),
+    boozePower: Math.round(p.boozePower),
   };
   const signature = statLabels.map(({ key }) => values[key]).join(",");
   if (signature === statHudSignature) return;
@@ -3843,6 +4394,8 @@ function getPauseStatValues() {
     regen: `${Math.round(p.regen)}/s`,
     fortify: Math.round(p.fortify),
     trapPower: Math.round(p.trapPower),
+    languagePower: Math.round(p.languagePower),
+    boozePower: Math.round(p.boozePower),
   };
 }
 
@@ -3858,6 +4411,7 @@ ui.refreshButton.addEventListener("click", rerollShop);
 ui.pauseButton.addEventListener("click", togglePause);
 ui.resumeButton.addEventListener("click", resumeGame);
 ui.buildToggle.addEventListener("click", toggleBuildPanel);
+ui.fusionNoticeClose?.addEventListener("click", () => ui.fusionNotice?.classList.add("hidden"));
 
 decorateHudIcons();
 
@@ -3877,6 +4431,8 @@ renderStatHud({
   regen: "0/s",
   fortify: 0,
   trapPower: 0,
+  languagePower: 0,
+  boozePower: 0,
 });
 renderItemHud([]);
 drawMenuBackground();
@@ -3892,3 +4448,4 @@ function decorateHudIcons() {
   hpIcon.className = `stat-icon ${uiIconClass(0)}`;
   document.querySelector(".hp-stat")?.prepend(hpIcon);
 }
+

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工位肉鸽原型</title>
+    <link rel="icon" href="data:," />
     <link rel="preload" as="image" href="assets/office-rogue-atlas.png" />
     <link rel="preload" as="image" href="assets/office-rogue-props.png" />
     <link rel="preload" as="image" href="assets/office-rogue-ui-icons.png" />
@@ -30,6 +31,12 @@
           <span id="stageBannerMeta">第 1 关</span>
           <strong id="stageBannerTitle">漏洞潮</strong>
           <p id="stageBannerText">清理 Bug，建立第一套武器方向</p>
+        </div>
+        <div id="fusionNotice" class="fusion-notice hidden" role="status" aria-live="polite">
+          <span id="fusionNoticeMeta">终局改造</span>
+          <strong id="fusionNoticeTitle">武器已接近最终形态</strong>
+          <p id="fusionNoticeText">继续强化同体系武器和关键属性，可能触发特殊变化。</p>
+          <button id="fusionNoticeClose" type="button">知道了</button>
         </div>
 
         <div class="hud top-left">
@@ -156,6 +163,6 @@
       </section>
     </main>
 
-    <script src="main.js?v=20260611-standfield2"></script>
+    <script src="main.js?v=20260611-office-depth"></script>
   </body>
 </html>
