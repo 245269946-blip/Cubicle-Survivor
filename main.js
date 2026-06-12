@@ -43,6 +43,7 @@ const ui = {
   pauseStats: document.querySelector("#pauseStats"),
   pauseButton: document.querySelector("#pauseButton"),
   resumeButton: document.querySelector("#resumeButton"),
+  restartFromPause: document.querySelector("#restartFromPause"),
   objectiveStageMeta: document.querySelector("#objectiveStageMeta"),
   objectiveStageName: document.querySelector("#objectiveStageName"),
   objectiveTime: document.querySelector("#objectiveTime"),
@@ -348,7 +349,7 @@ function getStageConfig(stage) {
   return {
     name: names[Math.min(names.length - 1, stage - 1)],
     duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2 + lateStage,
-    totalEnemies: Math.round(24 + stage * 8.4 + midStage * 4.2 + lateStage * 3.2),
+    totalEnemies: Math.round(24 + stage * 8.4 + midStage * 4.2 + lateStage * 3.2 - (stage <= 3 ? 4 + stage * 2 : 0)),
     maxConcurrent: Math.round((14 + stage * 3.1 + midStage * 1.35 + lateStage * 1.45) * (pressureStage ? 1.08 : 1)),
     spawnInterval: Math.max(0.24, 0.9 - stage * 0.044 - midStage * 0.013),
     batchSize: Math.min(6, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
@@ -1340,15 +1341,17 @@ function createGame() {
     boughtItemTags: [],
     fusionHintsSeen: new Set(),
     fusionLog: [],
+    routeTiers: {},
     evolutionHintsSeen: new Set(),
     evolvedWeapons: new Set(),
+    perimeterPulseCooldown: 0,
     kills: 0,
     level: 1,
     upgradesTaken: 0,
     pendingLevelUps: 0,
     upgradeReturnState: "playing",
     xp: 0,
-    xpNext: 18,
+    xpNext: 26,
     spawnTimer: 0,
     eliteTimer: 24,
     projectiles: [],
@@ -1567,6 +1570,23 @@ function updateWeapons(dt) {
     }
     if (level >= 7 && Math.random() < clamp(getEffectiveStat("crit"), 10, 75) / 140) {
       chainLightning(target, 1 + (hasWeaponEvolution("coffee") ? 1 : 0), 210 + rangeBonus(0.35), damage * 0.55, "coffee");
+    }
+    if (precisionTier >= 3 && level >= 3 && Math.random() < clamp(getEffectiveStat("crit"), 10, 75) / 200) {
+      game.damageZones.push({
+        x: target.x,
+        y: target.y,
+        r: 52 + level * 4,
+        life: 0.48,
+        maxLife: 0.48,
+        damage: damage * 0.34,
+        source: "coffee",
+        tick: 0.24,
+        chainTick: Infinity,
+        textTick: 0,
+        residual: true,
+        color: "#b282ff",
+      });
+      floatingText(target.x, target.y - 18, "校准", "#b282ff");
     }
     if (precision) {
       fireBeam(angle, 420 + rangeBonus(0.9), 3 + Math.floor(level / 2), hitDamage(5 + game.weapons.marker.level * 2.2), "#b282ff", "marker");
@@ -1794,6 +1814,29 @@ function updateWeapons(dt) {
       }
       pulse(p.x, p.y, p.orbitRadius + 90, "#ffd15c");
     }
+  }
+
+  if (perimeterTier >= 3 && getAnchorCharge() >= 1) {
+    game.perimeterPulseCooldown = Math.max(0, (game.perimeterPulseCooldown || 0) - dt);
+    if (game.perimeterPulseCooldown <= 0) {
+      const pulseRadius = 122 + Math.min(60, getEffectiveStat("fortify") * 2.5);
+      for (const e of game.enemies) {
+        const dx = e.x - p.x;
+        const dy = e.y - p.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < pulseRadius + e.r) {
+          e.x += (dx / dist) * 58;
+          e.y += (dy / dist) * 58;
+          e.slow = Math.min(e.slow || 1, 0.5);
+          applyEnemyDamage(e, continuousDamage(4 + getEffectiveStat("fortify") * 0.55), "headset");
+        }
+      }
+      pulse(p.x, p.y, pulseRadius, "#ffd15c");
+      floatingText(p.x, p.y - 42, "结界脉冲", "#ffd15c");
+      game.perimeterPulseCooldown = 8;
+    }
+  } else {
+    game.perimeterPulseCooldown = Math.max(0, (game.perimeterPulseCooldown || 0) - dt);
   }
 }
 
@@ -2026,6 +2069,23 @@ function updateDamageZones(dt) {
     }
   }
   for (const zone of game.damageZones) {
+    if (zone.life <= 0 && zone.source === "sticky" && getRouteTier("conductor") >= 3 && !zone.residual) {
+      game.damageZones.push({
+        x: zone.x,
+        y: zone.y,
+        r: zone.r * 0.62,
+        life: 1.8,
+        maxLife: 1.8,
+        damage: zone.damage * 0.2,
+        source: "sticky",
+        tick: 0.38,
+        chainTick: Infinity,
+        textTick: 0,
+        residual: true,
+        color: "#52ffe1",
+      });
+      floatingText(zone.x, zone.y - 10, "残留", "#52ffe1");
+    }
     if (zone.life <= 0 && zone.explodeOnEnd) {
       game.delayedBlasts.push({
         x: zone.x,
@@ -2091,6 +2151,23 @@ function updateProjectiles(dt) {
         pr.hitIds.add(e.id);
         applyEnemyDamage(e, pr.damage, pr.source || "projectile");
         e.hitFlash = 0.08;
+        if (pr.source === "keyboard" && getRouteTier("barrage") >= 3 && Math.random() < 0.16) {
+          const fragAngle = Math.atan2(pr.vy, pr.vx);
+          for (let f = -1; f <= 1; f += 2) {
+            spawnProjectile({
+              x: pr.x,
+              y: pr.y,
+              vx: Math.cos(fragAngle + f * 0.46) * 285,
+              vy: Math.sin(fragAngle + f * 0.46) * 285,
+              r: 2.5,
+              life: 0.36,
+              damage: pr.damage * 0.42,
+              color: "#c35cff",
+              pierce: 1,
+              source: "keyboardShard",
+            });
+          }
+        }
         pr.pierce -= 1;
         spark(pr.x, pr.y, pr.color);
       }
@@ -2356,7 +2433,7 @@ function gainXp(amount) {
   while (game.xp >= game.xpNext) {
     game.xp -= game.xpNext;
     game.level += 1;
-    game.xpNext = Math.floor(game.xpNext * 1.22 + 7);
+    game.xpNext = Math.floor(game.xpNext * 1.24 + 9);
     if (state === "recovery") {
       game.pendingLevelUps += 1;
     } else {
@@ -2463,6 +2540,7 @@ function chooseUpgrade(choice) {
   choice.apply(game);
   game.upgradesTaken += 1;
   checkWeaponEvolutions();
+  checkRouteTierUps();
   ui.upgradePanel.classList.add("hidden");
   game.currentUpgradeChoices = [];
   game.upgradeRerolls = 0;
@@ -2860,6 +2938,7 @@ function buyShopOffer(index) {
     applyWeaponUpgradeModifiers();
     maybeShowFusionHint(getUpgradeWeaponId(offer.entry.id));
     checkWeaponEvolutions();
+    checkRouteTierUps();
     markBuildHint();
   }
   offer.purchased = true;
@@ -2869,6 +2948,7 @@ function buyShopOffer(index) {
     game.boughtItemNames.push(offer.entry.title);
     game.boughtItemTags.push(offer.entry.tag || "");
     checkWeaponEvolutions();
+    checkRouteTierUps();
   }
   updateBuildHud();
   updateStatHud();
@@ -3173,7 +3253,25 @@ function weaponCooldown(base, weaponId) {
   };
   const coefficient = coefficients[weaponId] ?? 1;
   const floor = weaponId === "marker" ? 0.42 : weaponId === "coffee" ? 0.16 : 0.22;
-  return Math.max(floor, base * (100 / (100 + attackSpeed * coefficient)));
+  const hybrid = getHybridBonus();
+  const hybridMult = hybrid.active ? hybrid.cooldownMult : 1;
+  return Math.max(floor, base * (100 / (100 + attackSpeed * coefficient)) * hybridMult);
+}
+
+function getHybridBonus() {
+  if (!game) return { active: false };
+  const counts = getWeaponClassCounts();
+  const owned = getOwnedWeaponCount();
+  const classCount = Object.keys(counts).length;
+  const anyRouteActive = routeDefinitions.some((route) => getRouteTier(route.id) >= 2);
+  if (owned < 3 || classCount < 3 || anyRouteActive) return { active: false };
+  return {
+    active: true,
+    cooldownMult: 0.92,
+    label: classCount >= 5 ? "全能工位+" : "全能工位",
+    text: classCount >= 5 ? "冷却 -8%，伤害 +4%" : "冷却 -8%",
+    damageMult: classCount >= 5 ? 0.04 : 0,
+  };
 }
 
 function hasWeaponEvolution(weaponId) {
@@ -3298,6 +3396,48 @@ function getRouteTier(routeId) {
   return route ? getRouteProgress(route).tier : 0;
 }
 
+function checkRouteTierUps() {
+  if (!game) return;
+  if (!game.routeTiers) game.routeTiers = {};
+  for (const route of routeDefinitions) {
+    const newTier = getRouteTier(route.id);
+    const oldTier = game.routeTiers[route.id] || 0;
+    if (newTier <= oldTier) continue;
+    for (let tier = oldTier + 1; tier <= newTier; tier += 1) {
+      game.routeTiers[route.id] = tier;
+      if (tier === 1) continue;
+      if (tier === 2) {
+        game.materials += 3;
+        showRouteTierNotice(route, tier, "路线启动：补给材料 +3。");
+      } else if (tier === 3) {
+        game.player.damageMult += 0.04;
+        showRouteTierNotice(route, tier, "路线聚焦：全局伤害 +4%，中期特效已启用。");
+      } else if (tier === 4) {
+        const pool = route.weapons.filter((id) => game.weapons[id].level < game.weapons[id].max);
+        if (pool.length) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          game.weapons[pick].level += 1;
+          syncWeaponDerivedStats();
+          applyWeaponUpgradeModifiers();
+          showRouteTierNotice(route, tier, `路线终局：${game.weapons[pick].label} 免费 +1 级。`);
+        } else {
+          showRouteTierNotice(route, tier, "路线终局：武器已达上限，终局进化进入待触发状态。");
+        }
+        checkWeaponEvolutions();
+      }
+    }
+  }
+}
+
+function showRouteTierNotice(route, tier, detail) {
+  const tierName = route.stages?.[tier] || `Tier ${tier}`;
+  const message = `${route.name} · ${tierName}。${detail}`;
+  game.fusionLog.push(message);
+  showFusionNotice(`${route.name}路线`, route.fantasy || route.name, message);
+  pulse(game.player.x, game.player.y, tier >= 4 ? 170 : tier >= 3 ? 135 : 96, route.color || "#52ffe1");
+  markBuildHint();
+}
+
 function getRouteStatUnit(key) {
   const value = getEffectiveStat(key);
   if (key === "crit") return value / 3;
@@ -3385,7 +3525,8 @@ function continuousDamage(base) {
 }
 
 function getDamageMult() {
-  return game.player.damageMult + getClassBonus("damageMult") + getBuildFocusDamageBonus();
+  const hybrid = getHybridBonus();
+  return game.player.damageMult + getClassBonus("damageMult") + getBuildFocusDamageBonus() + (hybrid.active ? hybrid.damageMult : 0);
 }
 
 function getBuildFocusDamageBonus() {
@@ -4218,6 +4359,37 @@ function drawPlayer() {
   ctx.globalAlpha = p.invuln > 0 ? 0.62 + Math.sin(game.time * 34) * 0.22 : 1;
   drawPixelWorker(p.x, p.y, game.time, p);
   ctx.restore();
+  const dominantRoute = getDominantRoute();
+  if (dominantRoute && dominantRoute.tier >= 2) {
+    const alpha = dominantRoute.tier >= 4
+      ? 0.22 + Math.sin(game.time * 3) * 0.06
+      : dominantRoute.tier >= 3
+        ? 0.14 + Math.sin(game.time * 2.5) * 0.04
+        : 0.08;
+    const radius = dominantRoute.tier >= 4 ? 46 : dominantRoute.tier >= 3 ? 34 : 22;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = dominantRoute.color || "#52ffe1";
+    ctx.lineWidth = dominantRoute.tier >= 4 ? 3 : 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius + p.r, 0, TAU);
+    ctx.stroke();
+    if (dominantRoute.tier >= 4 && Math.random() < 0.3) {
+      const angle = Math.random() * TAU;
+      game.particles.push({
+        x: p.x + Math.cos(angle) * (radius + p.r),
+        y: p.y + Math.sin(angle) * (radius + p.r),
+        vx: Math.cos(angle) * 8,
+        vy: Math.sin(angle) * 8 - 4,
+        r: 2,
+        age: 0,
+        life: 0.8,
+        maxLife: 0.8,
+        color: dominantRoute.accent || dominantRoute.color,
+      });
+    }
+    ctx.restore();
+  }
 }
 
 function drawEnemies() {
@@ -4639,7 +4811,7 @@ function renderBuildHud(weapons, summary) {
 
 function getClassResonanceRows() {
   const counts = getWeaponClassCounts();
-  return Object.entries(counts)
+  const rows = Object.entries(counts)
     .filter(([, count]) => count >= 2)
     .sort((a, b) => b[1] - a[1])
     .map(([className, count]) => {
@@ -4654,6 +4826,9 @@ function getClassResonanceRows() {
         text: active ? formatClassBonus(active) : "待共鸣",
       };
     });
+  const hybrid = getHybridBonus();
+  if (hybrid.active) rows.unshift({ label: hybrid.label, count: Object.keys(counts).length, text: hybrid.text });
+  return rows;
 }
 
 function formatClassBonus(tier) {
@@ -4832,6 +5007,26 @@ function resumeGame() {
   if (state === "playing" || state === "recovery") requestAnimationFrame(loop);
 }
 
+function abandonRunToMenu() {
+  state = "menu";
+  pausedFromState = "playing";
+  game = null;
+  keys.clear();
+  pointer.active = false;
+  ui.pausePanel.classList.add("hidden");
+  ui.weaponPanel.classList.add("hidden");
+  ui.upgradePanel.classList.add("hidden");
+  ui.resultPanel.classList.add("hidden");
+  ui.fusionNotice?.classList.add("hidden");
+  ui.startPanel.classList.remove("hidden");
+  buildHudSignature = "";
+  statHudSignature = "";
+  itemHudSignature = "";
+  renderBuildHud(weaponDefinitions, "咖啡 Lv.1 · 1/6");
+  renderItemHud([]);
+  drawMenuBackground();
+}
+
 function renderPauseSheet() {
   const values = getPauseStatValues();
   const weapons = buildOrder.map((id) => {
@@ -4893,6 +5088,7 @@ ui.upgradeRerollButton?.addEventListener("click", rerollUpgradeChoices);
 ui.refreshButton.addEventListener("click", rerollShop);
 ui.pauseButton.addEventListener("click", togglePause);
 ui.resumeButton.addEventListener("click", resumeGame);
+ui.restartFromPause?.addEventListener("click", abandonRunToMenu);
 ui.buildToggle.addEventListener("click", toggleBuildPanel);
 ui.fusionNoticeClose?.addEventListener("click", () => ui.fusionNotice?.classList.add("hidden"));
 

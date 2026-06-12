@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>工位肉鸽原型</title>
+    <title>工位幸存者</title>
     <link rel="icon" href="data:," />
     <link rel="preload" as="image" href="assets/office-rogue-atlas.png" />
     <link rel="preload" as="image" href="assets/office-rogue-props.png" />
@@ -12,7 +12,7 @@
   </head>
   <body>
     <main class="shell">
-      <section class="game-wrap" aria-label="工位肉鸽原型">
+      <section class="game-wrap" aria-label="工位幸存者">
         <canvas id="game" width="1280" height="720"></canvas>
 
         <div class="objective-hud" aria-live="polite">
@@ -106,14 +106,33 @@
 
         <div id="startPanel" class="overlay">
           <div class="panel intro-panel">
-            <p class="eyebrow">Prototype 01</p>
-            <h1>工位幸存者</h1>
-            <p class="subtitle">会议、Bug 和报表正在靠近。</p>
+            <div class="title-hero">
+              <span class="title-stamp">办公室 Roguelike</span>
+              <h1><span class="title-glitch">工位</span>幸存者</h1>
+              <p class="subtitle">会议、Bug 和报表正在靠近。</p>
+              <div class="title-bar" aria-hidden="true"></div>
+            </div>
             <div class="quick-guide">
-              <span>WASD / 方向键移动</span>
-              <span>自动攻击，优先躲开冲刺和 Boss 警告</span>
-              <span>升级选属性，关后进工坊换武器方向</span>
-              <span>B / Tab 查看武器、属性和职业共鸣</span>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">WASD</span>
+                <strong>移动</strong>
+                <span>方向键或 WASD 控制走位，别被截止线贴脸。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">AUTO</span>
+                <strong>自动战斗</strong>
+                <span>武器自动开火，优先躲开冲刺和 Boss 警告圈。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">LV</span>
+                <strong>升级路线</strong>
+                <span>升级选属性，关后进工坊决定武器方向。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">TAB</span>
+                <strong>Build 面板</strong>
+                <span>按 B / Tab 查看武器等级、属性和职业共鸣。</span>
+              </div>
             </div>
             <button id="startButton" class="primary-button">开始加班</button>
           </div>
@@ -169,12 +188,15 @@
             <p class="eyebrow">Paused</p>
             <h2>暂停</h2>
             <div id="pauseStats" class="pause-sheet"></div>
-            <button id="resumeButton" class="primary-button secondary-button">继续</button>
+            <div class="pause-actions">
+              <button id="resumeButton" class="primary-button secondary-button">继续</button>
+              <button id="restartFromPause" class="primary-button danger-button" type="button">放弃本轮</button>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <script src="main.js?v=20260611-balance"></script>
+    <script src="main.js?v=20260612-v2"></script>
   </body>
 </html>
