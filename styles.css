@@ -1126,6 +1126,10 @@ h2 {
   gap: 12px;
 }
 
+#upgradeChoices {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .upgrade-actions {
   display: flex;
   justify-content: center;
@@ -1773,6 +1777,10 @@ h2 {
   }
 
   .choices {
+    grid-template-columns: 1fr;
+  }
+
+  #upgradeChoices {
     grid-template-columns: 1fr;
   }
 
