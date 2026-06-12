@@ -3755,7 +3755,7 @@ function rerollShop() {
 }
 
 function getShopOfferCount() {
-  return game.stage === 1 && getOwnedWeaponCount() === 1 ? 6 : 4;
+  return 4;
 }
 
 function getRefreshCost() {
