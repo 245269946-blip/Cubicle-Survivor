@@ -39,6 +39,19 @@ const ui = {
   resultEyebrow: document.querySelector("#resultEyebrow"),
   resultTitle: document.querySelector("#resultTitle"),
   resultStats: document.querySelector("#resultStats"),
+  perkPanel: document.querySelector("#perkPanel"),
+  perkList: document.querySelector("#perkList"),
+  perkPoints: document.querySelector("#perkPointsText"),
+  perkShopButton: document.querySelector("#perkShopButton"),
+  perkCloseButton: document.querySelector("#perkCloseButton"),
+  startPerkButton: document.querySelector("#startPerkButton"),
+  startEndlessButton: document.querySelector("#startEndlessButton"),
+  itemReplacePanel: document.querySelector("#itemReplacePanel"),
+  itemReplaceNew: document.querySelector("#itemReplaceNew"),
+  itemReplaceList: document.querySelector("#itemReplaceList"),
+  itemReplaceCount: document.querySelector("#itemReplaceCount"),
+  itemConvertButton: document.querySelector("#itemConvertButton"),
+  itemKeepButton: document.querySelector("#itemKeepButton"),
   pausePanel: document.querySelector("#pausePanel"),
   pauseStats: document.querySelector("#pauseStats"),
   pauseButton: document.querySelector("#pauseButton"),
@@ -75,6 +88,13 @@ const WORLD = { w: 4800, h: 3000 };
 const WAVE_SECONDS = 50;
 const RECOVERY_SECONDS = 10;
 const MAX_STAGE = 14;
+const STAGE_ONE_WARMUP_SECONDS = 18;
+const EMPLOYEE_POINTS_KEY = "cb_employee_points";
+const EMPLOYEE_UPGRADES_KEY = "cb_employee_upgrades";
+const DAMAGE_MULT_SOFT_CAP = 1.82;
+const DAMAGE_MULT_HARD_CAP = 2.18;
+const ATTACK_SPEED_SOFT_CAP = 62;
+const ATTACK_SPEED_HARD_CAP = 92;
 const SPRITE_ATLAS_SRC = "assets/office-rogue-atlas.png";
 const PROPS_ATLAS_SRC = "assets/office-rogue-props.png";
 const UI_ATLAS_SRC = "assets/office-rogue-ui-icons.png";
@@ -213,39 +233,39 @@ const weaponClassLabels = {
 };
 const weaponClassBonuses = {
   precise: [
-    { count: 2, crit: 6 },
-    { count: 3, crit: 12, damageMult: 0.06 },
-    { count: 4, crit: 18, damageMult: 0.12 },
+    { count: 2, crit: 4 },
+    { count: 3, crit: 9, damageMult: 0.04 },
+    { count: 4, crit: 14, damageMult: 0.08 },
   ],
   ranged: [
-    { count: 2, range: 24 },
-    { count: 3, range: 52, pierce: 1 },
-    { count: 4, range: 80, pierce: 1, attackSpeed: 8 },
+    { count: 2, range: 18 },
+    { count: 3, range: 40, pierce: 1 },
+    { count: 4, range: 64, pierce: 1, attackSpeed: 5 },
   ],
   barrage: [
-    { count: 2, attackSpeed: 8 },
-    { count: 3, attackSpeed: 18, projectileMult: 1 },
-    { count: 4, attackSpeed: 28, projectileMult: 2 },
+    { count: 2, attackSpeed: 6 },
+    { count: 3, attackSpeed: 14, projectileMult: 1 },
+    { count: 4, attackSpeed: 22, projectileMult: 1 },
   ],
   field: [
-    { count: 2, fieldRadius: 18 },
-    { count: 3, fieldRadius: 34, armor: 2 },
-    { count: 4, fieldRadius: 50, armor: 4 },
+    { count: 2, fieldRadius: 12 },
+    { count: 3, fieldRadius: 24, armor: 1 },
+    { count: 4, fieldRadius: 38, armor: 2 },
   ],
   engineering: [
-    { count: 2, engineering: 0.12 },
-    { count: 3, engineering: 0.25, chain: 1 },
-    { count: 4, engineering: 0.4, chain: 2 },
+    { count: 2, engineering: 0.08 },
+    { count: 3, engineering: 0.18, chain: 1 },
+    { count: 4, engineering: 0.3, chain: 1 },
   ],
   support: [
-    { count: 2, pickupRange: 22 },
-    { count: 3, pickupRange: 45, luck: 8 },
-    { count: 4, pickupRange: 70, luck: 24 },
+    { count: 2, pickupRange: 16 },
+    { count: 3, pickupRange: 34, luck: 6 },
+    { count: 4, pickupRange: 52, luck: 16 },
   ],
   close: [
     { count: 1, armor: 1 },
-    { count: 2, armor: 2, damageMult: 0.05 },
-    { count: 3, armor: 3, damageMult: 0.08, attackSpeed: 8 },
+    { count: 2, armor: 2, damageMult: 0.03 },
+    { count: 3, armor: 3, damageMult: 0.05, attackSpeed: 5 },
   ],
 };
 
@@ -340,8 +360,8 @@ const statDropPool = [
   { key: "armor", label: "护甲", amount: 1, apply: (g) => { g.player.armor += 1; } },
   { key: "dodge", label: "闪避", amount: 2, apply: (g) => { g.player.dodge = Math.min(60, g.player.dodge + 2); } },
   { key: "speed", label: "速度", amount: 5, apply: (g) => { g.player.speed += 5; } },
-  { key: "attackSpeed", label: "攻速", amount: 3, apply: (g) => { g.player.attackSpeed += 3; } },
-  { key: "damageMult", label: "伤害", amount: 3, apply: (g) => { g.player.damageMult += 0.03; } },
+  { key: "attackSpeed", label: "攻速", amount: 3, apply: (g) => { addPlayerAttackSpeed(g, 3); } },
+  { key: "damageMult", label: "伤害", amount: 3, apply: (g) => { addPlayerDamage(g, 0.03); } },
   { key: "crit", label: "暴击", amount: 2, apply: (g) => { g.player.crit = Math.min(75, g.player.crit + 2); } },
   { key: "range", label: "射程", amount: 8, apply: (g) => { g.player.range += 8; } },
   { key: "luck", label: "幸运", amount: 3, apply: (g) => { g.player.luck += 3; } },
@@ -423,17 +443,19 @@ function getStageConfig(stage) {
   const burstStage = stage === 4 || stage === 7 || stage === 9;
   const midStage = Math.max(0, stage - 6);
   const lateStage = Math.max(0, stage - 10);
+  const scalingStage = Math.max(0, stage - 1);
+  const latePressure = Math.max(0, stage - 8);
   return {
     name: names[Math.min(names.length - 1, stage - 1)],
     duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2 + lateStage,
-    totalEnemies: Math.round(24 + stage * 8.4 + midStage * 4.2 + lateStage * 3.2 - (stage <= 3 ? 4 + stage * 2 : 0)),
-    maxConcurrent: Math.round((14 + stage * 3.1 + midStage * 1.35 + lateStage * 1.45) * (pressureStage ? 1.08 : 1)),
-    spawnInterval: Math.max(0.24, 0.9 - stage * 0.044 - midStage * 0.013),
-    batchSize: Math.min(6, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
+    totalEnemies: Math.round((24 + stage * 9.2 + midStage * 5.5 + lateStage * 6 - (stage <= 3 ? 4 + stage * 2 : 0)) * (stage === 1 ? 0.82 : 1)),
+    maxConcurrent: Math.round((14 + stage * 3.4 + midStage * 2 + lateStage * 2.4) * (pressureStage ? 1.12 : 1) * (stage === 1 ? 0.72 : 1)),
+    spawnInterval: Math.max(0.2, 0.92 - stage * 0.046 - midStage * 0.02 - lateStage * 0.012) * (stage === 1 ? 1.28 : 1),
+    batchSize: stage === 1 ? 1 : Math.min(6, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
     eliteTotal: Math.max(0, Math.floor((stage - 1) / 2) + (stage >= 8 ? 1 : 0) + (stage >= 12 ? 1 : 0)),
-    healthMult: 1 + stage * 0.145 + midStage * 0.075 + lateStage * 0.055,
-    speedMult: 0.98 + stage * 0.034 + lateStage * 0.018 + (burstStage ? 0.03 : 0),
-    damageMult: (1 + stage * 0.078 + midStage * 0.022) * (pressureStage ? 1.055 : 1),
+    healthMult: 1 + stage * 0.108 + scalingStage * scalingStage * 0.0165 + midStage * 0.058 + latePressure * latePressure * 0.013,
+    speedMult: 0.98 + stage * 0.042 + midStage * 0.013 + lateStage * 0.028 + (burstStage ? 0.04 : 0),
+    damageMult: (1 + stage * 0.07 + midStage * 0.065 + latePressure * 0.04) * (pressureStage ? 1.075 : 1),
     materialMult: 0.76 + stage * 0.047 + lateStage * 0.018,
     enemyMix: mixes[Math.min(mixes.length - 1, stage - 1)],
     clearBonusMult: burstStage || stage === 10 ? 1.22 : 1,
@@ -455,9 +477,9 @@ function getEndlessStageConfig(level) {
     spawnInterval: Math.max(0.18, 0.42 - level * 0.012),
     batchSize: Math.min(8, 5 + Math.floor(level / 3)),
     eliteTotal: Infinity,
-    healthMult: 3.12 + level * 0.16,
+    healthMult: 4.85 + level * 0.22 + level * level * 0.008,
     speedMult: 1.38 + level * 0.045,
-    damageMult: 1.92 + level * 0.065,
+    damageMult: 2.18 + level * 0.075,
     materialMult: 1.38 + level * 0.035,
     enemyMix: mix,
     clearBonusMult: 0,
@@ -511,7 +533,7 @@ function rollOfficeIncident(stage) {
       title: "下班酒局邀约",
       text: "伤害和暴击提升，但容错更低。",
       apply: (g) => {
-        g.player.damageMult += 0.04;
+        addPlayerDamage(g, 0.04);
         g.player.crit = Math.min(75, g.player.crit + 2);
         g.player.maxHp = Math.max(60, g.player.maxHp - 3);
         g.player.hp = Math.min(g.player.hp, g.player.maxHp);
@@ -805,7 +827,7 @@ const weaponUpgradePool = [
     apply: (g) => {
       g.weapons.coffee.level += 1;
       g.player.coffeeCooldown *= 0.84;
-      g.player.attackSpeed += 4;
+      addPlayerAttackSpeed(g, 4);
     },
     available: (g) => g.weapons.coffee.level >= 3 && g.weapons.coffee.level < g.weapons.coffee.max,
   },
@@ -817,7 +839,7 @@ const weaponUpgradePool = [
     apply: (g) => {
       g.weapons.keyboard.level += 1;
       g.player.keyboardShots += 2;
-      g.player.attackSpeed += 3;
+      addPlayerAttackSpeed(g, 3);
     },
     available: (g) => g.weapons.keyboard.level >= 3 && g.weapons.keyboard.level < g.weapons.keyboard.max,
   },
@@ -916,10 +938,10 @@ const statUpgradePool = [
     apply: (g) => {
       g.player.maxHp += 10;
       g.player.hp = Math.min(g.player.maxHp, g.player.hp + 25);
-      g.player.damageMult += 0.08;
+      addPlayerDamage(g, 0.08);
       g.player.pickupRange += 8;
     },
-    available: (g) => g.player.damageMult < 1.8,
+    available: (g) => g.player.damageMult < DAMAGE_MULT_HARD_CAP,
   },
   {
     id: "attackSpeed",
@@ -927,10 +949,10 @@ const statUpgradePool = [
     tag: "属性 / 攻速",
     text: "攻速 +12%，小幅提升射程。",
     apply: (g) => {
-      g.player.attackSpeed += 12;
+      addPlayerAttackSpeed(g, 12);
       g.player.range += 8;
     },
-    available: (g) => g.player.attackSpeed < 120,
+    available: (g) => g.player.attackSpeed < ATTACK_SPEED_HARD_CAP,
   },
   {
     id: "crit",
@@ -939,7 +961,7 @@ const statUpgradePool = [
     text: "暴击 +8%，伤害 +3%。",
     apply: (g) => {
       g.player.crit = Math.min(75, g.player.crit + 8);
-      g.player.damageMult += 0.03;
+      addPlayerDamage(g, 0.03);
     },
     available: (g) => g.player.crit < 75,
   },
@@ -1017,12 +1039,12 @@ const statUpgradePool = [
     tag: "属性 / 高速",
     text: "攻速 +22%，伤害 +5%，生命上限 -8。适合弹幕和连锁流。",
     apply: (g) => {
-      g.player.attackSpeed += 22;
-      g.player.damageMult += 0.05;
+      addPlayerAttackSpeed(g, 22);
+      addPlayerDamage(g, 0.05);
       g.player.maxHp = Math.max(55, g.player.maxHp - 8);
       g.player.hp = Math.min(g.player.hp, g.player.maxHp);
     },
-    available: (g) => g.player.attackSpeed < 150 && g.player.maxHp > 65,
+    available: (g) => g.player.attackSpeed < ATTACK_SPEED_HARD_CAP && g.player.maxHp > 65,
   },
   {
     id: "glassBuild",
@@ -1030,11 +1052,11 @@ const statUpgradePool = [
     tag: "属性 / 爆发",
     text: "伤害 +18%，暴击 +6%，护甲 -2。适合精准贯穿。",
     apply: (g) => {
-      g.player.damageMult += 0.18;
+      addPlayerDamage(g, 0.18);
       g.player.crit = Math.min(75, g.player.crit + 6);
       g.player.armor = Math.max(-6, g.player.armor - 2);
     },
-    available: (g) => g.player.damageMult < 2.2,
+    available: (g) => g.player.damageMult < DAMAGE_MULT_HARD_CAP,
   },
   {
     id: "compound",
@@ -1123,11 +1145,11 @@ const statUpgradePool = [
     tag: "属性 / 爆发",
     text: "伤害 +10%，暴击 +4%，闪避 -3%。短线爆发更猛。",
     apply: (g) => {
-      g.player.damageMult += 0.1;
+      addPlayerDamage(g, 0.1);
       g.player.crit = Math.min(75, g.player.crit + 4);
       g.player.dodge = Math.max(0, g.player.dodge - 3);
     },
-    available: (g) => g.player.damageMult < 2.4 || g.player.crit < 75,
+    available: (g) => g.player.damageMult < DAMAGE_MULT_HARD_CAP || g.player.crit < 75,
   },
   {
     id: "bilingualMinutes",
@@ -1147,12 +1169,12 @@ const statUpgradePool = [
     tag: "属性 / 爆发 后期",
     text: "伤害 +10%，暴击 +8%，生命 -8。后半程极端输出选择。",
     apply: (g) => {
-      g.player.damageMult += 0.1;
+      addPlayerDamage(g, 0.1);
       g.player.crit = Math.min(75, g.player.crit + 8);
       g.player.maxHp = Math.max(55, g.player.maxHp - 8);
       g.player.hp = Math.min(g.player.hp, g.player.maxHp);
     },
-    available: (g) => g.stage >= 6 && (g.player.damageMult < 2.6 || g.player.crit < 75),
+    available: (g) => g.stage >= 6 && (g.player.damageMult < DAMAGE_MULT_HARD_CAP || g.player.crit < 75),
   },
   {
     id: "laserCalibration",
@@ -1236,11 +1258,11 @@ const statUpgradePool = [
     tag: "属性 / 爆发 后期",
     text: "伤害和暴击大幅提升，但护甲下降。适合用爆发压过后半程压力。",
     apply: (g) => {
-      g.player.damageMult += 0.12;
+      addPlayerDamage(g, 0.12);
       g.player.crit = Math.min(75, g.player.crit + 10);
       g.player.armor = Math.max(-8, g.player.armor - 2);
     },
-    available: (g) => g.stage >= 8 && (g.player.damageMult < 2.8 || g.player.crit < 75),
+    available: (g) => g.stage >= 8 && (g.player.damageMult < DAMAGE_MULT_HARD_CAP || g.player.crit < 75),
   },
   {
     id: "shredderMaintenance",
@@ -1319,7 +1341,7 @@ const itemPool = [
     tag: "道具 / 输出",
     text: "伤害 +10%，速度 -8。",
     apply: (g) => {
-      g.player.damageMult += 0.1;
+      addPlayerDamage(g, 0.1);
       g.player.speed = Math.max(140, g.player.speed - 8);
     },
   },
@@ -1349,7 +1371,7 @@ const itemPool = [
     tag: "道具 / 爆发",
     text: "伤害 +6%，速度 +14，生命 -6。",
     apply: (g) => {
-      g.player.damageMult += 0.06;
+      addPlayerDamage(g, 0.06);
       g.player.speed += 14;
       g.player.maxHp = Math.max(40, g.player.maxHp - 6);
       g.player.hp = Math.min(g.player.hp, g.player.maxHp);
@@ -1372,7 +1394,7 @@ const itemPool = [
     tag: "道具 / 攻速",
     text: "攻速 +18%，伤害 -4%。",
     apply: (g) => {
-      g.player.attackSpeed += 18;
+      addPlayerAttackSpeed(g, 18);
       g.player.damageMult = Math.max(0.45, g.player.damageMult - 0.04);
     },
   },
@@ -1413,7 +1435,7 @@ const itemPool = [
     tag: "道具 / 闪避 攻速",
     text: "攻速 +14%，闪避 +8%，护甲 -1。弹幕近距流更灵活。",
     apply: (g) => {
-      g.player.attackSpeed += 14;
+      addPlayerAttackSpeed(g, 14);
       g.player.dodge = Math.min(60, g.player.dodge + 8);
       g.player.armor = Math.max(-6, g.player.armor - 1);
     },
@@ -1446,7 +1468,7 @@ const itemPool = [
     tag: "道具 / 输出 爆发",
     text: "伤害 +16%，生命 -10。适合想清场拿高奖励的爆发打法。",
     apply: (g) => {
-      g.player.damageMult += 0.16;
+      addPlayerDamage(g, 0.16);
       g.player.maxHp = Math.max(50, g.player.maxHp - 10);
       g.player.hp = Math.min(g.player.hp, g.player.maxHp);
     },
@@ -1511,9 +1533,9 @@ const itemPool = [
     tag: "道具 / 酒 爆发",
     text: "伤害 +12%，暴击 +5%，攻速 +8%，护甲 -1。",
     apply: (g) => {
-      g.player.damageMult += 0.12;
+      addPlayerDamage(g, 0.12);
       g.player.crit = Math.min(75, g.player.crit + 5);
-      g.player.attackSpeed += 8;
+      addPlayerAttackSpeed(g, 8);
       g.player.armor = Math.max(-6, g.player.armor - 1);
     },
   },
@@ -1540,6 +1562,91 @@ const itemPool = [
   },
 ];
 
+const itemRarityMeta = {
+  common: { label: "普通", recycle: 4, weight: 1 },
+  rare: { label: "稀有", recycle: 7, weight: 2 },
+  epic: { label: "史诗", recycle: 12, weight: 4 },
+  legendary: { label: "传说", recycle: 18, weight: 7 },
+};
+
+const itemRarityById = {
+  lunchbox: "common",
+  rubberSole: "common",
+  luckyBadge: "common",
+  oldHardDrive: "rare",
+  fileCabinet: "common",
+  wirelessMouse: "common",
+  energyDrink: "rare",
+  deskFan: "common",
+  macroPad: "rare",
+  redPen: "rare",
+  projector: "rare",
+  laserPointer: "epic",
+  standingDesk: "epic",
+  assetLedger: "rare",
+  quietRoom: "rare",
+  redlineContract: "epic",
+  insuranceClause: "epic",
+  ergonomicMat: "rare",
+  whiteboardWall: "epic",
+  deskLamp: "rare",
+  cableNest: "rare",
+  liquorCoffee: "legendary",
+  translationHeadset: "epic",
+  foreignContract: "legendary",
+};
+
+for (const item of itemPool) {
+  item.rarity = itemRarityById[item.id] || "common";
+}
+
+const permanentUpgrades = [
+  {
+    id: "maxHp",
+    title: "入职体检",
+    text: "每级开局生命上限 +8。",
+    costs: [75, 150, 300, 520],
+    apply: (g, level) => {
+      g.player.maxHp += level * 8;
+      g.player.hp += level * 8;
+    },
+  },
+  {
+    id: "speed",
+    title: "通勤路线",
+    text: "每级开局移动速度 +6。",
+    costs: [75, 180, 360],
+    apply: (g, level) => {
+      g.player.speed += level * 6;
+    },
+  },
+  {
+    id: "materials",
+    title: "办公抽屉",
+    text: "每级开局材料 +3。",
+    costs: [90, 200, 420],
+    apply: (g, level) => {
+      g.materials += level * 3;
+    },
+  },
+  {
+    id: "luck",
+    title: "玄学工牌夹",
+    text: "每级开局幸运 +5。",
+    costs: [110, 250, 520],
+    apply: (g, level) => {
+      g.player.luck += level * 5;
+    },
+  },
+  {
+    id: "refresh",
+    title: "供应商熟人",
+    text: "每级工坊刷新费用 -1。",
+    costs: [220, 460],
+    apply: () => {},
+  },
+];
+
 function createGame() {
   const stageConfig = getStageConfig(1);
   return {
@@ -1560,6 +1667,7 @@ function createGame() {
     pendingStageEnd: null,
     materials: 0,
     weaponSlots: 6,
+    itemSlots: 6,
     rerollCount: 0,
     shopOffers: [],
     lockedShopOffers: [],
@@ -1569,6 +1677,10 @@ function createGame() {
     boughtItems: new Set(),
     boughtItemNames: [],
     boughtItemTags: [],
+    boughtItemRecords: [],
+    pendingItemChoice: null,
+    itemReplaceReturnState: "playing",
+    itemDropCooldown: 0,
     activePolicy: null,
     policyCooldownMult: 1,
     policyEnemySpeedMult: 1,
@@ -1591,6 +1703,11 @@ function createGame() {
     evolvedWeapons: new Set(),
     perimeterPulseCooldown: 0,
     kills: 0,
+    hitsTaken: 0,
+    damageTaken: 0,
+    damageBySource: {},
+    lastDamageSource: "",
+    damageFlash: 0,
     level: 1,
     upgradesTaken: 0,
     pendingLevelUps: 0,
@@ -1700,6 +1817,7 @@ function startGameActual() {
   statHudSignature = "";
   itemHudSignature = "";
   game = createGame();
+  applyPermanentUpgrades(game);
   applyPolicyToGame(game, pendingPolicy);
   pendingPolicy = null;
   policySelectionOpen = false;
@@ -1708,6 +1826,8 @@ function startGameActual() {
   state = "playing";
   ui.startPanel.classList.add("hidden");
   ui.resultPanel.classList.add("hidden");
+  ui.perkPanel?.classList.add("hidden");
+  ui.itemReplacePanel?.classList.add("hidden");
   ui.upgradePanel.classList.add("hidden");
   ui.weaponPanel.classList.add("hidden");
   ui.pausePanel.classList.add("hidden");
@@ -1717,6 +1837,11 @@ function startGameActual() {
   showStageBanner();
   lastTime = performance.now();
   requestAnimationFrame(loop);
+}
+
+function updateStartActions() {
+  const hasCleared = localStorage.getItem("cb_cleared") === "1";
+  ui.startEndlessButton?.classList.toggle("hidden", !hasCleared);
 }
 
 function showPolicySelection() {
@@ -1812,6 +1937,8 @@ function loop(now) {
 function updateGame(dt) {
   game.time += dt;
   game.waveTime += dt;
+  game.damageFlash = Math.max(0, (game.damageFlash || 0) - dt * 1.9);
+  game.itemDropCooldown = Math.max(0, (game.itemDropCooldown || 0) - dt);
   game.orbitAngle += game.player.orbitSpeed * dt;
 
   updatePlayer(dt);
@@ -2397,6 +2524,8 @@ function updateEnemies(dt) {
     const dist = Math.hypot(dx, dy) || 1;
     e.phase += dt;
     let speed = e.speed * (e.slow || 1);
+    const campPressure = game.stage >= 5 ? clamp(((p.anchorTime || 0) - 1.8) / 3, 0, 1) * (0.08 + game.stage * 0.008) : 0;
+    if (campPressure > 0 && dist > 150) speed *= 1 + campPressure;
     let moveX = dx / dist;
     let moveY = dy / dist;
 
@@ -2418,7 +2547,7 @@ function updateEnemies(dt) {
       e.slow = 1;
       e.hitFlash = Math.max(0, (e.hitFlash || 0) - dt);
       if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r && p.invuln <= 0) {
-        takeDamage(e.damage * (e.charging > 0 ? 1.05 : 0.72));
+        takeDamage(e.damage * (e.charging > 0 ? 1.05 : 0.72), enemyDamageLabel(e));
       }
       continue;
     }
@@ -2485,7 +2614,7 @@ function updateEnemies(dt) {
       e.specialTimer -= dt;
       if (e.specialTimer <= 0) {
         const radius = e.type === "boss" ? 170 : 108;
-        if (dist < radius && p.invuln <= 0) takeDamage(e.damage * (e.type === "boss" ? 0.42 : 0.28));
+        if (dist < radius && p.invuln <= 0) takeDamage(e.damage * (e.type === "boss" ? 0.42 : 0.28), enemyDamageLabel(e));
         pulse(e.x, e.y, radius, e.type === "boss" ? "#ff2a60" : "#ffd15c");
         e.specialTimer = e.type === "boss" ? 2.8 : 4.2;
       }
@@ -2493,7 +2622,7 @@ function updateEnemies(dt) {
 
     if (e.type === "meeting" && dist < 118) {
       p.slow = Math.min(p.slow, 0.74);
-      if (dist < 86 && p.invuln <= 0) takeDamage(e.damage * 0.45);
+      if (dist < 86 && p.invuln <= 0) takeDamage(e.damage * 0.45, enemyDamageLabel(e));
     }
 
     e.x += moveX * speed * dt;
@@ -2502,7 +2631,7 @@ function updateEnemies(dt) {
     e.hitFlash = Math.max(0, (e.hitFlash || 0) - dt);
 
     if (dist < p.r + e.r && p.invuln <= 0) {
-      takeDamage(e.damage);
+      takeDamage(e.damage, enemyDamageLabel(e));
     }
   }
 
@@ -2552,7 +2681,24 @@ function updateEmergencyMeeting(e, dt, p, dx, dy, dist) {
   }
 }
 
-function takeDamage(rawDamage) {
+function enemyDamageLabel(enemy) {
+  const labels = {
+    bug: "Bug 贴脸",
+    change: "需求变更",
+    meeting: "会议减速",
+    deadline: "Deadline 冲刺",
+    intern: "实习生绕行",
+    alarm: "警报增援",
+    audit: "审计压迫",
+    manager: "经理光环",
+    boss: "终局评审",
+    emergency: "紧急会议",
+  };
+  if (enemy?.elite) return `精英${labels[enemy.type] || "压力源"}`;
+  return labels[enemy?.type] || "压力源";
+}
+
+function takeDamage(rawDamage, source = "压力源") {
   const p = game.player;
   const ramp = game.stage <= 1 ? 0.72 : game.stage === 2 ? 0.84 : game.stage === 3 ? 0.92 : 1;
   const dodgeChance = clamp(p.dodge, 0, 60) / 100;
@@ -2568,6 +2714,11 @@ function takeDamage(rawDamage) {
   const damage = Math.max(1, Math.round(rawDamage * ramp * reduction));
   const finalDamage = Math.max(1, Math.round(damage * anchorReduction));
   p.hp -= finalDamage;
+  game.hitsTaken += 1;
+  game.damageTaken += finalDamage;
+  game.lastDamageSource = source;
+  game.damageBySource[source] = (game.damageBySource[source] || 0) + finalDamage;
+  game.damageFlash = Math.min(1, game.damageFlash + 0.42);
   if (p.fortify > 0 || game.weapons.headset.level > 0 || game.weapons.report.level > 0) {
     p.anchorTime = Math.min(getAnchorMaxTime(), p.anchorTime + 0.48 + getEffectiveStat("fortify") * 0.014);
   }
@@ -2586,6 +2737,7 @@ function applyEnemyDamage(enemy, amount, source = "generic", showWeakText = true
   if (enemy.type === "boss" && (source === "marker" || source === "report" || source === "calculator")) multiplier *= 1.18;
   if (enemy.type === "emergency" && (source === "marker" || source === "sticky")) multiplier *= 1.22;
   if (enemy.swarmGroup !== undefined && (source === "headset" || source === "report" || source === "shredder" || source === "sticky")) multiplier *= 1.16;
+  multiplier *= getEnemyLateDamageResistance(enemy, source);
   if (game.policyRemoteDamagePenalty && Math.hypot(enemy.x - game.player.x, enemy.y - game.player.y) > 200) multiplier *= 0.8;
 
   const shield = enemy.shield ? 1 - clamp(enemy.shield, 0, 0.45) : 1;
@@ -2599,6 +2751,16 @@ function applyEnemyDamage(enemy, amount, source = "generic", showWeakText = true
       enemy.weakTextTimer = 0.7;
     }
   }
+}
+
+function getEnemyLateDamageResistance(enemy, source) {
+  if (!game || game.stage < 8 || !enemy) return 1;
+  const rangedSources = new Set(["coffee", "keyboard", "stapler", "marker", "calculator", "projectile", "beam"]);
+  if (!rangedSources.has(source)) return 1;
+  const dist = Math.hypot(enemy.x - game.player.x, enemy.y - game.player.y);
+  if (dist < 330) return 1;
+  const stagePenalty = game.stage >= 12 ? 0.82 : 0.9;
+  return enemy.elite ? Math.min(stagePenalty, 0.86) : stagePenalty;
 }
 
 function dropEnemyLoot(enemy) {
@@ -2618,6 +2780,8 @@ function dropEnemyLoot(enemy) {
       value: Math.max(1, Math.round(enemy.materialValue * game.stageConfig.materialMult * getMaterialMult() * game.policyMaterialMult * eliteMult)),
     });
   }
+
+  maybeDropPassiveItem(enemy, effectiveLuck);
 
   const luck = Math.max(0, effectiveLuck);
   const bonusChance = (enemy.elite ? 0.34 : 0.035) + luck * 0.0022;
@@ -2644,6 +2808,44 @@ function dropEnemyLoot(enemy) {
       value: stat.amount,
     });
   }
+}
+
+function maybeDropPassiveItem(enemy, effectiveLuck) {
+  const isBoss = enemy.type === "boss";
+  if (!enemy.elite && !isBoss) return;
+  if (!isBoss && game.itemDropCooldown > 0) return;
+  const latePenalty = game.stage >= 8 ? 0.08 : 0;
+  const dropChance = isBoss ? 1 : Math.min(0.36, 0.18 + Math.max(0, effectiveLuck) * 0.0008 + game.stage * 0.006 - latePenalty);
+  if (Math.random() > dropChance) return;
+  const item = pickDropItem(isBoss || game.stage >= 10 ? "rare" : "common");
+  if (!item) return;
+  if (!isBoss) game.itemDropCooldown = game.stage >= 8 ? 30 : 22;
+  game.pickups.push({
+    kind: "item",
+    item,
+    x: enemy.x + (Math.random() - 0.5) * 42,
+    y: enemy.y + (Math.random() - 0.5) * 42,
+    r: 11,
+    value: 1,
+  });
+}
+
+function pickDropItem(minRarity = "common") {
+  const available = itemPool.filter((item) => !game.boughtItems.has(item.id));
+  if (!available.length) return null;
+  const minWeight = itemRarityMeta[minRarity]?.weight || 1;
+  const filtered = available.filter((item) => getRarityWeight(item) >= minWeight);
+  const poolSource = filtered.length ? filtered : available;
+  const weighted = [];
+  for (const item of poolSource) {
+    weighted.push(item);
+    if (getItemRarity(item) === "common") weighted.push(item);
+    if (getItemRarity(item) === "rare") weighted.push(item);
+    if (isItemAlignedWithBuild(item)) weighted.push(item);
+    if (game.stage >= 7 && /爆发|输出|防御|站场/.test(item.tag || "") && getRarityWeight(item) >= 2) weighted.push(item);
+  }
+  shuffle(weighted);
+  return weighted[0];
 }
 
 function updateDamageZones(dt) {
@@ -2831,6 +3033,11 @@ function collectPickup(pickup) {
     return;
   }
 
+  if (pickup.kind === "item") {
+    addPassiveItem(pickup.item, "drop");
+    return;
+  }
+
   gainXp(pickup.value);
 }
 
@@ -2856,6 +3063,10 @@ function spawnEnemies(dt) {
   if (game.enemiesToSpawn <= 0) return;
   const config = game.stageConfig;
   if (game.enemies.length >= config.maxConcurrent) return;
+  if (!game.endless && game.stage === 1 && game.waveTime < STAGE_ONE_WARMUP_SECONDS) {
+    game.spawnTimer = Math.max(game.spawnTimer, 0.35);
+    return;
+  }
 
   game.spawnTimer -= dt;
   if (game.spawnTimer <= 0) {
@@ -3172,9 +3383,10 @@ function collectLooseMaterials() {
 
 function openUpgrade(returnState = "playing") {
   state = "upgrade";
+  ui.stageBanner?.classList.add("hidden");
   game.upgradeReturnState = returnState;
   game.upgradeRerolls = 1;
-  game.currentUpgradeChoices = pickUpgrades(game.endless ? 5 : 4);
+  game.currentUpgradeChoices = pickUpgrades(4);
   renderUpgradeChoices();
   ui.upgradePanel.classList.remove("hidden");
   ui.upgradeRerollButton?.classList.toggle("hidden", false);
@@ -3190,8 +3402,8 @@ function renderUpgradeChoices() {
         <span class="offer-icon ${getEntryIconClass(choice)}"></span>
         <span class="tag">${choice.tag}</span>
       </div>
-      <strong>${choice.title}</strong>
-      <span>${choice.text}</span>
+      <strong class="card-title">${choice.title}</strong>
+      <span class="card-desc">${choice.text}</span>
     `;
     button.addEventListener("click", () => chooseUpgrade(choice));
     ui.upgradeChoices.append(button);
@@ -3226,17 +3438,24 @@ function chooseUpgrade(choice) {
 function rerollUpgradeChoices() {
   if (state !== "upgrade" || game.upgradeRerolls <= 0) return;
   game.upgradeRerolls -= 1;
-  game.currentUpgradeChoices = pickUpgrades(game.endless ? 5 : 4);
+  game.currentUpgradeChoices = pickUpgrades(4);
   renderUpgradeChoices();
 }
 
 function pickUpgrades(count) {
   const available = statUpgradePool.filter((upgrade) => upgrade.available(game));
   const choices = [];
+  if (game.stage === 1 && game.upgradesTaken === 0) {
+    const starterSurvival = ["padding", "regen", "dodge", "sprint"]
+      .map((id) => available.find((upgrade) => upgrade.id === id))
+      .filter(Boolean);
+    shuffle(starterSurvival);
+    if (starterSurvival[0]) choices.push(starterSurvival[0]);
+  }
   const aligned = available.filter(isUpgradeAlignedWithBuild);
   if (aligned.length) {
     shuffle(aligned);
-    choices.push(aligned[0]);
+    if (!choices.includes(aligned[0])) choices.push(aligned[0]);
   }
   const weighted = [];
   for (const upgrade of available) {
@@ -3263,6 +3482,7 @@ function isUpgradeAlignedWithBuild(upgrade) {
 }
 
 function openWeaponArmory() {
+  ui.stageBanner?.classList.add("hidden");
   state = "armory";
   if (game.shopOffers.length === 0) {
     game.shopOffers = generateShopOffers(getShopOfferCount(), game.lockedShopOffers);
@@ -3284,7 +3504,7 @@ function renderShop() {
   for (let i = 0; i < game.shopOffers.length; i += 1) {
     const offer = game.shopOffers[i];
     const card = document.createElement("div");
-    card.className = `choice shop-card ${offer.purchased ? "disabled-choice" : ""} ${offer.locked ? "locked-card" : ""}`;
+    card.className = `choice shop-card ${offer.entry.shopType === "item" ? getRarityClass(offer.entry) : ""} ${offer.purchased ? "disabled-choice" : ""} ${offer.locked ? "locked-card" : ""}`;
     card.tabIndex = offer.purchased ? -1 : 0;
 
     const head = document.createElement("div");
@@ -3299,9 +3519,11 @@ function renderShop() {
     head.append(icon, tag);
 
     const title = document.createElement("strong");
+    title.className = "card-title";
     title.textContent = offer.entry.title;
 
     const text = document.createElement("span");
+    text.className = "card-desc";
     text.textContent = offer.entry.text;
 
     const compare = document.createElement("span");
@@ -3361,30 +3583,23 @@ function renderArmoryBuildStrip() {
     .map(([className, count]) => {
       const nextTier = (weaponClassBonuses[className] || []).find((tier) => getClassTierThreshold(tier) > count);
       const nextText = nextTier ? ` · 差 ${getClassTierThreshold(nextTier) - count} 件进阶` : "";
-      return `<b>${weaponClassLabels[className] || className} x${count}</b>${nextText}`;
+      return `<span class="armory-class-chip"><b>${weaponClassLabels[className] || className} x${count}</b>${nextText}</span>`;
     });
-  const chips = buildOrder.map((id) => {
+  const chips = buildOrder.filter((id) => game.weapons[id].level > 0).map((id) => {
     const weapon = game.weapons[id];
     const classes = (weapon.classes || []).map((className) => weaponClassLabels[className] || className).join("/");
-    const stateClass = weapon.level > 0 ? "owned" : "empty";
-    const sellButton = weapon.level > 0 && getOwnedWeaponCount() > 1
-      ? `<button class="sell-weapon" type="button" data-sell-weapon="${id}">拆解 +${getWeaponSellValue(id)}</button>`
-      : "";
     return `
-      <div class="armory-weapon-chip ${stateClass}">
+      <div class="armory-weapon-chip owned" title="${weapon.label} Lv.${weapon.level}/${weapon.max} · ${classes}">
         <span class="offer-icon small ${getWeaponIconClass(id)}"></span>
-        <span><strong>${weapon.label}</strong><em>Lv.${weapon.level}/${weapon.max} · ${classes}</em>${sellButton}</span>
+        <span><strong>${weapon.label}</strong><em>Lv.${weapon.level}/${weapon.max}</em></span>
       </div>
     `;
   }).join("");
-  const classText = activeClasses.length ? activeClasses.slice(0, 4).join("　") : `武器槽 ${getOwnedWeaponCount()}/${game.weaponSlots}`;
+  const classText = activeClasses.length ? activeClasses.slice(0, 3).join("") : `<span class="armory-class-chip">武器槽 ${getOwnedWeaponCount()}/${game.weaponSlots}</span>`;
   ui.armoryBuildStrip.innerHTML = `
     <div class="armory-class-line">${classText}</div>
-    <div class="armory-weapon-grid">${chips}</div>
+    <div class="armory-weapon-grid">${chips || `<span class="armory-empty">暂无武器</span>`}</div>
   `;
-  ui.armoryBuildStrip.querySelectorAll("[data-sell-weapon]").forEach((button) => {
-    button.addEventListener("click", () => sellWeapon(button.dataset.sellWeapon));
-  });
   renderRouteMap(ui.armoryRouteMap, { compact: false });
 }
 
@@ -3488,6 +3703,30 @@ function getItemBuildHint(entry) {
   if (/酒|爆发/.test(tag)) return "偏高风险爆发，适合咖啡、订书机和想快速清场的打法。";
   if (/防御|生存|控制|站场|站桩|领域/.test(tag)) return "偏领域/生存，适合耳机和报告领域。";
   return "通用补强，但会挤压武器升级节奏。";
+}
+
+function getItemRarity(item) {
+  return item?.rarity || "common";
+}
+
+function getItemRarityLabel(item) {
+  return itemRarityMeta[getItemRarity(item)]?.label || "普通";
+}
+
+function getItemRecycleValue(item) {
+  return itemRarityMeta[getItemRarity(item)]?.recycle || 4;
+}
+
+function shouldPromptItemReplace(item) {
+  return ["epic", "legendary"].includes(getItemRarity(item));
+}
+
+function getRarityClass(item) {
+  return `rarity-${getItemRarity(item)}`;
+}
+
+function getRarityWeight(item) {
+  return itemRarityMeta[getItemRarity(item)]?.weight || 1;
 }
 
 function generateShopOffers(count, existing = []) {
@@ -3601,8 +3840,10 @@ function buyShopOffer(index) {
   const offer = game.shopOffers[index];
   if (!offer || !canBuyShopOffer(offer)) return;
   game.materials -= offer.cost;
-  offer.entry.apply(game);
-  if (offer.entry.shopType === "weapon") {
+  if (offer.entry.shopType === "item") {
+    addPassiveItem(offer.entry, "shop");
+  } else {
+    offer.entry.apply(game);
     game.weaponUpgradeCounts[offer.entry.id] = (game.weaponUpgradeCounts[offer.entry.id] || 0) + 1;
     syncWeaponDerivedStats();
     applyWeaponUpgradeModifiers();
@@ -3613,21 +3854,169 @@ function buyShopOffer(index) {
   }
   offer.purchased = true;
   offer.locked = false;
-  if (offer.entry.shopType === "item") {
-    game.boughtItems.add(offer.entry.id);
-    game.boughtItemNames.push(offer.entry.title);
-    game.boughtItemTags.push(offer.entry.tag || "");
-    checkWeaponEvolutions();
-    checkRouteTierUps();
-  }
   updateBuildHud();
   updateStatHud();
   updateItemHud();
   renderShop();
 }
 
+function snapshotPlayerNumbers() {
+  const values = {};
+  if (!game?.player) return values;
+  for (const [key, value] of Object.entries(game.player)) {
+    if (Number.isFinite(value)) values[key] = value;
+  }
+  return values;
+}
+
+function diffPlayerNumbers(before, after) {
+  const delta = {};
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    const change = (after[key] ?? 0) - (before[key] ?? 0);
+    if (Math.abs(change) > 0.0001) delta[key] = change;
+  }
+  return delta;
+}
+
+function removePassiveItem(index) {
+  const record = game?.boughtItemRecords?.[index];
+  if (!record) return false;
+  for (const [key, change] of Object.entries(record.delta || {})) {
+    if (Number.isFinite(game.player[key])) game.player[key] -= change;
+  }
+  game.player.maxHp = Math.max(1, game.player.maxHp);
+  game.player.hp = clamp(game.player.hp, 1, game.player.maxHp);
+  game.boughtItems.delete(record.id);
+  game.boughtItemNames.splice(index, 1);
+  game.boughtItemTags.splice(index, 1);
+  game.boughtItemRecords.splice(index, 1);
+  return true;
+}
+
+function resumeAfterItemReplace() {
+  if (!game) return;
+  state = game.itemReplaceReturnState || "playing";
+  game.pendingItemChoice = null;
+  ui.itemReplacePanel?.classList.add("hidden");
+  ui.fusionNotice?.classList.add("hidden");
+  updateBuildHud();
+  updateStatHud();
+  updateItemHud();
+  lastTime = performance.now();
+  if (state === "playing" || state === "recovery") requestAnimationFrame(loop);
+}
+
+function openItemReplace(item) {
+  if (!item || !game) return;
+  game.pendingItemChoice = item;
+  game.itemReplaceReturnState = state === "recovery" ? "recovery" : "playing";
+  state = "itemReplace";
+  ui.stageBanner?.classList.add("hidden");
+  ui.fusionNotice?.classList.add("hidden");
+  ui.itemReplacePanel?.classList.remove("hidden");
+  renderItemReplacePanel();
+}
+
+function renderItemReplacePanel() {
+  if (!game?.pendingItemChoice || !ui.itemReplacePanel) return;
+  const item = game.pendingItemChoice;
+  if (ui.itemConvertButton) ui.itemConvertButton.textContent = `回收为材料 +${getItemRecycleValue(item)}`;
+  if (ui.itemReplaceCount) ui.itemReplaceCount.textContent = `${game.boughtItemNames.length}/${game.itemSlots}`;
+  if (ui.itemReplaceNew) {
+    ui.itemReplaceNew.replaceChildren();
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = `${getItemRarityLabel(item)} · ${item.tag || "道具"}`;
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+    const text = document.createElement("p");
+    text.textContent = item.text;
+    ui.itemReplaceNew.append(tag, title, text);
+  }
+  if (ui.itemReplaceList) {
+    ui.itemReplaceList.replaceChildren(...game.boughtItemRecords.map((record, index) => {
+      const card = document.createElement("div");
+      card.className = `replace-item-card ${record.rarity ? `rarity-${record.rarity}` : ""}`;
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = `${itemRarityMeta[record.rarity]?.label || "普通"} · ${record.tag || "道具"}`;
+      const title = document.createElement("strong");
+      title.textContent = record.title;
+      const text = document.createElement("p");
+      text.textContent = record.text || "";
+      const button = document.createElement("button");
+      button.className = "mini-button";
+      button.type = "button";
+      button.textContent = "替换";
+      button.addEventListener("click", () => replacePassiveItem(index));
+      card.append(tag, title, text, button);
+      return card;
+    }));
+  }
+}
+
+function replacePassiveItem(index) {
+  const item = game?.pendingItemChoice;
+  if (!item || !removePassiveItem(index)) return;
+  addPassiveItem(item, "replace");
+  floatingText(game.player.x, game.player.y - 46, `替换为 ${item.title}`, "#52ffe1");
+  resumeAfterItemReplace();
+}
+
+function convertPendingItemToMaterial() {
+  if (!game?.pendingItemChoice) return;
+  const refund = getItemRecycleValue(game.pendingItemChoice);
+  game.materials += refund;
+  floatingText(game.player.x, game.player.y - 42, `道具回收 材料+${refund}`, "#ffd15c");
+  resumeAfterItemReplace();
+}
+
+function keepCurrentPassiveItems() {
+  if (!game?.pendingItemChoice) return;
+  floatingText(game.player.x, game.player.y - 42, "保留现有道具", "#ffd15c");
+  resumeAfterItemReplace();
+}
+
+function addPassiveItem(item, source = "shop") {
+  if (!item || game.boughtItems.has(item.id)) return false;
+  if (game.boughtItems.size >= game.itemSlots) {
+    if (source === "drop" && shouldPromptItemReplace(item)) {
+      openItemReplace(item);
+    } else if (source === "drop") {
+      const refund = getItemRecycleValue(item);
+      game.materials += refund;
+      floatingText(game.player.x, game.player.y - 42, `${getItemRarityLabel(item)}道具回收 材料+${refund}`, "#ffd15c");
+    }
+    else floatingText(game.player.x, game.player.y - 42, "道具槽满", "#ffd15c");
+    return false;
+  }
+  const before = snapshotPlayerNumbers();
+  item.apply(game);
+  const delta = diffPlayerNumbers(before, snapshotPlayerNumbers());
+  game.boughtItems.add(item.id);
+  game.boughtItemNames.push(item.title);
+  game.boughtItemTags.push(item.tag || "");
+  game.boughtItemRecords.push({
+    id: item.id,
+    title: item.title,
+    tag: item.tag || "",
+    rarity: getItemRarity(item),
+    text: item.text,
+    delta,
+  });
+  if (source !== "replace") floatingText(game.player.x, game.player.y - 46, `获得 ${item.title}`, "#52ffe1");
+  if (source !== "replace") showFusionNotice("新道具", item.title, item.text);
+  checkWeaponEvolutions();
+  checkRouteTierUps();
+  updateBuildHud();
+  updateStatHud();
+  updateItemHud();
+  return true;
+}
+
 function canBuyShopOffer(offer) {
   if (!offer || offer.purchased || game.materials < offer.cost) return false;
+  if (offer.entry.shopType === "item") return game.boughtItems.size < game.itemSlots;
   if (offer.entry.shopType !== "weapon") return true;
   const weaponId = getUpgradeWeaponId(offer.entry.id);
   if (!weaponId) return true;
@@ -3759,7 +4148,7 @@ function getShopOfferCount() {
 }
 
 function getRefreshCost() {
-  return 7 + game.rerollCount * 4 + (game.policyRefreshAdd || 0);
+  return Math.max(2, 7 + game.rerollCount * 4 + (game.policyRefreshAdd || 0) - (game.permanentRefreshDiscount || 0));
 }
 
 function getUpgradeWeaponId(id) {
@@ -3942,7 +4331,7 @@ function nearestEnemy() {
 }
 
 function cooldown(base) {
-  return Math.max(0.18, base * (100 / (100 + Math.max(-60, game.player.attackSpeed + getClassBonus("attackSpeed")))));
+  return Math.max(0.18, base * (100 / (100 + Math.max(-60, getEffectiveStat("attackSpeed")))));
 }
 
 function weaponCooldown(base, weaponId) {
@@ -4118,7 +4507,7 @@ function checkRouteTierUps() {
         game.materials += 3;
         showRouteTierNotice(route, tier, "路线启动：补给材料 +3。");
       } else if (tier === 3) {
-        game.player.damageMult += 0.04;
+        addPlayerDamage(game, 0.04);
         showRouteTierNotice(route, tier, "路线聚焦：全局伤害 +4%，中期特效已启用。");
       } else if (tier === 4) {
         const pool = route.weapons.filter((id) => game.weapons[id].level < game.weapons[id].max);
@@ -4236,6 +4625,33 @@ function getAnchorMaxTime() {
   return Math.max(1.35, 2.8 - getEffectiveStat("fortify") * 0.035);
 }
 
+function softCap(value, softCap, hardCap, tail = 0.35) {
+  if (value <= softCap) return value;
+  const extra = value - softCap;
+  return Math.min(hardCap, softCap + extra * tail);
+}
+
+function addPlayerDamage(g, amount) {
+  const current = g.player.damageMult;
+  const scaled = current >= DAMAGE_MULT_SOFT_CAP ? amount * 0.45 : amount;
+  g.player.damageMult = Math.min(DAMAGE_MULT_HARD_CAP, current + scaled);
+}
+
+function addPlayerAttackSpeed(g, amount) {
+  const current = g.player.attackSpeed;
+  const scaled = current >= ATTACK_SPEED_SOFT_CAP ? amount * 0.42 : amount;
+  g.player.attackSpeed = Math.min(ATTACK_SPEED_HARD_CAP, current + scaled);
+}
+
+function getRawDamageMult() {
+  const hybrid = getHybridBonus();
+  return game.player.damageMult + getClassBonus("damageMult") + getBuildFocusDamageBonus() + (hybrid.active ? hybrid.damageMult : 0);
+}
+
+function getRawAttackSpeed() {
+  return game.player.attackSpeed + getClassBonus("attackSpeed");
+}
+
 function getAnchorDamageReduction() {
   const fortify = Math.max(0, getEffectiveStat("fortify"));
   return clamp(getAnchorCharge() * (0.1 + fortify * 0.011), 0, 0.42);
@@ -4257,8 +4673,7 @@ function continuousDamage(base) {
 }
 
 function getDamageMult() {
-  const hybrid = getHybridBonus();
-  return game.player.damageMult + getClassBonus("damageMult") + getBuildFocusDamageBonus() + (hybrid.active ? hybrid.damageMult : 0);
+  return softCap(getRawDamageMult(), DAMAGE_MULT_SOFT_CAP, DAMAGE_MULT_HARD_CAP, 0.35);
 }
 
 function getBuildFocusDamageBonus() {
@@ -4278,7 +4693,7 @@ function getMaterialMult() {
 function getEffectiveStat(key) {
   const p = game.player;
   const values = {
-    attackSpeed: p.attackSpeed + getClassBonus("attackSpeed"),
+    attackSpeed: softCap(getRawAttackSpeed(), ATTACK_SPEED_SOFT_CAP, ATTACK_SPEED_HARD_CAP, 0.34),
     crit: p.crit + getClassBonus("crit"),
     range: p.range + getClassBonus("range"),
     dodge: p.dodge,
@@ -4428,24 +4843,163 @@ function getOrbiters() {
   return list;
 }
 
+function getEmployeePoints() {
+  return Number.parseInt(localStorage.getItem(EMPLOYEE_POINTS_KEY) || "0", 10) || 0;
+}
+
+function setEmployeePoints(points) {
+  localStorage.setItem(EMPLOYEE_POINTS_KEY, String(Math.max(0, Math.floor(points))));
+}
+
+function addEmployeePoints(amount) {
+  const total = getEmployeePoints() + amount;
+  setEmployeePoints(total);
+  return total;
+}
+
+function getPermanentUpgradeLevels() {
+  try {
+    return JSON.parse(localStorage.getItem(EMPLOYEE_UPGRADES_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+function setPermanentUpgradeLevels(levels) {
+  localStorage.setItem(EMPLOYEE_UPGRADES_KEY, JSON.stringify(levels));
+}
+
+function getPermanentUpgradeLevel(id) {
+  return getPermanentUpgradeLevels()[id] || 0;
+}
+
+function applyPermanentUpgrades(targetGame) {
+  const levels = getPermanentUpgradeLevels();
+  for (const upgrade of permanentUpgrades) {
+    const level = levels[upgrade.id] || 0;
+    if (level > 0) upgrade.apply(targetGame, level);
+  }
+  targetGame.permanentRefreshDiscount = Math.min(2, levels.refresh || 0);
+  targetGame.player.hp = Math.min(targetGame.player.maxHp, targetGame.player.hp);
+}
+
+function openPerkShop() {
+  ui.resultPanel?.classList.add("hidden");
+  ui.startPanel?.classList.add("hidden");
+  ui.perkPanel?.classList.remove("hidden");
+  renderPerkShop();
+}
+
+function closePerkShop() {
+  ui.perkPanel?.classList.add("hidden");
+  if (state === "result") ui.resultPanel?.classList.remove("hidden");
+  else {
+    ui.startPanel?.classList.remove("hidden");
+    updateStartActions();
+  }
+}
+
+function renderPerkShop() {
+  if (!ui.perkList || !ui.perkPoints) return;
+  const points = getEmployeePoints();
+  const levels = getPermanentUpgradeLevels();
+  ui.perkPoints.textContent = points;
+  ui.perkList.replaceChildren(...permanentUpgrades.map((upgrade) => {
+    const level = levels[upgrade.id] || 0;
+    const max = upgrade.costs.length;
+    const nextCost = upgrade.costs[level] || 0;
+    const card = document.createElement("div");
+    card.className = "perk-card";
+    const title = document.createElement("strong");
+    title.textContent = upgrade.title;
+    const levelText = document.createElement("small");
+    levelText.textContent = `Lv.${level}/${max}`;
+    const desc = document.createElement("span");
+    desc.textContent = upgrade.text;
+    const button = document.createElement("button");
+    button.className = "mini-button";
+    button.type = "button";
+    button.textContent = level >= max ? "已满" : `${nextCost} 工分`;
+    button.disabled = level >= max || points < nextCost;
+    button.addEventListener("click", () => buyPermanentUpgrade(upgrade.id));
+    card.append(title, levelText, desc, button);
+    return card;
+  }));
+}
+
+function buyPermanentUpgrade(id) {
+  const upgrade = permanentUpgrades.find((entry) => entry.id === id);
+  if (!upgrade) return;
+  const levels = getPermanentUpgradeLevels();
+  const level = levels[id] || 0;
+  const cost = upgrade.costs[level];
+  if (!cost || getEmployeePoints() < cost) return;
+  setEmployeePoints(getEmployeePoints() - cost);
+  levels[id] = level + 1;
+  setPermanentUpgradeLevels(levels);
+  renderPerkShop();
+}
+
+function getTopDamageSource() {
+  const entries = Object.entries(game.damageBySource || {});
+  if (!entries.length) return "未被击中";
+  entries.sort((a, b) => b[1] - a[1]);
+  const [source, amount] = entries[0];
+  return `${source} ${Math.round(amount)}`;
+}
+
+function getRunTopWeaponLabel() {
+  const owned = buildOrder
+    .map((id) => game.weapons[id])
+    .filter((weapon) => weapon && weapon.level > 0)
+    .sort((a, b) => b.level - a.level);
+  if (!owned.length) return "尚未成型";
+  return `${owned[0].label} Lv.${owned[0].level}`;
+}
+
+function calculateEmployeePoints(won, wasEndless, survived) {
+  const stageScore = wasEndless ? Math.floor(survived / 14) : game.stage * 8;
+  const clearBonus = won ? 70 : 0;
+  const killScore = Math.floor(game.kills * 0.18);
+  const growthScore = game.level * 2 + game.upgradesTaken * 3;
+  return Math.max(8, Math.round(stageScore + clearBonus + killScore + growthScore));
+}
+
 function endGame(won) {
   const wasEndless = Boolean(game?.endless);
   const survived = wasEndless ? Math.floor(game.overtimeTimer) : 0;
   if (won) localStorage.setItem("cb_cleared", "1");
   if (wasEndless) recordEndlessBest(survived);
+  const earnedPoints = calculateEmployeePoints(won, wasEndless, survived);
+  const totalPoints = addEmployeePoints(earnedPoints);
+  game.employeePointsEarned = earnedPoints;
   state = "result";
+  ui.stageBanner?.classList.add("hidden");
   ui.resultEyebrow.textContent = wasEndless ? "加班结算" : won ? "通关" : "本轮结束";
   ui.resultTitle.textContent = wasEndless ? "这班终于下了" : won ? "你完成了全部关卡" : "血量归零";
-  ui.resultStats.textContent = wasEndless
-    ? `持续加班 ${formatTime(survived)} / 等级 ${game.level} / 属性 ${game.upgradesTaken} / 材料 ${game.materials} / 击破 ${game.kills}`
-    : `关卡 ${game.stage} / 等级 ${game.level} / 属性 ${game.upgradesTaken} / 材料 ${game.materials} / 击破 ${game.kills}`;
+  const runLine = wasEndless
+    ? `持续加班 ${formatTime(survived)} · 等级 ${game.level} · 属性 ${game.upgradesTaken} · 材料 ${game.materials} · 击破 ${game.kills}`
+    : `第 ${game.stage} 关 · 等级 ${game.level} · 属性 ${game.upgradesTaken} · 材料 ${game.materials} · 击破 ${game.kills}`;
+  ui.resultStats.innerHTML = `
+    <span>${runLine}</span>
+    <div class="result-breakdown" aria-label="本局复盘">
+      <span>主要伤害来源<b>${getTopDamageSource()}</b></span>
+      <span>承受伤害<b>${Math.round(game.damageTaken)} / ${game.hitsTaken} 次</b></span>
+      <span>最强武器<b>${getRunTopWeaponLabel()}</b></span>
+    </div>
+    <div class="result-award">+${earnedPoints} 工分 · 当前累计 ${totalPoints}</div>
+  `;
   ui.endlessButton?.classList.toggle("hidden", !won || wasEndless);
   ui.resultPanel.classList.remove("hidden");
+  updateStartActions();
   renderBestOvertime();
 }
 
 function startEndlessMode() {
-  if (!game) return;
+  if (!game || state === "menu") {
+    startDirectEndlessMode();
+    return;
+  }
   game.endless = true;
   game.stage = MAX_STAGE + 1;
   game.maxStage = Infinity;
@@ -4477,6 +5031,48 @@ function startEndlessMode() {
   ui.endlessButton?.classList.add("hidden");
   showStageBanner();
   state = "playing";
+  lastTime = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function startDirectEndlessMode() {
+  if (localStorage.getItem("cb_cleared") !== "1") return;
+  enemyId = 1;
+  swarmId = 1;
+  buildHudSignature = "";
+  statHudSignature = "";
+  itemHudSignature = "";
+  game = createGame();
+  applyPermanentUpgrades(game);
+  pendingPolicy = null;
+  policySelectionOpen = false;
+  game.endless = true;
+  game.stage = MAX_STAGE + 1;
+  game.maxStage = Infinity;
+  game.stageConfig = getEndlessStageConfig(0);
+  game.currentIncident = {
+    id: "endless",
+    title: "直接加班",
+    text: "从清空工位开始进入无尽压力测试。",
+    apply: () => {},
+  };
+  game.overtimeTimer = 0;
+  game.overtimeLevel = 0;
+  game.overtimeBreakTimer = 120;
+  game.waveTime = 0;
+  game.stageKills = 0;
+  game.stageSpawned = 0;
+  game.enemiesToSpawn = Infinity;
+  game.elitesToSpawn = Infinity;
+  game.bossSpawned = true;
+  state = "playing";
+  ui.startPanel?.classList.add("hidden");
+  ui.resultPanel?.classList.add("hidden");
+  ui.perkPanel?.classList.add("hidden");
+  ui.weaponPanel?.classList.add("hidden");
+  ui.upgradePanel?.classList.add("hidden");
+  ui.endlessButton?.classList.add("hidden");
+  showStageBanner();
   lastTime = performance.now();
   requestAnimationFrame(loop);
 }
@@ -4515,6 +5111,27 @@ function render() {
   drawPlayer();
   drawFloatingTexts();
   ctx.restore();
+  drawScreenFeedback();
+}
+
+function drawScreenFeedback() {
+  const flash = game.damageFlash || 0;
+  const lowHpRatio = game.player.hp / game.player.maxHp;
+  if (flash > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.34, flash * 0.28);
+    ctx.fillStyle = "#ff335f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+  if (lowHpRatio < 0.28) {
+    const pulseAlpha = 0.18 + Math.sin(game.time * 8) * 0.05;
+    const grd = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.28, canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.72);
+    grd.addColorStop(0, "rgba(255, 42, 96, 0)");
+    grd.addColorStop(1, `rgba(255, 42, 96, ${pulseAlpha})`);
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 }
 
 function drawMenuBackground() {
@@ -5255,11 +5872,16 @@ function drawProjectiles() {
 function drawPickups() {
   for (const pickup of game.pickups) {
     const bob = Math.sin(game.time * 7 + pickup.x * 0.01) * 2;
+    if (pickup.kind === "item" && drawAtlasCell(getItemPickupAtlasIndex(pickup.item?.id), pickup.x, pickup.y + bob, 42, 42, { glow: "#52ffe1", glowBlur: 10 })) continue;
     if (pickup.kind === "heal" && drawAtlasCell(7, pickup.x, pickup.y + bob, 36, 36)) continue;
     if (pickup.kind === "material" && drawAtlasCell(5, pickup.x, pickup.y + bob, 32, 32)) continue;
     if (pickup.kind === "stat" && drawAtlasCell(13, pickup.x, pickup.y + bob, 34, 34)) continue;
     if (pickup.kind === "xp" && drawAtlasCell(6, pickup.x, pickup.y + bob, 28, 34)) continue;
-    if (pickup.kind === "heal") {
+    if (pickup.kind === "item") {
+      pixelRect(pickup.x - 10, pickup.y - 10 + bob, 20, 20, "#151226");
+      pixelRect(pickup.x - 7, pickup.y - 7 + bob, 14, 14, "#52ffe1");
+      pixelRect(pickup.x - 4, pickup.y - 4 + bob, 8, 8, "#ffd15c");
+    } else if (pickup.kind === "heal") {
       pixelRect(pickup.x - 8, pickup.y - 8 + bob, 16, 16, "#f4f0e8");
       pixelRect(pickup.x - 3, pickup.y - 6 + bob, 6, 12, "#ff6b6b");
       pixelRect(pickup.x - 6, pickup.y - 3 + bob, 12, 6, "#ff6b6b");
@@ -5278,6 +5900,36 @@ function drawPickups() {
       pixelRect(pickup.x - 2, pickup.y - 1 + bob, 4, 3, "#e9fff9");
     }
   }
+}
+
+function getItemPickupAtlasIndex(id) {
+  const map = {
+    lunchbox: 0,
+    rubberSole: 3,
+    luckyBadge: 8,
+    oldHardDrive: 5,
+    fileCabinet: 1,
+    wirelessMouse: 4,
+    energyDrink: 11,
+    deskFan: 7,
+    macroPad: 12,
+    redPen: 6,
+    projector: 7,
+    laserPointer: 6,
+    standingDesk: 3,
+    assetLedger: 9,
+    quietRoom: 1,
+    redlineContract: 5,
+    insuranceClause: 0,
+    ergonomicMat: 1,
+    whiteboardWall: 7,
+    deskLamp: 11,
+    cableNest: 10,
+    liquorCoffee: 11,
+    translationHeadset: 12,
+    foreignContract: 9,
+  };
+  return map[id] ?? 9;
 }
 
 function drawDamageZones() {
@@ -5489,8 +6141,9 @@ function updateHud() {
 
 function updateGuideOverlay() {
   if (!ui.guideOverlay || !game) return;
-  const show = state === "playing" && game.stage === 1 && game.waveTime < 10;
+  const show = state === "playing" && game.stage === 1 && game.waveTime < STAGE_ONE_WARMUP_SECONDS;
   ui.guideOverlay.classList.toggle("hidden", !show);
+  if (show) ui.guideOverlay.textContent = `热身 ${Math.ceil(STAGE_ONE_WARMUP_SECONDS - game.waveTime)}s · WASD 移动 · 自动攻击 · 第一次升级会优先给生存选项`;
 }
 
 function updateObjectiveHud(timeText, remaining) {
@@ -5510,6 +6163,9 @@ function getObjectiveAlert(remaining) {
   if (game.endless) return { text: `已撑 ${formatTime(game.overtimeTimer)}，下一次工间工坊还有 ${Math.max(0, Math.ceil(game.overtimeBreakTimer))} 秒`, boss: game.overtimeLevel >= 3 };
   if (state === "recovery") return { text: "战斗结束，尽快拾取遗留材料和经验", boss: false };
   if (game.stage >= game.maxStage) return { text: "Boss 评审压场，保留爆发和移动空间", boss: true };
+  if (game.stage === 1 && game.waveTime < STAGE_ONE_WARMUP_SECONDS) {
+    return { text: `热身期 ${Math.ceil(STAGE_ONE_WARMUP_SECONDS - game.waveTime)} 秒：先熟悉走位，第一波会延后`, boss: false };
+  }
   if (game.waveTime < 7 && game.currentIncident) return { text: `${game.currentIncident.title}：${game.currentIncident.text}`, boss: game.currentIncident.id === "bossCheck" };
   const pressureHint = getBuildPressureHint();
   if (pressureHint) return { text: pressureHint, boss: false };
@@ -5638,7 +6294,7 @@ function getSortedWeaponClasses() {
 
 function formatEntryTag(entry) {
   const weaponId = getUpgradeWeaponId(entry.id);
-  if (!weaponId) return entry.tag;
+  if (!weaponId) return `${getItemRarityLabel(entry)} · ${entry.tag}`;
   const labels = (game.weapons[weaponId].classes || []).map((className) => weaponClassLabels[className] || className);
   return labels.length ? `${entry.tag} · ${labels.join("/")}` : entry.tag;
 }
@@ -5730,7 +6386,7 @@ function updateStatHud() {
     armor: Math.round(p.armor + getClassBonus("armor")),
     dodge: `${Math.round(p.dodge)}%`,
     speed: Math.round(p.speed),
-    attackSpeed: `${Math.round(p.attackSpeed + getClassBonus("attackSpeed"))}%`,
+    attackSpeed: `${Math.round(getEffectiveStat("attackSpeed"))}%`,
     damageMult: `${Math.round(getDamageMult() * 100)}%`,
     crit: `${Math.round(p.crit + getClassBonus("crit"))}%`,
     range: Math.round(p.range + getClassBonus("range")),
@@ -5754,7 +6410,7 @@ function updateItemHud() {
 }
 
 function renderItemHud(names) {
-  ui.itemSummary.textContent = names.length;
+  ui.itemSummary.textContent = game ? `${names.length}/${game.itemSlots}` : names.length;
   ui.itemList.replaceChildren(
     ...(names.length ? names.slice(-4).map((name) => {
       const pill = document.createElement("span");
@@ -5893,11 +6549,14 @@ function abandonRunToMenu() {
   ui.weaponPanel.classList.add("hidden");
   ui.upgradePanel.classList.add("hidden");
   ui.resultPanel.classList.add("hidden");
+  ui.perkPanel?.classList.add("hidden");
+  ui.itemReplacePanel?.classList.add("hidden");
   ui.fusionNotice?.classList.add("hidden");
   ui.policyPanel?.classList.add("hidden");
   ui.startButton?.classList.remove("hidden");
   ui.endlessButton?.classList.add("hidden");
   ui.startPanel.classList.remove("hidden");
+  updateStartActions();
   pendingPolicy = null;
   policySelectionOpen = false;
   buildHudSignature = "";
@@ -5943,7 +6602,7 @@ function getPauseStatValues() {
     armor: Math.round(p.armor + getClassBonus("armor")),
     dodge: `${Math.round(p.dodge)}%`,
     speed: Math.round(p.speed),
-    attackSpeed: `${Math.round(p.attackSpeed + getClassBonus("attackSpeed"))}%`,
+    attackSpeed: `${Math.round(getEffectiveStat("attackSpeed"))}%`,
     damageMult: `${Math.round(getDamageMult() * 100)}%`,
     crit: `${Math.round(p.crit + getClassBonus("crit"))}%`,
     range: Math.round(p.range + getClassBonus("range")),
@@ -5967,6 +6626,12 @@ function markBuildHint() {
 
 ui.startButton.addEventListener("click", startGame);
 ui.restartButton.addEventListener("click", startGame);
+ui.perkShopButton?.addEventListener("click", openPerkShop);
+ui.perkCloseButton?.addEventListener("click", closePerkShop);
+ui.startPerkButton?.addEventListener("click", openPerkShop);
+ui.startEndlessButton?.addEventListener("click", startEndlessMode);
+ui.itemConvertButton?.addEventListener("click", convertPendingItemToMaterial);
+ui.itemKeepButton?.addEventListener("click", keepCurrentPassiveItems);
 ui.endlessButton?.addEventListener("click", startEndlessMode);
 ui.policySkip?.addEventListener("click", skipPolicyAndStart);
 ui.continueButton.addEventListener("click", startNextStage);
@@ -5979,6 +6644,7 @@ ui.buildToggle.addEventListener("click", toggleBuildPanel);
 ui.fusionNoticeClose?.addEventListener("click", () => ui.fusionNotice?.classList.add("hidden"));
 
 decorateHudIcons();
+updateStartActions();
 
 renderBuildHud(weaponDefinitions, "咖啡 Lv.1 · 1/6");
 renderStatHud({
@@ -6010,4 +6676,5 @@ function decorateHudIcons() {
   hpIcon.className = `stat-icon ${uiIconClass(0)}`;
   document.querySelector(".hp-stat")?.prepend(hpIcon);
 }
+
 

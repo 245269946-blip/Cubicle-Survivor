@@ -140,7 +140,11 @@
               <div id="policyChoices" class="policy-choices"></div>
               <button id="policySkip" class="primary-button tertiary-button" type="button">不选政策 · 正常开局</button>
             </div>
-            <button id="startButton" class="primary-button">开始加班</button>
+            <div class="start-actions">
+              <button id="startButton" class="primary-button">开始加班</button>
+              <button id="startPerkButton" class="primary-button secondary-button" type="button">永久商店</button>
+              <button id="startEndlessButton" class="primary-button tertiary-button hidden" type="button">直接无尽</button>
+            </div>
           </div>
         </div>
 
@@ -184,10 +188,45 @@
           <div class="panel result-panel">
             <p id="resultEyebrow" class="eyebrow">结算</p>
             <h2 id="resultTitle">本轮结束</h2>
-            <p id="resultStats" class="subtitle"></p>
+            <div id="resultStats" class="subtitle"></div>
             <div class="result-actions">
               <button id="restartButton" class="primary-button">再来一局</button>
+              <button id="perkShopButton" class="primary-button secondary-button" type="button">永久商店</button>
               <button id="endlessButton" class="primary-button secondary-button hidden" type="button">继续加班</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="perkPanel" class="overlay hidden">
+          <div class="panel perk-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">永久商店</p>
+                <h2>工分升级</h2>
+              </div>
+              <div class="material-pill">工分 <strong id="perkPointsText">0</strong></div>
+            </div>
+            <div id="perkList" class="perk-list"></div>
+            <div class="result-actions">
+              <button id="perkCloseButton" class="primary-button secondary-button" type="button">返回</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="itemReplacePanel" class="overlay hidden">
+          <div class="panel item-replace-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">道具槽已满</p>
+                <h2>替换一个被动道具</h2>
+              </div>
+              <div class="material-pill">容量 <strong id="itemReplaceCount">6/6</strong></div>
+            </div>
+            <div id="itemReplaceNew" class="item-replace-new"></div>
+            <div id="itemReplaceList" class="item-replace-list"></div>
+            <div class="result-actions">
+              <button id="itemConvertButton" class="primary-button secondary-button" type="button">回收为材料 +6</button>
+              <button id="itemKeepButton" class="primary-button tertiary-button" type="button">保留现有道具</button>
             </div>
           </div>
         </div>
@@ -206,6 +245,6 @@
       </section>
     </main>
 
-    <script src="main.js?v=20260612-layoutfix"></script>
+    <script src="main.js?v=20260615-phase2-balance"></script>
   </body>
 </html>
