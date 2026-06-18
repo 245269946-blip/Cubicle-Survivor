@@ -2063,6 +2063,7 @@ function updateGame(dt) {
   const pEff = getRouteEffectiveness("perimeter");
   const auraBoost = pEff > 0 && game.enemies.some(en => Math.hypot(en.x - game.player.x, en.y - game.player.y) < getAuraRadius() + 30 + en.r);
   game.orbitAngle += game.player.orbitSpeed * dt * (auraBoost ? 1 + 1 * pEff : 1);
+  updatePlayer(dt);
 
   // System update timer blocks attacking
   if (game.systemUpdateTimer > 0) {
