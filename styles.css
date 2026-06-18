@@ -1404,10 +1404,10 @@ h2 {
 }
 
 .card-head {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   min-height: 44px;
 }
 
@@ -2095,6 +2095,127 @@ h2 {
   margin-top: 12px;
 }
 
+/* ═══════════════════════════════════════════════
+   TEXT ROBUSTNESS — panel-wide overflow & clamp fixes
+   ═══════════════════════════════════════════════ */
+.card-desc,
+.choice > span:last-child {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: 4.3em; /* 3 lines × ~1.42 line-height */
+}
+
+/* Upgrade card: force description to always take the same row space */
+#upgradeChoices .choice .card-desc {
+  -webkit-line-clamp: 2;
+  max-height: 3em;
+  min-height: 2.2em;
+}
+
+/* Shop card description */
+.shop-card .card-desc {
+  -webkit-line-clamp: 2;
+  max-height: 3em;
+  min-height: 2.2em;
+}
+
+/* Tag/label overflow */
+.tag,
+.subsidy-badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card-head row: keep tag on a single line even when route tag appears */
+.card-head .tag {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+/* Event-choice text truncing */
+.event-choice .event-body {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.event-choice .event-body strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.event-choice .event-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  max-height: 2.5em;
+}
+
+/* Ensure all choice buttons have consistent internal spacing */
+.choice,
+.event-choice,
+.perk-card {
+  overflow: hidden;
+}
+
+.choice strong,
+.shop-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Item-replace panel: candidate names */
+.item-replace-panel .card-head strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Result / death-recap text */
+.death-recap .hint-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Policy panel choices */
+.policy-choices .choice strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.policy-choices .card-desc {
+  -webkit-line-clamp: 2;
+  max-height: 3em;
+  min-height: 2.2em;
+}
+
+/* Dark affix label */
+.dark-affix {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Perk card descriptions */
+.perk-card .card-desc {
+  -webkit-line-clamp: 2;
+  max-height: 3em;
+  min-height: 2.2em;
+}
+
 @media (max-width: 760px) {
   .shell {
     padding: 0;
@@ -2179,8 +2300,8 @@ h2 {
   }
 
   #upgradeChoices .card-head {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
     min-height: 0;
   }
 
