@@ -457,13 +457,13 @@ function getStageConfig(stage) {
     name: names[Math.min(names.length - 1, stage - 1)],
     duration: WAVE_SECONDS + Math.max(0, stage - 4) * 2 + lateStage,
     totalEnemies: Math.round((24 + stage * 9.2 + midStage * 5.5 + lateStage * 6 - (stage <= 3 ? 4 + stage * 2 : 0)) * (stage === 1 ? 0.82 : 1)),
-    maxConcurrent: Math.round((14 + stage * 3.4 + midStage * 2 + lateStage * 2.4) * (pressureStage ? 1.12 : 1) * (stage === 1 ? 0.72 : 1)),
-    spawnInterval: Math.max(0.2, 0.92 - stage * 0.046 - midStage * 0.02 - lateStage * 0.012) * (stage === 1 ? 1.28 : 1),
+    maxConcurrent: Math.round((16 + stage * 4.2 + midStage * 2.5 + lateStage * 3) * (pressureStage ? 1.15 : 1) * (stage === 1 ? 0.7 : 1)),
+    spawnInterval: Math.max(0.16, 0.88 - stage * 0.044 - midStage * 0.022 - lateStage * 0.014) * (stage === 1 ? 1.3 : 1),
     batchSize: stage === 1 ? 1 : Math.min(6, 1 + Math.floor(stage / 2) + (burstStage ? 1 : 0)),
     eliteTotal: Math.max(0, Math.floor((stage - 1) / 2) + (stage >= 8 ? 1 : 0) + (stage >= 12 ? 1 : 0)),
-    healthMult: 1 + stage * 0.126 + scalingStage * scalingStage * 0.022 + midStage * 0.072 + latePressure * latePressure * 0.018 + (stage >= 10 ? stage * 0.02 : 0),
-    speedMult: 0.98 + stage * 0.048 + midStage * 0.018 + lateStage * 0.034 + (burstStage ? 0.04 : 0) + (stage >= 10 ? 0.02 : 0),
-    damageMult: (1 + stage * 0.07 + midStage * 0.065 + latePressure * 0.04) * (pressureStage ? 1.075 : 1),
+    healthMult: 1 + stage * 0.14 + scalingStage * scalingStage * 0.028 + midStage * 0.09 + latePressure * latePressure * 0.024 + (stage >= 8 ? stage * 0.025 : 0),
+    speedMult: 0.98 + stage * 0.052 + midStage * 0.022 + lateStage * 0.04 + (burstStage ? 0.05 : 0) + (stage >= 6 ? 0.02 : 0),
+    damageMult: (1 + stage * 0.085 + midStage * 0.075 + latePressure * 0.055) * (pressureStage ? 1.09 : 1),
     materialMult: 0.76 + stage * 0.047 + lateStage * 0.018,
     enemyMix: mixes[Math.min(mixes.length - 1, stage - 1)],
     clearBonusMult: burstStage || stage === 10 ? 1.22 : 1,
@@ -3119,7 +3119,7 @@ function takeDamage(rawDamage, source = "压力源") {
     return;
   }
 
-  const reduction = 100 / (100 + Math.max(0, p.armor + getClassBonus("armor")) * 7);
+  const reduction = 100 / (100 + Math.max(0, p.armor + getClassBonus("armor")) * 5.5);
   const anchorReduction = 1 - getAnchorDamageReduction();
   const damage = Math.max(1, Math.round(rawDamage * ramp * reduction));
   const finalDamage = Math.max(1, Math.round(damage * anchorReduction));
@@ -3168,11 +3168,11 @@ function applyEnemyDamage(enemy, amount, source = "generic", showWeakText = true
 
 function getEnemyLateDamageResistance(enemy, source) {
   if (!game || !enemy) return 1;
-  // Stage-based damage reduction
-  if (game.stage >= 13) return enemy.elite ? 0.65 : 0.75;
-  if (game.stage >= 9) return enemy.elite ? 0.78 : 0.85;
-  if (game.stage >= 5) return enemy.elite ? 0.88 : 0.92;
-  return 1;
+  // Continuous DR scaling: enemies get progressively tougher
+  const s = Math.max(0, game.stage - 2);
+  const base = 1 / (1 + s * 0.07 + Math.max(0, game.stage - 7) * 0.05 + Math.max(0, game.stage - 11) * 0.05);
+  const eliteMult = enemy.elite ? 0.88 : 1;
+  return base * eliteMult;
 }
 
 function dropEnemyLoot(enemy) {
