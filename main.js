@@ -3883,7 +3883,7 @@ function openUpgrade(returnState = "playing") {
   ui.stageBanner?.classList.add("hidden");
   game.upgradeReturnState = returnState;
   game.upgradeRerolls = 1;
-  game.currentUpgradeChoices = pickUpgrades(game.upgradeSlotPenalty ? 3 : (4 + (game.upgradeChoiceBonus || 0)));
+  game.currentUpgradeChoices = pickUpgrades(Math.min(4, game.upgradeSlotPenalty ? 3 : (4 + (game.upgradeChoiceBonus || 0))));
   game.upgradeSlotPenalty = false;
   game.upgradeChoiceBonus = 0;
   renderUpgradeChoices();
