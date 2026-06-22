@@ -1,3 +1,18 @@
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  CUBICLE SURVIVOR REFORGED — 工位幸存者 重构版                      ║
+// ║                                                                     ║
+// ║  7-Layer Architecture (code sections below marked with ═══ banners): ║
+// ║  01 核心规则 | 02 强度预算 | 03 成长曲线 | 04 流派架构             ║
+// ║  05 内容实现 | 06 表现反馈 | 07 测试调参                           ║
+// ║                                                                     ║
+// ║  Key files: main.js (game logic) + styles.css + index.html          ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 01+02: CORE RULES & POWER BUDGET
+//  常量·上限·公式·预算边界·掉落规则
+// ════════════════════════════════════════════════════════════
 ﻿const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
@@ -140,6 +155,11 @@ propsAtlas.onload = () => {
 };
 propsAtlas.src = PROPS_ATLAS_SRC;
 
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 04: BUILD ARCHITECTURE — 流派架构
+//  武器定义·路线系统·职业协同·Build关系
+// ════════════════════════════════════════════════════════════
 const weaponDefinitions = {
   coffee: {
     label: "咖啡",
@@ -434,6 +454,11 @@ const policyCards = [
 ];
 
 function getStageConfig(stage) {
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 03: PROGRESSION CURVE — 成长曲线
+//  关卡配置·事件·游戏创建·开局逻辑
+// ════════════════════════════════════════════════════════════
   const names = ["漏洞潮", "需求变更", "晨会围堵", "截止线", "复盘压力", "季度审判", "紧急上线", "跨组拉齐", "财年封版", "审计追问", "组织调整", "灰度事故", "年度述职", "终局评审"];
   const mixes = [
     { bug: 1 },
@@ -1730,6 +1755,11 @@ const permanentUpgrades = [
 ];
 
 function createGame() {
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 03 (cont): 游戏生命周期
+//  创建·开始·策略选择·永久升级
+// ════════════════════════════════════════════════════════════
   const stageConfig = getStageConfig(1);
   return {
     time: 0,
@@ -2032,6 +2062,11 @@ function applyPolicyStageModifiers(g) {
 }
 
 function loop(now) {
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 05: CONTENT — 核心游戏循环
+//  主循环·玩家移动·武器更新·敌人AI·弹幕·掉落
+// ════════════════════════════════════════════════════════════
   const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
   lastTime = now;
 
@@ -5668,6 +5703,11 @@ function endGame(won) {
   renderBestOvertime();
 }
 
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 07: TELEMETRY — 死亡复盘 & 统计
+//  死亡分析·伤害来源·工分计算
+// ════════════════════════════════════════════════════════════
 function renderDeathRecap() {
   if (!ui.deathRecap) return;
   const hints = getDeathHints();
@@ -5838,6 +5878,11 @@ function renderBestOvertime() {
 }
 
 function render() {
+
+// ════════════════════════════════════════════════════════════
+//  LAYER 06: PRESENTATION — 表现与绘制
+//  渲染·HUD·特效·演出·UI面板
+// ════════════════════════════════════════════════════════════
   if (!game) {
     drawMenuBackground();
     return;
