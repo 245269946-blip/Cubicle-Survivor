@@ -103,6 +103,10 @@ const DAMAGE_MULT_SOFT_CAP = 1.82;
 const DAMAGE_MULT_HARD_CAP = 2.18;
 const ATTACK_SPEED_SOFT_CAP = 62;
 const ATTACK_SPEED_HARD_CAP = 92;
+// Weapon-specific size/radius caps to prevent screen-filling AoE
+const WSIZE_SOFT_FACTOR = 1.5;   // up to 1.5x base: full growth
+const WSIZE_HARD_FACTOR = 2.5;   // absolute max 2.5x base
+const WSIZE_TAIL = 0.30;         // growth rate beyond soft cap
 const SPRITE_ATLAS_SRC = "assets/office-rogue-atlas.png";
 const PROPS_ATLAS_SRC = "assets/office-rogue-props.png";
 const UI_ATLAS_SRC = "assets/office-rogue-ui-icons.png";
@@ -4685,6 +4689,15 @@ function syncWeaponDerivedStats() {
   p.thermosRadius = 70 + (thermos >= 4 ? 40 : 0);
   p.thermosChargeBonus = thermos >= 2 ? 0.18 : 0;
   p.thermosBurstHeal = thermos >= 7 ? 17 : 15;
+
+  // --- weapon size soft-caps (prevents screen-filling AoE) ---
+  p.auraRadius = softCapWeaponSize(p.auraRadius, 78);
+  p.stickyRadius = softCapWeaponSize(p.stickyRadius, 54);
+  p.shredderRange = softCapWeaponSize(p.shredderRange, 90);
+  p.chainRange = softCapWeaponSize(p.chainRange, 180);
+  p.thermosRadius = softCapWeaponSize(p.thermosRadius, 70);
+  p.orbitRadius = softCapWeaponSize(p.orbitRadius, 86);
+  p.markerWidth = softCapWeaponSize(p.markerWidth, 10);
 }
 
 function applyWeaponUpgradeModifiers() {
@@ -4718,6 +4731,15 @@ function applyWeaponUpgradeModifiers() {
   p.thermosRadius += n("thermosSteam") * 14;
   p.thermosBurstHeal += n("thermosRefill") * 2;
   p.thermosTea = Math.min(p.thermosTea, p.thermosTeaMax);
+
+  // --- weapon size soft-caps (prevents screen-filling AoE) ---
+  p.auraRadius = softCapWeaponSize(p.auraRadius, 78);
+  p.stickyRadius = softCapWeaponSize(p.stickyRadius, 54);
+  p.shredderRange = softCapWeaponSize(p.shredderRange, 90);
+  p.chainRange = softCapWeaponSize(p.chainRange, 180);
+  p.thermosRadius = softCapWeaponSize(p.thermosRadius, 70);
+  p.orbitRadius = softCapWeaponSize(p.orbitRadius, 86);
+  p.markerWidth = softCapWeaponSize(p.markerWidth, 10);
 }
 
 function rerollShop() {
@@ -5233,6 +5255,11 @@ function softCap(value, softCap, hardCap, tail = 0.35) {
   if (value <= softCap) return value;
   const extra = value - softCap;
   return Math.min(hardCap, softCap + extra * tail);
+}
+
+function softCapWeaponSize(actual, base) {
+  if (typeof base !== "number" || base <= 0) return actual;
+  return Math.round(softCap(actual, base * WSIZE_SOFT_FACTOR, base * WSIZE_HARD_FACTOR, WSIZE_TAIL));
 }
 
 function addPlayerDamage(g, amount) {
