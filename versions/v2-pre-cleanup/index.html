@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工位幸存者</title>
+    <link rel="icon" href="data:," />
+    <link rel="preload" as="image" href="assets/office-rogue-atlas.png" />
+    <link rel="preload" as="image" href="assets/office-rogue-props.png" />
+    <link rel="preload" as="image" href="assets/office-rogue-ui-icons.png" />
+    <link rel="preload" as="image" href="assets/marker-laser-vfx-spritesheet.png" />
+    <link rel="preload" as="image" href="assets/selection-preview-vfx.png" />
+    <link rel="stylesheet" href="styles.css?v=10" />
+  </head>
+  <body>
+    <script>
+    window._errors = [];
+    window.onerror = function(msg, url, line, col, err) {
+      window._errors.push({msg: String(msg), url: String(url||''), line: line, col: col, stack: err && err.stack ? String(err.stack) : ''});
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      window._errors.push({msg: 'Promise: ' + String(e.reason), stack: e.reason && e.reason.stack ? String(e.reason.stack) : ''});
+    });
+    </script>
+    <main class="shell">
+      <section class="game-wrap" aria-label="工位幸存者">
+        <canvas id="game" width="1280" height="720"></canvas>
+
+        <div class="objective-hud" aria-live="polite">
+          <span id="objectiveStageMeta" class="stage-meta">第 1 关</span>
+          <strong id="objectiveStageName">漏洞潮</strong>
+          <div class="objective-row">
+            <span>倒计时 <b id="objectiveTime">00:00</b></span>
+            <span>剩余 <b id="objectiveRemaining">0</b></span>
+            <span>击破 <b id="objectiveKills">0</b></span>
+          </div>
+          <div id="objectiveAlert" class="objective-alert">清理 Bug，建立第一套武器效果</div>
+        </div>
+
+        <button id="pauseButton" class="pause-button" type="button">暂停</button>
+        <div id="stageBanner" class="stage-banner hidden">
+          <span id="stageBannerMeta">第 1 关</span>
+          <strong id="stageBannerTitle">漏洞潮</strong>
+          <p id="stageBannerText">清理 Bug，建立第一套武器效果</p>
+        </div>
+        <div id="fusionNotice" class="fusion-notice hidden" role="status" aria-live="polite">
+          <span id="fusionNoticeMeta">阶段提示</span>
+          <strong id="fusionNoticeTitle">武器形态接近强化节点</strong>
+          <p id="fusionNoticeText">继续强化主武器和关键槽位，可能触发新的战斗反馈。</p>
+          <button id="fusionNoticeClose" type="button">知道了</button>
+        </div>
+        <div id="guideOverlay" class="guide-overlay hidden">WASD 移动 / 自动攻击 / B 或 Tab 查看 Build</div>
+        <div id="warmupOverlay" class="warmup-overlay hidden">
+          <span id="warmupEmoji">ID</span>
+          <strong id="warmupTitle">入职准备中</strong>
+          <div class="warmup-bar"><div id="warmupFill"></div></div>
+          <span id="warmupTimer">18s</span>
+          <span id="warmupHint">WASD 移动 / 熟悉走位</span>
+        </div>
+
+        <div class="hud top-left">
+          <div class="stat">
+            <span>时间</span>
+            <strong id="timeText">00:00</strong>
+          </div>
+          <div class="stat">
+            <span>关卡</span>
+            <strong id="stageText">1</strong>
+          </div>
+          <div class="stat">
+            <span>等级</span>
+            <strong id="levelText">1</strong>
+          </div>
+          <div class="stat">
+            <span>击破</span>
+            <strong id="killsText">0</strong>
+          </div>
+          <div class="stat">
+            <span>剩余</span>
+            <strong id="remainingText">0</strong>
+          </div>
+          <div class="stat">
+            <span>属性</span>
+            <strong id="skillCountText">0</strong>
+          </div>
+          <div class="stat">
+            <span>材料</span>
+            <strong id="materialText">0</strong>
+          </div>
+        </div>
+
+        <div class="hud top-right">
+          <div class="stat hp-stat wide-stat">
+            <span>血量</span>
+            <strong id="hpText">100 / 100</strong>
+            <div class="hp-meter" aria-hidden="true">
+              <div id="hpFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <button id="buildToggle" class="build-toggle" type="button" aria-label="打开 Build 面板">B</button>
+        <div id="buildPanel" class="build-panel collapsed" aria-label="当前 Build 状态">
+          <div class="build-panel-head">
+            <span>武器 Build</span>
+            <strong id="buildSummary">武器槽</strong>
+          </div>
+          <div id="routeMap" class="route-map"></div>
+          <div id="buildList" class="build-list"></div>
+          <div class="build-panel-head stats-head">
+            <span>个人属性</span>
+          </div>
+          <div id="statList" class="build-list stat-list"></div>
+          <div class="build-panel-head stats-head">
+            <span>道具</span>
+            <strong id="itemSummary">0</strong>
+          </div>
+          <div id="itemList" class="item-list"></div>
+          <div class="build-panel-head stats-head">
+            <span>进化进度</span>
+            <strong id="evoSummary"></strong>
+          </div>
+          <div id="evoProgressList" class="evo-progress-list"></div>
+        </div>
+
+        <div class="xp-bar" aria-hidden="true">
+          <div id="xpFill"></div>
+        </div>
+
+        <div id="startPanel" class="overlay">
+          <div class="panel intro-panel">
+            <div class="title-hero">
+              <span class="title-stamp">Office Roguelike</span>
+              <h1><span class="title-glitch">工位</span>幸存者</h1>
+              <p class="subtitle">会议、Bug 和报表正在靠近。</p>
+              <div class="title-bar" aria-hidden="true"></div>
+            </div>
+            <div class="quick-guide">
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">WASD</span>
+                <strong>移动</strong>
+                <span>方向键或 WASD 控制走位，别被怪群贴脸。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">AUTO</span>
+                <strong>自动战斗</strong>
+                <span>武器自动开火，你负责拉位置和找窗口。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">LV</span>
+                <strong>经验成长</strong>
+                <span>升级选择会强化主武器形态，或补足生存和资源。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">TAB</span>
+                <strong>Build 面板</strong>
+                <span>按 B / Tab 查看主武器形态、槽位强化和道具。</span>
+              </div>
+            </div>
+            <div id="bestOvertimeText" class="best-overtime hidden"></div>
+            <div id="policyPanel" class="policy-panel hidden">
+              <p class="eyebrow policy-eyebrow">选择本局公司政策</p>
+              <div id="policyChoices" class="policy-choices"></div>
+              <button id="policySkip" class="primary-button tertiary-button" type="button">不选政策 · 正常开局</button>
+            </div>
+            <div class="start-actions">
+              <button id="startButton" class="primary-button">开始游戏</button>
+              <button id="startPerkButton" class="primary-button secondary-button" type="button">永久商店</button>
+              <button id="startEndlessButton" class="primary-button tertiary-button hidden" type="button">直接无尽</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="upgradePanel" class="overlay hidden">
+          <div class="panel upgrade-panel">
+            <p class="eyebrow">经验结算</p>
+            <h2>选择本次属性成长</h2>
+            <div id="upgradeChoices" class="choices"></div>
+            <div class="upgrade-actions">
+              <button id="upgradeRerollButton" class="primary-button tertiary-button" type="button">
+                免费刷新 <span id="upgradeRerollCount">1</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="weaponSelectPanel" class="overlay hidden">
+          <div class="panel weapon-select-panel">
+            <p class="eyebrow">选择初始武器</p>
+            <h2>先决定你怎么清场</h2>
+            <p class="panel-note">武器决定基础攻击方式。下一步选择工牌后，同一把武器会变成不同战斗形态。</p>
+            <div id="weaponSelectGrid" class="weapon-select-grid"></div>
+          </div>
+        </div>
+
+        <div id="weaponPanel" class="overlay hidden">
+          <div class="panel upgrade-panel shop-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">关卡结算</p>
+                <h2>武器工坊</h2>
+                <p id="armoryReasonText" class="panel-note">清场过关</p>
+              </div>
+            </div>
+            <div id="armoryBuildStrip" class="armory-build-strip"></div>
+            <div id="armoryRouteMap" class="route-map armory-route-map"></div>
+            <div id="offerPreview" class="offer-preview hidden"></div>
+            <div id="weaponChoices" class="choices shop-choices"></div>
+            <div class="shop-actions">
+              <div class="material-pill shop-material-pill">材料 <strong id="armoryMaterialText">0</strong></div>
+              <button id="refreshButton" class="primary-button tertiary-button">
+                刷新 <span id="refreshCostText">3</span>
+              </button>
+              <button id="continueButton" class="primary-button secondary-button">进入下一关</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="resultPanel" class="overlay hidden">
+          <div class="panel result-panel">
+            <p id="resultEyebrow" class="eyebrow">结算</p>
+            <h2 id="resultTitle">本轮结束</h2>
+            <p class="subtitle">看看这局哪种攻击真的生效，下一次把主形态做得更清楚。</p>
+            <div id="deathRecap" class="death-recap hidden"></div>
+            <div class="result-actions">
+              <button id="restartButton" class="primary-button">再来一局</button>
+              <button id="perkShopButton" class="primary-button secondary-button" type="button">永久商店</button>
+              <button id="endlessButton" class="primary-button secondary-button hidden" type="button">继续加班</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="perkPanel" class="overlay hidden">
+          <div class="panel perk-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">永久商店</p>
+                <h2>工分升级</h2>
+              </div>
+              <div class="material-pill">工分 <strong id="perkPointsText">0</strong></div>
+            </div>
+            <div id="perkList" class="perk-list"></div>
+            <div class="result-actions">
+              <button id="perkCloseButton" class="primary-button secondary-button" type="button">返回</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="itemReplacePanel" class="overlay hidden">
+          <div class="panel item-replace-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">道具槽已满</p>
+                <h2>替换一个被动道具</h2>
+              </div>
+              <div class="material-pill">容量 <strong id="itemReplaceCount">6/6</strong></div>
+            </div>
+            <div id="itemReplaceNew" class="item-replace-new"></div>
+            <div id="itemReplaceList" class="item-replace-list"></div>
+            <div class="result-actions">
+              <button id="itemConvertButton" class="primary-button secondary-button" type="button">回收为材料 +6</button>
+              <button id="itemKeepButton" class="primary-button tertiary-button" type="button">保留现有道具</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="pausePanel" class="overlay hidden">
+          <div class="panel result-panel pause-panel">
+            <p class="eyebrow">Paused</p>
+            <h2>暂停</h2>
+            <div id="pauseStats" class="pause-sheet"></div>
+            <div class="pause-actions">
+              <button id="resumeButton" class="primary-button secondary-button">继续</button>
+              <button id="restartFromPause" class="primary-button danger-button" type="button">放弃本轮</button>
+            </div>
+          </div>
+        </div>
+        <!-- 关卡间事件 -->
+        <div id="eventPanel" class="overlay hidden">
+          <div class="panel event-panel">
+            <p class="eyebrow">关间事件</p>
+            <h2 id="eventTitle">做出选择</h2>
+            <div id="eventChoices"></div>
+            <button id="eventSkipButton" class="event-skip">跳过（不承担风险）</button>
+          </div>
+        </div>
+
+        <!-- v0.3 身份工牌选择 -->
+        <div id="badgePanel" class="overlay hidden">
+          <div class="panel badge-panel">
+            <p class="eyebrow">选择工牌</p>
+            <h2>今天是你的第一天</h2>
+            <div class="badge-grid" id="badgeGrid"></div>
+          </div>
+        </div>
+
+        <!-- v0.3 协作任务 -->
+        <div id="collabPanel" class="overlay hidden">
+          <div class="panel collab-panel">
+            <div class="collab-dept-icons" id="collabDeptIcons"></div>
+            <h3 id="collabNarrative"></h3>
+            <p id="collabRequirement"></p>
+            <p id="collabReward"></p>
+            <div class="collab-actions" id="collabActions">
+              <button id="collabAccept" class="primary-button">接受合作</button>
+              <button id="collabDecline" class="secondary-button">以后再说</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- v0.3 复盘增强层 -->
+        <div id="debriefLayers">
+          <div id="identityLayer" class="debrief-layer layer-identity hidden">
+            <p id="identityText"></p>
+          </div>
+          <div id="suggestionsLayer" class="debrief-layer layer-suggestions hidden">
+            <h4>💡 下局试试</h4>
+            <div id="suggestionList"></div>
+          </div>
+          <div id="radarLayer" class="debrief-layer layer-radar hidden">
+            <h4>📊 Build 维度</h4>
+            <div id="radarChart" class="radar-chart"></div>
+          </div>
+        </div>
+
+        <!-- 路线视觉叠加层 -->
+        <div id="routeScanlines" class="route-scanlines"></div>
+        <div id="lowHpVignette" class="low-hp-vignette"></div>
+      </section>
+    </main>
+
+    <!-- v0.3 数据层 -->
+    <script>
+      window._errors = [];
+      window.onerror = function(msg, src, line, col, err) {
+        window._errors.push({msg: String(msg), src: src, line: line, col: col, stack: err&&err.stack||''});
+        var e = document.getElementById('errLog');
+        if(e) e.textContent += '\nL' + line + ': ' + msg;
+      };
+    </script>
+    <script src="src/data/departments.js"></script>
+    <script src="src/data/attributes.js"></script>
+    <script src="src/data/tags.js"></script>
+<script src="src/data/cards.js"></script>
+    <script src="src/data/weapons.js?v=3"></script>
+    <script src="src/data/synergies.js"></script>
+    <script src="src/data/milestones.js"></script>
+    <script src="src/data/stages.js"></script>
+    <script src="src/data/balance.js"></script>
+    <!-- v0.3 核心运行时 -->
+    <script src="src/core/build-state.js"></script>
+    <!-- 主游戏逻辑 -->
+    <script src="main.js?v=39"></script>
+    <!-- 调试: 全 Build 测试按钮 -->
+    <div id="testOutputWrap" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:rgba(0,0,0,0.92);display:none;overflow-y:auto;" onclick="this.style.display='none'"></div>
+    <pre id="testOutput" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;color:#0f0;background:#111;padding:24px 32px;border:2px solid #0f0;border-radius:10px;font:15px/1.6 monospace;max-width:90vw;max-height:85vh;overflow-y:auto;display:none;white-space:pre-wrap;" onclick="this.style.display='none';document.getElementById('testOutputWrap').style.display='none'"></pre>
+    <button id="testAllBtn" style="position:fixed;bottom:10px;right:10px;z-index:100000;padding:8px 14px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,0.5);" onclick="var wrap=document.getElementById('testOutputWrap');if(!wrap){wrap=document.createElement('div');wrap.id='testOutputWrap';wrap.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:rgba(0,0,0,0.92);overflow-y:auto;';wrap.onclick=function(){wrap.style.display='none';};document.body.appendChild(wrap);}var out=document.getElementById('testOutput');if(!out){out=document.createElement('pre');out.id='testOutput';out.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;color:#0f0;background:#111;padding:24px 32px;border:2px solid #0f0;border-radius:10px;font:15px/1.6 monospace;max-width:90vw;max-height:85vh;overflow-y:auto;white-space:pre-wrap;';out.onclick=function(){wrap.style.display='none';};document.body.appendChild(out);}wrap.style.display='block';out.style.display='block';out.textContent='⏳ 测试运行中...';setTimeout(function(){try{if(typeof window._testAllBuilds!=='function'){var errs='_testAllBuilds is '+typeof window._testAllBuilds;if(window._errors&&window._errors.length>0){errs+='\n\n前置JS错误:';for(var ei=0;ei<window._errors.length;ei++){var er=window._errors[ei];errs+='\nL'+er.line+': '+er.msg;}}out.textContent='❌ '+errs;}else{var r=window._testAllBuilds();var o='=== '+r.length+' Builds Tested ===\n';for(var i=0;i<r.length;i++){var x=r[i];var c=x.clearedAll?'✅':'❌';var t=x.clearedAll?'14/14':('第'+x.deathStage+'关死亡');o+=(i+1)+'. '+c+' '+x.name+' '+t+' | 卡槽:'+x.slots+'/5 | 部门协同:'+x.deptSyns+' | 属性协同:'+x.attrSyns+' | 里程碑:'+x.milestones+'\n';}out.textContent=o;}}catch(e){out.textContent='❌ 测试错误: '+e.message+'\n'+e.stack;}},100);">🧪 测试全部 Build</button>
+    <!-- 自动测试: ?test=1 自动选择技术实习生并跑全 Build -->
+    <script>
+      (function() {
+        if (new URLSearchParams(window.location.search).get('test') !== '1') return;
+        // 创建DOM输出面板
+        var wrap = document.getElementById('testOutputWrap');
+        var out = document.getElementById('testOutput');
+        if (!wrap) {
+          wrap = document.createElement('div');
+          wrap.id = 'testOutputWrap';
+          wrap.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:rgba(0,0,0,0.92);display:none;overflow-y:auto;';
+          wrap.onclick = function(){wrap.style.display='none';if(out)out.style.display='none';};
+          document.body.appendChild(wrap);
+        }
+        if (!out) {
+          out = document.createElement('pre');
+          out.id = 'testOutput';
+          out.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;color:#0f0;background:#111;padding:24px 32px;border:2px solid #0f0;border-radius:10px;font:15px/1.6 monospace;max-width:90vw;max-height:85vh;overflow-y:auto;display:none;white-space:pre-wrap;';
+          out.onclick = function(){out.style.display='none';wrap.style.display='none';};
+          document.body.appendChild(out);
+        }
+        var attempts = 0;
+        var check = setInterval(function() {
+          attempts++;
+          var startBtn = null;
+          for (var b of document.querySelectorAll('button')) {
+            if (b.textContent.includes('开始加班')) { startBtn = b; break; }
+          }
+          if (startBtn) {
+            startBtn.click();
+            clearInterval(check);
+            setTimeout(function() {
+              for (var b of document.querySelectorAll('button')) {
+                if (b.textContent.includes('技术实习生')) { b.click(); break; }
+              }
+              // 等待 _testAllBuilds 就绪（main.js 可能还没加载完）
+              var waitTest = function(retries) {
+                if (window._testAllBuilds) {
+                  wrap.style.display = 'block';
+                  out.style.display = 'block';
+                  out.textContent = '⏳ 全 Build 测试运行中...';
+                  setTimeout(function() {
+                    try {
+                      var res = window._testAllBuilds();
+                      var msg = '=== ' + res.length + ' Builds Tested ===\n';
+                      for (var i = 0; i < res.length; i++) {
+                        var x = res[i];
+                        var c = x.clearedAll ? '✅' : '❌';
+                        var t = x.clearedAll ? '14/14' : ('第' + x.deathStage + '关死亡');
+                        msg += (i+1) + '. ' + c + ' ' + x.name + ' ' + t + ' | 卡槽:' + x.slots + '/5 | 部门协同:' + x.deptSyns + ' | 属性协同:' + x.attrSyns + ' | 里程碑:' + x.milestones + '\n';
+                      }
+                      out.textContent = msg;
+                      console.log(msg);
+                    } catch(e) {
+                      out.textContent = '❌ 测试错误: ' + e.message;
+                    }
+                  }, 100);
+                } else if (retries > 0) {
+                  setTimeout(function() { waitTest(retries - 1); }, 300);
+                } else {
+                  wrap.style.display = 'block';
+                  out.style.display = 'block';
+                  out.textContent = '❌ _testAllBuilds 未找到 (60次重试后)';
+                }
+              };
+              waitTest(60);
+            }, 2000);
+          } else if (attempts > 30) {
+            clearInterval(check);
+            wrap.style.display = 'block';
+            out.style.display = 'block';
+            out.textContent = '❌ 未找到开始加班按钮 (30次尝试)';
+          }
+        }, 500);
+      })();
+    </script>
+  </body>
+</html>
