@@ -1,0 +1,882 @@
+{
+  "checkedAt": "2026-07-05T15:44:59.652Z",
+  "package": "Cubicle-Survivor-demo",
+  "staticRefs": 27,
+  "enemyThreatTypes": [
+    "approval",
+    "client",
+    "deadline",
+    "email",
+    "meeting",
+    "ping",
+    "scope",
+    "todo"
+  ],
+  "combatSmokes": [
+    {
+      "label": "marker-base",
+      "weaponId": "marker",
+      "stageId": 1,
+      "activeForm": "marker_intern",
+      "modeAfterSmoke": "combat",
+      "delta": {
+        "shots": 11,
+        "kills": 11,
+        "stageKills": 11,
+        "damage": 264,
+        "hpLost": 0,
+        "simulated": 20
+      }
+    },
+    {
+      "label": "thermos-dept",
+      "weaponId": "thermos",
+      "stageId": 4,
+      "activeForm": "thermos_product",
+      "modeAfterSmoke": "combat",
+      "delta": {
+        "shots": 16,
+        "kills": 12,
+        "stageKills": 12,
+        "damage": 684,
+        "hpLost": 0,
+        "simulated": 19.98
+      }
+    },
+    {
+      "label": "sticky-cross-weapon",
+      "weaponId": "sticky_note",
+      "stageId": 14,
+      "activeForm": "sticky_note_general",
+      "modeAfterSmoke": "combat",
+      "delta": {
+        "shots": 10,
+        "kills": 47,
+        "stageKills": 47,
+        "damage": 3638.9599999999996,
+        "hpLost": 0,
+        "simulated": 15.98
+      }
+    }
+  ],
+  "pressureStages": [
+    {
+      "label": "marker-promotion-boss",
+      "weaponId": "marker",
+      "stageId": 7,
+      "activeForm": "marker_tech",
+      "modeAfterPressure": "armory",
+      "delta": {
+        "damage": 764.2128000000001,
+        "shots": 9,
+        "kills": 1,
+        "hpLost": 0,
+        "enemyShots": 4,
+        "bossDamage": 745,
+        "simulated": 14.13,
+        "completed": true
+      }
+    },
+    {
+      "label": "thermos-cross-dept-boss",
+      "weaponId": "thermos",
+      "stageId": 13,
+      "activeForm": "thermos_product",
+      "modeAfterPressure": "support_weapon_select",
+      "delta": {
+        "damage": 1526,
+        "shots": 7,
+        "kills": 1,
+        "hpLost": 0,
+        "enemyShots": 9,
+        "bossDamage": 1308,
+        "simulated": 17.63,
+        "completed": true
+      }
+    },
+    {
+      "label": "sticky-final-boss",
+      "weaponId": "sticky_note",
+      "stageId": 16,
+      "activeForm": "sticky_note_general",
+      "modeAfterPressure": "result",
+      "delta": {
+        "damage": 1906.664000000001,
+        "shots": 14,
+        "kills": 1,
+        "hpLost": 0,
+        "enemyShots": 10,
+        "bossDamage": 1841,
+        "simulated": 20.65,
+        "completed": true
+      }
+    }
+  ],
+  "actualFullCombatPaths": [
+    {
+      "weaponId": "marker",
+      "dept": "tech",
+      "secondaryDept": "product",
+      "supportWeaponId": "thermos",
+      "stageCount": 16,
+      "totalDamage": 48671.69,
+      "totalKills": 697,
+      "maxHpLost": 35.12,
+      "finalLevel": 13,
+      "finalMaterials": 213,
+      "supportSkill": "support_thermos_pulse",
+      "stageSummaries": [
+        {
+          "stageId": 1,
+          "simulated": 36.7,
+          "damage": 576,
+          "kills": 24,
+          "shots": 23,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 2,
+          "simulated": 45.2,
+          "damage": 912,
+          "kills": 27,
+          "shots": 31,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 3,
+          "simulated": 18.7,
+          "damage": 364,
+          "kills": 1,
+          "shots": 13,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "badge_select"
+        },
+        {
+          "stageId": 4,
+          "simulated": 44.13,
+          "damage": 1541.1,
+          "kills": 40,
+          "shots": 30,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 5,
+          "simulated": 49.97,
+          "damage": 2268.96,
+          "kills": 50,
+          "shots": 35,
+          "hpLost": 0,
+          "enemyShots": 54,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 6,
+          "simulated": 54.53,
+          "damage": 2991.06,
+          "kills": 56,
+          "shots": 40,
+          "hpLost": 0,
+          "enemyShots": 95,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 7,
+          "simulated": 10.53,
+          "damage": 763.55,
+          "kills": 1,
+          "shots": 7,
+          "hpLost": 0,
+          "enemyShots": 3,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 8,
+          "simulated": 35.87,
+          "damage": 3022.58,
+          "kills": 67,
+          "shots": 26,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 9,
+          "simulated": 62.8,
+          "damage": 4961.98,
+          "kills": 72,
+          "shots": 47,
+          "hpLost": 35.12,
+          "enemyShots": 91,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 10,
+          "simulated": 7.63,
+          "damage": 1185.92,
+          "kills": 1,
+          "shots": 4,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "secondary_badge_select"
+        },
+        {
+          "stageId": 11,
+          "simulated": 54.5,
+          "damage": 5813.94,
+          "kills": 82,
+          "shots": 41,
+          "hpLost": 0,
+          "enemyShots": 133,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 12,
+          "simulated": 44.1,
+          "damage": 6105.91,
+          "kills": 88,
+          "shots": 33,
+          "hpLost": 0,
+          "enemyShots": 114,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 13,
+          "simulated": 6.4,
+          "damage": 1504.64,
+          "kills": 1,
+          "shots": 4,
+          "hpLost": 0,
+          "enemyShots": 1,
+          "nextMode": "support_weapon_select"
+        },
+        {
+          "stageId": 14,
+          "simulated": 36.3,
+          "damage": 6242.93,
+          "kills": 90,
+          "shots": 27,
+          "hpLost": 0,
+          "enemyShots": 53,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 15,
+          "simulated": 49.3,
+          "damage": 8525.48,
+          "kills": 96,
+          "shots": 37,
+          "hpLost": 0,
+          "enemyShots": 105,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 16,
+          "simulated": 7.7,
+          "damage": 1891.64,
+          "kills": 1,
+          "shots": 4,
+          "hpLost": 0,
+          "enemyShots": 2,
+          "nextMode": "result"
+        }
+      ]
+    },
+    {
+      "weaponId": "thermos",
+      "dept": "product",
+      "secondaryDept": "ops",
+      "supportWeaponId": "sticky_note",
+      "stageCount": 16,
+      "totalDamage": 103483.32,
+      "totalKills": 670,
+      "maxHpLost": 24,
+      "finalLevel": 13,
+      "finalMaterials": 205,
+      "supportSkill": "support_sticky_trap",
+      "stageSummaries": [
+        {
+          "stageId": 1,
+          "simulated": 41.03,
+          "damage": 828.9,
+          "kills": 19,
+          "shots": 34,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 2,
+          "simulated": 45.2,
+          "damage": 1355.35,
+          "kills": 27,
+          "shots": 43,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 3,
+          "simulated": 22.27,
+          "damage": 382.4,
+          "kills": 1,
+          "shots": 18,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "badge_select"
+        },
+        {
+          "stageId": 4,
+          "simulated": 53.23,
+          "damage": 2448,
+          "kills": 39,
+          "shots": 48,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 5,
+          "simulated": 57.23,
+          "damage": 3510,
+          "kills": 45,
+          "shots": 49,
+          "hpLost": 9.36,
+          "enemyShots": 152,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 6,
+          "simulated": 61.23,
+          "damage": 3924,
+          "kills": 43,
+          "shots": 54,
+          "hpLost": 0,
+          "enemyShots": 183,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 7,
+          "simulated": 39.67,
+          "damage": 779.22,
+          "kills": 1,
+          "shots": 20,
+          "hpLost": 0,
+          "enemyShots": 14,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 8,
+          "simulated": 40.47,
+          "damage": 6111,
+          "kills": 66,
+          "shots": 38,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 9,
+          "simulated": 62.17,
+          "damage": 8550.3,
+          "kills": 75,
+          "shots": 57,
+          "hpLost": 0,
+          "enemyShots": 170,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 10,
+          "simulated": 19.97,
+          "damage": 1368,
+          "kills": 1,
+          "shots": 10,
+          "hpLost": 24,
+          "enemyShots": 0,
+          "nextMode": "secondary_badge_select"
+        },
+        {
+          "stageId": 11,
+          "simulated": 54.4,
+          "damage": 16698.8,
+          "kills": 80,
+          "shots": 40,
+          "hpLost": 0,
+          "enemyShots": 134,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 12,
+          "simulated": 41.73,
+          "damage": 17854.2,
+          "kills": 87,
+          "shots": 30,
+          "hpLost": 0,
+          "enemyShots": 112,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 13,
+          "simulated": 25.27,
+          "damage": 1526,
+          "kills": 1,
+          "shots": 7,
+          "hpLost": 0,
+          "enemyShots": 13,
+          "nextMode": "support_weapon_select"
+        },
+        {
+          "stageId": 14,
+          "simulated": 37.93,
+          "damage": 17867.45,
+          "kills": 88,
+          "shots": 29,
+          "hpLost": 0,
+          "enemyShots": 79,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 15,
+          "simulated": 48.07,
+          "damage": 18313.34,
+          "kills": 96,
+          "shots": 36,
+          "hpLost": 0,
+          "enemyShots": 164,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 16,
+          "simulated": 18.93,
+          "damage": 1966.36,
+          "kills": 1,
+          "shots": 11,
+          "hpLost": 0,
+          "enemyShots": 9,
+          "nextMode": "result"
+        }
+      ]
+    },
+    {
+      "weaponId": "sticky_note",
+      "dept": "general",
+      "secondaryDept": "marketing",
+      "supportWeaponId": "marker",
+      "stageCount": 16,
+      "totalDamage": 49447.98,
+      "totalKills": 684,
+      "maxHpLost": 6,
+      "finalLevel": 9,
+      "finalMaterials": 93,
+      "supportSkill": "support_marker_line",
+      "stageSummaries": [
+        {
+          "stageId": 1,
+          "simulated": 41.03,
+          "damage": 428,
+          "kills": 18,
+          "shots": 27,
+          "hpLost": 6,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 2,
+          "simulated": 45.2,
+          "damage": 864,
+          "kills": 31,
+          "shots": 33,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 3,
+          "simulated": 38.67,
+          "damage": 364,
+          "kills": 1,
+          "shots": 27,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "badge_select"
+        },
+        {
+          "stageId": 4,
+          "simulated": 44.27,
+          "damage": 1582.7,
+          "kills": 40,
+          "shots": 31,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 5,
+          "simulated": 55.43,
+          "damage": 2206.8,
+          "kills": 48,
+          "shots": 39,
+          "hpLost": 0,
+          "enemyShots": 65,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 6,
+          "simulated": 48.83,
+          "damage": 2796,
+          "kills": 56,
+          "shots": 34,
+          "hpLost": 0,
+          "enemyShots": 54,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 7,
+          "simulated": 73.97,
+          "damage": 765.46,
+          "kills": 1,
+          "shots": 52,
+          "hpLost": 0,
+          "enemyShots": 26,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 8,
+          "simulated": 32,
+          "damage": 3180,
+          "kills": 66,
+          "shots": 22,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 9,
+          "simulated": 44.2,
+          "damage": 4819.95,
+          "kills": 72,
+          "shots": 30,
+          "hpLost": 0,
+          "enemyShots": 2,
+          "nextMode": "slot_select"
+        },
+        {
+          "stageId": 10,
+          "simulated": 14.53,
+          "damage": 1197,
+          "kills": 1,
+          "shots": 10,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "secondary_badge_select"
+        },
+        {
+          "stageId": 11,
+          "simulated": 44.6,
+          "damage": 6125.9,
+          "kills": 78,
+          "shots": 31,
+          "hpLost": 0,
+          "enemyShots": 1,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 12,
+          "simulated": 28.87,
+          "damage": 6467.98,
+          "kills": 86,
+          "shots": 20,
+          "hpLost": 0,
+          "enemyShots": 1,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 13,
+          "simulated": 15.87,
+          "damage": 1512.4,
+          "kills": 1,
+          "shots": 10,
+          "hpLost": 0,
+          "enemyShots": 6,
+          "nextMode": "support_weapon_select"
+        },
+        {
+          "stageId": 14,
+          "simulated": 25.33,
+          "damage": 6718.34,
+          "kills": 88,
+          "shots": 17,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 15,
+          "simulated": 36.2,
+          "damage": 8517.71,
+          "kills": 96,
+          "shots": 25,
+          "hpLost": 0,
+          "enemyShots": 0,
+          "nextMode": "armory"
+        },
+        {
+          "stageId": 16,
+          "simulated": 19.8,
+          "damage": 1901.74,
+          "kills": 1,
+          "shots": 14,
+          "hpLost": 0,
+          "enemyShots": 9,
+          "nextMode": "result"
+        }
+      ]
+    }
+  ],
+  "actualFullCombatPath": {
+    "weaponId": "marker",
+    "dept": "tech",
+    "secondaryDept": "product",
+    "supportWeaponId": "thermos",
+    "stageCount": 16,
+    "totalDamage": 48671.69,
+    "totalKills": 697,
+    "maxHpLost": 35.12,
+    "finalLevel": 13,
+    "finalMaterials": 213,
+    "supportSkill": "support_thermos_pulse",
+    "stageSummaries": [
+      {
+        "stageId": 1,
+        "simulated": 36.7,
+        "damage": 576,
+        "kills": 24,
+        "shots": 23,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 2,
+        "simulated": 45.2,
+        "damage": 912,
+        "kills": 27,
+        "shots": 31,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 3,
+        "simulated": 18.7,
+        "damage": 364,
+        "kills": 1,
+        "shots": 13,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "badge_select"
+      },
+      {
+        "stageId": 4,
+        "simulated": 44.13,
+        "damage": 1541.1,
+        "kills": 40,
+        "shots": 30,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "slot_select"
+      },
+      {
+        "stageId": 5,
+        "simulated": 49.97,
+        "damage": 2268.96,
+        "kills": 50,
+        "shots": 35,
+        "hpLost": 0,
+        "enemyShots": 54,
+        "nextMode": "slot_select"
+      },
+      {
+        "stageId": 6,
+        "simulated": 54.53,
+        "damage": 2991.06,
+        "kills": 56,
+        "shots": 40,
+        "hpLost": 0,
+        "enemyShots": 95,
+        "nextMode": "slot_select"
+      },
+      {
+        "stageId": 7,
+        "simulated": 10.53,
+        "damage": 763.55,
+        "kills": 1,
+        "shots": 7,
+        "hpLost": 0,
+        "enemyShots": 3,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 8,
+        "simulated": 35.87,
+        "damage": 3022.58,
+        "kills": 67,
+        "shots": 26,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "slot_select"
+      },
+      {
+        "stageId": 9,
+        "simulated": 62.8,
+        "damage": 4961.98,
+        "kills": 72,
+        "shots": 47,
+        "hpLost": 35.12,
+        "enemyShots": 91,
+        "nextMode": "slot_select"
+      },
+      {
+        "stageId": 10,
+        "simulated": 7.63,
+        "damage": 1185.92,
+        "kills": 1,
+        "shots": 4,
+        "hpLost": 0,
+        "enemyShots": 0,
+        "nextMode": "secondary_badge_select"
+      },
+      {
+        "stageId": 11,
+        "simulated": 54.5,
+        "damage": 5813.94,
+        "kills": 82,
+        "shots": 41,
+        "hpLost": 0,
+        "enemyShots": 133,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 12,
+        "simulated": 44.1,
+        "damage": 6105.91,
+        "kills": 88,
+        "shots": 33,
+        "hpLost": 0,
+        "enemyShots": 114,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 13,
+        "simulated": 6.4,
+        "damage": 1504.64,
+        "kills": 1,
+        "shots": 4,
+        "hpLost": 0,
+        "enemyShots": 1,
+        "nextMode": "support_weapon_select"
+      },
+      {
+        "stageId": 14,
+        "simulated": 36.3,
+        "damage": 6242.93,
+        "kills": 90,
+        "shots": 27,
+        "hpLost": 0,
+        "enemyShots": 53,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 15,
+        "simulated": 49.3,
+        "damage": 8525.48,
+        "kills": 96,
+        "shots": 37,
+        "hpLost": 0,
+        "enemyShots": 105,
+        "nextMode": "armory"
+      },
+      {
+        "stageId": 16,
+        "simulated": 7.7,
+        "damage": 1891.64,
+        "kills": 1,
+        "shots": 4,
+        "hpLost": 0,
+        "enemyShots": 2,
+        "nextMode": "result"
+      }
+    ]
+  },
+  "fullRuns": [
+    {
+      "weaponId": "marker",
+      "dept": "tech",
+      "secondaryDept": "product",
+      "supportWeaponId": "thermos",
+      "level": 1,
+      "materials": 58,
+      "flags": {
+        "badgeSeen": true,
+        "slotUnlocked": true,
+        "promoted": true,
+        "mastered": true,
+        "crossDepartment": true,
+        "crossWeapon": true,
+        "gameOver": false,
+        "won": true,
+        "debug": false
+      },
+      "armoryVisits": 15,
+      "supportSkill": "support_thermos_pulse"
+    },
+    {
+      "weaponId": "thermos",
+      "dept": "product",
+      "secondaryDept": "ops",
+      "supportWeaponId": "sticky_note",
+      "level": 1,
+      "materials": 71,
+      "flags": {
+        "badgeSeen": true,
+        "slotUnlocked": true,
+        "promoted": true,
+        "mastered": true,
+        "crossDepartment": true,
+        "crossWeapon": true,
+        "gameOver": false,
+        "won": true,
+        "debug": false
+      },
+      "armoryVisits": 15,
+      "supportSkill": "support_sticky_trap"
+    },
+    {
+      "weaponId": "sticky_note",
+      "dept": "general",
+      "secondaryDept": "marketing",
+      "supportWeaponId": "marker",
+      "level": 1,
+      "materials": 71,
+      "flags": {
+        "badgeSeen": true,
+        "slotUnlocked": true,
+        "promoted": true,
+        "mastered": true,
+        "crossDepartment": true,
+        "crossWeapon": true,
+        "gameOver": false,
+        "won": true,
+        "debug": false
+      },
+      "armoryVisits": 15,
+      "supportSkill": "support_marker_line"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test-runner.js",
+    "qa": "node test-runner.js && node demo-qa.js"
+  }
+}
