@@ -351,6 +351,141 @@ function assertFoundationContracts(V2) {
   }
 }
 
+function makeMechanicEnemy(id, x, y, hp) {
+  return {
+    id,
+    typeId: "contract_dummy",
+    name: "机制靶",
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    r: 14,
+    hp: hp || 80,
+    maxHp: hp || 80,
+    speed: 0,
+    damage: 0,
+    xp: 0,
+    material: 0,
+    dead: false,
+    hitCooldown: 0
+  };
+}
+
+function setupMechanicState(weaponId, dept) {
+  sandbox.GameV2.startRun({ weaponId });
+  if (dept) sandbox.GameV2.dispatch({ type: "SET_BADGE", dept });
+  const state = sandbox.GameV2.getState();
+  state.mode = "combat";
+  state.warmupTime = 0;
+  state.stageTime = 45;
+  state.stageKills = 0;
+  state.enemies = [];
+  state.projectiles = [];
+  state.damageZones = [];
+  state.formEvents = [];
+  state.particles = [];
+  state.pickups = [];
+  state.stats.weaponEvents = [];
+  state.stats.damageDone = {};
+  state.player.x = 400;
+  state.player.y = 360;
+  state.camera.x = 0;
+  state.camera.y = 0;
+  return state;
+}
+
+function weaponEvents(state, type, source) {
+  return (state.stats.weaponEvents || []).filter(event => {
+    if (type && event.type !== type) return false;
+    if (source && event.source !== source) return false;
+    return true;
+  });
+}
+
+function assertWeaponMechanicContracts(V2) {
+  let state = setupMechanicState("marker", "tech");
+  Object.assign(state.activeFormParams, {
+    damage: 28,
+    range: 720,
+    width: 8,
+    pierce: 6,
+    splitCount: 2,
+    splitDamage: 0.55,
+    extraTrigger: false,
+    promotionFullscreenChance: 0
+  });
+  state.enemies = [
+    makeMechanicEnemy("line-a", 620, 360, 100),
+    makeMechanicEnemy("split-up", 705, 295, 100),
+    makeMechanicEnemy("split-down", 705, 425, 100),
+    makeMechanicEnemy("line-b", 820, 360, 100)
+  ];
+  V2.combat.fireWeapon(state);
+  const markerSplitHits = weaponEvents(state, "hit", "marker_split").length;
+  if (weaponEvents(state, "beam", "marker_main").length !== 1) fail("Marker tech should always fire one piercing main beam");
+  if (weaponEvents(state, "beam", "marker_split").length < 4 || markerSplitHits < 2) {
+    fail("Marker tech contract broken: main beam should create damaging split lasers", {
+      beams: weaponEvents(state, "beam", "marker_split").length,
+      hits: markerSplitHits,
+      enemies: state.enemies.map(enemy => ({ id: enemy.id, hp: enemy.hp }))
+    });
+  }
+  if (!(state.enemies.find(enemy => enemy.id === "line-b").hp < 100)) {
+    fail("Marker base line should pierce through a row instead of behaving like a short projectile");
+  }
+
+  state = setupMechanicState("thermos", "product");
+  Object.assign(state.activeFormParams, {
+    damage: 16,
+    heat: 0,
+    heatRate: 55,
+    heatMax: 100,
+    steamRange: 230,
+    releaseRange: 430,
+    releaseWidth: 22,
+    releaseDamage: 90
+  });
+  state.enemies = [makeMechanicEnemy("boil-target", 650, 360, 300)];
+  V2.combat.fireWeapon(state);
+  const warmupDamage = 300 - state.enemies[0].hp;
+  if (!weaponEvents(state, "beam", "thermos_warmup").length || weaponEvents(state, "beam", "thermos_release").length) {
+    fail("Thermos product warmup should show weak steam before the boil release", weaponEvents(state));
+  }
+  V2.combat.fireWeapon(state);
+  const releaseDamage = 300 - state.enemies[0].hp - warmupDamage;
+  if (!weaponEvents(state, "beam", "thermos_release").length || !(releaseDamage > warmupDamage * 2)) {
+    fail("Thermos product contract broken: heat should culminate in a visibly stronger release beam", {
+      warmupDamage,
+      releaseDamage,
+      events: weaponEvents(state)
+    });
+  }
+
+  state = setupMechanicState("sticky_note", "general");
+  Object.assign(state.activeFormParams, {
+    damage: 11,
+    zoneDamage: 12,
+    trapRadius: 58,
+    linkRadius: 145,
+    slow: 0.3
+  });
+  state.enemies = [makeMechanicEnemy("notice-target", 640, 360, 120)];
+  V2.combat.fireWeapon(state);
+  V2.combat.fireWeapon(state);
+  V2.combat.fireWeapon(state);
+  if (weaponEvents(state, "circle", "sticky_notice_trap").length < 3 || weaponEvents(state, "beam", "sticky_link_line").length < 3) {
+    fail("Sticky admin contract broken: three notes should link into a visible notice-board field", {
+      circles: weaponEvents(state, "circle", "sticky_notice_trap").length,
+      links: weaponEvents(state, "beam", "sticky_link_line").length,
+      zones: state.damageZones.map(zone => zone.source || zone.visual)
+    });
+  }
+  if (!state.damageZones.some(zone => zone.source === "sticky_notice_zone")) {
+    fail("Sticky admin should create a persistent control zone after linked notes");
+  }
+}
+
 function assertShopContract(V2) {
   sandbox.GameV2.startRun({ weaponId: "marker" });
   sandbox.GameV2.dispatch({ type: "SET_BADGE", dept: "tech" });
@@ -778,6 +913,7 @@ assertShopContract(V2);
 assertEnemyBehaviorContract();
 assertPauseViewModelContract(V2);
 assertFoundationContracts(V2);
+assertWeaponMechanicContracts(V2);
 
 const combatSmokes = [
   runCombatSmoke({ label: "marker-base", weaponId: "marker", targetStageId: 1, seconds: 20, minKills: 3 }),

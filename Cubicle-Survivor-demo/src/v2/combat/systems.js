@@ -200,6 +200,7 @@
       return Object.assign({
         primitive: "beam",
         kind: "beam",
+        source: "beam",
         color: "#63f7ff",
         width: 5,
         life: 0.18,
@@ -210,6 +211,7 @@
       return Object.assign({
         primitive: "circle_event",
         kind: "circle",
+        source: "circle",
         color: "#63f7ff",
         radius: 48,
         life: 0.28,
@@ -219,6 +221,7 @@
     zone(data) {
       return Object.assign({
         primitive: "zone",
+        source: "zone",
         type: "circle",
         life: 0.35,
         maxLife: data && data.life ? data.life : 0.35,
@@ -232,6 +235,7 @@
     projectile(data) {
       return Object.assign({
         primitive: "projectile",
+        source: "projectile",
         speed: 360,
         damage: 10,
         radius: 5,
@@ -241,12 +245,28 @@
     }
   };
 
-  function addBeamEvent(state, x1, y1, x2, y2, color, width, life, kind, sprite) {
-    state.formEvents.push(CombatPrimitives.beam({ kind: kind || "beam", x1, y1, x2, y2, color, width, life, sprite: sprite || beamSpriteFor(kind || "beam") }));
+  function traceWeaponEvent(state, type, data) {
+    if (!state.stats.weaponEvents) state.stats.weaponEvents = [];
+    state.stats.weaponEvents.push(Object.assign({
+      type,
+      stageId: state.stage && state.stage.id,
+      formId: state.activeForm && state.activeForm.formId
+    }, data || {}));
+    if (state.stats.weaponEvents.length > 240) {
+      state.stats.weaponEvents.splice(0, state.stats.weaponEvents.length - 240);
+    }
   }
 
-  function addCircleEvent(state, x, y, radius, color, life, kind, sprite) {
-    state.formEvents.push(CombatPrimitives.circleEvent({ kind: kind || "circle", x, y, radius, color, life, sprite: sprite || circleSpriteFor(kind || "circle") }));
+  function addBeamEvent(state, x1, y1, x2, y2, color, width, life, kind, sprite, source) {
+    const event = CombatPrimitives.beam({ kind: kind || "beam", source: source || kind || "beam", x1, y1, x2, y2, color, width, life, sprite: sprite || beamSpriteFor(kind || "beam") });
+    state.formEvents.push(event);
+    traceWeaponEvent(state, "beam", { source: event.source, x1, y1, x2, y2, width, sprite: event.sprite });
+  }
+
+  function addCircleEvent(state, x, y, radius, color, life, kind, sprite, source) {
+    const event = CombatPrimitives.circleEvent({ kind: kind || "circle", source: source || kind || "circle", x, y, radius, color, life, sprite: sprite || circleSpriteFor(kind || "circle") });
+    state.formEvents.push(event);
+    traceWeaponEvent(state, "circle", { source: event.source, x, y, radius, sprite: event.sprite });
   }
 
   function addTextEvent(state, x, y, text, color, life) {
@@ -254,7 +274,20 @@
   }
 
   function addDamageZone(state, zone) {
-    state.damageZones.push(CombatPrimitives.zone(zone));
+    const z = CombatPrimitives.zone(zone);
+    state.damageZones.push(z);
+    traceWeaponEvent(state, "zone", {
+      source: z.source || z.visual || z.type,
+      x: z.x,
+      y: z.y,
+      x1: z.x1,
+      y1: z.y1,
+      x2: z.x2,
+      y2: z.y2,
+      radius: z.radius,
+      width: z.width,
+      visual: z.visual
+    });
   }
 
   function damageEnemy(state, enemy, amount, source, knockbackFrom) {
@@ -265,6 +298,7 @@
     }
     enemy.hp -= amount;
     state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
+    traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp });
     if (knockbackFrom) {
       const dx = enemy.x - knockbackFrom.x;
       const dy = enemy.y - knockbackFrom.y;
@@ -345,7 +379,7 @@
       [-0.5, 0.5].forEach(function (off) {
         const tx = first.x + Math.cos(base + off) * 130;
         const ty = first.y + Math.sin(base + off) * 130;
-        addBeamEvent(state, first.x, first.y, tx, ty, "#b7fbff", 3.5, 0.14, "beam");
+        addBeamEvent(state, first.x, first.y, tx, ty, "#b7fbff", 3.5, 0.14, "beam", "marker_split", "secondary_split");
         lineHitEnemies(state, first.x, first.y, tx, ty, 4, (p.damage || 20) * 0.28, 2, "secondary_split");
       });
     }
@@ -362,7 +396,7 @@
           const a = Math.PI * 2 * i / 4;
           const ex = state.player.x + Math.cos(a) * 180;
           const ey = state.player.y + Math.sin(a) * 180;
-          addBeamEvent(state, state.player.x, state.player.y, ex, ey, "#84ffe7", 3, 0.16, "counter");
+          addBeamEvent(state, state.player.x, state.player.y, ex, ey, "#84ffe7", 3, 0.16, "counter", "marker_counter", "secondary_counter");
           lineHitEnemies(state, state.player.x, state.player.y, ex, ey, 4, (p.damage || 20) * 0.35, 4, "secondary_counter");
         }
       }
@@ -392,7 +426,7 @@
     const color = form.badgeDept === "product" ? "#82dfff" : form.badgeDept === "marketing" ? "#76b7ff" : form.badgeDept === "ops" ? "#62ffd6" : form.badgeDept === "general" ? "#bfe6ff" : "#5efcff";
     const width = Math.max(5, p.width || 8);
     const hits = lineHitEnemies(state, x1, y1, x2, y2, width, p.damage || 20, p.pierce || 4, form.formId || "marker");
-    addBeamEvent(state, x1, y1, x2, y2, color, width, 0.18, "beam");
+    addBeamEvent(state, x1, y1, x2, y2, color, width, 0.18, "beam", "marker_beam", "marker_main");
     state.stats.shots += 1;
 
     if (form.mechanicType === "line_split") {
@@ -406,14 +440,14 @@
           const angle = base + off + idx * 0.1;
           const sx2 = hit.enemy.x + Math.cos(angle) * (150 + branchCount * 10);
           const sy2 = hit.enemy.y + Math.sin(angle) * (150 + branchCount * 10);
-          addBeamEvent(state, hit.enemy.x, hit.enemy.y, sx2, sy2, "#9ffcff", 4, 0.16, "beam");
+          addBeamEvent(state, hit.enemy.x, hit.enemy.y, sx2, sy2, "#9ffcff", 4, 0.16, "beam", "marker_split", "marker_split");
           const splitHits = lineHitEnemies(state, hit.enemy.x, hit.enemy.y, sx2, sy2, 4, (p.damage || 20) * (p.splitDamage || 0.42), 2, "marker_split");
           if (p.secondarySplit) {
             splitHits.slice(0, 1).forEach(function (second) {
               const a2 = angle + (Math.random() > 0.5 ? 0.75 : -0.75);
               const tx = second.enemy.x + Math.cos(a2) * 105;
               const ty = second.enemy.y + Math.sin(a2) * 105;
-              addBeamEvent(state, second.enemy.x, second.enemy.y, tx, ty, "#d8ffff", 2.5, 0.12, "beam");
+              addBeamEvent(state, second.enemy.x, second.enemy.y, tx, ty, "#d8ffff", 2.5, 0.12, "beam", "marker_split", "marker_secondary_split");
               lineHitEnemies(state, second.enemy.x, second.enemy.y, tx, ty, 3, (p.damage || 20) * 0.22, 1, "marker_secondary_split");
             });
           }
@@ -422,7 +456,7 @@
       if (p.shieldPerHit && hits.length) state.activeFormParams.shield = (state.activeFormParams.shield || 0) + hits.length * p.shieldPerHit;
       if ((p.extraTrigger && Math.random() < 0.18) || (p.promotionFullscreenChance && Math.random() < p.promotionFullscreenChance)) {
         const camera = state.camera || { x: 0, width: W };
-        addBeamEvent(state, camera.x, state.player.y, camera.x + camera.width, state.player.y, "#c7f8ff", 7, 0.22, "beam");
+        addBeamEvent(state, camera.x, state.player.y, camera.x + camera.width, state.player.y, "#c7f8ff", 7, 0.22, "beam", "marker_beam", "marker_fullscreen");
         lineHitEnemies(state, camera.x, state.player.y, camera.x + camera.width, state.player.y, 7, (p.damage || 20) * 0.7, 99, "marker_fullscreen");
       }
     }
@@ -466,7 +500,7 @@
           const a = Math.PI * 2 * (i / lines) + Math.random() * 0.12;
           const ex = state.player.x + Math.cos(a) * 240;
           const ey = state.player.y + Math.sin(a) * 240;
-          addBeamEvent(state, state.player.x, state.player.y, ex, ey, "#72ffe5", 4, 0.2, "counter");
+          addBeamEvent(state, state.player.x, state.player.y, ex, ey, "#72ffe5", 4, 0.2, "counter", "marker_counter", "marker_counter");
           lineHitEnemies(state, state.player.x, state.player.y, ex, ey, 5, p.counterDamage || 28, 5, "marker_counter");
         }
       }
@@ -487,7 +521,7 @@
       if (p.gridEcho) {
         const ox = -(y2 - y1) * 0.08;
         const oy = (x2 - x1) * 0.08;
-        addBeamEvent(state, x1 + ox, y1 + oy, x2 + ox, y2 + oy, "#e8d99a", 3, 0.24, "grid");
+        addBeamEvent(state, x1 + ox, y1 + oy, x2 + ox, y2 + oy, "#e8d99a", 3, 0.24, "grid", "marker_grid", "marker_grid_line");
         addDamageZone(state, { type: "line", x1: x1 + ox, y1: y1 + oy, x2: x2 + ox, y2: y2 + oy, width: 8, damage: p.gridDamage || 11, life: p.trailDuration || 2.8, maxLife: p.trailDuration || 2.8, color: "#e8d99a", slow: p.gridSlow || 0 });
       }
     }
@@ -509,6 +543,7 @@
         tickEvery: 0.28,
         color: "#a8fbff",
         visual: "steam_drone",
+        source: "thermos_drone",
         orbitPlayer: true,
         orbitAngle: Math.random() * Math.PI * 2,
         orbitRadius: 62,
@@ -553,12 +588,12 @@
         const y2 = state.player.y + dy / len * (p.releaseRange || 430);
         const width = p.releaseWidth || 16;
         addCircleEvent(state, state.player.x, state.player.y, 62, "#bdf5ff", 0.22, "steam_pulse", "thermos_charge");
-        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.28, "steam", "thermos_boil");
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.28, "steam", "thermos_boil", "thermos_release");
         lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, p.releaseDamage || 58, 6, "thermos_intern_release");
       } else {
         const x2 = state.player.x + dx / len * (p.steamRange || p.range || 300);
         const y2 = state.player.y + dy / len * (p.steamRange || p.range || 300);
-        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 8, 0.14, "steam");
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 8, 0.14, "steam", "thermos_steam", "thermos_warmup");
         lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 10, Math.max(6, (p.damage || 18) * 0.55), 2, "thermos_intern_steam");
       }
       return;
@@ -580,6 +615,7 @@
             tickEvery: 0.22,
             color: "#9ff8ff",
             visual: "steam_drone",
+            source: "thermos_drone",
             orbitPlayer: true,
             orbitAngle: Math.PI * 2 * (i / count),
             orbitRadius: 78 + i * 18,
@@ -587,7 +623,7 @@
             slow: p.slow || 0
           });
         }
-        addCircleEvent(state, state.player.x, state.player.y, 96, "#9ff8ff", 0.42, "steam_drone", "thermos_drone");
+        addCircleEvent(state, state.player.x, state.player.y, 96, "#9ff8ff", 0.42, "steam_drone", "thermos_drone", "thermos_drone_summon");
         addTextEvent(state, state.player.x, state.player.y - 42, "自动恒温模块上线", "#bdf5ff", 0.7);
       } else if (target) {
         const dx = target.x - state.player.x;
@@ -595,24 +631,34 @@
         const len = Math.hypot(dx, dy) || 1;
         const x2 = state.player.x + dx / len * (p.steamRange || 220);
         const y2 = state.player.y + dy / len * (p.steamRange || 220);
-        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 9, 0.16, "steam");
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 9, 0.16, "steam", "thermos_steam", "thermos_warmup");
         lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 11, Math.max(4, (p.damage || 12) * 0.55), 3, "thermos_steam");
       }
       return;
     }
 
-    if (form.mechanicType === "charge_release_beam" && p.heat >= 100) {
-      p.heat = 0;
+    if (form.mechanicType === "charge_release_beam") {
       const dx = target.x - state.player.x;
       const dy = target.y - state.player.y;
       const len = Math.hypot(dx, dy) || 1;
-      const x2 = state.player.x + dx / len * (p.releaseRange || 420);
-      const y2 = state.player.y + dy / len * (p.releaseRange || 420);
-      const width = p.releaseWidth || 20;
-      addCircleEvent(state, state.player.x, state.player.y, 72, "#bdf5ff", 0.22, "steam_pulse", "thermos_charge");
-      addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.32, "steam", "thermos_boil");
-      lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, p.releaseDamage || 72, 8, "thermos_release");
-      if (p.shieldAfterRelease) state.hp = Math.min(state.maxHp, state.hp + Math.round(p.shieldAfterRelease * 0.35));
+      if (p.heat >= (p.heatMax || 100)) {
+        p.heat = 0;
+        const x2 = state.player.x + dx / len * (p.releaseRange || 420);
+        const y2 = state.player.y + dy / len * (p.releaseRange || 420);
+        const width = p.releaseWidth || 20;
+        addCircleEvent(state, state.player.x, state.player.y, 72, "#bdf5ff", 0.22, "steam_pulse", "thermos_charge", "thermos_charge");
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.32, "steam", "thermos_boil", "thermos_release");
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, p.releaseDamage || 72, 8, "thermos_release");
+        if (p.shieldAfterRelease) state.hp = Math.min(state.maxHp, state.hp + Math.round(p.shieldAfterRelease * 0.35));
+      } else {
+        const chargeRatio = Math.max(0.15, Math.min(1, p.heat / (p.heatMax || 100)));
+        const x2 = state.player.x + dx / len * (p.steamRange || 220);
+        const y2 = state.player.y + dy / len * (p.steamRange || 220);
+        const width = 7 + chargeRatio * 5;
+        addCircleEvent(state, state.player.x, state.player.y, 38 + chargeRatio * 34, "#86f7ff", 0.18, "steam_pulse", "thermos_charge", "thermos_charge");
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", width, 0.16, "steam", "thermos_steam", "thermos_warmup");
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 1, Math.max(5, (p.damage || 14) * 0.48), 3, "thermos_warmup");
+      }
       return;
     }
 
@@ -701,7 +747,7 @@
       addCircleEvent(state, target.x, target.y, 24, "#8df7ff", 0.24, "sticky_attach", "sticky_spread");
     }
     if (p.crossBoardLink) {
-      addDamageZone(state, { type: "circle", x, y, radius: 88, damage: Math.max(5, (p.zoneDamage || p.damage || 9) * 0.55), life: 0.9, maxLife: 0.9, tickEvery: 0.28, color: "#e8db92", slow: 0.18, visual: "notice_board" });
+      addDamageZone(state, { type: "circle", source: "sticky_notice_zone", x, y, radius: 88, damage: Math.max(5, (p.zoneDamage || p.damage || 9) * 0.55), life: 0.9, maxLife: 0.9, tickEvery: 0.28, color: "#e8db92", slow: 0.18, visual: "notice_board" });
     }
   }
 
@@ -759,7 +805,7 @@
       }
     }
     const trapRadius = p.trapRadius || (form.mechanicType === "trap_link_control_zone" ? 62 : 48);
-    addCircleEvent(state, x, y, trapRadius, form.badgeDept === "general" ? "#e8db92" : "#86f7ff", 0.45, "trap", form.mechanicType === "route_buff_trap" ? "sticky_route" : form.mechanicType === "seeking_trap_summon" ? "sticky_seeking" : form.mechanicType === "trap_link_control_zone" ? "sticky_notice_board" : "sticky_base");
+    addCircleEvent(state, x, y, trapRadius, form.badgeDept === "general" ? "#e8db92" : "#86f7ff", 0.45, "trap", form.mechanicType === "route_buff_trap" ? "sticky_route" : form.mechanicType === "seeking_trap_summon" ? "sticky_seeking" : form.mechanicType === "trap_link_control_zone" ? "sticky_notice_board" : "sticky_base", form.mechanicType === "trap_link_control_zone" ? "sticky_notice_trap" : "sticky_trap");
     addDamageZone(state, {
       type: "circle",
       x, y,
@@ -776,6 +822,7 @@
       seek: form.mechanicType === "seeking_trap_summon",
       seekSpeed: p.seekSpeed || 120,
       zoneDamage: p.zoneDamage || 0,
+      source: form.mechanicType === "trap_link_control_zone" ? "sticky_notice_trap" : "sticky_trap",
       visual: form.mechanicType === "route_buff_trap" ? "route_note" : form.mechanicType === "seeking_trap_summon" ? "seeking_note" : "sticky_note",
       seekBounce: !!p.seekBounce
     });
@@ -791,13 +838,13 @@
         for (let i = 0; i < zones.length; i++) {
           const a = zones[i];
           const b = zones[(i + 1) % zones.length];
-          addBeamEvent(state, a.x, a.y, b.x, b.y, "#e8db92", 3, 0.45, "grid");
-          addDamageZone(state, { type: "line", x1: a.x, y1: a.y, x2: b.x, y2: b.y, width: 7, damage: Math.max(4, (p.zoneDamage || 9) * 0.6), life: 1.1, maxLife: 1.1, color: "#e8db92", slow: p.slow || 0.25, visual: "link_line" });
+          addBeamEvent(state, a.x, a.y, b.x, b.y, "#e8db92", 3, 0.45, "grid", "sticky_notice_board", "sticky_link_line");
+          addDamageZone(state, { type: "line", source: "sticky_link_line", x1: a.x, y1: a.y, x2: b.x, y2: b.y, width: 7, damage: Math.max(4, (p.zoneDamage || 9) * 0.6), life: 1.1, maxLife: 1.1, color: "#e8db92", slow: p.slow || 0.25, visual: "link_line" });
         }
         const cx = zones.reduce((sum, z) => sum + z.x, 0) / zones.length;
         const cy = zones.reduce((sum, z) => sum + z.y, 0) / zones.length;
         addCircleEvent(state, cx, cy, p.linkRadius || 135, "#e8db92", 0.48, "trap", "sticky_notice_mastery");
-        addDamageZone(state, { type: "circle", x: cx, y: cy, radius: p.linkRadius || 135, damage: p.zoneDamage || 9, life: 1.2, maxLife: 1.2, tickEvery: 0.3, color: "#e8db92", slow: p.slow || 0.3, visual: "notice_board" });
+        addDamageZone(state, { type: "circle", source: "sticky_notice_zone", x: cx, y: cy, radius: p.linkRadius || 135, damage: p.zoneDamage || 9, life: 1.2, maxLife: 1.2, tickEvery: 0.3, color: "#e8db92", slow: p.slow || 0.3, visual: "notice_board" });
       }
     }
     applyStickySecondary(state, x, y, target);
