@@ -403,6 +403,29 @@ function weaponEvents(state, type, source) {
   });
 }
 
+function expectWeaponEvent(state, type, source, min, message) {
+  const events = weaponEvents(state, type, source);
+  if (events.length < min) {
+    fail(message, {
+      expected: { type, source, min },
+      actual: events.length,
+      allEvents: (state.stats.weaponEvents || []).map(event => ({ type: event.type, source: event.source, formId: event.formId }))
+    });
+  }
+  return events;
+}
+
+function expectDamageZone(state, source, message) {
+  const zones = state.damageZones.filter(zone => zone.source === source);
+  if (!zones.length) {
+    fail(message, {
+      source,
+      zones: state.damageZones.map(zone => ({ source: zone.source, visual: zone.visual, type: zone.type, radius: zone.radius, width: zone.width }))
+    });
+  }
+  return zones;
+}
+
 function assertWeaponMechanicContracts(V2) {
   let state = setupMechanicState("marker", "tech");
   Object.assign(state.activeFormParams, {
@@ -423,8 +446,9 @@ function assertWeaponMechanicContracts(V2) {
   ];
   V2.combat.fireWeapon(state);
   const markerSplitHits = weaponEvents(state, "hit", "marker_split").length;
-  if (weaponEvents(state, "beam", "marker_main").length !== 1) fail("Marker tech should always fire one piercing main beam");
-  if (weaponEvents(state, "beam", "marker_split").length < 4 || markerSplitHits < 2) {
+  expectWeaponEvent(state, "beam", "marker_main", 1, "Marker tech should always fire one piercing main beam");
+  expectWeaponEvent(state, "beam", "marker_split", 4, "Marker tech should create visible split laser branches");
+  if (markerSplitHits < 2) {
     fail("Marker tech contract broken: main beam should create damaging split lasers", {
       beams: weaponEvents(state, "beam", "marker_split").length,
       hits: markerSplitHits,
@@ -434,6 +458,41 @@ function assertWeaponMechanicContracts(V2) {
   if (!(state.enemies.find(enemy => enemy.id === "line-b").hp < 100)) {
     fail("Marker base line should pierce through a row instead of behaving like a short projectile");
   }
+
+  state = setupMechanicState("marker", "product");
+  Object.assign(state.activeFormParams, { damage: 24, pierce: 4, explosionRadius: 70, explosionDamage: 48 });
+  state.enemies = [makeMechanicEnemy("p0-target", 640, 360, 180)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "marker_p0_mark", 1, "Product Marker should first tag a priority target with P0");
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "marker_p0_blast", 1, "Product Marker should detonate a re-hit P0 target");
+  expectDamageZone(state, "marker_p0_blast", "Product Marker P0 detonation should create an actual blast damage zone");
+
+  state = setupMechanicState("marker", "ops");
+  Object.assign(state.activeFormParams, { damage: 20, pierce: 4, shieldPerHit: 22, counterLines: 4, counterDamage: 35 });
+  state.enemies = [makeMechanicEnemy("counter-a", 610, 360, 80), makeMechanicEnemy("counter-b", 720, 360, 80)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "beam", "marker_counter", 4, "Ops Marker should convert shield charge into radial counter lasers");
+
+  state = setupMechanicState("marker", "marketing");
+  Object.assign(state.activeFormParams, { damage: 20, waveCount: 2, waveRadius: 96, waveDamage: 18 });
+  state.enemies = [makeMechanicEnemy("wave-line", 620, 360, 100)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "marker_wave", 2, "Marketing Marker should turn line endpoint into expanding wave rings");
+  expectDamageZone(state, "marker_wave", "Marketing Marker wave rings should be real damage zones");
+
+  state = setupMechanicState("marker", "general");
+  Object.assign(state.activeFormParams, { damage: 18, gridDamage: 13, trailDuration: 3 });
+  state.enemies = [makeMechanicEnemy("grid-line", 620, 360, 100)];
+  V2.combat.fireWeapon(state);
+  expectDamageZone(state, "marker_grid_line", "Admin Marker should leave a lingering grid line after the beam path");
+
+  state = setupMechanicState("thermos", "tech");
+  Object.assign(state.activeFormParams, { heat: 90, heatRate: 20, steamRange: 260, summonCount: 2, summonDuration: 4, damage: 12 });
+  state.enemies = [makeMechanicEnemy("drone-target", 600, 360, 100)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "thermos_drone_summon", 1, "Tech Thermos should announce an automatic refill module");
+  expectDamageZone(state, "thermos_drone", "Tech Thermos should create orbiting steam module zones");
 
   state = setupMechanicState("thermos", "product");
   Object.assign(state.activeFormParams, {
@@ -461,6 +520,60 @@ function assertWeaponMechanicContracts(V2) {
       events: weaponEvents(state)
     });
   }
+
+  state = setupMechanicState("thermos", "ops");
+  Object.assign(state.activeFormParams, { damage: 12, shieldGain: 35, shieldThreshold: 30, pulseDamage: 40, pulseRadius: 120 });
+  state.enemies = [makeMechanicEnemy("shield-target", 620, 360, 100)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "thermos_shield_break", 1, "Ops Thermos should break warm shield into a pulse");
+  expectDamageZone(state, "thermos_shield_break", "Ops Thermos shield break should create a real pulse damage zone");
+
+  state = setupMechanicState("thermos", "marketing");
+  Object.assign(state.activeFormParams, { damage: 10, waveCount: 3, waveRadius: 110, spreadDamage: 14 });
+  state.enemies = [makeMechanicEnemy("tea-target", 620, 360, 100)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "thermos_tea_wave", 3, "Marketing Thermos should emit multiple tea-wave rings");
+  expectDamageZone(state, "thermos_tea_wave", "Marketing Thermos tea waves should be actual damage zones");
+
+  state = setupMechanicState("thermos", "general");
+  Object.assign(state.activeFormParams, { stationRadius: 120, stationDuration: 5, stationPulseDamage: 10, heal: 1 });
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "thermos_station", 1, "Admin Thermos should deploy a visible safe station");
+  expectDamageZone(state, "thermos_station", "Admin Thermos station should be a persistent zone");
+
+  state = setupMechanicState("sticky_note", "tech");
+  Object.assign(state.activeFormParams, { damage: 10, trapRadius: 44, seekSpeed: 160 });
+  state.enemies = [makeMechanicEnemy("seek-target", 640, 360, 90)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "sticky_seeking", 1, "Tech Sticky Note should create a seeking trap");
+  if (!expectDamageZone(state, "sticky_seeking", "Tech Sticky Note seeking trap should be an actual zone").some(zone => zone.seek)) {
+    fail("Tech Sticky Note zone should actively seek enemies");
+  }
+
+  state = setupMechanicState("sticky_note", "product");
+  Object.assign(state.activeFormParams, { damage: 13, trapRadius: 48, explosionRadius: 74 });
+  state.enemies = [makeMechanicEnemy("blast-target", 640, 360, 120)];
+  V2.combat.fireWeapon(state);
+  V2.combat.fireWeapon(state);
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "sticky_sync_blast", 2, "Product Sticky Note should sync-detonate prepared traps");
+  expectDamageZone(state, "sticky_sync_blast", "Product Sticky Note synced detonation should create blast zones");
+
+  state = setupMechanicState("sticky_note", "ops");
+  Object.assign(state.activeFormParams, { damage: 9, trapRadius: 48, routeHeal: 1.2, shieldGain: 5 });
+  state.input.right = true;
+  state.enemies = [makeMechanicEnemy("route-target", 640, 360, 90)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "sticky_route", 1, "Ops Sticky Note should lay a route buff trap");
+  const routeZone = expectDamageZone(state, "sticky_route", "Ops Sticky Note route should be a zone with player benefits")[0];
+  if (!(routeZone.heal > 0 && routeZone.playerShield > 0)) fail("Ops Sticky Note route should heal or shield the player", routeZone);
+
+  state = setupMechanicState("sticky_note", "marketing");
+  Object.assign(state.activeFormParams, { damage: 11, spreadRadius: 130, spreadLimit: 3, spreadDepth: 2 });
+  state.enemies = [makeMechanicEnemy("spread-target", 640, 360, 120)];
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "sticky_spread_attach", 1, "Marketing Sticky Note should visibly attach a spreading note");
+  if (!state.enemies[0].stickyDebuff) fail("Marketing Sticky Note should attach a spread-on-death debuff to the target");
 
   state = setupMechanicState("sticky_note", "general");
   Object.assign(state.activeFormParams, {
