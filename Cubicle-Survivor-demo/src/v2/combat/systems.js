@@ -195,6 +195,24 @@
     return "";
   }
 
+  function eventPhase(source) {
+    return V2.getWeaponEventPhase ? V2.getWeaponEventPhase(source || "") : "impact";
+  }
+
+  function eventSignature(source) {
+    const forms = V2.weaponFormSignatures || {};
+    const keys = Object.keys(forms);
+    for (let i = 0; i < keys.length; i++) {
+      const sig = forms[keys[i]];
+      if (sig.sources && sig.sources.indexOf(source) >= 0) return sig;
+    }
+    return null;
+  }
+
+  function eventProgress(item) {
+    return 1 - clamp(item.life / item.maxLife, 0, 1);
+  }
+
   const CombatPrimitives = {
     beam(data) {
       return Object.assign({
@@ -258,15 +276,37 @@
   }
 
   function addBeamEvent(state, x1, y1, x2, y2, color, width, life, kind, sprite, source) {
-    const event = CombatPrimitives.beam({ kind: kind || "beam", source: source || kind || "beam", x1, y1, x2, y2, color, width, life, sprite: sprite || beamSpriteFor(kind || "beam") });
+    const eventSource = source || kind || "beam";
+    const event = CombatPrimitives.beam({
+      kind: kind || "beam",
+      source: eventSource,
+      x1, y1, x2, y2,
+      color,
+      width,
+      life,
+      sprite: sprite || beamSpriteFor(kind || "beam"),
+      vfxPhase: eventPhase(eventSource),
+      signature: eventSignature(eventSource)
+    });
     state.formEvents.push(event);
-    traceWeaponEvent(state, "beam", { source: event.source, x1, y1, x2, y2, width, sprite: event.sprite });
+    traceWeaponEvent(state, "beam", { source: event.source, x1, y1, x2, y2, width, sprite: event.sprite, vfxPhase: event.vfxPhase });
   }
 
   function addCircleEvent(state, x, y, radius, color, life, kind, sprite, source) {
-    const event = CombatPrimitives.circleEvent({ kind: kind || "circle", source: source || kind || "circle", x, y, radius, color, life, sprite: sprite || circleSpriteFor(kind || "circle") });
+    const eventSource = source || kind || "circle";
+    const event = CombatPrimitives.circleEvent({
+      kind: kind || "circle",
+      source: eventSource,
+      x, y,
+      radius,
+      color,
+      life,
+      sprite: sprite || circleSpriteFor(kind || "circle"),
+      vfxPhase: eventPhase(eventSource),
+      signature: eventSignature(eventSource)
+    });
     state.formEvents.push(event);
-    traceWeaponEvent(state, "circle", { source: event.source, x, y, radius, sprite: event.sprite });
+    traceWeaponEvent(state, "circle", { source: event.source, x, y, radius, sprite: event.sprite, vfxPhase: event.vfxPhase });
   }
 
   function addTextEvent(state, x, y, text, color, life) {
@@ -275,6 +315,8 @@
 
   function addDamageZone(state, zone) {
     const z = CombatPrimitives.zone(zone);
+    z.vfxPhase = z.vfxPhase || eventPhase(z.source || z.visual || z.type);
+    z.signature = z.signature || eventSignature(z.source || z.visual || z.type);
     state.damageZones.push(z);
     traceWeaponEvent(state, "zone", {
       source: z.source || z.visual || z.type,
@@ -286,7 +328,8 @@
       y2: z.y2,
       radius: z.radius,
       width: z.width,
-      visual: z.visual
+      visual: z.visual,
+      vfxPhase: z.vfxPhase
     });
   }
 
@@ -298,7 +341,7 @@
     }
     enemy.hp -= amount;
     state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
-    traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp });
+    traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp, vfxPhase: eventPhase(source) });
     if (knockbackFrom) {
       const dx = enemy.x - knockbackFrom.x;
       const dy = enemy.y - knockbackFrom.y;
@@ -1412,9 +1455,84 @@
     }
   }
 
+  function drawExpandingRing(ctx, x, y, radius, color, progress, alpha, width) {
+    const p = clamp(progress, 0, 1);
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = width || 4;
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(4, radius * (0.18 + p * 0.82)), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha *= 0.45;
+    ctx.lineWidth = Math.max(1, (width || 4) * 0.45);
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(6, radius * (0.08 + p * 0.52)), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawImpactSpark(ctx, x, y, color, progress, size) {
+    const p = clamp(progress, 0, 1);
+    const r = (size || 18) * (0.4 + p * 0.8);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 16;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const ang = Math.PI * 2 * i / 6 + p * 0.9;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(ang) * r * 0.25, y + Math.sin(ang) * r * 0.25);
+      ctx.lineTo(x + Math.cos(ang) * r, y + Math.sin(ang) * r);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawProcessLine(ctx, e, alpha, progress) {
+    const len = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) || 1;
+    const nx = (e.x2 - e.x1) / len;
+    const ny = (e.y2 - e.y1) / len;
+    const head = clamp(progress * 1.28, 0.18, 1);
+    const hx = e.x1 + (e.x2 - e.x1) * head;
+    const hy = e.y1 + (e.y2 - e.y1) * head;
+    const tail = e.vfxPhase === "branch" ? Math.max(0, head - 0.4) : 0;
+    const tx = e.x1 + (e.x2 - e.x1) * tail;
+    const ty = e.y1 + (e.y2 - e.y1) * tail;
+    const glowWidth = (e.width || 5) + (e.kind === "steam" ? 20 : 12) * (1 - alpha);
+    ctx.lineCap = "round";
+    ctx.globalAlpha = alpha * (e.kind === "steam" ? 0.2 : 0.16);
+    ctx.lineWidth = glowWidth;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = e.width || 5;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+    if (e.vfxPhase === "release" || e.vfxPhase === "ultimate") {
+      ctx.globalAlpha = alpha * 0.75;
+      ctx.lineWidth = Math.max(1, (e.width || 5) * 0.34);
+      ctx.beginPath();
+      ctx.moveTo(e.x1 - ny * 10, e.y1 + nx * 10);
+      ctx.lineTo(e.x2 - ny * 10, e.y2 + nx * 10);
+      ctx.moveTo(e.x1 + ny * 10, e.y1 - nx * 10);
+      ctx.lineTo(e.x2 + ny * 10, e.y2 - nx * 10);
+      ctx.stroke();
+    }
+    drawImpactSpark(ctx, hx, hy, e.color, progress, e.vfxPhase === "branch" ? 10 : 18);
+  }
+
   function drawEffects(ctx, state) {
     for (const z of state.damageZones) {
       const a = clamp(z.life / z.maxLife, 0, 1);
+      const p = eventProgress(z);
       ctx.save();
       ctx.globalAlpha = Math.min(0.52, a * 0.42);
       ctx.strokeStyle = z.color;
@@ -1424,7 +1542,7 @@
         const zoneSprite = zoneSpriteFor(z.visual || "");
         if (zoneSprite) {
           const spriteAlpha = z.visual === "safe_station" || z.visual === "notice_board" ? 0.78 : 0.9;
-          const visualSize = Math.max(42, Math.min(280, z.radius * 2.25));
+          const visualSize = Math.max(42, Math.min(280, z.radius * (1.15 + p * 1.1)));
           drawSprite(ctx, zoneSprite, z.x, z.y, visualSize, visualSize, spriteAlpha * Math.min(1, a + 0.22), ((z.x + z.y) % 31) * 0.01);
         }
         if (/note|board/.test(z.visual || "")) {
@@ -1467,8 +1585,11 @@
           ctx.arc(0, 0, z.radius, 0, Math.PI * 2);
           ctx.stroke();
         } else {
+          if (z.vfxPhase === "detonate" || z.vfxPhase === "expand" || z.visual === "secondary_blast" || z.visual === "tea_wave") {
+            drawExpandingRing(ctx, z.x, z.y, z.radius, z.color, p, Math.min(0.9, a + 0.08), z.vfxPhase === "detonate" ? 7 : 4);
+          }
           ctx.beginPath();
-          ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2);
+          ctx.arc(z.x, z.y, z.radius * (0.42 + p * 0.58), 0, Math.PI * 2);
           ctx.stroke();
           ctx.globalAlpha *= 0.24;
           ctx.fill();
@@ -1488,6 +1609,7 @@
     }
     for (const e of state.formEvents) {
       const a = clamp(e.life / e.maxLife, 0, 1);
+      const p = eventProgress(e);
       ctx.save();
       ctx.globalAlpha = a;
       ctx.shadowBlur = 22;
@@ -1498,19 +1620,7 @@
         if (e.sprite && drawLineSprite(ctx, e.sprite, e.x1, e.y1, e.x2, e.y2, e.width || 5, Math.min(0.95, a + 0.08))) {
           ctx.globalAlpha *= 0.35;
         }
-        ctx.lineCap = "round";
-        ctx.lineWidth = (e.width || 5) + (e.kind === "steam" ? 18 : 10) * (1 - a);
-        ctx.globalAlpha = a * (e.kind === "steam" ? 0.24 : 0.18);
-        ctx.beginPath();
-        ctx.moveTo(e.x1, e.y1);
-        ctx.lineTo(e.x2, e.y2);
-        ctx.stroke();
-        ctx.globalAlpha = a;
-        ctx.lineWidth = e.width || 5;
-        ctx.beginPath();
-        ctx.moveTo(e.x1, e.y1);
-        ctx.lineTo(e.x2, e.y2);
-        ctx.stroke();
+        drawProcessLine(ctx, e, a, p);
       } else if (e.kind === "text") {
         ctx.shadowBlur = 10;
         ctx.font = "bold 14px sans-serif";
@@ -1531,8 +1641,8 @@
         ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.stroke();
       } else if (e.kind === "station") {
-        if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(140, e.radius * 2.1), Math.max(140, e.radius * 2.1), Math.min(0.86, a + 0.1), 0);
-        const r = e.radius * (1.05 - a * 0.05);
+        if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(140, e.radius * (1.1 + p)), Math.max(140, e.radius * (1.1 + p)), Math.min(0.86, a + 0.1), 0);
+        const r = e.radius * (0.28 + p * 0.72);
         ctx.lineWidth = 4;
         ctx.strokeRect(e.x - 28, e.y - 22, 56, 44);
         ctx.beginPath();
@@ -1540,14 +1650,15 @@
         ctx.stroke();
       } else if (e.kind === "shield") {
         if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(90, e.radius * 2.1), Math.max(90, e.radius * 2.1), Math.min(0.86, a + 0.1), 0);
-        const r = e.radius * (1.08 - a * 0.08);
+        const r = e.radius * (0.75 + p * 0.35);
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(e.x, e.y, r, -Math.PI * 0.15, Math.PI * 1.45);
         ctx.stroke();
+        if (e.vfxPhase === "counter") drawImpactSpark(ctx, e.x, e.y, e.color, p, e.radius * 0.55);
       } else if (e.kind === "sticky_spread") {
         if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(90, e.radius * 1.9), Math.max(90, e.radius * 1.9), Math.min(0.85, a + 0.08), (1 - a) * 0.3);
-        const r = e.radius * (1.18 - a * 0.18);
+        const r = e.radius * (0.2 + p);
         ctx.lineWidth = 3;
         for (let i = 0; i < 6; i++) {
           const ang = Math.PI * 2 * i / 6 + (1 - a) * 0.8;
@@ -1557,8 +1668,8 @@
           ctx.stroke();
         }
       } else {
-        if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(54, e.radius * 2.3), Math.max(54, e.radius * 2.3), Math.min(0.9, a + 0.08), 0);
-        const r = e.radius * (1.15 - a * 0.15);
+        if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, Math.max(54, e.radius * (0.75 + p * 1.55)), Math.max(54, e.radius * (0.75 + p * 1.55)), Math.min(0.9, a + 0.08), p * 0.18);
+        const r = e.radius * (e.vfxPhase === "mark" ? (0.85 + Math.sin(p * Math.PI) * 0.12) : (0.18 + p * 0.95));
         ctx.lineWidth = e.kind === "mark" ? 3 : 6;
         ctx.beginPath();
         ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
@@ -1566,6 +1677,7 @@
         if (e.kind === "blast") {
           ctx.globalAlpha = a * 0.22;
           ctx.fill();
+          drawImpactSpark(ctx, e.x, e.y, e.color, p, e.radius * 0.45);
         }
       }
       ctx.restore();

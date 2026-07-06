@@ -139,6 +139,7 @@ const scripts = [
   "src/data/balance.js",
   "src/core/build-state.js",
   "src/v2/data/weapon-forms.js",
+  "src/v2/data/form-signatures.js",
   "src/v2/compat/legacy.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
@@ -412,6 +413,12 @@ function expectWeaponEvent(state, type, source, min, message) {
       allEvents: (state.stats.weaponEvents || []).map(event => ({ type: event.type, source: event.source, formId: event.formId }))
     });
   }
+  if (source && events.some(event => !event.vfxPhase)) {
+    fail("Weapon event is missing VFX phase metadata", {
+      source,
+      events: events.map(event => ({ type: event.type, source: event.source, vfxPhase: event.vfxPhase, sprite: event.sprite }))
+    });
+  }
   return events;
 }
 
@@ -423,10 +430,58 @@ function expectDamageZone(state, source, message) {
       zones: state.damageZones.map(zone => ({ source: zone.source, visual: zone.visual, type: zone.type, radius: zone.radius, width: zone.width }))
     });
   }
+  if (zones.some(zone => !zone.vfxPhase)) {
+    fail("Damage zone is missing VFX phase metadata", {
+      source,
+      zones: zones.map(zone => ({ source: zone.source, visual: zone.visual, vfxPhase: zone.vfxPhase }))
+    });
+  }
   return zones;
 }
 
+function assertWeaponFormSignatures(V2) {
+  const required = [
+    ["marker", "tech", ["marker_main", "marker_split"]],
+    ["marker", "product", ["marker_p0_mark", "marker_p0_blast"]],
+    ["marker", "ops", ["marker_counter"]],
+    ["marker", "marketing", ["marker_wave"]],
+    ["marker", "general", ["marker_grid_line"]],
+    ["thermos", "tech", ["thermos_drone_summon", "thermos_drone"]],
+    ["thermos", "product", ["thermos_warmup", "thermos_release"]],
+    ["thermos", "ops", ["thermos_shield_break"]],
+    ["thermos", "marketing", ["thermos_tea_wave"]],
+    ["thermos", "general", ["thermos_station"]],
+    ["sticky_note", "tech", ["sticky_seeking"]],
+    ["sticky_note", "product", ["sticky_sync_blast"]],
+    ["sticky_note", "ops", ["sticky_route"]],
+    ["sticky_note", "marketing", ["sticky_spread_attach"]],
+    ["sticky_note", "general", ["sticky_notice_trap", "sticky_link_line", "sticky_notice_zone"]]
+  ];
+  required.forEach(([weaponId, dept, sources]) => {
+    const form = V2.getWeaponForm(weaponId, dept);
+    const sig = V2.getWeaponFormSignature(form);
+    if (!sig || !sig.topology || !sig.process || !sig.focus || sig.focus.length < 2) {
+      fail("Weapon form signature is incomplete", { weaponId, dept, mechanicType: form.mechanicType, sig });
+    }
+    sources.forEach(source => {
+      if (!sig.sources || sig.sources.indexOf(source) < 0) {
+        fail("Weapon form signature does not cover expected VFX source", {
+          weaponId,
+          dept,
+          mechanicType: form.mechanicType,
+          source,
+          signatureSources: sig.sources
+        });
+      }
+      if (!V2.getWeaponEventPhase(source)) {
+        fail("Weapon VFX source is missing phase mapping", { source });
+      }
+    });
+  });
+}
+
 function assertWeaponMechanicContracts(V2) {
+  assertWeaponFormSignatures(V2);
   let state = setupMechanicState("marker", "tech");
   Object.assign(state.activeFormParams, {
     damage: 28,

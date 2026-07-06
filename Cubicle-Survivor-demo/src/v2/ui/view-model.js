@@ -49,6 +49,7 @@
     const weapon = state.selectedWeaponId ? CS.weapons && CS.weapons[state.selectedWeaponId] : null;
     const form = state.activeForm || {};
     const topology = form.mechanicType || (weapon && weapon.formTopology) || "basic";
+    const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(form.mechanicType || weapon && weapon.formTopology) : null;
     const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(topology)) || { id: "generic", label: "基础形态", action: "先看攻击方式，再决定如何强化。" };
     const dept = state.badgeDept;
     return {
@@ -62,6 +63,10 @@
       formName: form.displayName || (weapon ? "实习" + weapon.name : "实习武器"),
       formShort: form.short || (weapon ? weapon.tagDescription : "基础形态"),
       combatVerb: form.combatVerb || (weapon ? weapon.description : ""),
+      signature,
+      signatureLabel: signature ? signature.topology : "",
+      signatureProcess: signature ? signature.process : "",
+      signatureFocus: signature ? signature.focus : [],
       badgeName: dept ? V2.compat.deptName(dept) : "未选择工牌",
       badgeColor: dept ? V2.compat.deptColor(dept) : "#00e5ff",
       phase: stagePhase(state)
@@ -74,6 +79,7 @@
       const w = weapons[id];
       if (!w) return null;
       const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(w.formTopology || "")) || { id: "generic", label: "基础形态" };
+      const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(w.formTopology || "") : null;
       return {
         id,
         name: w.name,
@@ -84,6 +90,9 @@
         tagDescription: w.tagDescription,
         themeId: theme.id,
         themeLabel: theme.label,
+        signatureLabel: signature ? signature.topology : theme.label,
+        signatureProcess: signature ? signature.process : w.description,
+        signatureFocus: signature ? signature.focus : [],
         implemented: id === "marker" || id === "thermos" || id === "sticky_note"
       };
     }).filter(Boolean);
@@ -96,6 +105,7 @@
     return supportOrder.filter(function (id) { return id !== current && weapons[id]; }).map(function (id) {
       const w = weapons[id];
       const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(w.formTopology || "")) || { id: "generic", label: "基础辅助" };
+      const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(w.formTopology || "") : null;
       const supportCopy = {
         marker: "每隔一段时间射出一条短贯穿线。",
         thermos: "每隔一段时间释放一圈小热浪。",
@@ -111,6 +121,9 @@
         tagDescription: w.tagDescription,
         themeId: theme.id,
         themeLabel: theme.label,
+        signatureLabel: signature ? signature.topology : theme.label,
+        signatureProcess: signature ? signature.process : supportCopy[id] || w.description,
+        signatureFocus: signature ? signature.focus : [],
         implemented: true
       };
     });
@@ -121,6 +134,7 @@
       const form = V2.getWeaponForm(state.selectedWeaponId, dept);
       const fakeState = Object.assign({}, state, { activeForm: form, badgeDept: dept });
       const theme = pageTheme(fakeState);
+      const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(form) : null;
       return {
         dept,
         deptName: V2.compat.deptName(dept),
@@ -130,6 +144,9 @@
         short: form.short,
         combatVerb: form.combatVerb,
         mechanicType: form.mechanicType,
+        signatureLabel: signature ? signature.topology : "",
+        signatureProcess: signature ? signature.process : form.combatVerb,
+        signatureFocus: signature ? signature.focus : [],
         weakness: form.weakness,
         bestMatch: !!form.bestMatch,
         theme
@@ -194,6 +211,10 @@
       formName: form ? form.displayName : "基础实习形态",
       formShort: form ? form.short : "先体验基础武器",
       mechanicType: form ? form.mechanicType : "",
+      signature: theme.signature,
+      signatureLabel: theme.signatureLabel,
+      signatureProcess: theme.signatureProcess,
+      signatureFocus: theme.signatureFocus,
       theme,
       promoted: !!(state.flags && state.flags.promoted),
       promotion: state.promotionLog && state.promotionLog.length ? state.promotionLog[state.promotionLog.length - 1] : null,

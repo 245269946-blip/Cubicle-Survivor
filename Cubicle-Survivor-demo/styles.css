@@ -5321,6 +5321,39 @@ h2 {
   font-size: 13px;
 }
 
+.v2-signature-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.v2-signature-tags span {
+  width: fit-content;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 46%, #2a2a4a);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  color: var(--theme-accent-2);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.v2-signature-tags.compact {
+  margin-top: 8px;
+}
+
+.badge-signature {
+  display: block;
+  min-height: 30px;
+  color: var(--theme-accent-2, #70e8ff);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
 .v2-stage-chip {
   display: grid;
   align-content: center;

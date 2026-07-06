@@ -128,15 +128,28 @@
   }
 
   function themeBrief(theme, pageLabel, focusText) {
+    const focus = theme.signatureFocus && theme.signatureFocus.length
+      ? '<div class="v2-signature-tags">' + theme.signatureFocus.map(function (tag) {
+        return '<span>' + escapeHtml(tag) + '</span>';
+      }).join("") + '</div>'
+      : "";
     return '<div class="v2-page-identity theme-' + escapeHtml(theme.id) + '">' +
       '<div class="v2-theme-preview ' + previewClass(theme.topology) + '" aria-hidden="true"><i></i><i></i><i></i></div>' +
       '<div class="v2-theme-copy">' +
         '<span>' + escapeHtml(pageLabel) + '</span>' +
         '<strong>' + escapeHtml(theme.formName) + '</strong>' +
-        '<p>' + escapeHtml(focusText || theme.action) + '</p>' +
+        '<p>' + escapeHtml(focusText || theme.signatureProcess || theme.action) + '</p>' +
+        focus +
       '</div>' +
       '<div class="v2-stage-chip"><b>' + escapeHtml(theme.phase.label + " · " + theme.phase.weaponStageShort) + '</b><em>' + escapeHtml(theme.phase.note) + '</em></div>' +
     '</div>';
+  }
+
+  function signatureTags(tags) {
+    if (!tags || !tags.length) return "";
+    return '<div class="v2-signature-tags compact">' + tags.slice(0, 3).map(function (tag) {
+      return '<span>' + escapeHtml(tag) + '</span>';
+    }).join("") + '</div>';
   }
 
   function renderHud(state) {
@@ -189,7 +202,8 @@
         vfxPreviewHtml(weaponPreviewSprite(w.id), "vfx-preview-img weapon-vfx-preview") +
         '<div class="v2-preview" aria-hidden="true"><i></i><i></i><i></i></div>' +
         '<p>' + escapeHtml(w.description) + '</p>' +
-        '<small>' + escapeHtml(w.themeLabel) + (w.implemented ? " · 已接入实机形态" : " · 框架已接入") + '</small>' +
+        '<small>' + escapeHtml(w.signatureLabel) + ' · ' + escapeHtml(w.signatureProcess) + '</small>' +
+        signatureTags(w.signatureFocus) +
       '</button>';
     }).join(""));
     document.querySelectorAll("[data-weapon]").forEach(function (button) {
@@ -214,6 +228,8 @@
         vfxPreviewHtml(formPreviewSprite(state.selectedWeaponId, f.mechanicType), "vfx-preview-img badge-vfx-preview") +
         '<div class="form-preview ' + previewClass(f.mechanicType) + '"><i></i><i></i><i></i></div>' +
         '<p class="badge-desc">' + escapeHtml(f.combatVerb) + '</p>' +
+        '<small class="badge-signature">' + escapeHtml(f.signatureLabel) + ' · ' + escapeHtml(f.signatureProcess) + '</small>' +
+        signatureTags(f.signatureFocus) +
         '<em class="badge-risk">' + escapeHtml(f.weakness) + '</em>' +
       '</button>';
     }).join(""));
@@ -245,7 +261,7 @@
   function renderSlots() {
     const vm = V2.getViewModel("slot_select");
     const b = vm.build;
-    setHtml("slotBuildSummary", themeBrief(vm.theme, "卡槽分工", "这里看的不是拿什么部门卡，而是这张强化会把主形态改成什么功能。") +
+    setHtml("slotBuildSummary", themeBrief(vm.theme, "卡槽分工", "当前主形态：" + (b.signatureProcess || vm.theme.signatureProcess || "看前后参数变化")) +
       '<div class="slot-metric-row">' + b.params.map(function (p) {
         return '<div><span>' + escapeHtml(p.label) + '</span><strong>' + escapeHtml(p.value) + '</strong></div>';
       }).join("") + '</div>');
@@ -281,7 +297,7 @@
       refresh.disabled = vm.materials < vm.refreshCost;
     }
     const b = vm.build;
-    setHtml("armoryBuildStrip", themeBrief(vm.theme, "材料工坊", "材料只用于补强当前主武器形态；这里不跳阶段、不塞跨武器系统。") +
+    setHtml("armoryBuildStrip", themeBrief(vm.theme, "材料工坊", "围绕当前主形态补强：" + (b.signatureProcess || vm.theme.signatureProcess || "强化当前攻击方式")) +
       '<div class="armory-form-metrics">' + b.params.map(function (p) {
         return '<span><i>' + escapeHtml(p.label) + '</i><strong>' + escapeHtml(p.value) + '</strong></span>';
       }).join("") + '</div>');
