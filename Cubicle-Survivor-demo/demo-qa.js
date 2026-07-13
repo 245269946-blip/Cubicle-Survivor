@@ -10,6 +10,16 @@ function seededRandom() {
   return randomSeed / 0x100000000;
 }
 
+function resetScenarioSeed(config, salt) {
+  const key = [salt || "scenario", config.label || "", config.weaponId || "", config.dept || "", config.secondaryDept || "", config.targetStageId || ""].join("|");
+  let seed = 2166136261;
+  for (let index = 0; index < key.length; index++) {
+    seed ^= key.charCodeAt(index);
+    seed = Math.imul(seed, 16777619) >>> 0;
+  }
+  randomSeed = seed || 13371337;
+}
+
 const seededMath = Object.create(Math);
 seededMath.random = seededRandom;
 
@@ -140,6 +150,7 @@ const scripts = [
   "src/core/build-state.js",
   "src/v2/data/weapon-forms.js",
   "src/v2/data/form-signatures.js",
+  "src/v2/audio/audio.js",
   "src/v2/compat/legacy.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
@@ -164,7 +175,8 @@ function collectStaticRefs() {
   const refs = new Set();
   const html = fs.readFileSync(path.join(baseDir, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(baseDir, "styles.css"), "utf8");
-  for (const text of [html, css]) {
+  const generatedSkin = fs.readFileSync(path.join(baseDir, "generated-skin.css"), "utf8");
+  for (const text of [html, css, generatedSkin]) {
     for (const match of text.matchAll(/(?:href|src)="([^"]+)"/g)) refs.add(match[1]);
     for (const match of text.matchAll(/url\("?([^")]+)"?\)/g)) refs.add(match[1]);
   }
@@ -182,7 +194,7 @@ function assertPackageAssets() {
     "Build Prototype",
     "主流程已经跑通",
     "继续加深每把武器",
-    "Steam Demo Candidate",
+    "Demo V1 Candidate",
     "active prototype",
     "平均帧耗时",
     "Paused"
@@ -198,6 +210,30 @@ function assertPackageAssets() {
 
   const html = fs.readFileSync(path.join(baseDir, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(baseDir, "styles.css"), "utf8");
+  const generatedSkin = fs.readFileSync(path.join(baseDir, "generated-skin.css"), "utf8");
+  if (!/generated-skin\.css\?v=\d+/.test(html)) fail("Generated raster skin must load after the legacy layout stylesheet");
+  if (/gradient\s*\(|@keyframes\b/i.test(generatedSkin)) fail("Generated skin must not reintroduce CSS-drawn gradients or keyframe animation");
+  const activeAnimations = Array.from(generatedSkin.matchAll(/animation\s*:\s*([^;]+);/gi))
+    .map(match => match[1].trim())
+    .filter(value => !/^none(?:\s*!important)?$/i.test(value));
+  if (activeAnimations.length) fail("Generated skin must disable CSS animation on all visual surfaces", activeAnimations);
+  const requiredGeneratedSkinRefs = [
+    "assets/generated-ui-v2/menu-shell-office-3col.png",
+    "assets/generated-ui-v2/menu-shell-office-5col.png",
+    "assets/generated-ui-v2/menu-shell-office-workbench-3col.png",
+    "assets/generated-ui-v2/modal-shell-office-casefile.png",
+    "assets/generated-ui-v2/card-frame-office-vertical.png"
+  ];
+  const unmappedGeneratedSkinRefs = requiredGeneratedSkinRefs.filter(ref => !generatedSkin.includes(ref));
+  if (unmappedGeneratedSkinRefs.length) fail("Generated skin is missing current office raster mappings", unmappedGeneratedSkinRefs);
+  const retiredGeneratedUiRefs = Array.from(generatedSkin.matchAll(/assets\/generated-ui\/(?:slices|controls)\/[^"')]+/g)).map(match => match[0]);
+  if (retiredGeneratedUiRefs.length) fail("Retired generated-ui atlas slices must not return to runtime CSS", retiredGeneratedUiRefs);
+  const retiredPreviewSheets = ["selection-preview-vfx.png", "marker-laser-vfx-spritesheet.png"];
+  const leakedPreviewSheets = retiredPreviewSheets.filter(file => html.includes(file) || css.includes(file) || generatedSkin.includes(file));
+  if (leakedPreviewSheets.length) fail("Retired cyber preview sprite sheets must not be preloaded or mapped by runtime CSS", leakedPreviewSheets);
+  const requiredOfficePreviewRefs = ["marker-branch-office-v2.png", "marker-line-office-v2.png", "thermos-charge-gauge-office-v2.png", "sticky-control-office-v2.png"];
+  const missingOfficePreviewRefs = requiredOfficePreviewRefs.filter(file => !generatedSkin.includes(file));
+  if (missingOfficePreviewRefs.length) fail("Weapon selection cards must use current static office mechanism previews", missingOfficePreviewRefs);
   if (/\.game-wrap:has\(/.test(css)) fail("HUD visibility should use data-page-mode instead of :has selectors for demo compatibility");
   if (!css.includes('.v2-game:not([data-page-mode="combat"]) > .objective-hud')) {
     fail("HUD visibility should hide combat HUD outside combat mode");
@@ -208,17 +244,203 @@ function assertPackageAssets() {
   if (!css.includes('.v2-game[data-page-mode="combat"] > .build-panel.collapsed')) {
     fail("Collapsed build panel should use a combat-mode safe layout rule");
   }
+  const compactHudContracts = [
+    {
+      label: "top-center objective/title strip must stay within 410x66px",
+      pattern: /\.v2-game\[data-page-mode="combat"\]\s*>\s*\.objective-hud\s*\{[^}]*width:\s*410px\s*!important;[^}]*height:\s*66px\s*!important;/s
+    },
+    {
+      label: "stage title must remain inside the objective strip instead of adding a battlefield row",
+      pattern: /\.v2-game\[data-page-mode="combat"\]\s*>\s*\.objective-hud\s*>\s*strong\s*\{[^}]*grid-column:\s*1\s*!important;[^}]*grid-row:\s*2\s*!important;/s
+    },
+    {
+      label: "bottom mechanic strip must stay within 420x48px",
+      pattern: /\.v2-game\[data-page-mode="combat"\]\s*>\s*\.combat-status\s*\{[^}]*width:\s*420px\s*!important;[^}]*height:\s*48px\s*!important;/s
+    },
+    {
+      label: "collapsed Build strip must stay within 210x44px",
+      pattern: /\.v2-game\[data-page-mode="combat"\]\s*>\s*\.build-panel\.collapsed\s*\{[^}]*width:\s*210px\s*!important;[^}]*height:\s*44px\s*!important;/s
+    }
+  ];
+  const missingCompactHudContracts = compactHudContracts.filter(contract => !contract.pattern.test(generatedSkin)).map(contract => contract.label);
+  if (missingCompactHudContracts.length) fail("Combat HUD must preserve the 78% continuous player/aiming field contract", missingCompactHudContracts);
   if (/\.debug-(test-button|state)\b|\.error-log\b/.test(css) || /id="(?:debugState|errLog|testAllBtn)"/.test(html)) {
     fail("Public demo package should not include visible debug UI nodes or styles");
   }
 
-  const requiredSprites = [
+  const requiredSprites = ["thermos_drone_v2", "thermos_station_v2", "sticky_note_v2"];
+  const missingSprites = requiredSprites.filter(id => !fs.existsSync(path.join(baseDir, "assets/v2-weapon-vfx/sprites/" + id + ".png")));
+  if (missingSprites.length) fail("Required weapon VFX sprites missing", missingSprites);
+  const requiredOfficeStatusSprites = ["status-shield-office-v2.png", "status-mark-office-v2.png", "status-root-office-v2.png"];
+  const missingOfficeStatusSprites = requiredOfficeStatusSprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
+  if (missingOfficeStatusSprites.length) fail("Required open-center office status sprites missing", missingOfficeStatusSprites);
+  const requiredOfficeThermosSprites = ["thermos-charge-gauge-office-v2.png", "thermos-release-office-v2.png", "thermos-steam-line-office-v2.png", "thermos-wave-office-v2.png"];
+  const missingOfficeThermosSprites = requiredOfficeThermosSprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
+  if (missingOfficeThermosSprites.length) fail("Required lightweight office thermos sprites missing", missingOfficeThermosSprites);
+  const requiredOfficeThreatSprites = ["enemy-projectile-office-v2.png"];
+  const missingOfficeThreatSprites = requiredOfficeThreatSprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
+  if (missingOfficeThreatSprites.length) fail("Required office threat sprites missing", missingOfficeThreatSprites);
+  const requiredOfficeStickySprites = ["sticky-burst-office-v2.png", "sticky-seek-office-v2.png", "sticky-control-office-v2.png", "sticky-link-line-office-v2.png"];
+  const missingOfficeStickySprites = requiredOfficeStickySprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
+  if (missingOfficeStickySprites.length) fail("Required open-center office sticky-note sprites missing", missingOfficeStickySprites);
+  const requiredOfficeMarkerSprites = ["marker-line-office-v2.png", "marker-impact-office-v2.png", "marker-grid-field-office-v2.png", "marker-wave-office-v2.png", "marker-branch-office-v2.png"];
+  const missingOfficeMarkerSprites = requiredOfficeMarkerSprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
+  if (missingOfficeMarkerSprites.length) fail("Required lightweight office marker sprites missing", missingOfficeMarkerSprites);
+  const uiRender = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.js"), "utf8");
+  const requiredBadgeCopyMechanics = [
+    "line_split", "mark_detonate", "shield_counter_line", "line_to_wave", "line_grid_field",
+    "patrol_summon_steam", "charge_release_beam", "shield_break_pulse", "periodic_wave_spread", "deployable_safe_station",
+    "seeking_trap_summon", "manual_trap_detonate", "route_buff_trap", "sticky_debuff_spread", "trap_link_control_zone"
+  ];
+  const missingBadgeCopy = requiredBadgeCopyMechanics.filter(mechanic => !new RegExp("\\b" + mechanic + "\\s*:").test(uiRender));
+  if (missingBadgeCopy.length) fail("All 15 department forms need concise badge-card combat copy", missingBadgeCopy);
+  if (!uiRender.includes("badgeCombatCopy(f)") || !uiRender.includes("badgeSignatureCopy(f)")) {
+    fail("Badge cards must render concise mechanism and signature copy instead of clipping full contract prose");
+  }
+  if (/class="badge-signature"[^\n]+signatureProcess/.test(uiRender)) {
+    fail("Badge signature rows must not repeat the full process paragraph");
+  }
+  const rejectedRuntimeSprites = [
     "marker_beam", "marker_split", "marker_blast", "marker_counter", "marker_wave", "marker_grid",
     "thermos_steam", "thermos_drone", "thermos_boil", "thermos_shield", "thermos_shield_break", "thermos_station", "thermos_tea_wave",
     "sticky_base", "sticky_seeking", "sticky_sync_blast", "sticky_route", "sticky_spread", "sticky_notice_board"
   ];
-  const missingSprites = requiredSprites.filter(id => !fs.existsSync(path.join(baseDir, "assets/v2-weapon-vfx/sprites/" + id + ".png")));
-  if (missingSprites.length) fail("Required weapon VFX sprites missing", missingSprites);
+  const leakedLegacySprites = rejectedRuntimeSprites.filter(id => new RegExp("return\\s+[\\\"']" + id + "[\\\"']").test(uiRender) || html.includes(id + ".png"));
+  if (leakedLegacySprites.length) fail("Rejected legacy VFX sprites must not be referenced by runtime UI or preloads", leakedLegacySprites);
+
+  const requiredAtlases = ["office-rogue-atlas.png"];
+  const missingAtlases = requiredAtlases.filter(file => !fs.existsSync(path.join(baseDir, "assets", file)));
+  if (missingAtlases.length) fail("Approved office pixel atlases missing", missingAtlases);
+  const officeIconAtlas = path.join("assets", "generated-ui-v2", "office-department-slot-icons-v2.png");
+  if (!fs.existsSync(path.join(baseDir, officeIconAtlas))) fail("Office-native department and build-slot icon atlas missing");
+  const retiredSourceArt = [
+    path.join("assets", "office-rogue-props.png"),
+    path.join("assets", "office-rogue-ui-icons.png"),
+    path.join("assets", "pixel-art-visual-style-board.png"),
+    path.join("assets", "generated-vfx", "demo-v1-combat-vfx-atlas.png"),
+    path.join("assets", "generated-vfx", "demo-v1-combat-vfx-atlas-chroma.png")
+  ];
+  const leakedSourceArt = retiredSourceArt.filter(file => fs.existsSync(path.join(baseDir, file)));
+  if (leakedSourceArt.length) fail("Archived source art and loaded-but-unused atlases must stay out of the runnable package", leakedSourceArt);
+  const combatSource = fs.readFileSync(path.join(baseDir, "src/v2/combat/systems.js"), "utf8");
+  if (!combatSource.includes("thermos-charge-gauge-office-v2.png") || !combatSource.includes("thermos-release-office-v2.png") || !combatSource.includes("thermos-steam-line-office-v2.png")) {
+    fail("Thermos charge, release and beam rendering must use the lightweight office sprite set");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/thermos-charge.png') || combatSource.includes('assets/generated-vfx/sprites/thermos-release.png') || combatSource.includes('assets/generated-vfx/sprites/thermos-steam.png')) {
+    fail("Retired bulky thermos sprites must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/thermos-wave-office-v2.png') || !combatSource.includes('if (sprite === "thermos_wave_art")')) {
+    fail("Thermos traveling waves must use the open-center office tea-ring sprite");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/thermos-wave.png')) {
+    fail("Retired blue smoke-ring thermos wave must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/marker-line-office-v2.png')) {
+    fail("Marker piercing and split paths must use the lightweight office highlighter stroke");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/enemy-projectile-office-v2.png') || !combatSource.includes('const height = projectile.hostile ? width * 0.35')) {
+    fail("Hostile projectiles must use the proportion-correct office urgency memo");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/enemy-projectile.png')) {
+    fail("Retired electric angry-envelope projectile must not return to combat rendering");
+  }
+  if (!combatSource.includes('kind === "enemy_projectile"') || !combatSource.includes('source: "qa_enemy_mail"')) {
+    fail("Enemy projectile visual replacements must retain a static runtime-scale calibration lab");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/marker-beam.png')) {
+    fail("Retired cyber marker beam must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/marker-impact-office-v2.png')) {
+    fail("Marker hit feedback must use the compact office proofreader mark");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/marker-impact.png')) {
+    fail("Retired cyber marker impact gear must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/marker-grid-field-office-v2.png')) {
+    fail("Marker grid intersections must use the compact office drafting mark");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/marker-grid.png')) {
+    fail("Retired cyber marker grid must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/marker-wave-office-v2.png') || !combatSource.includes('if (/wave|ring/.test(key)) return "marker_wave_art"')) {
+    fail("Marker traveling waves must use the open-center office highlighter ring");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/marker-wave.png')) {
+    fail("Retired cyber marker wave must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/marker-branch-office-v2.png') || !combatSource.includes('if (sprite === "marker_branch_art")')) {
+    fail("Marker split origins must use the compact office proofreading junction");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/marker-branch.png')) {
+    fail("Retired electric marker branch must not return to combat rendering");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/sticky-burst-office-v2.png') || !combatSource.includes('if (sprite === "sticky_burst_art")')) {
+    fail("Sticky-note detonation feedback must use the open-center office paper burst");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/sticky-burst.png') || combatSource.includes('assets/generated-vfx/sprites/sticky-trap.png')) {
+    fail("Retired cyber sticky-note burst and metal trap sprites must not return to combat rendering");
+  }
+  if (!combatSource.includes('sticky_trap_art: "assets/v2-weapon-vfx/sprites/sticky_note_v2.png"')) {
+    fail("Placed sticky traps must reuse the approved sticky-note entity instead of stacking a second trap skin");
+  }
+  if (!combatSource.includes('assets/generated-vfx/sprites/sticky-seek-office-v2.png') || !combatSource.includes('sprite === "sticky_seek_art" ? width * 0.487')) {
+    fail("Seeking sticky notes must use the compact office memo dart at its authored aspect ratio");
+  }
+  if (combatSource.includes('assets/generated-vfx/sprites/sticky-seek.png')) {
+    fail("Retired blue-jet sticky projectile must not return to combat rendering");
+  }
+  if (!combatSource.includes('const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;')) {
+    fail("Traveling wave sprites must follow the same live radius used by ring damage checks");
+  }
+  if (!combatSource.includes('office_atlas: "assets/office-rogue-atlas.png"')) {
+    fail("The approved office actor atlas must be connected to combat rendering");
+  }
+  if (combatSource.includes("office_props") || combatSource.includes("office-rogue-props.png")) {
+    fail("The retired office prop atlas must not be preloaded without a visible runtime role");
+  }
+  if (!uiRender.includes("runtime-atlas-icon") || !css.includes('assets/generated-ui-v2/office-department-slot-icons-v2.png')) {
+    fail("Office-native UI icon atlas must be consumed by rendered cards");
+  }
+  if (html.includes("office-rogue-ui-icons.png") || css.includes("office-rogue-ui-icons.png")) {
+    fail("Retired RPG-style UI icon atlas must not return to preloads or runtime CSS");
+  }
+
+  const drawBody = combatSource.match(/function draw\(\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  function frame\(/);
+  if (!drawBody || !/drawGeneratedEffects\(ctx, state\)/.test(drawBody[1]) || /\bdrawEffects\(ctx, state\)/.test(drawBody[1])) {
+    fail("Combat render loop must use the generated-sprite renderer and must not call the legacy geometry renderer");
+  }
+  const generatedEffectsBody = combatSource.match(/function drawGeneratedEffects\(ctx, state\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  function draw\(\)/);
+  const forbiddenCanvasPrimitives = /ctx\.(?:arc|fillRect|strokeRect|moveTo|lineTo)\s*\(|create(?:Linear|Radial)Gradient\s*\(/;
+  if (forbiddenCanvasPrimitives.test(combatSource)) {
+    fail("Combat runtime source must not contain visible geometry drawing primitives");
+  }
+  if (!generatedEffectsBody || forbiddenCanvasPrimitives.test(generatedEffectsBody[1])) {
+    fail("Active generated-effects renderer must not draw geometry primitives");
+  }
+  const drawBackgroundBody = combatSource.match(/function drawBackground\(ctx, state\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  function drawPlayer\(/);
+  if (!drawBackgroundBody || /ctx\.(?:fillRect|strokeRect|arc)\s*\(/.test(drawBackgroundBody[1])) {
+    fail("Arena background must not fall back to a CSS/Canvas geometry placeholder");
+  }
+  const runtimeSpriteBlock = combatSource.match(/const RUNTIME_SPRITES = \{([\s\S]*?)\n  \};/);
+  const runtimeSpriteRefs = runtimeSpriteBlock
+    ? Array.from(runtimeSpriteBlock[1].matchAll(/:\s*["']([^"']+\.png)["']/g), match => match[1])
+    : [];
+  if (!runtimeSpriteRefs.length) fail("Combat runtime sprite manifest could not be inspected");
+  const missingRuntimeSprites = runtimeSpriteRefs.filter(ref => !fs.existsSync(path.join(baseDir, ref)));
+  if (missingRuntimeSprites.length) fail("Combat runtime references missing generated sprite files", missingRuntimeSprites);
+
+  const uiPngs = fs.readdirSync(path.join(baseDir, "assets/v2-ui")).filter(file => file.endsWith(".png"));
+  if (uiPngs.length) fail("Rejected raster UI experiments must stay out of the runnable package", uiPngs);
+  const spriteDir = path.join(baseDir, "assets/v2-weapon-vfx/sprites");
+  const unexpectedVfx = fs.readdirSync(spriteDir)
+    .filter(file => file.endsWith(".png"))
+    .filter(file => !requiredSprites.includes(path.basename(file, ".png")));
+  if (unexpectedVfx.length) fail("Weapon VFX runtime directory contains non-whitelisted sprites", unexpectedVfx);
+  const vfxRoot = path.join(baseDir, "assets/v2-weapon-vfx");
+  const vfxRootPngs = fs.readdirSync(vfxRoot).filter(file => file.endsWith(".png"));
+  if (vfxRootPngs.length || fs.existsSync(path.join(vfxRoot, "generated"))) {
+    fail("Rejected VFX contact sheets or generated intermediates returned to the runnable package", vfxRootPngs);
+  }
 }
 
 function assertStageModel(V2) {
@@ -237,6 +459,16 @@ function assertStageModel(V2) {
   if (missingTypes.length) fail("Stage enemyMix is missing required threat types", { missingTypes, enemyTypes });
   const bossTypes = blueprints.filter(stage => stage.boss).map(stage => stage.bossType).join(",");
   if (bossTypes !== "lead,director,delivery,client,ceo") fail("Boss stages should escalate through five named boss types", bossTypes);
+  const normalStages = blueprints.filter(stage => !stage.boss);
+  if (normalStages.some(stage => stage.duration < 30 || stage.duration > 65 || stage.targetKills < 20 || stage.targetKills > 80)) fail("Normal stage pacing left the concise Demo V1 window", normalStages);
+  const bossStages = blueprints.filter(stage => stage.boss);
+  if (bossStages.some(stage => !(stage.bossHitCap > 0 && stage.bossHitCap <= 0.16))) fail("Every boss stage should define a burst-resilience cap", bossStages);
+  const phases = ["weapon_intro", "promotion", "promoted_mastery", "cross_department", "cross_weapon"];
+  phases.forEach(phase => {
+    const normal = V2.audio.getMusicScene(phase + ":normal");
+    const boss = V2.audio.getMusicScene(phase + ":boss");
+    if (!normal || !boss || !(boss.bpm > normal.bpm)) fail("Phase music must provide a faster boss arrangement", { phase, normal, boss });
+  });
   if (!state || !state.stage || state.stage.id !== 1) fail("Initial state should point to stage 1");
 }
 
@@ -388,6 +620,7 @@ function setupMechanicState(weaponId, dept) {
   state.particles = [];
   state.pickups = [];
   state.stats.weaponEvents = [];
+  state.stats.audioEvents = [];
   state.stats.damageDone = {};
   state.player.x = 400;
   state.player.y = 360;
@@ -419,6 +652,26 @@ function expectWeaponEvent(state, type, source, min, message) {
       events: events.map(event => ({ type: event.type, source: event.source, vfxPhase: event.vfxPhase, sprite: event.sprite }))
     });
   }
+  if (source && events.some(event => !event.visualFamily || !event.visualTopology || !event.visualCue || !event.visualRole || !Array.isArray(event.visualTimeline) || !event.visualTimeline.length)) {
+    fail("Weapon event is missing visual mapping metadata", {
+      source,
+      events: events.map(event => ({
+        type: event.type,
+        source: event.source,
+        visualFamily: event.visualFamily,
+        visualTopology: event.visualTopology,
+        visualCue: event.visualCue,
+        visualRole: event.visualRole,
+        visualTimeline: event.visualTimeline
+      }))
+    });
+  }
+  if (source) {
+    const audio = V2.getWeaponAudioEvent && V2.getWeaponAudioEvent(source);
+    if (!audio || !audio.voice || !audio.role || !audio.family || !audio.triggers || !Object.keys(audio.triggers).length) {
+      fail("Weapon event source is missing audio mapping metadata", { source, audio });
+    }
+  }
   return events;
 }
 
@@ -434,6 +687,12 @@ function expectDamageZone(state, source, message) {
     fail("Damage zone is missing VFX phase metadata", {
       source,
       zones: zones.map(zone => ({ source: zone.source, visual: zone.visual, vfxPhase: zone.vfxPhase }))
+    });
+  }
+  if (zones.some(zone => !zone.visualProfile || !zone.visualProfile.family || !zone.visualProfile.topology || !zone.visualProfile.cue || !zone.visualProfile.timeline || !zone.visualProfile.timeline.length)) {
+    fail("Damage zone is missing visual event profile", {
+      source,
+      zones: zones.map(zone => ({ source: zone.source, visual: zone.visual, visualProfile: zone.visualProfile }))
     });
   }
   return zones;
@@ -476,6 +735,10 @@ function assertWeaponFormSignatures(V2) {
       if (!V2.getWeaponEventPhase(source)) {
         fail("Weapon VFX source is missing phase mapping", { source });
       }
+      const audio = V2.getWeaponAudioEvent && V2.getWeaponAudioEvent(source);
+      if (!audio || !audio.voice || !audio.family || !audio.role || !audio.triggers || !Object.keys(audio.triggers).length) {
+        fail("Weapon form signature source is missing audio event mapping", { source, audio });
+      }
     });
   });
 }
@@ -489,36 +752,73 @@ function assertWeaponMechanicContracts(V2) {
     width: 8,
     pierce: 6,
     splitCount: 2,
+    splitRange: 250,
+    splitPierce: 2,
     splitDamage: 0.55,
     extraTrigger: false,
     promotionFullscreenChance: 0
   });
   state.enemies = [
     makeMechanicEnemy("line-a", 620, 360, 100),
-    makeMechanicEnemy("split-up", 705, 295, 100),
-    makeMechanicEnemy("split-down", 705, 425, 100),
+    makeMechanicEnemy("split-up-a", 700, 300, 100),
+    makeMechanicEnemy("split-up-b", 780, 240, 100),
+    makeMechanicEnemy("split-down-a", 700, 420, 100),
+    makeMechanicEnemy("split-down-b", 780, 480, 100),
     makeMechanicEnemy("line-b", 820, 360, 100)
   ];
   V2.combat.fireWeapon(state);
   const markerSplitHits = weaponEvents(state, "hit", "marker_split").length;
+  const markerSplitBeams = expectWeaponEvent(state, "beam", "marker_split", 2, "Marker tech should only create split beams that lock onto real nearby targets");
   expectWeaponEvent(state, "beam", "marker_main", 1, "Marker tech should always fire one piercing main beam");
-  expectWeaponEvent(state, "beam", "marker_split", 4, "Marker tech should create visible split laser branches");
-  if (markerSplitHits < 2) {
-    fail("Marker tech contract broken: main beam should create damaging split lasers", {
-      beams: weaponEvents(state, "beam", "marker_split").length,
+  if (markerSplitHits < 4 || !markerSplitBeams.some(event => event.actualHitCount >= 2)) {
+    fail("Marker tech contract broken: a locked split branch should keep piercing aligned enemies", {
+      beams: markerSplitBeams,
       hits: markerSplitHits,
       enemies: state.enemies.map(enemy => ({ id: enemy.id, hp: enemy.hp }))
     });
+  }
+  const splitTargetIds = markerSplitBeams.map(event => event.targetEnemyId);
+  if (splitTargetIds.some(id => !id) || new Set(splitTargetIds).size !== splitTargetIds.length) {
+    fail("Marker split branches must lock different real targets instead of drawing decorative fan lines", { splitTargetIds, markerSplitBeams });
+  }
+  if (markerSplitBeams.some(event => event.hitEnemyIds.some(id => id === "line-a" || id === "line-b"))) {
+    fail("Marker split branches should seek targets outside the already-pierced main line", markerSplitBeams);
   }
   if (!(state.enemies.find(enemy => enemy.id === "line-b").hp < 100)) {
     fail("Marker base line should pierce through a row instead of behaving like a short projectile");
   }
 
+  state = setupMechanicState("marker", "tech");
+  Object.assign(state.activeFormParams, { damage: 28, splitCount: 3, splitDamage: 0.5, bossConvergeScale: 0.18, range: 720, pierce: 6 });
+  state.stage.boss = true;
+  const convergenceBoss = makeMechanicEnemy("convergence-boss", 650, 360, 500);
+  convergenceBoss.boss = true;
+  state.enemies = [convergenceBoss];
+  V2.combat.fireWeapon(state);
+  const convergenceBeams = weaponEvents(state, "beam", "marker_split").filter(event => event.converged);
+  if (convergenceBeams.length !== 2 || !(convergenceBoss.hp < 500 - state.activeFormParams.damage)) {
+    fail("Marker tech should visibly fold unused split branches back into a lone boss at reduced damage", {
+      convergenceBeams,
+      hpAfter: convergenceBoss.hp,
+      events: weaponEvents(state)
+    });
+  }
+  const convergenceStatus = V2.viewModel.mechanicStatus(state);
+  if (convergenceStatus.label !== "分裂回折" || convergenceStatus.hint.indexOf("Boss") < 0) fail("Marker boss convergence should be explained by the live mechanic status", convergenceStatus);
+
   state = setupMechanicState("marker", "product");
-  Object.assign(state.activeFormParams, { damage: 24, pierce: 4, explosionRadius: 70, explosionDamage: 48 });
+  Object.assign(state.activeFormParams, { damage: 24, pierce: 4, markWindow: 0.5, explosionRadius: 70, explosionDamage: 48 });
   state.enemies = [makeMechanicEnemy("p0-target", 640, 360, 180)];
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "marker_p0_mark", 1, "Product Marker should first tag a priority target with P0");
+  if (!(state.enemies[0].p0MarkTime > 0 && state.enemies[0].p0MarkMax === 0.5)) {
+    fail("Product Marker P0 should store a real finite mark window on the enemy", state.enemies[0]);
+  }
+  state.enemies[0].p0MarkTime = 0;
+  V2.combat.fireWeapon(state);
+  if (weaponEvents(state, "circle", "marker_p0_blast").length) {
+    fail("Expired P0 marks must not detonate; the target should be marked again instead", weaponEvents(state));
+  }
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "marker_p0_blast", 1, "Product Marker should detonate a re-hit P0 target");
   expectDamageZone(state, "marker_p0_blast", "Product Marker P0 detonation should create an actual blast damage zone");
@@ -527,27 +827,79 @@ function assertWeaponMechanicContracts(V2) {
   Object.assign(state.activeFormParams, { damage: 20, pierce: 4, shieldPerHit: 22, counterLines: 4, counterDamage: 35 });
   state.enemies = [makeMechanicEnemy("counter-a", 610, 360, 80), makeMechanicEnemy("counter-b", 720, 360, 80)];
   V2.combat.fireWeapon(state);
-  expectWeaponEvent(state, "beam", "marker_counter", 4, "Ops Marker should convert shield charge into radial counter lasers");
+  if (weaponEvents(state, "beam", "marker_counter").length || !(state.activeFormParams.shield > 0)) {
+    fail("Ops Marker should charge a real shield without auto-firing counters at the charge threshold", {
+      shield: state.activeFormParams.shield,
+      events: weaponEvents(state)
+    });
+  }
+  V2.combat.damagePlayer(state, state.activeFormParams.shield + 1, "#ff6b4a");
+  expectWeaponEvent(state, "beam", "marker_counter", 2, "Ops Marker should convert the broken shield into counter lasers aimed at real nearby enemies");
+  expectWeaponEvent(state, "circle", "marker_shield_break", 1, "Ops Marker counter should only begin after enemy damage actually breaks the shield");
 
   state = setupMechanicState("marker", "marketing");
-  Object.assign(state.activeFormParams, { damage: 20, waveCount: 2, waveRadius: 96, waveDamage: 18 });
-  state.enemies = [makeMechanicEnemy("wave-line", 620, 360, 100)];
+  Object.assign(state.activeFormParams, { damage: 20, waveCount: 2, waveRadius: 96, waveDamage: 18, waveDuration: 0.48, waveThickness: 28 });
+  state.enemies = [
+    makeMechanicEnemy("wave-line", 620, 360, 300),
+    makeMechanicEnemy("wave-front", 620, 440, 300)
+  ];
   V2.combat.fireWeapon(state);
-  expectWeaponEvent(state, "circle", "marker_wave", 2, "Marketing Marker should turn line endpoint into expanding wave rings");
-  expectDamageZone(state, "marker_wave", "Marketing Marker wave rings should be real damage zones");
+  const markerWaves = expectDamageZone(state, "marker_wave", "Marketing Marker should create real propagating wavefront damage zones");
+  if (markerWaves.length !== 2 || markerWaves.some(zone => zone.type !== "ring" || !(zone.duration > 0) || !(zone.thickness > 0))) {
+    fail("Marketing Marker waves must be timed ring fronts instead of instant circle damage", markerWaves);
+  }
+  if (markerWaves.some(zone => zone.x !== 620 || zone.y !== 360)) {
+    fail("Marketing Marker wave should originate from the last main-line hit", markerWaves);
+  }
+  const waveFrontTarget = state.enemies.find(enemy => enemy.id === "wave-front");
+  const waveFrontHp = waveFrontTarget.hp;
+  for (let i = 0; i < 12; i++) V2.combat.update(0.05);
+  if (!(waveFrontTarget.hp < waveFrontHp) || !weaponEvents(state, "hit", "marker_wave").length) {
+    fail("Marketing Marker wavefront should deal damage only when the expanding ring reaches an enemy", {
+      hpBefore: waveFrontHp,
+      hpAfter: waveFrontTarget.hp,
+      waveHits: weaponEvents(state, "hit", "marker_wave"),
+      waves: markerWaves
+    });
+  }
+
+  state = setupMechanicState("marker", "marketing");
+  state.stage.phaseKey = "promotion";
+  state.stage.phaseStep = 2;
+  V2.progression.applySlotChoice(state, "survival", "replace");
+  state.enemies = [makeMechanicEnemy("wave-push", 620, 360, 300)];
+  V2.combat.fireWeapon(state);
+  const pushWave = expectDamageZone(state, "marker_wave", "Marker wave survival slot should still create a real wavefront")[0];
+  if (!(pushWave.knockback > 12)) fail("Marker wave survival slot should increase real displacement, not only attach an unused flag", pushWave);
 
   state = setupMechanicState("marker", "general");
   Object.assign(state.activeFormParams, { damage: 18, gridDamage: 13, trailDuration: 3 });
   state.enemies = [makeMechanicEnemy("grid-line", 620, 360, 100)];
   V2.combat.fireWeapon(state);
   expectDamageZone(state, "marker_grid_line", "Admin Marker should leave a lingering grid line after the beam path");
+  if (state.damageZones.some(zone => zone.source === "marker_grid_field")) {
+    fail("A single Admin Marker trail must not pretend that a grid intersection already exists");
+  }
+  state.player.x = 600;
+  state.player.y = 200;
+  state.enemies = [makeMechanicEnemy("grid-cross", 600, 500, 100)];
+  V2.combat.fireWeapon(state);
+  const gridFields = expectDamageZone(state, "marker_grid_field", "Two genuinely crossing Admin Marker trails should create a control field at their intersection");
+  if (!gridFields.some(zone => zone.type === "circle" && zone.root > 0)) {
+    fail("Admin Marker intersection field should apply a real short root instead of only drawing a grid", gridFields);
+  }
 
   state = setupMechanicState("thermos", "tech");
   Object.assign(state.activeFormParams, { heat: 90, heatRate: 20, steamRange: 260, summonCount: 2, summonDuration: 4, damage: 12 });
   state.enemies = [makeMechanicEnemy("drone-target", 600, 360, 100)];
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "thermos_drone_summon", 1, "Tech Thermos should announce an automatic refill module");
-  expectDamageZone(state, "thermos_drone", "Tech Thermos should create orbiting steam module zones");
+  const thermosModules = expectDamageZone(state, "thermos_drone", "Tech Thermos should create orbiting steam modules");
+  if (!thermosModules.every(zone => zone.droneModule && zone.damage === 0 && zone.droneDamage > 0)) {
+    fail("Tech Thermos modules must actively spray steam instead of acting as contact-damage circles", thermosModules);
+  }
+  V2.combat.update(0.05);
+  expectWeaponEvent(state, "beam", "thermos_drone_steam", 1, "Tech Thermos orbiting modules should lock a real nearby target and emit short steam");
 
   state = setupMechanicState("thermos", "product");
   Object.assign(state.activeFormParams, {
@@ -575,11 +927,44 @@ function assertWeaponMechanicContracts(V2) {
       events: weaponEvents(state)
     });
   }
+  const releasesBeforeLockout = weaponEvents(state, "beam", "thermos_release").length;
+  V2.combat.fireWeapon(state);
+  if (!(state.activeFormParams.releaseLockout > 0) || weaponEvents(state, "beam", "thermos_release").length !== releasesBeforeLockout) {
+    fail("Thermos product release should create a real no-attack lockout window", {
+      releaseLockout: state.activeFormParams.releaseLockout,
+      events: weaponEvents(state)
+    });
+  }
+  const thermosStatus = V2.viewModel.mechanicStatus(state);
+  if (thermosStatus.label !== "释放空窗" || thermosStatus.value.indexOf("s") < 0) fail("Thermos release lockout should be visible in the live mechanic status", thermosStatus);
+
+  state = setupMechanicState("thermos", "product");
+  state.stage.phaseKey = "promotion";
+  state.stage.phaseStep = 2;
+  V2.progression.applySlotChoice(state, "survival", "replace");
+  Object.assign(state.activeFormParams, { heat: 90, heatRate: 20 });
+  state.hp = 70;
+  state.enemies = [makeMechanicEnemy("release-shield-target", 620, 360, 300)];
+  V2.combat.fireWeapon(state);
+  if (!(state.activeFormParams.shield > 0) || state.hp !== 70 || !weaponEvents(state, "circle", "thermos_release_shield").length) {
+    fail("Thermos product survival slot should grant a real shield after release instead of silently healing HP", {
+      shield: state.activeFormParams.shield,
+      hp: state.hp,
+      events: weaponEvents(state)
+    });
+  }
 
   state = setupMechanicState("thermos", "ops");
-  Object.assign(state.activeFormParams, { damage: 12, shieldGain: 35, shieldThreshold: 30, pulseDamage: 40, pulseRadius: 120 });
+  Object.assign(state.activeFormParams, { damage: 12, steamRange: 240, shieldGain: 35, shieldThreshold: 30, pulseDamage: 40, pulseRadius: 120 });
   state.enemies = [makeMechanicEnemy("shield-target", 620, 360, 100)];
   V2.combat.fireWeapon(state);
+  if (weaponEvents(state, "circle", "thermos_shield_break").length || !(state.activeFormParams.shield > 0)) {
+    fail("Ops Thermos should charge a real shield from steam hits without auto-breaking it", {
+      shield: state.activeFormParams.shield,
+      events: weaponEvents(state)
+    });
+  }
+  V2.combat.damagePlayer(state, state.activeFormParams.shield + 1, "#ff6b4a");
   expectWeaponEvent(state, "circle", "thermos_shield_break", 1, "Ops Thermos should break warm shield into a pulse");
   expectDamageZone(state, "thermos_shield_break", "Ops Thermos shield break should create a real pulse damage zone");
 
@@ -587,22 +972,34 @@ function assertWeaponMechanicContracts(V2) {
   Object.assign(state.activeFormParams, { damage: 10, waveCount: 3, waveRadius: 110, spreadDamage: 14 });
   state.enemies = [makeMechanicEnemy("tea-target", 620, 360, 100)];
   V2.combat.fireWeapon(state);
-  expectWeaponEvent(state, "circle", "thermos_tea_wave", 3, "Marketing Thermos should emit multiple tea-wave rings");
-  expectDamageZone(state, "thermos_tea_wave", "Marketing Thermos tea waves should be actual damage zones");
+  const teaWaves = expectDamageZone(state, "thermos_tea_wave", "Marketing Thermos tea waves should be actual propagating damage zones");
+  if (teaWaves.length !== 3 || teaWaves.some(zone => zone.type !== "ring" || zone.debuff !== "tea")) {
+    fail("Marketing Thermos should emit delayed wavefronts that attach the death-echo state when they pass", teaWaves);
+  }
 
   state = setupMechanicState("thermos", "general");
-  Object.assign(state.activeFormParams, { stationRadius: 120, stationDuration: 5, stationPulseDamage: 10, heal: 1 });
+  Object.assign(state.activeFormParams, { heat: 90, heatRate: 20, stationRadius: 120, stationDuration: 5, stationPulseDamage: 10, heal: 1 });
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "thermos_station", 1, "Admin Thermos should deploy a visible safe station");
   expectDamageZone(state, "thermos_station", "Admin Thermos station should be a persistent zone");
 
   state = setupMechanicState("sticky_note", "tech");
   Object.assign(state.activeFormParams, { damage: 10, trapRadius: 44, seekSpeed: 160 });
-  state.enemies = [makeMechanicEnemy("seek-target", 640, 360, 90)];
+  state.enemies = [makeMechanicEnemy("seek-target", 520, 360, 90)];
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "sticky_seeking", 1, "Tech Sticky Note should create a seeking trap");
-  if (!expectDamageZone(state, "sticky_seeking", "Tech Sticky Note seeking trap should be an actual zone").some(zone => zone.seek)) {
-    fail("Tech Sticky Note zone should actively seek enemies");
+  const seekingNotes = expectDamageZone(state, "sticky_seeking", "Tech Sticky Note seeking trap should be an actual zone");
+  if (!seekingNotes.some(zone => zone.seekingSticky && zone.damage === 0 && zone.triggerDamage > 0)) {
+    fail("Tech Sticky Note should be a one-shot seeking collider instead of a continuous contact-damage aura", seekingNotes);
+  }
+  const seekHp = state.enemies[0].hp;
+  for (let i = 0; i < 8; i++) V2.combat.update(0.05);
+  if (!(state.enemies[0].hp < seekHp) || !weaponEvents(state, "hit", "sticky_seeking_hit").length) {
+    fail("Tech Sticky Note should arm, chase a real target, and deal damage once on collision", {
+      hpBefore: seekHp,
+      hpAfter: state.enemies[0].hp,
+      events: weaponEvents(state)
+    });
   }
 
   state = setupMechanicState("sticky_note", "product");
@@ -611,8 +1008,28 @@ function assertWeaponMechanicContracts(V2) {
   V2.combat.fireWeapon(state);
   V2.combat.fireWeapon(state);
   V2.combat.fireWeapon(state);
-  expectWeaponEvent(state, "circle", "sticky_sync_blast", 2, "Product Sticky Note should sync-detonate prepared traps");
+  if (weaponEvents(state, "circle", "sticky_sync_blast").length) {
+    fail("Product Sticky Note must wait for explicit player input instead of auto-detonating by trap count", weaponEvents(state));
+  }
+  state.damageZones.filter(zone => zone.manualSticky).forEach(zone => { zone.armed = true; });
+  const stickyStatus = V2.viewModel.mechanicStatus(state);
+  if (stickyStatus.label !== "开关贴" || stickyStatus.hint.indexOf("空格") < 0 || stickyStatus.value.indexOf("3 / 3") < 0) fail("Product Sticky Note should expose armed count and Space input in combat", stickyStatus);
+  state.input.trigger = true;
+  V2.combat.fireWeapon(state);
+  expectWeaponEvent(state, "circle", "sticky_sync_blast", 3, "Product Sticky Note should sync-detonate every prepared trap after Space/manual trigger");
   expectDamageZone(state, "sticky_sync_blast", "Product Sticky Note synced detonation should create blast zones");
+
+  state = setupMechanicState("sticky_note", "product");
+  state.stage.phaseKey = "promotion";
+  state.stage.phaseStep = 2;
+  V2.progression.applySlotChoice(state, "survival", "replace");
+  state.enemies = [makeMechanicEnemy("push-target", 520, 360, 160)];
+  V2.combat.fireWeapon(state);
+  state.damageZones.filter(zone => zone.manualSticky).forEach(zone => { zone.armed = true; });
+  state.input.trigger = true;
+  V2.combat.fireWeapon(state);
+  const pushBlast = expectDamageZone(state, "sticky_sync_blast", "Sticky product survival slot should create a push-capable manual blast")[0];
+  if (!(pushBlast.knockback > 12)) fail("Sticky product survival slot should increase actual knockback distance", pushBlast);
 
   state = setupMechanicState("sticky_note", "ops");
   Object.assign(state.activeFormParams, { damage: 9, trapRadius: 48, routeHeal: 1.2, shieldGain: 5 });
@@ -621,7 +1038,22 @@ function assertWeaponMechanicContracts(V2) {
   V2.combat.fireWeapon(state);
   expectWeaponEvent(state, "circle", "sticky_route", 1, "Ops Sticky Note should lay a route buff trap");
   const routeZone = expectDamageZone(state, "sticky_route", "Ops Sticky Note route should be a zone with player benefits")[0];
-  if (!(routeZone.heal > 0 && routeZone.playerShield > 0)) fail("Ops Sticky Note route should heal or shield the player", routeZone);
+  if (!routeZone.routeSticky || !(routeZone.shieldGain > 0)) fail("Ops Sticky Note should store a one-time route-crossing benefit", routeZone);
+  routeZone.armed = true;
+  state.player.x = routeZone.x;
+  state.player.y = routeZone.y;
+  const routeShieldBefore = state.activeFormParams.shield || 0;
+  V2.combat.update(0.01);
+  const routeShieldAfter = state.activeFormParams.shield || 0;
+  V2.combat.update(0.01);
+  if (!(routeShieldAfter > routeShieldBefore) || state.activeFormParams.shield !== routeShieldAfter || !routeZone.routeClaimed) {
+    fail("Ops Sticky Note should grant shield once per crossed note without continuous shield farming", {
+      before: routeShieldBefore,
+      after: routeShieldAfter,
+      secondUpdate: state.activeFormParams.shield,
+      zone: routeZone
+    });
+  }
 
   state = setupMechanicState("sticky_note", "marketing");
   Object.assign(state.activeFormParams, { damage: 11, spreadRadius: 130, spreadLimit: 3, spreadDepth: 2 });
@@ -642,6 +1074,8 @@ function assertWeaponMechanicContracts(V2) {
   V2.combat.fireWeapon(state);
   V2.combat.fireWeapon(state);
   V2.combat.fireWeapon(state);
+  state.damageZones.filter(zone => zone.noticeNode).forEach(zone => { zone.armed = true; });
+  V2.combat.update(0.01);
   if (weaponEvents(state, "circle", "sticky_notice_trap").length < 3 || weaponEvents(state, "beam", "sticky_link_line").length < 3) {
     fail("Sticky admin contract broken: three notes should link into a visible notice-board field", {
       circles: weaponEvents(state, "circle", "sticky_notice_trap").length,
@@ -649,8 +1083,9 @@ function assertWeaponMechanicContracts(V2) {
       zones: state.damageZones.map(zone => zone.source || zone.visual)
     });
   }
-  if (!state.damageZones.some(zone => zone.source === "sticky_notice_zone")) {
-    fail("Sticky admin should create a persistent control zone after linked notes");
+  const noticeZone = state.damageZones.find(zone => zone.source === "sticky_notice_zone");
+  if (!noticeZone || noticeZone.type !== "polygon" || !Array.isArray(noticeZone.points) || noticeZone.points.length !== 3) {
+    fail("Sticky admin should create a real three-node polygon control zone after distance-valid links", noticeZone);
   }
 }
 
@@ -857,6 +1292,7 @@ function advanceToCombatStage(config, targetStageId) {
 }
 
 function runCombatSmoke(config) {
+  resetScenarioSeed(config, "combat-smoke");
   const state = advanceToCombatStage(config, config.targetStageId);
   const start = {
     shots: state.stats.shots,
@@ -907,6 +1343,7 @@ function runCombatSmoke(config) {
 }
 
 function runPressureStage(config) {
+  resetScenarioSeed(config, "pressure-stage");
   const state = advanceToCombatStage(config, config.targetStageId);
   state.hp = state.maxHp;
   const start = {
@@ -973,6 +1410,7 @@ function runPressureStage(config) {
 }
 
 function runActualFullCombatPath(config) {
+  resetScenarioSeed(config, "actual-full-path");
   sandbox.GameV2.startRun({ weaponId: config.weaponId });
   const stageSummaries = [];
   let guard = 0;
@@ -1005,8 +1443,8 @@ function runActualFullCombatPath(config) {
       }
       const end = sandbox.GameV2.getState();
       clearInput(end);
-      if (end.flags.gameOver) fail("Actual full combat path died", { config, stageId, hp: end.hp, mode: end.mode });
-      if (end.mode === "combat" && end.stage && end.stage.id === stageId) fail("Actual full combat path failed to complete a stage in time", { config, stageId, simulated: Number(simulated.toFixed(2)), kills: end.stageKills + "/" + end.stage.targetKills, hp: end.hp });
+      if (end.flags.gameOver) fail("Actual full combat path died", { config, stageId, hp: end.hp, mode: end.mode, form: end.activeForm && end.activeForm.mechanicType, damageDone: end.stats.damageDone, zones: end.damageZones.map(zone => zone.source || zone.visual) });
+      if (end.mode === "combat" && end.stage && end.stage.id === stageId) fail("Actual full combat path failed to complete a stage in time", { config, stageId, simulated: Number(simulated.toFixed(2)), kills: end.stageKills + "/" + end.stage.targetKills, hp: end.hp, damageDone: end.stats.damageDone, zones: end.damageZones.map(zone => zone.source || zone.visual) });
       stageSummaries.push({
         stageId,
         simulated: Number(simulated.toFixed(2)),
@@ -1054,6 +1492,8 @@ function runActualFullCombatPath(config) {
       const bossStages = stageSummaries.filter(item => [3, 7, 10, 13, 16].includes(item.stageId));
       const missedBossKills = bossStages.filter(item => item.kills < 1);
       if (missedBossKills.length) fail("Actual full combat path had boss stages without confirmed kills", { config, missedBossKills });
+      const totalSimulated = Number(stageSummaries.reduce((sum, item) => sum + item.simulated, 0).toFixed(2));
+      if (totalSimulated < 480 || totalSimulated > 800) fail("Actual full combat path left the intended 8-13 minute Demo V1 combat window", { config, totalSimulated, stageSummaries });
       return {
         weaponId: config.weaponId,
         dept: config.dept,
@@ -1062,6 +1502,7 @@ function runActualFullCombatPath(config) {
         stageCount: stageSummaries.length,
         totalDamage: Number(stageSummaries.reduce((sum, item) => sum + item.damage, 0).toFixed(2)),
         totalKills: stageSummaries.reduce((sum, item) => sum + item.kills, 0),
+        totalSimulated,
         maxHpLost: Math.max.apply(null, stageSummaries.map(item => item.hpLost)),
         finalLevel: state.level,
         finalMaterials: state.materials,
@@ -1090,9 +1531,9 @@ const combatSmokes = [
 ];
 
 const pressureStages = [
-  runPressureStage({ label: "marker-promotion-boss", weaponId: "marker", dept: "tech", secondaryDept: "product", supportWeaponId: "thermos", targetStageId: 7, seconds: 42, minDamage: 500, minBossDamage: 220, steerOffset: 0.3 }),
+  runPressureStage({ label: "marker-promotion-boss", weaponId: "marker", dept: "tech", secondaryDept: "product", supportWeaponId: "thermos", targetStageId: 7, seconds: 42, minDamage: 400, minBossDamage: 200, steerOffset: 0.3 }),
   runPressureStage({ label: "thermos-cross-dept-boss", weaponId: "thermos", dept: "product", secondaryDept: "ops", supportWeaponId: "sticky_note", targetStageId: 13, seconds: 42, minDamage: 650, minBossDamage: 260, steerOffset: 0.9 }),
-  runPressureStage({ label: "sticky-final-boss", weaponId: "sticky_note", dept: "general", secondaryDept: "marketing", supportWeaponId: "marker", targetStageId: 16, seconds: 45, minDamage: 900, minBossDamage: 320, steerOffset: 1.4 })
+  runPressureStage({ label: "sticky-final-boss", weaponId: "sticky_note", dept: "general", secondaryDept: "marketing", supportWeaponId: "marker", targetStageId: 16, seconds: 45, minDamage: 400, minBossDamage: 320, steerOffset: 1.4 })
 ];
 
 const actualFullCombatPaths = [

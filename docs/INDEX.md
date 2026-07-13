@@ -6,6 +6,14 @@
 
 重点文件：
 
+- `CURRENT_BASELINE.md`（任何工作开始前先读）
+- `DEMO_V1_MECHANIC_AUDIT.md`（三武器 15 形态与增强层唯一审计表）
+- `DEMO_V1_VISUAL_EVENT_MAP.md`（71 个武器事件源到视觉时间线、拓扑与主次层级的映射）
+- `DEMO_V1_VISUAL_ASSET_AUDIT.md`（底层视觉资产白名单、清洗记录与浏览器验收规则）
+- `DEMO_V1_AUDIO_EVENT_MAP.md`（71 个武器事件源到音色、阶段、限流与主次混音的映射）
+- `DEMO_V1_PACING_PASS.md`（16 关时长、刷怪、Boss 韧性与三条实战路径数据）
+- `DEMO_V1_TAPTAP_DIRECTION.md`（TapTap 目标、当前体验优先级与下一轮玩家验收标准）
+- `v2-core-review-principles.md`
 - `v2-framework/merged-build-framework.md`
 - `v2-framework/step1-core-rules-v2.md`
 - `v2-framework/step2-ability-budget.md`

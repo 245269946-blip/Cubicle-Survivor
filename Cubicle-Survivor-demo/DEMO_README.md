@@ -1,4 +1,4 @@
-# 工位幸存者 Steam Demo HTML 包
+# 工位幸存者 Demo V1 HTML 包
 
 ## 运行方式
 

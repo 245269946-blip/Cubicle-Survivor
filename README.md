@@ -1,6 +1,8 @@
-# Cubicle Survivor Reforged
+# Cubicle Survivor Demo V1
 
-当前根目录是 **v2.0 active prototype**，用于继续开发和试玩。
+当前工作树是 **Demo V1 唯一开发基线**。真正可运行与验收的版本位于 `Cubicle-Survivor-demo/`。
+
+产品命名统一使用 `Demo V1`。内部 `src/v2/` 与 `docs/v2-framework/` 是架构代号，不代表另一个对外版本。
 
 ## 版本分区
 
