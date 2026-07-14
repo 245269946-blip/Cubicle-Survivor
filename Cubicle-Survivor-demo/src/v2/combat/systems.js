@@ -514,6 +514,12 @@
 
   function damageEnemy(state, enemy, amount, source, knockbackFrom) {
     if (!enemy || enemy.dead) return;
+    const markerTest = markerFixedRuntime(state);
+    const markerParams = state.activeFormParams || {};
+    if (markerTest && markerParams.markerFixedCritChance > 0 && Math.random() < markerParams.markerFixedCritChance) {
+      amount *= 2;
+      addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, "暴击", "#ffd86b", 0.42);
+    }
     if (enemy.armor) {
       amount *= 1 - Math.min(0.6, enemy.armor);
       addCircleEvent(state, enemy.x, enemy.y, enemy.r + 10, enemy.accent || "#d9e6ff", 0.16, "shield");
@@ -523,6 +529,12 @@
     }
     enemy.hp -= amount;
     state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
+    if (markerTest && markerParams.markerFixedLifeStealChance > 0 && markerTest.lifeStealCooldown <= 0
+      && state.hp < state.maxHp && Math.random() < markerParams.markerFixedLifeStealChance) {
+      state.hp = Math.min(state.maxHp, state.hp + 1);
+      markerTest.lifeStealCooldown = 0.1;
+      addTextEvent(state, state.player.x, state.player.y - 28, "+1", "#8fffb2", 0.36);
+    }
     traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp, vfxPhase: eventPhase(source) });
     if (knockbackFrom) {
       const dx = enemy.x - knockbackFrom.x;
@@ -601,9 +613,11 @@
       if (state.stage && state.stage.demoV2Phase === "marker-fixed") {
         const xpAmount = Math.max(1, Math.round((enemy.xp || 4) * (enemy.markerFixedElite ? 1.8 : 1)));
         state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
+        const luck = (state.activeFormParams && state.activeFormParams.markerFixedLuck) || 0;
+        const materialDropChance = 0.018 * (1 + luck / 100);
         const materialAmount = enemy.markerFixedBoss
           ? Math.max(1, enemy.markerFixedBossMaterial || 1)
-          : enemy.markerFixedElite ? 2 : Math.random() < 0.018 ? 1 : 0;
+          : enemy.markerFixedElite ? 2 : Math.random() < materialDropChance ? 1 : 0;
         if (materialAmount > 0) {
           state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: materialAmount, radius: enemy.markerFixedBoss ? 9 : 6, color: "#ffd700", markerFixedDrop: true });
         }
@@ -2469,6 +2483,12 @@
   function damagePlayer(state, amount, color) {
     let incoming = amount;
     const params = state.activeFormParams || {};
+    if (params.markerFixedDodgeChance > 0 && Math.random() < params.markerFixedDodgeChance) {
+      state.player.invuln = 0.18;
+      addTextEvent(state, state.player.x, state.player.y - 30, "闪避", "#9fe7ff", 0.42);
+      return;
+    }
+    if (params.markerFixedArmor > 0) incoming *= 15 / (15 + params.markerFixedArmor);
     const shieldBefore = params.shield || 0;
     if ((params.shield || 0) > 0) {
       const absorb = Math.min(params.shield, incoming);
@@ -2870,9 +2890,8 @@
   function updatePickups(state, dt) {
     pickupMagnetTimer += dt;
     const markerTest = markerFixedRuntime(state);
-    const pickupRanks = markerTest && markerTest.experienceAllocations ? markerTest.experienceAllocations.pickup : 0;
-    const magnetRadius = markerTest && markerTest.collecting ? 520 + pickupRanks * 45 : 150 + pickupRanks * 35;
-    const magnetSpeed = markerTest && markerTest.collecting ? 8.5 + pickupRanks * 0.35 : 5;
+    const magnetRadius = markerTest && markerTest.collecting ? 520 : 150;
+    const magnetSpeed = markerTest && markerTest.collecting ? 8.5 : 5;
     for (const p of state.pickups) {
       const d = Math.hypot(state.player.x - p.x, state.player.y - p.y);
       if (d < magnetRadius) {
@@ -2923,7 +2942,7 @@
       if (markerTest && markerTest.collecting) {
         updatePickups(state, dt);
         updateEffects(state, dt);
-        if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state);
+        if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state, dt);
         if (state.warmupTime <= 0 && V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.finishCollection(state);
       }
       return;
@@ -2936,7 +2955,7 @@
     if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b" || state.stage.demoV2Phase === "marker-fixed")) {
       updateDemoV2Director(state, dt);
       if (state.stage.demoV2Phase === "phase-b" && V2.demoV2 && V2.demoV2.phaseB) V2.demoV2.phaseB.tick(state);
-      if (state.stage.demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state);
+      if (state.stage.demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state, dt);
     } else {
       spawnTimer -= dt;
       if (spawnTimer <= 0 && state.enemies.length < (state.stage.boss ? 5 : 80)) {

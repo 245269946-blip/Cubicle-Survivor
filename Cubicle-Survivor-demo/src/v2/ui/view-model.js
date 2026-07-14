@@ -26,6 +26,16 @@
     return String(m).padStart(2, "0") + ":" + String(rest).padStart(2, "0");
   }
 
+  function markerExperienceSummary(test) {
+    const defs = V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.experienceStats || {};
+    const entries = Object.keys(defs).filter(function (id) {
+      return test.experienceAllocations[id] > 0;
+    }).map(function (id) {
+      return (defs[id].short || defs[id].name) + test.experienceAllocations[id];
+    });
+    return entries.length ? entries.join("/") : "未分配";
+  }
+
   function stagePhase(state) {
     const stage = state.stage || {};
     if (stage.demoV2Phase === "phase-a") {
@@ -311,7 +321,7 @@
       return {
         label: "马克笔三线成长",
         value: "激光 " + instant + " · 墨迹 " + trails,
-        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 经验点 伤" + test.experienceAllocations.damage + "/生" + test.experienceAllocations.health + "/移" + test.experienceAllocations.moveSpeed + "/拾" + test.experienceAllocations.pickup + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
+        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 基础属性 " + markerExperienceSummary(test) + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
         tone: "marker"
       };
     }
@@ -604,8 +614,10 @@
         shopsVisited: state.demoV2.marker.completedStages,
         experienceLevels: state.demoV2.marker.experienceLevels,
         experienceAllocations: Object.assign({}, state.demoV2.marker.experienceAllocations),
+        experienceSummary: markerExperienceSummary(state.demoV2.marker),
         componentsBought: state.demoV2.marker.componentsBought,
         stageMaterialsEarned: state.demoV2.marker.stageMaterialsEarned,
+        harvestingMaterialsEarned: state.demoV2.marker.harvestingMaterialsEarned,
         dropMaterialsEarned: state.demoV2.marker.dropMaterialsEarned,
         materialsSpent: state.demoV2.marker.materialsSpent
       } : null,

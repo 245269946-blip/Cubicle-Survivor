@@ -320,7 +320,7 @@
     }
     const skip = el("skipUpgradeButton");
     if (skip) skip.classList.toggle("hidden", !!vm.markerFixed);
-    setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。只选通用属性，不占用组件的武器属性职责。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
+    setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
     setHtml("upgradeChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-upgrade="' + escapeHtml(choice.id) + '">' +
         atlasIconHtml("ui", "upgrade", choice.title) +
@@ -495,8 +495,8 @@
       (vm.markerFixed
         ? '<p>完成 ' + vm.markerFixed.completedEncounters + '/17 关 · 商店 ' + vm.markerFixed.shopsVisited + '/6 · 击破 ' + vm.kills + ' · 峰值目标 ' + vm.markerFixed.peakEnemies + '</p>' +
           '<p>复写 Lv.' + vm.markerFixed.modules.copy + ' / 留档 Lv.' + vm.markerFixed.modules.archive + '</p>' +
-          '<p>经验属性分配 伤' + vm.markerFixed.experienceAllocations.damage + ' / 生' + vm.markerFixed.experienceAllocations.health + ' / 移' + vm.markerFixed.experienceAllocations.moveSpeed + ' / 拾' + vm.markerFixed.experienceAllocations.pickup + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
-          '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + ' / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
+          '<p>经验基础属性 ' + escapeHtml(vm.markerFixed.experienceSummary) + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
+          '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + '（收获追加 ' + vm.markerFixed.harvestingMaterialsEarned + '） / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
           '<p>全屏复写 ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · 全屏留档 ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次</p>' +
           '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div>'; }).join("") + '</div>'
         : vm.phaseB

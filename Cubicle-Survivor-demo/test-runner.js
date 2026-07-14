@@ -515,7 +515,7 @@ if (!markerFixed || markerFixed.duration !== 890 || markerFixed.phaseCount !== 5
   || [1, 2, 3, 4, 5].map((phase) => markerFixed.encounters.filter((encounter) => encounter.phase === phase).length).join(",") !== "3,3,3,3,5"
   || Object.keys(markerFixed.modules).sort().join(",") !== "archive,copy"
   || Object.keys(markerFixed.parts).sort().join(",") !== "body,tail,tip"
-  || Object.keys(markerFixed.experienceStats).sort().join(",") !== "damage,health,moveSpeed,pickup") {
+  || Object.keys(markerFixed.experienceStats).sort().join(",") !== "armor,attackSpeed,critChance,damage,dodge,harvesting,hpRegen,lifeSteal,luck,maxHp,moveSpeed,range") {
   console.error("Marker fixed-type test contract missing or drifted", markerFixed);
   process.exit(1);
 }
@@ -540,6 +540,8 @@ if (!markerFixedState.pickups.some((pickup) => pickup.type === "xp")
 }
 const baseMarkerDamage = markerFixedState.activeFormParams.damage;
 const baseMarkerMaxHp = markerFixedState.maxHp;
+const baseMarkerCooldown = markerFixedState.activeFormParams.cooldown;
+const baseMarkerRange = markerFixedState.activeFormParams.range;
 V2.dispatch({ type: "GAIN_XP", amount: 999 });
 if (markerFixedState.level <= 1 || markerFixedState.mode !== "combat"
   || markerFixedState.activeFormParams.damage !== baseMarkerDamage || markerFixedState.maxHp !== baseMarkerMaxHp
@@ -548,6 +550,29 @@ if (markerFixedState.level <= 1 || markerFixedState.mode !== "combat"
   console.error("Marker XP must queue player-assigned stat points without interrupting combat", markerFixedState.level, markerFixedState.mode, markerFixedState.demoV2.marker);
   process.exit(1);
 }
+Object.keys(markerFixedState.demoV2.marker.experienceAllocations).forEach((id) => {
+  markerFixedState.demoV2.marker.experienceAllocations[id] = 1;
+});
+markerFixed.rebuildParams(markerFixedState);
+if (markerFixedState.activeFormParams.damage <= baseMarkerDamage
+  || markerFixedState.activeFormParams.cooldown >= baseMarkerCooldown
+  || markerFixedState.activeFormParams.range <= baseMarkerRange
+  || markerFixedState.maxHp !== baseMarkerMaxHp + 12
+  || markerFixedState.player.speed <= 220
+  || markerFixedState.activeFormParams.markerFixedHpRegen !== 0.8
+  || markerFixedState.activeFormParams.markerFixedLifeStealChance !== 0.015
+  || markerFixedState.activeFormParams.markerFixedCritChance !== 0.03
+  || markerFixedState.activeFormParams.markerFixedArmor !== 1
+  || markerFixedState.activeFormParams.markerFixedDodgeChance !== 0.03
+  || markerFixedState.activeFormParams.markerFixedLuck !== 5
+  || markerFixedState.activeFormParams.markerFixedHarvesting !== 5) {
+  console.error("Marker simplified Brotato-style stats must all feed real combat or economy parameters", markerFixedState.activeFormParams, markerFixedState.maxHp, markerFixedState.player.speed);
+  process.exit(1);
+}
+Object.keys(markerFixedState.demoV2.marker.experienceAllocations).forEach((id) => {
+  markerFixedState.demoV2.marker.experienceAllocations[id] = 0;
+});
+markerFixed.rebuildParams(markerFixedState);
 markerFixed.applyModule(markerFixedState, "copy", true);
 markerFixed.applyModule(markerFixedState, "copy", true);
 markerFixed.applyModule(markerFixedState, "archive", true);
@@ -606,7 +631,10 @@ if (markerFixedState.mode !== "combat" || !markerFixedState.demoV2.marker.collec
 }
 markerFixed.finishCollection(markerFixedState);
 if (markerFixedState.mode !== "level_up" || markerFixedState.materials !== 10 || markerFixedState.level !== 2
-  || markerFixedState.demoV2.marker.lastAutoCollect.xp <= 0 || markerFixedState.demoV2.marker.lastAutoCollect.materials !== 3) {
+  || markerFixedState.demoV2.marker.lastAutoCollect.xp <= 0 || markerFixedState.demoV2.marker.lastAutoCollect.materials !== 3
+  || markerFixedState.upgradeChoices.length !== 4
+  || new Set(markerFixedState.upgradeChoices.map((choice) => choice.id)).size !== 4
+  || markerFixedState.upgradeChoices.some((choice) => !markerFixed.experienceStats[choice.id])) {
   console.error("Collection expiry must auto-pick leftovers, grant stage materials, and open queued XP choices", markerFixedState.mode, markerFixedState.materials, markerFixedState.demoV2.marker);
   process.exit(1);
 }

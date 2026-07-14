@@ -79,11 +79,25 @@
   };
 
   const EXPERIENCE_STATS = {
-    damage: { id: "damage", name: "输出训练", effect: "马克笔基础伤害 +5%", family: "即时输出" },
-    health: { id: "health", name: "健康额度", effect: "最大生命 +12，并恢复 12 点生命", family: "容错" },
-    moveSpeed: { id: "moveSpeed", name: "跑腿熟练", effect: "移动速度 +4%", family: "走位" },
-    pickup: { id: "pickup", name: "磁吸归档", effect: "常规拾取半径 +35，收集期吸附更快", family: "资源" }
+    maxHp: { id: "maxHp", name: "最大生命", effect: "最大生命 +12，并恢复 12 点生命", family: "生存", short: "血" },
+    hpRegen: { id: "hpRegen", name: "生命再生", effect: "每秒生命恢复 +0.8", family: "恢复", short: "回" },
+    lifeSteal: { id: "lifeSteal", name: "生命窃取", effect: "造成伤害时 +1.5% 概率恢复 1 点生命", family: "恢复", short: "吸" },
+    damage: { id: "damage", name: "伤害", effect: "所有马克笔伤害 +5%", family: "输出", short: "伤" },
+    attackSpeed: { id: "attackSpeed", name: "攻击速度", effect: "攻击速度 +5%", family: "输出", short: "速" },
+    critChance: { id: "critChance", name: "暴击率", effect: "暴击率 +3%，暴击造成 2 倍伤害", family: "输出", short: "暴" },
+    range: { id: "range", name: "范围", effect: "激光长度 +15", family: "覆盖", short: "距" },
+    armor: { id: "armor", name: "护甲", effect: "护甲 +1，降低受到的伤害", family: "生存", short: "甲" },
+    dodge: { id: "dodge", name: "闪避", effect: "闪避 +3%，上限 60%", family: "生存", short: "闪" },
+    moveSpeed: { id: "moveSpeed", name: "速度", effect: "移动速度 +3%", family: "走位", short: "移" },
+    luck: { id: "luck", name: "幸运", effect: "幸运 +5，提高普通敌人材料掉落概率", family: "资源", short: "幸" },
+    harvesting: { id: "harvesting", name: "收获", effect: "收获 +5，每关结算材料 +1", family: "资源", short: "收" }
   };
+
+  function makeExperienceAllocations() {
+    const allocations = {};
+    Object.keys(EXPERIENCE_STATS).forEach(function (id) { allocations[id] = 0; });
+    return allocations;
+  }
 
   const MODULES = {
     copy: {
@@ -252,15 +266,22 @@
     const copyLevel = test.modules.copy;
     const archiveLevel = test.modules.archive;
     const experience = test.experienceAllocations;
-    const damage = 18 * Math.pow(1.05, experience.damage) * Math.pow(1.15, tip.damage);
+    const damage = 18 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage);
     const rangeScale = Math.pow(1.1, tail.range);
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: 1.05 * Math.pow(0.88, body.attackSpeed),
-      range: 720 * rangeScale,
+      cooldown: 1.05 * Math.pow(0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
+      range: 720 * rangeScale + (experience.range || 0) * 15,
       pierce: 4 + tip.pierce,
       amount: 1 + body.amount,
       width: 8 * Math.pow(1.12, tail.range),
+      markerFixedHpRegen: (experience.hpRegen || 0) * 0.8,
+      markerFixedLifeStealChance: (experience.lifeSteal || 0) * 0.015,
+      markerFixedCritChance: (experience.critChance || 0) * 0.03,
+      markerFixedArmor: experience.armor || 0,
+      markerFixedDodgeChance: Math.min(0.6, (experience.dodge || 0) * 0.03),
+      markerFixedLuck: (experience.luck || 0) * 5,
+      markerFixedHarvesting: (experience.harvesting || 0) * 5,
       markerFixedTest: true,
       markerFixedCopyLevel: copyLevel,
       markerFixedArchiveLevel: archiveLevel,
@@ -277,10 +298,10 @@
       markerFixedFullscreenChance: 0.15,
       markerFixedFullscreenCooldown: 4.5
     });
-    const expectedMaxHp = 600 + experience.health * 12;
+    const expectedMaxHp = 600 + (experience.maxHp || 0) * 12;
     if (state.maxHp !== expectedMaxHp) state.maxHp = expectedMaxHp;
     state.hp = Math.min(state.hp, state.maxHp);
-    state.player.speed = 220 * Math.pow(1.04, experience.moveSpeed);
+    state.player.speed = 220 * Math.pow(1.03, experience.moveSpeed || 0);
     if (state.activeForm) {
       state.activeForm.displayName = "马克笔 · 三线成长测试";
       state.activeForm.short = "经验稳定成长；复写与留档改变攻击；组件只强化属性";
@@ -488,7 +509,17 @@
   function makeExperienceChoices(state) {
     const test = runtime(state);
     if (!test) return [];
-    return Object.keys(EXPERIENCE_STATS).map(function (id) {
+    if (!test.experienceOfferIds || test.experienceOfferIds.length !== 4) {
+      const pool = Object.keys(EXPERIENCE_STATS);
+      for (let index = pool.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const held = pool[index];
+        pool[index] = pool[swapIndex];
+        pool[swapIndex] = held;
+      }
+      test.experienceOfferIds = pool.slice(0, 4);
+    }
+    return test.experienceOfferIds.map(function (id) {
       const stat = EXPERIENCE_STATS[id];
       return {
         id,
@@ -526,6 +557,7 @@
       return;
     }
     state.previousMode = "combat";
+    test.experienceOfferIds = [];
     state.upgradeChoices = makeExperienceChoices(state);
     state.mode = "level_up";
   }
@@ -537,9 +569,10 @@
     test.experienceAllocations[statId] += 1;
     test.pendingExperiencePoints -= 1;
     rebuildParams(state);
-    if (statId === "health") state.hp = Math.min(state.maxHp, previousHp + 12);
+    if (statId === "maxHp") state.hp = Math.min(state.maxHp, previousHp + 12);
     test.lastExperienceChoice = statId;
     if (test.pendingExperiencePoints > 0) {
+      test.experienceOfferIds = [];
       state.upgradeChoices = makeExperienceChoices(state);
       state.mode = "level_up";
     } else {
@@ -566,18 +599,22 @@
     const encounter = currentEncounter(state);
     if (!test || !encounter || !test.collecting || encounter.id <= test.completedEncounters) return;
     const autoCollected = collectLoosePickups(state);
-    state.materials += encounter.materialReward;
-    state.stats.materialsCollected += encounter.materialReward;
-    test.stageMaterialsEarned += encounter.materialReward;
-    test.materialsSinceLastShop += encounter.materialReward;
-    test.lastStageReward = encounter.materialReward;
+    const harvestingReward = test.experienceAllocations.harvesting || 0;
+    const stageReward = encounter.materialReward + harvestingReward;
+    state.materials += stageReward;
+    state.stats.materialsCollected += stageReward;
+    test.stageMaterialsEarned += stageReward;
+    test.harvestingMaterialsEarned += harvestingReward;
+    test.materialsSinceLastShop += stageReward;
+    test.lastStageReward = stageReward;
     test.completedEncounters = encounter.id;
     test.completedEncounterOrder.push(encounter.id);
     test.lastEncounterSummary = {
       id: encounter.id,
       phase: encounter.phase,
       autoCollected,
-      materialReward: encounter.materialReward,
+      materialReward: stageReward,
+      harvestingReward,
       remainingEnemiesDispersed: test.enemiesDispersedAtCollection,
       spawned: test.encounterSpawned,
       quota: encounter.spawnTotal
@@ -597,10 +634,14 @@
     if (immediate) finishCollection(state);
   }
 
-  function tick(state) {
+  function tick(state, dt) {
     const test = runtime(state);
     if (!test || state.mode !== "combat") return;
     test.elapsed = totalElapsed(state);
+    test.lifeStealCooldown = Math.max(0, test.lifeStealCooldown - (dt || 0));
+    if (!test.collecting && state.hp > 0 && state.hp < state.maxHp && state.activeFormParams.markerFixedHpRegen > 0) {
+      state.hp = Math.min(state.maxHp, state.hp + state.activeFormParams.markerFixedHpRegen * (dt || 0));
+    }
     if (test.collecting) test.collectionTime = state.warmupTime;
   }
 
@@ -657,12 +698,12 @@
         moduleOrder: [], moduleChoiceIndex: 0, lastModule: "",
         parts: { tip: makePartState("tip"), body: makePartState("body"), tail: makePartState("tail") },
         experienceLevels: 0, pendingExperiencePoints: 0, lastExperienceGain: null, lastExperienceChoice: "",
-        experienceAllocations: { damage: 0, health: 0, moveSpeed: 0, pickup: 0 },
+        experienceAllocations: makeExperienceAllocations(), experienceOfferIds: [], lifeStealCooldown: 0,
         currentEncounterIndex: 0, currentPhase: 1, currentPhaseStep: 1,
         encounterSpawned: 0, collecting: false, collectionTime: 0, collectionStartedFor: 0,
         enemiesDispersedAtCollection: 0, lastCollection: null, postCollectionRoute: "",
         completedEncounters: 0, completedEncounterOrder: [], completedStages: 0,
-        stageMaterialsEarned: 0, dropMaterialsEarned: 0, materialsSpent: 0, componentsBought: 0,
+        stageMaterialsEarned: 0, harvestingMaterialsEarned: 0, dropMaterialsEarned: 0, materialsSpent: 0, componentsBought: 0,
         materialsSinceLastShop: 0, lastShopIncome: 0, lastStageReward: 0, lastAutoCollect: null,
         shopIndex: 0, currentShopStage: 0, currentShopEncounter: 0, rerolls: 0, refreshCost: REFRESH_BASE_COST,
         offers: [], carriedLocks: [], pendingStatPart: "", pendingQualityIndex: 0,
