@@ -118,6 +118,9 @@ const scripts = [
   "src/v2/data/form-signatures.js",
   "src/v2/audio/audio.js",
   "src/v2/compat/legacy.js",
+  "src/v2/demo-v2/phase-a.js",
+  "src/v2/demo-v2/phase-b.js",
+  "src/v2/demo-v2/marker-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",
@@ -150,6 +153,593 @@ if (failed.length) {
 }
 
 const V2 = sandbox.CS.V2;
+const phaseA = V2.demoV2 && V2.demoV2.phaseA;
+if (!phaseA || phaseA.duration !== 60 || phaseA.enemyFloor < 12 || phaseA.enemyCap !== 60) {
+  console.error("Demo V2 Phase A contract missing or drifted", phaseA);
+  process.exit(1);
+}
+if (phaseA.waves.map((wave) => wave.id).join(",") !== "queue,cluster,pursuit,review"
+  || Object.keys(phaseA.weaponOverrides).sort().join(",") !== "marker,sticky_note,thermos") {
+  console.error("Demo V2 Phase A must stay locked to three weapons and four wave grammars", phaseA);
+  process.exit(1);
+}
+V2.dispatch({ type: "INIT", demoV2Phase: "phase-a" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+let phaseAState = V2.getState();
+if (phaseAState.mode !== "combat" || phaseAState.stage.demoV2Phase !== "phase-a" || phaseAState.stageTime !== 60
+  || phaseAState.badgeDept || !phaseAState.activeFormParams.demoV2BaseBranch) {
+  console.error("Demo V2 Phase A did not start as an isolated marker weapon test", phaseAState);
+  process.exit(1);
+}
+V2.dispatch({ type: "GAIN_XP", amount: 999 });
+if (V2.getState().mode !== "combat" || V2.getState().level !== 1) {
+  console.error("Demo V2 Phase A must not open the legacy level-up flow");
+  process.exit(1);
+}
+V2.dispatch({ type: "COMPLETE_STAGE" });
+if (V2.getState().mode !== "result" || !V2.getState().flags.won) {
+  console.error("Demo V2 Phase A must finish directly in its result screen");
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "phase-a" });
+V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
+phaseAState = V2.getState();
+const thermosPhaseA = phaseAState.activeFormParams;
+if (!thermosPhaseA.demoV2SteamFan || thermosPhaseA.steamRange >= phaseA.weaponOverrides.marker.range * 0.5
+  || thermosPhaseA.steamWidth < thermosPhaseA.steamRange * 0.75 || thermosPhaseA.steamDuration <= thermosPhaseA.cooldown
+  || thermosPhaseA.steamSlow <= 0 || thermosPhaseA.releaseWidth < thermosPhaseA.releaseRange * 0.9) {
+  console.error("Demo V2 Thermos must remain a short, wide, persistent control fan instead of a Marker-like beam", thermosPhaseA);
+  process.exit(1);
+}
+phaseAState.enemies = [{
+  id: "phase-a-thermos-target",
+  typeId: "todo",
+  x: phaseAState.player.x + 120,
+  y: phaseAState.player.y,
+  r: 14,
+  hp: 200,
+  maxHp: 200,
+  speed: 0,
+  baseSpeed: 0,
+  damage: 0,
+  dead: false,
+  color: "#ffffff"
+}];
+V2.combat.fireWeapon(phaseAState);
+if (!phaseAState.damageZones.some((zone) => zone.type === "polygon" && zone.source === "thermos_warmup" && zone.slow > 0 && zone.life > thermosPhaseA.cooldown)) {
+  console.error("Demo V2 Thermos warmup did not create its persistent slowing fan", phaseAState.damageZones);
+  process.exit(1);
+}
+thermosPhaseA.heat = 75;
+V2.combat.fireWeapon(phaseAState);
+if (!phaseAState.damageZones.some((zone) => zone.type === "polygon" && zone.source === "thermos_release" && zone.slow >= thermosPhaseA.steamSlow)) {
+  console.error("Demo V2 Thermos boil did not expand the persistent fan", phaseAState.damageZones);
+  process.exit(1);
+}
+console.log("OK Demo V2 Phase A contract: 3 weapons, 4 wave grammars, 60 seconds, no legacy progression; Thermos uses a short wide control fan");
+V2.dispatch({ type: "RESTART" });
+
+const phaseB = V2.demoV2 && V2.demoV2.phaseB;
+if (!phaseB || phaseB.duration !== 180 || Object.keys(phaseB.modules).sort().join(",") !== "archive,copy,expedite,forward,merge,overdraft"
+  || Object.keys(phaseB.representative).sort().join(",") !== "marker,sticky_note,thermos") {
+  console.error("Demo V2 Phase B contract missing or drifted", phaseB);
+  process.exit(1);
+}
+const phaseBExpectations = {
+  marker: { dept: "tech", mechanic: "line_split" },
+  thermos: { dept: "product", mechanic: "charge_release_beam" },
+  sticky_note: { dept: "general", mechanic: "trap_link_control_zone" }
+};
+for (const weaponId of Object.keys(phaseBExpectations)) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "phase-b" });
+  V2.dispatch({ type: "START_RUN", weaponId });
+  const state = V2.getState();
+  if (state.stage.demoV2Phase !== "phase-b" || state.stageTime !== 180 || state.badgeDept || state.level !== 1) {
+    console.error("Demo V2 Phase B must begin with the isolated base weapon", weaponId, state);
+    process.exit(1);
+  }
+  state.stageTime = 150;
+  phaseB.tick(state);
+  const expected = phaseBExpectations[weaponId];
+  if (!state.demoV2.identityApplied || state.badgeDept !== expected.dept || state.activeForm.mechanicType !== expected.mechanic || state.mode !== "combat") {
+    console.error("Demo V2 Phase B representative identity did not apply at 30 seconds", weaponId, state);
+    process.exit(1);
+  }
+  V2.dispatch({ type: "GAIN_XP", amount: 999 });
+  if (state.mode !== "combat" || state.level !== 1) {
+    console.error("Demo V2 Phase B leaked into legacy XP progression", weaponId, state.mode, state.level);
+    process.exit(1);
+  }
+  phaseB.applyModule(state, "copy");
+  const forwardOffer = phaseB.makeChoices(state).find((choice) => choice.id === "forward");
+  if (!forwardOffer || forwardOffer.combo.indexOf("：") < 0 || forwardOffer.combo.indexOf("组合流程成立") >= 0) {
+    console.error("Phase B combo cards must state the weapon-specific rule instead of a generic combo label", weaponId, forwardOffer);
+    process.exit(1);
+  }
+  phaseB.applyModule(state, "forward");
+  if (state.demoV2.moduleOrder.join(",") !== "copy,forward" || !state.demoV2.lastCombo.length) {
+    console.error("Demo V2 Phase B module combo was not recorded", weaponId, state.demoV2);
+    process.exit(1);
+  }
+  if (weaponId === "marker" && (state.activeFormParams.demoV2ParallelLines < 1 || !state.activeFormParams.secondarySplit || state.activeFormParams.splitCount !== 1)) {
+    console.error("Marker copy and forward must remain distinct: parallel main lines versus second-generation relay branches", state.activeFormParams);
+    process.exit(1);
+  }
+  if (weaponId === "thermos" && (!state.activeFormParams.demoV2SteamFan || state.activeFormParams.demoV2FanCount < 2 || !state.activeFormParams.demoV2ForwardHeatwave)) {
+    console.error("Thermos copy + forward did not preserve the fan or add outlets and relay heatwaves", state.activeFormParams);
+    process.exit(1);
+  }
+  if (weaponId === "sticky_note" && (state.activeFormParams.demoV2StickyCopies < 1 || !state.activeFormParams.demoV2StickyForward)) {
+    console.error("Sticky copy + forward did not add synchronous and relay nodes", state.activeFormParams);
+    process.exit(1);
+  }
+}
+function phaseBTarget(id, x, y) {
+  return { id, typeId: "todo", x, y, r: 14, hp: 500, maxHp: 500, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#ffffff", rooted: 0 };
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "phase-b" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+let markerModuleState = V2.getState();
+phaseB.applyIdentity(markerModuleState);
+phaseB.applyModule(markerModuleState, "copy");
+markerModuleState.enemies = [
+  phaseBTarget("copy-main", markerModuleState.player.x + 110, markerModuleState.player.y),
+  phaseBTarget("copy-lane", markerModuleState.player.x + 170, markerModuleState.player.y + markerModuleState.activeFormParams.demoV2ParallelSpacing)
+];
+V2.combat.fireWeapon(markerModuleState);
+if (!(markerModuleState.stats.damageDone.marker_module_copy > 0)
+  || !markerModuleState.formEvents.some((event) => event.source === "marker_module_copy")) {
+  console.error("Marker Copy must create and damage with a complete parallel main line", markerModuleState.stats.damageDone, markerModuleState.formEvents);
+  process.exit(1);
+}
+phaseB.applyModule(markerModuleState, "forward");
+markerModuleState.enemies = [
+  phaseBTarget("combo-main", markerModuleState.player.x + 105, markerModuleState.player.y),
+  phaseBTarget("combo-copy", markerModuleState.player.x + 160, markerModuleState.player.y + markerModuleState.activeFormParams.demoV2ParallelSpacing),
+  phaseBTarget("combo-relay", markerModuleState.player.x + 245, markerModuleState.player.y + 105)
+];
+markerModuleState.formEvents = [];
+V2.combat.fireWeapon(markerModuleState);
+if (!markerModuleState.formEvents.some((event) => event.source === "marker_module_forward" && event.meta && event.meta.generation === "copy-relay")) {
+  console.error("Marker Copy + Forward must turn parallel-line hits into additional relay origins", markerModuleState.formEvents);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "phase-b" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerModuleState = V2.getState();
+phaseB.applyIdentity(markerModuleState);
+phaseB.applyModule(markerModuleState, "archive");
+const archiveTarget = phaseBTarget("archive-target", markerModuleState.player.x + 150, markerModuleState.player.y);
+markerModuleState.enemies = [archiveTarget];
+V2.combat.fireWeapon(markerModuleState);
+const archiveZone = markerModuleState.damageZones.find((zone) => zone.source === "marker_module_archive");
+const hpAfterMarkerShot = archiveTarget.hp;
+V2.combat.qa.updateZones(markerModuleState, 0.02);
+if (!archiveZone || archiveZone.damage <= 0 || archiveZone.width < 16 || archiveTarget.hp >= hpAfterMarkerShot
+  || !(markerModuleState.stats.damageDone.marker_module_archive > 0)) {
+  console.error("Marker Archive must leave a wide, persistent line that deals real follow-up damage", archiveZone, hpAfterMarkerShot, archiveTarget.hp, markerModuleState.stats.damageDone);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "phase-b" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerModuleState = V2.getState();
+phaseB.applyIdentity(markerModuleState);
+phaseB.applyModule(markerModuleState, "forward");
+markerModuleState.enemies = [
+  phaseBTarget("forward-main", markerModuleState.player.x + 100, markerModuleState.player.y),
+  phaseBTarget("forward-first", markerModuleState.player.x + 100, markerModuleState.player.y + 90),
+  phaseBTarget("forward-second", markerModuleState.player.x + 210, markerModuleState.player.y + 90)
+];
+V2.combat.fireWeapon(markerModuleState);
+if (!(markerModuleState.stats.damageDone.marker_module_forward > 0)
+  || !markerModuleState.formEvents.some((event) => event.source === "marker_module_forward")) {
+  console.error("Marker Forward must relay from a first-generation branch into a new target", markerModuleState.stats.damageDone, markerModuleState.formEvents);
+  process.exit(1);
+}
+
+function phaseBModuleState(weaponId, moduleId, level) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "phase-b" });
+  V2.dispatch({ type: "START_RUN", weaponId });
+  const state = V2.getState();
+  phaseB.applyIdentity(state);
+  for (let index = 0; index < level; index++) phaseB.applyModule(state, moduleId);
+  return state;
+}
+
+const branchGrowth = {
+  marker: {
+    copy: (p) => p.demoV2ParallelLines,
+    archive: (p) => p.demoV2TrailDuration,
+    forward: (p) => p.secondarySplitCount,
+    expedite: (p) => p.demoV2MarkerExpedite ? 10 - p.demoV2MarkerExpediteEvery : 0,
+    merge: (p) => p.demoV2MarkerMerge,
+    overdraft: (p) => p.demoV2MarkerOverdraftLines
+  },
+  thermos: {
+    copy: (p) => p.demoV2FanCount - 1,
+    archive: (p) => p.demoV2ThermosArchive,
+    forward: (p) => p.demoV2ForwardHeatwave,
+    expedite: (p) => p.demoV2ThermosExpedite ? 10 - p.demoV2ThermosExpediteEvery : 0,
+    merge: (p) => p.demoV2ThermosMerge,
+    overdraft: (p) => p.demoV2ThermosOverdraft
+  },
+  sticky_note: {
+    copy: (p) => p.demoV2StickyCopies,
+    archive: (p) => p.demoV2StickyArchive,
+    forward: (p) => p.demoV2StickyForward,
+    expedite: (p) => p.demoV2StickyExpedite ? 10 - p.demoV2StickyExpediteEvery : 0,
+    merge: (p) => p.demoV2StickyMerge,
+    overdraft: (p) => p.demoV2StickyOverdraft
+  }
+};
+for (const weaponId of Object.keys(branchGrowth)) {
+  for (const moduleId of Object.keys(branchGrowth[weaponId])) {
+    const levelOne = phaseBModuleState(weaponId, moduleId, 1);
+    const levelOneGrowth = branchGrowth[weaponId][moduleId](levelOne.activeFormParams);
+    const levelThree = phaseBModuleState(weaponId, moduleId, 3);
+    const read = branchGrowth[weaponId][moduleId];
+    if (!(levelOneGrowth > 0) || !(read(levelThree.activeFormParams) > levelOneGrowth)) {
+      console.error("Every Phase B module must unlock a branch at Lv1 and visibly grow through Lv3", weaponId, moduleId, levelOneGrowth, read(levelThree.activeFormParams));
+      process.exit(1);
+    }
+  }
+}
+
+let moduleState = phaseBModuleState("marker", "expedite", 3);
+moduleState.stats.shots = moduleState.activeFormParams.demoV2MarkerExpediteEvery - 1;
+moduleState.enemies = [phaseBTarget("marker-expedite", moduleState.player.x + 130, moduleState.player.y)];
+V2.combat.fireWeapon(moduleState);
+if (!moduleState.formEvents.some((event) => event.source === "marker_module_expedite")) {
+  console.error("Marker Expedite must create an independent redraw line");
+  process.exit(1);
+}
+moduleState = phaseBModuleState("marker", "merge", 3);
+moduleState.enemies = [100, 170, 240].map((offset, index) => phaseBTarget("marker-merge-" + index, moduleState.player.x + offset, moduleState.player.y));
+V2.combat.fireWeapon(moduleState);
+if (!moduleState.damageZones.some((zone) => zone.source === "marker_module_merge")) {
+  console.error("Marker Merge must create an independent summary burst");
+  process.exit(1);
+}
+moduleState = phaseBModuleState("marker", "overdraft", 3);
+moduleState.stats.shots = moduleState.activeFormParams.demoV2OverdraftEvery - 1;
+moduleState.enemies = [phaseBTarget("marker-overdraft", moduleState.player.x + 130, moduleState.player.y)];
+V2.combat.fireWeapon(moduleState);
+if (moduleState.formEvents.filter((event) => event.source === "marker_module_overdraft").length < moduleState.activeFormParams.demoV2MarkerOverdraftLines) {
+  console.error("Marker Overdraft must add one visible line per level-grown branch");
+  process.exit(1);
+}
+
+moduleState = phaseBModuleState("thermos", "copy", 3);
+moduleState.enemies = [phaseBTarget("thermos-copy", moduleState.player.x + 150, moduleState.player.y)];
+V2.combat.fireWeapon(moduleState);
+if (moduleState.damageZones.filter((zone) => zone.source === "thermos_warmup").length < 4) {
+  console.error("Thermos Copy Lv3 must create three independent outlets in addition to the base fan");
+  process.exit(1);
+}
+for (const moduleId of ["archive", "expedite", "merge", "overdraft"]) {
+  moduleState = phaseBModuleState("thermos", moduleId, 3);
+  moduleState.enemies = [phaseBTarget("thermos-" + moduleId, moduleState.player.x + 150, moduleState.player.y)];
+  if (moduleId === "expedite") moduleState.stats.shots = moduleState.activeFormParams.demoV2ThermosExpediteEvery - 1;
+  if (moduleId === "merge" || moduleId === "overdraft") moduleState.activeFormParams.heat = moduleState.activeFormParams.heatMax - moduleState.activeFormParams.heatRate;
+  V2.combat.fireWeapon(moduleState);
+  const source = "thermos_module_" + moduleId;
+  if (!moduleState.damageZones.some((zone) => zone.source === source)) {
+    console.error("Thermos module must create its own combat branch", moduleId, moduleState.damageZones);
+    process.exit(1);
+  }
+}
+moduleState = phaseBModuleState("thermos", "forward", 3);
+const forwardVictim = phaseBTarget("thermos-forward", moduleState.player.x + 100, moduleState.player.y);
+forwardVictim.hp = 1;
+moduleState.enemies = [forwardVictim];
+V2.combat.qa.damageEnemy(moduleState, forwardVictim, 2, "thermos_release");
+if (moduleState.damageZones.filter((zone) => zone.source === "thermos_module_heatwave").length !== 3) {
+  console.error("Thermos Forward must add one death heatwave per level");
+  process.exit(1);
+}
+
+function closeStickyBoard(state) {
+  state.enemies = [phaseBTarget("sticky-board", state.player.x + 150, state.player.y)];
+  for (let index = 0; index < 3; index++) {
+    V2.combat.fireWeapon(state);
+    V2.combat.qa.updateZones(state, 0.34);
+  }
+}
+moduleState = phaseBModuleState("sticky_note", "copy", 3);
+moduleState.enemies = [phaseBTarget("sticky-copy", moduleState.player.x + 150, moduleState.player.y)];
+V2.combat.fireWeapon(moduleState);
+if (moduleState.damageZones.filter((zone) => zone.noticeNode).length < 4) {
+  console.error("Sticky Copy Lv3 must add three synchronized nodes to the base placement");
+  process.exit(1);
+}
+moduleState = phaseBModuleState("sticky_note", "expedite", 3);
+moduleState.stats.shots = moduleState.activeFormParams.demoV2StickyExpediteEvery - 1;
+moduleState.enemies = [phaseBTarget("sticky-expedite", moduleState.player.x + 150, moduleState.player.y)];
+V2.combat.fireWeapon(moduleState);
+if (!moduleState.damageZones.some((zone) => zone.source === "sticky_module_expedite")) {
+  console.error("Sticky Expedite must create an independent urgent annotation");
+  process.exit(1);
+}
+for (const moduleId of ["archive", "overdraft"]) {
+  moduleState = phaseBModuleState("sticky_note", moduleId, 3);
+  moduleState.enemies = [phaseBTarget("sticky-expiry-" + moduleId, moduleState.player.x + 150, moduleState.player.y)];
+  V2.combat.fireWeapon(moduleState);
+  const originalNode = moduleState.damageZones.find((zone) => zone.noticeNode);
+  originalNode.life = 0.01;
+  V2.combat.qa.updateZones(moduleState, 0.02);
+  const source = "sticky_module_" + moduleId;
+  if (!moduleState.damageZones.some((zone) => zone.source === source)) {
+    console.error("Sticky expiry module must create its own combat branch", moduleId, moduleState.damageZones);
+    process.exit(1);
+  }
+}
+moduleState = phaseBModuleState("sticky_note", "archive", 3);
+closeStickyBoard(moduleState);
+if (moduleState.formEvents.filter((event) => event.source === "sticky_module_archive").length < 3) {
+  console.error("Sticky Archive must create visible echo nodes immediately when a board closes");
+  process.exit(1);
+}
+moduleState = phaseBModuleState("sticky_note", "merge", 3);
+closeStickyBoard(moduleState);
+if (moduleState.formEvents.filter((event) => event.source === "sticky_module_merge").length !== 3) {
+  console.error("Sticky Merge must add one closure pulse per level");
+  process.exit(1);
+}
+moduleState = phaseBModuleState("sticky_note", "forward", 3);
+closeStickyBoard(moduleState);
+if (moduleState.damageZones.filter((zone) => zone.source === "sticky_notice_relay").length !== 3) {
+  console.error("Sticky Forward must add one relay node per level");
+  process.exit(1);
+}
+console.log("OK Demo V2 module branch gate: all 18 weapon-module mappings unlock at Lv1, grow through Lv3, and Thermos/Sticky create distinct runtime branches");
+console.log("OK Demo V2 Phase B contract: 3 minutes, three fixed representative identities, six lightweight modules, weapon-specific copy + forward combos, no legacy XP");
+
+const markerFixed = V2.demoV2 && V2.demoV2.markerFixed;
+if (!markerFixed || markerFixed.duration !== 890 || markerFixed.phaseCount !== 5 || markerFixed.encounterCount !== 17
+  || markerFixed.encounters.length !== 17 || markerFixed.shopCount !== 6
+  || markerFixed.moduleEncounters.join(",") !== "3,6,9,12"
+  || markerFixed.shopEncounters.join(",") !== "2,5,8,11,14,16"
+  || markerFixed.moduleTimes.length !== 4 || markerFixed.shopTimes.length !== 6
+  || markerFixed.componentCost !== 7 || markerFixed.refreshBaseCost !== 2 || markerFixed.collectionDuration !== 10 || markerFixed.guaranteedMaterialTotal !== 124
+  || markerFixed.encounters.some((encounter) => !encounter.spawnTotal || !encounter.enemyTypes || !encounter.preview)
+  || markerFixed.encounters[9].enemyHp < markerFixed.encounters[7].enemyHp * 1.8
+  || [1, 2, 3, 4, 5].map((phase) => markerFixed.encounters.filter((encounter) => encounter.phase === phase).length).join(",") !== "3,3,3,3,5"
+  || Object.keys(markerFixed.modules).sort().join(",") !== "archive,copy"
+  || Object.keys(markerFixed.parts).sort().join(",") !== "body,tail,tip"
+  || Object.keys(markerFixed.experienceStats).sort().join(",") !== "damage,health,moveSpeed,pickup") {
+  console.error("Marker fixed-type test contract missing or drifted", markerFixed);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
+let markerFixedState = V2.getState();
+if (markerFixedState.selectedWeaponId !== "marker" || markerFixedState.stage.demoV2Phase !== "marker-fixed"
+  || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1) {
+  console.error("Marker fixed test must force the marker and remain isolated", markerFixedState.selectedWeaponId, markerFixedState.stage);
+  process.exit(1);
+}
+markerFixedState.pickups = [];
+V2.combat.qa.damageEnemy(markerFixedState, {
+  id: "marker-fixed-elite-drop", typeId: "meeting", x: 500, y: 360, r: 14,
+  hp: 1, maxHp: 1, xp: 10, damage: 0, dead: false, markerFixedElite: true
+}, 2, "marker_test_base");
+if (!markerFixedState.pickups.some((pickup) => pickup.type === "xp")
+  || !markerFixedState.pickups.some((pickup) => pickup.type === "material" && pickup.markerFixedDrop)) {
+  console.error("Marker elites must drop separate proximity-picked XP and material entities", markerFixedState.pickups);
+  process.exit(1);
+}
+const baseMarkerDamage = markerFixedState.activeFormParams.damage;
+const baseMarkerMaxHp = markerFixedState.maxHp;
+V2.dispatch({ type: "GAIN_XP", amount: 999 });
+if (markerFixedState.level <= 1 || markerFixedState.mode !== "combat"
+  || markerFixedState.activeFormParams.damage !== baseMarkerDamage || markerFixedState.maxHp !== baseMarkerMaxHp
+  || markerFixedState.demoV2.marker.pendingExperiencePoints <= 0
+  || markerFixedState.demoV2.marker.experienceLevels !== markerFixedState.level - 1) {
+  console.error("Marker XP must queue player-assigned stat points without interrupting combat", markerFixedState.level, markerFixedState.mode, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixed.applyModule(markerFixedState, "copy", true);
+markerFixed.applyModule(markerFixedState, "copy", true);
+markerFixed.applyModule(markerFixedState, "archive", true);
+if (markerFixedState.activeFormParams.markerFixedParallelLines !== 2 || markerFixedState.activeFormParams.markerFixedArchiveTrails !== 1
+  || markerFixedState.demoV2.marker.modules.copy !== 2 || markerFixedState.demoV2.marker.modules.archive !== 1) {
+  console.error("Marker modules must independently rebuild mechanism parameters", markerFixedState.activeFormParams, markerFixedState.demoV2.marker.modules);
+  process.exit(1);
+}
+markerFixedState.enemies = [{ id: "marker-fixed-target", typeId: "todo", x: markerFixedState.player.x + 180, y: markerFixedState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 }];
+V2.combat.fireWeapon(markerFixedState);
+if (!markerFixedState.formEvents.some((event) => event.source === "marker_test_copy")
+  || !markerFixedState.damageZones.some((zone) => zone.source === "marker_test_archive")) {
+  console.error("Copy and Archive must create distinct instant-line and persistent-zone branches", markerFixedState.formEvents, markerFixedState.damageZones);
+  process.exit(1);
+}
+const markerRuntime = markerFixedState.demoV2.marker;
+const modulesBeforeComponents = JSON.stringify(markerRuntime.modules);
+markerFixedState.materials = 500;
+for (let copy = 0; copy < 8; copy++) {
+  const offer = { id: "forced-tip-" + copy, partId: "tip", cost: 10, sold: false, locked: false };
+  markerRuntime.offers = [offer];
+  markerFixed.buyComponent(markerFixedState, offer.id);
+  if (markerRuntime.pendingStatPart) markerFixed.chooseComponentStat(markerFixedState, copy % 2 ? "pierce" : "damage");
+}
+if (markerRuntime.parts.tip.copies !== 8 || markerFixed.qualityIndex(markerRuntime.parts.tip.copies) !== 4
+  || markerRuntime.parts.tip.allocations.damage + markerRuntime.parts.tip.allocations.pierce !== 4
+  || JSON.stringify(markerRuntime.modules) !== modulesBeforeComponents) {
+  console.error("Component quality/stat choices must be cumulative and must not mutate modules", markerRuntime.parts.tip, markerRuntime.modules);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerFixedState = V2.getState();
+markerFixedState.warmupTime = 0;
+markerFixedState.stageTime = 0;
+markerFixedState.demoV2.marker.encounterSpawned = markerFixed.encounters[0].spawnTotal - 1;
+markerFixedState.enemies = [{ id: "quota-not-cleared", typeId: "todo", hp: 10, maxHp: 10, dead: false, boss: false, x: 500, y: 360, r: 12, speed: 0, baseSpeed: 0, damage: 0, rooted: 0 }];
+V2.combat.update(0.05);
+if (markerFixedState.mode !== "combat" || markerFixedState.demoV2.marker.collecting) {
+  console.error("Timer expiry alone must not clear a fixed-quota normal encounter", markerFixedState.mode, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixedState.pickups = [
+  { type: "xp", amount: markerFixedState.xpNeed, x: 0, y: 0, radius: 6 },
+  { type: "material", amount: 3, x: 0, y: 0, radius: 6, markerFixedDrop: true }
+];
+markerFixedState.enemies = [];
+markerFixedState.demoV2.marker.encounterSpawned = markerFixed.encounters[0].spawnTotal;
+V2.combat.update(0.05);
+if (markerFixedState.mode !== "combat" || !markerFixedState.demoV2.marker.collecting || markerFixedState.warmupTime !== 10
+  || markerFixedState.pickups.length !== 2 || markerFixedState.enemies.length !== 0) {
+  console.error("Every encounter must enter a 10-second pickup window before routing onward", markerFixedState.mode, markerFixedState.demoV2.marker, markerFixedState.pickups);
+  process.exit(1);
+}
+markerFixed.finishCollection(markerFixedState);
+if (markerFixedState.mode !== "level_up" || markerFixedState.materials !== 10 || markerFixedState.level !== 2
+  || markerFixedState.demoV2.marker.lastAutoCollect.xp <= 0 || markerFixedState.demoV2.marker.lastAutoCollect.materials !== 3) {
+  console.error("Collection expiry must auto-pick leftovers, grant stage materials, and open queued XP choices", markerFixedState.mode, markerFixedState.materials, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixed.chooseExperienceStat(markerFixedState, "damage");
+if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 2 || markerFixedState.activeFormParams.damage <= baseMarkerDamage) {
+  console.error("Spending the final XP point must apply the chosen stat and continue to encounter 2", markerFixedState.mode, markerFixedState.stage.id, markerFixedState.activeFormParams.damage);
+  process.exit(1);
+}
+markerFixed.completeEncounter(markerFixedState, true);
+if (markerFixedState.mode !== "component_shop" || markerFixedState.demoV2.marker.offers.length !== 4
+  || markerFixedState.demoV2.marker.refreshCost !== 2 || markerFixedState.demoV2.marker.currentShopEncounter !== 2
+  || markerFixedState.materials !== 17) {
+  console.error("Encounter 2 must open shop 1 with four white offers and at least two guaranteed purchases", markerFixedState.mode, markerFixedState.demoV2.marker.offers, markerFixedState.materials);
+  process.exit(1);
+}
+const lockedPart = markerFixedState.demoV2.marker.offers[0].partId;
+markerFixed.toggleOfferLock(markerFixedState, markerFixedState.demoV2.marker.offers[0].id);
+markerFixed.refreshShop(markerFixedState);
+if (markerFixedState.demoV2.marker.refreshCost !== 4
+  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.locked)) {
+  console.error("Shop refresh cost must rise and locked offers must survive rerolls", markerFixedState.demoV2.marker.refreshCost, markerFixedState.demoV2.marker.offers);
+  process.exit(1);
+}
+markerFixed.closeShop(markerFixedState);
+if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 3 || !markerFixedState.stage.boss) {
+  console.error("Closing shop 1 must enter encounter 3 Boss instead of another choice screen", markerFixedState.mode, markerFixedState.stage);
+  process.exit(1);
+}
+markerFixedState.warmupTime = 0;
+V2.combat.update(0.05);
+const markerBoss = markerFixedState.enemies.find((enemy) => enemy.markerFixedBoss);
+if (!markerBoss || markerBoss.markerFixedBossMaterial !== 2 || !markerFixedState.stageBossSpawned) {
+  console.error("Marker Boss encounters must spawn a real Boss with stable material drops", markerBoss, markerFixedState.stageBossSpawned);
+  process.exit(1);
+}
+for (let hit = 0; hit < 12 && !markerBoss.dead; hit++) V2.combat.qa.damageEnemy(markerFixedState, markerBoss, markerBoss.maxHp, "marker_test_base");
+V2.combat.update(0.05);
+if (markerFixedState.mode !== "combat" || markerFixedState.demoV2.marker.collecting) {
+  console.error("Killing a Boss early must not end the encounter before time expires or adds are cleared", markerFixedState.mode, markerFixedState.stageTime, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixedState.stageTime = 0;
+V2.combat.update(0.05);
+if (!markerFixedState.demoV2.marker.collecting || markerFixedState.warmupTime !== 10) {
+  console.error("Boss death plus timer expiry must enter the pickup window", markerFixedState.mode, markerFixedState.stageTime, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixed.finishCollection(markerFixedState);
+if (markerFixedState.mode !== "module_select" || markerFixedState.demoV2.marker.currentShopStage !== 0
+  || markerFixedState.pickups.length !== 0) {
+  console.error("Encounter 3 collection must resolve into module choice without opening a shop", markerFixedState.mode, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+markerFixed.applyModule(markerFixedState, "copy");
+if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 4) {
+  console.error("Module choice must be followed by a full combat encounter", markerFixedState.mode, markerFixedState.stage);
+  process.exit(1);
+}
+markerFixed.completeEncounter(markerFixedState, true);
+markerFixed.completeEncounter(markerFixedState, true);
+if (markerFixedState.mode !== "component_shop" || markerFixedState.demoV2.marker.shopIndex !== 2
+  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.locked)) {
+  console.error("Encounter 5 must open shop 2 and carry the previously locked offer", markerFixedState.mode, markerFixedState.demoV2.marker.offers);
+  process.exit(1);
+}
+markerFixedState.demoV2.marker.parts.tail.copies = 4;
+const guaranteedOffers = markerFixed.makeShopOffers(markerFixedState, [], true);
+if (!guaranteedOffers.some((offer) => offer.partId === "tail")) {
+  console.error("A purple unfinished component must be guaranteed once on first shop open", guaranteedOffers);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerFixedState = V2.getState();
+const shopsSeen = [];
+const modulesSeen = [];
+while (markerFixedState.mode !== "result") {
+  const encounter = markerFixed.currentEncounter(markerFixedState);
+  if (!encounter) break;
+  if (encounter.bossMaterial) {
+    markerFixedState.pickups.push({ type: "material", amount: encounter.bossMaterial, x: 0, y: 0, radius: 6, markerFixedDrop: true });
+  }
+  markerFixed.completeEncounter(markerFixedState, true);
+  if (markerFixedState.mode === "component_shop") {
+    shopsSeen.push(encounter.id);
+    markerFixed.closeShop(markerFixedState);
+  } else if (markerFixedState.mode === "module_select") {
+    modulesSeen.push(encounter.id);
+    markerFixed.applyModule(markerFixedState, modulesSeen.length % 2 ? "copy" : "archive");
+  }
+}
+if (markerFixedState.mode !== "result" || markerFixedState.demoV2.marker.completedEncounters !== 17
+  || shopsSeen.join(",") !== "2,5,8,11,14,16" || modulesSeen.join(",") !== "3,6,9,12"
+  || markerFixedState.materials !== markerFixed.guaranteedMaterialTotal
+  || markerFixedState.demoV2.marker.moduleChoiceIndex !== 4) {
+  console.error("The fixed 17-encounter schedule, six shops, four modules, or guaranteed economy drifted", shopsSeen, modulesSeen, markerFixedState.materials, markerFixedState.demoV2.marker);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerFixedState = V2.getState();
+for (let index = 0; index < 4; index++) markerFixed.applyModule(markerFixedState, "copy", true);
+if (markerFixedState.activeFormParams.markerFixedBaseLineScale >= 1
+  || markerFixedState.activeFormParams.markerFixedCopyLineScale >= markerFixedState.activeFormParams.markerFixedBaseLineScale
+  || markerFixedState.activeFormParams.markerFixedSecondRoundScale >= 1) {
+  console.error("Stage-4 Copy growth must add visible lines without letting every line inherit full damage", markerFixedState.activeFormParams);
+  process.exit(1);
+}
+markerFixedState.activeFormParams.markerFixedFullscreenChance = 1;
+markerFixedState.enemies = [{ id: "copy-ultimate-target", typeId: "todo", x: markerFixedState.player.x + 180, y: markerFixedState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 }];
+V2.combat.fireWeapon(markerFixedState);
+if (!markerFixedState.formEvents.some((event) => event.source === "marker_test_fullscreen_copy")) {
+  console.error("Copy Lv4 must produce a non-recursive fullscreen laser event");
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+markerFixedState = V2.getState();
+for (let index = 0; index < 4; index++) markerFixed.applyModule(markerFixedState, "archive", true);
+markerFixedState.activeFormParams.markerFixedFullscreenChance = 1;
+markerFixedState.enemies = [{ id: "archive-ultimate-target", typeId: "todo", x: markerFixedState.player.x + 180, y: markerFixedState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 }];
+V2.combat.fireWeapon(markerFixedState);
+if (!markerFixedState.damageZones.some((zone) => zone.source === "marker_test_fullscreen_archive")) {
+  console.error("Archive Lv4 must produce a temporary fullscreen ink zone");
+  process.exit(1);
+}
+console.log("OK Demo V2.0 Marker: fixed quotas, 10-second collection, player-assigned XP stats, Boss dual-condition completion, cheaper components, stage-4 damage falloff, 17 encounters / 6 shops / 4 modules");
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT" });
 const VISUAL_TIMELINE_STAGES = new Set(["anticipation", "release", "impact", "residual", "fade"]);
 const visualSources = Object.keys(V2.weaponEventPhases || {});
 if (!visualSources.length || visualSources.length !== Object.keys(V2.weaponVisualEvents || {}).length) {

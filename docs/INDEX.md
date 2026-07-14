@@ -1,6 +1,13 @@
 # 文档索引
 
-## 当前主线：v2.0
+## 下一目标：Demo V2
+
+- `DEMO_V2_PRODUCTION_BRIEF.md`：Demo V2 的目标、三武器/六形态/六模块冻结范围、敌人生态、8–10 分钟节奏、制作门禁和明确不做事项。
+- `DEMO_V2_MARKER_FIXED_TEST.md`：Demo V2.0 马克笔固定测试的 17 关配额、10 秒收集期、Boss 双条件、经验属性商店、组件经济与阶段 4 数值限制。
+
+当前完整可运行版本仍是 Demo V1；Demo V2 阶段 A/B 与 Demo V2.0 马克笔候选分别通过 `Cubicle-Survivor-demo/demo-v2.html`、`demo-v2-b.html`、`demo-v2-marker.html` 独立试玩。Demo V2.0 仍是隔离测试入口，不替换默认 Demo V1 主线。
+
+## 当前可运行主线：Demo V1
 
 进入 `v2-framework/`。
 

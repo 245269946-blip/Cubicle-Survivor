@@ -152,6 +152,9 @@ const scripts = [
   "src/v2/data/form-signatures.js",
   "src/v2/audio/audio.js",
   "src/v2/compat/legacy.js",
+  "src/v2/demo-v2/phase-a.js",
+  "src/v2/demo-v2/phase-b.js",
+  "src/v2/demo-v2/marker-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",
@@ -1515,6 +1518,53 @@ function runActualFullCombatPath(config) {
   fail("Actual full combat path exceeded guard", config);
 }
 
+function runDemoV2PhaseA(config) {
+  resetScenarioSeed(config, "demo-v2-phase-a");
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "phase-a" });
+  V2.dispatch({ type: "START_RUN", weaponId: config.weaponId });
+  const start = V2.getState();
+  const startHp = start.hp;
+  let simulated = 0;
+  while (simulated < 64) {
+    const state = V2.getState();
+    if (state.mode !== "combat") break;
+    steerForSecond(state, simulated + (config.steerOffset || 0));
+    V2.combat.update(1 / 30);
+    simulated += 1 / 30;
+    if (sandbox.window._errors && sandbox.window._errors.length) fail("Runtime errors during Demo V2 Phase A", sandbox.window._errors);
+  }
+  const end = V2.getState();
+  clearInput(end);
+  const sources = Array.from(new Set((end.stats.weaponEvents || []).map(event => event.source))).sort();
+  const enemyTypes = Object.keys(end.stats.enemyTypesSpawned || {}).sort();
+  const expectedSource = {
+    marker: "marker_split",
+    thermos: "thermos_release",
+    sticky_note: "sticky_base"
+  }[config.weaponId];
+  if (end.flags.gameOver || end.mode !== "result" || !end.flags.won) fail("Demo V2 Phase A did not complete cleanly", { config, mode: end.mode, hp: end.hp, flags: end.flags });
+  if ((end.demoV2.wavesSeen || []).join(",") !== "queue,cluster,pursuit,review") fail("Demo V2 Phase A did not present all four wave grammars", { config, demoV2: end.demoV2 });
+  if ((end.stats.peakEnemies || 0) < 12 || (end.stats.peakEnemies || 0) > 60) fail("Demo V2 Phase A target density left its contract", { config, peakEnemies: end.stats.peakEnemies });
+  if (end.stageKills < 8 || sumDamage(end) <= 0 || end.stats.shots <= 0) fail("Demo V2 Phase A weapon produced too little combat output", { config, kills: end.stageKills, damage: sumDamage(end), shots: end.stats.shots });
+  if (end.level !== 1 || end.materials !== 0 || end.pickups.length) fail("Demo V2 Phase A leaked legacy progression rewards", { config, level: end.level, materials: end.materials, pickups: end.pickups.length });
+  if (enemyTypes.length < 6) fail("Demo V2 Phase A enemy ecology was not represented", { config, enemyTypes, counts: end.stats.enemyTypesSpawned });
+  if (expectedSource && sources.indexOf(expectedSource) < 0) fail("Demo V2 Phase A did not expose the weapon mother-theme event", { config, expectedSource, sources });
+  return {
+    weaponId: config.weaponId,
+    simulated: Number(simulated.toFixed(2)),
+    kills: end.stageKills,
+    damage: Number(sumDamage(end).toFixed(2)),
+    shots: end.stats.shots,
+    hpLost: Number(Math.max(0, startHp - end.hp).toFixed(2)),
+    peakEnemies: end.stats.peakEnemies,
+    wavesSeen: end.demoV2.wavesSeen,
+    waveCounts: end.stats.demoV2WaveCounts,
+    enemyTypes,
+    signatureSource: expectedSource
+  };
+}
+
 const V2 = loadGame();
 assertPackageAssets();
 assertStageModel(V2);
@@ -1523,6 +1573,14 @@ assertEnemyBehaviorContract();
 assertPauseViewModelContract(V2);
 assertFoundationContracts(V2);
 assertWeaponMechanicContracts(V2);
+
+const demoV2PhaseA = [
+  runDemoV2PhaseA({ weaponId: "marker", steerOffset: 0.1 }),
+  runDemoV2PhaseA({ weaponId: "thermos", steerOffset: 0.8 }),
+  runDemoV2PhaseA({ weaponId: "sticky_note", steerOffset: 1.5 })
+];
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT" });
 
 const combatSmokes = [
   runCombatSmoke({ label: "marker-base", weaponId: "marker", targetStageId: 1, seconds: 20, minKills: 3 }),
@@ -1554,6 +1612,7 @@ const report = {
   package: "Cubicle-Survivor-demo",
   staticRefs: collectStaticRefs().length,
   enemyThreatTypes: Array.from(new Set(V2.store.stageBlueprints.flatMap(stage => stage.enemyMix.map(item => item.type)))).sort(),
+  demoV2PhaseA,
   combatSmokes,
   pressureStages,
   actualFullCombatPaths,

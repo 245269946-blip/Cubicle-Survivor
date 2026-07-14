@@ -13,14 +13,14 @@
       process: "拉直线穿队列",
       visualCue: "细长蓝光束贯穿多个敌人",
       focus: ["贯穿", "走位", "队列"],
-      sources: ["marker_main"]
+      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive"]
     },
     line_split: {
       topology: "线性分裂",
       process: "主光束按距离贯穿；命中点锁定附近新目标，支线沿目标方向继续贯穿",
       visualCue: "蓝白主束串起命中点，青色支线只连接真实目标",
       focus: ["主束贯穿", "命中点锁敌", "支线贯穿", "二次锁敌"],
-      sources: ["marker_main", "marker_split", "marker_split_origin", "marker_secondary_split", "marker_fullscreen"]
+      sources: ["marker_main", "marker_split", "marker_split_origin", "marker_secondary_split", "marker_fullscreen", "marker_module_copy", "marker_module_archive", "marker_module_forward", "marker_module_expedite", "marker_module_merge", "marker_module_overdraft"]
     },
     mark_detonate: {
       topology: "标记引爆",
@@ -69,7 +69,7 @@
       process: "弱蒸汽蓄热，过热提高释放倍率；沸点喷出强蒸汽柱后进入空窗",
       visualCue: "蓝白蒸汽柱从细到粗爆开",
       focus: ["蓄力", "沸点", "空窗"],
-      sources: ["thermos_charge", "thermos_warmup", "thermos_release"]
+      sources: ["thermos_charge", "thermos_warmup", "thermos_release", "thermos_module_archive", "thermos_module_expedite", "thermos_module_merge", "thermos_module_overdraft", "thermos_module_heatwave"]
     },
     shield_break_pulse: {
       topology: "破盾热浪",
@@ -132,7 +132,7 @@
       process: "多张贴纸连线，三点围成控制区",
       visualCue: "蓝金贴纸拉线围成规则区",
       focus: ["连线", "围区", "控制"],
-      sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "secondary_sticky_link", "secondary_sticky_notice"]
+      sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "sticky_notice_relay", "sticky_module_archive", "sticky_module_expedite", "sticky_module_merge", "sticky_module_overdraft", "secondary_sticky_link", "secondary_sticky_notice"]
     }
   };
 
@@ -160,6 +160,18 @@
     marker_wave_return: "expand",
     marker_grid_line: "linger",
     marker_grid_field: "field",
+    marker_module_copy: "cast",
+    marker_module_archive: "linger",
+    marker_module_forward: "branch",
+    marker_module_expedite: "cast",
+    marker_module_merge: "detonate",
+    marker_module_overdraft: "ultimate",
+    marker_test_base: "cast",
+    marker_test_copy: "cast",
+    marker_test_second_round: "cast",
+    marker_test_archive: "linger",
+    marker_test_fullscreen_copy: "ultimate",
+    marker_test_fullscreen_archive: "ultimate",
     thermos_warmup: "charge",
     thermos_charge: "charge",
     thermos_release: "release",
@@ -180,6 +192,11 @@
     secondary_thermos_shield_break: "counter",
     secondary_thermos_tea_wave: "expand",
     secondary_thermos_station: "deploy",
+    thermos_module_archive: "linger",
+    thermos_module_expedite: "cast",
+    thermos_module_merge: "expand",
+    thermos_module_overdraft: "expand",
+    thermos_module_heatwave: "expand",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -202,6 +219,11 @@
     sticky_notice_align: "link",
     sticky_link_line: "link",
     sticky_notice_zone: "field",
+    sticky_notice_relay: "deploy",
+    sticky_module_archive: "deploy",
+    sticky_module_expedite: "control",
+    sticky_module_merge: "detonate",
+    sticky_module_overdraft: "detonate",
     secondary_sticky_link: "link",
     secondary_sticky_notice: "field",
     support_marker: "cast",
@@ -266,6 +288,18 @@
     secondary_counter: ["counter_line", "secondary_counter"],
     secondary_marker_wave: ["traveling_ring", "secondary_wave"],
     secondary_marker_grid: ["residual_line", "secondary_grid"],
+    marker_module_copy: ["piercing_line", "parallel_copy"],
+    marker_module_archive: ["residual_line", "archived_ink"],
+    marker_module_forward: ["branch_line", "second_generation"],
+    marker_module_expedite: ["scan_line", "rush_redraw"],
+    marker_module_merge: ["radial_blast", "summary_burst"],
+    marker_module_overdraft: ["scan_line", "overdraft_fan"],
+    marker_test_base: ["piercing_line", "fixed_test_base"],
+    marker_test_copy: ["piercing_line", "parallel_copy"],
+    marker_test_second_round: ["scan_line", "reacquired_second_round"],
+    marker_test_archive: ["residual_line", "persistent_ink"],
+    marker_test_fullscreen_copy: ["scan_line", "fullscreen_copy"],
+    marker_test_fullscreen_archive: ["residual_line", "fullscreen_archive"],
 
     thermos_warmup: ["steam_line", "heat_buildup"],
     thermos_charge: ["heat_orb", "boil_meter"],
@@ -287,6 +321,11 @@
     secondary_thermos_shield_break: ["traveling_ring", "secondary_break"],
     secondary_thermos_tea_wave: ["aroma_ring", "secondary_wave"],
     secondary_thermos_station: ["deployable_field", "secondary_station"],
+    thermos_module_archive: ["deployable_field", "condensation_archive"],
+    thermos_module_expedite: ["steam_line", "rush_outlet"],
+    thermos_module_merge: ["traveling_ring", "pressure_merge"],
+    thermos_module_overdraft: ["traveling_ring", "reverse_overpressure"],
+    thermos_module_heatwave: ["aroma_ring", "kill_forward"],
 
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],
@@ -312,6 +351,11 @@
     sticky_notice_zone: ["polygon_field", "closed_zone"],
     secondary_sticky_link: ["link_line", "secondary_link"],
     secondary_sticky_notice: ["polygon_field", "secondary_zone"],
+    sticky_notice_relay: ["placed_trap", "relay_node"],
+    sticky_module_archive: ["placed_trap", "archive_echo"],
+    sticky_module_expedite: ["control_mark", "rush_annotation"],
+    sticky_module_merge: ["radial_blast", "summary_pulse"],
+    sticky_module_overdraft: ["radial_blast", "expiry_overdraft"],
 
     support_marker: ["support_line", "borrowed_marker"],
     support_thermos_wave: ["support_ring", "borrowed_thermos"],

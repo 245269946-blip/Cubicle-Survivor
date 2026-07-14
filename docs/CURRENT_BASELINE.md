@@ -1,15 +1,46 @@
 # Cubicle Survivor Demo V1 Current Baseline
 
-Last verified: 2026-07-13
+Last verified: 2026-07-14
 
 This file is the first source to read before any project audit, plan, implementation, or playtest. Its purpose is to prevent the historical web prototype, early Demo V1 snapshots, and the active Demo V1 worktree from being confused again.
 
 ## Official naming
 
 - **Demo V1**: the current product version. It means this active worktree and the `Cubicle-Survivor-demo/` runnable package.
+- **Demo V2**: the newly approved production target documented in `docs/DEMO_V2_PRODUCTION_BRIEF.md`. Its isolated Phase A and Phase B tests are runnable at `Cubicle-Survivor-demo/demo-v2.html` and `Cubicle-Survivor-demo/demo-v2-b.html`; they have not replaced the active Demo V1 package.
 - **Demo V1 early snapshot**: the earlier `Documents\Cubicle-Survivor-v2` clone at `91d32fb`.
 - **Historical web prototype**: the old static `Documents\New project 2` export and archived legacy content.
 - Avoid bare `V1` and `V2` in future user-facing work. Internal paths such as `src/v2/` may remain until a deliberate refactor, but they do not change the product name Demo V1.
+
+Until a deliberate runtime cutover is completed, always distinguish **current full Demo V1** from the **isolated Demo V2 validation entry**. Do not relabel the existing 16-stage package merely because the Demo V2 production brief or Phase A entry exists.
+
+## Approved next product direction: Demo V2
+
+The user approved a scoped Demo V2 experience rebuild on 2026-07-14. Its authoritative production brief is `docs/DEMO_V2_PRODUCTION_BRIEF.md`.
+
+The direction is locked to:
+
+- the same three main weapons: Marker, Thermos and Sticky Note;
+- two badge forms per weapon, implemented behind explicit gates rather than restoring all 15 forms at once;
+- six repeatable office-module families replacing generic XP/card-slot growth in the Demo V2 runtime;
+- an 8–10 minute continuous escalation structure with an early badge, a mid-run promotion, one late cross-weapon support choice and a protected domination window;
+- an encounter director built from fodder, queues, clusters, pursuers, anchors, ranged pressure, splitters and shield checks;
+- three production gates: a 60-second weapon/enemy test, a 3-minute Build-dialogue test and only then the complete six-form run.
+
+This planning change does not authorize deleting or overwriting the current Demo V1 runtime. Reuse the current combat, visual-event and audio-event contracts where they serve the new brief, and keep Demo V1 runnable until Demo V2 passes its replacement gate.
+
+Implementation status on 2026-07-14:
+
+- Phase A is implemented behind `demo-v2.html` as a 60-second three-weapon test.
+- It contains four encounter grammars: queue, cluster, pursuit and mixed review.
+- Marker and Sticky Note passed the Phase A feel gate. Thermos now uses a short, wide slowing damage-over-time steam fan instead of a Marker-like piercing beam.
+- Phase B is implemented behind `demo-v2-b.html` as a three-minute Build-dialogue test.
+- Phase B is locked to Marker × Tech, Thermos × Product and Sticky Note × General; identity applies at 30 seconds and module choices occur at 55, 100 and 145 seconds.
+- Its six module families are Copy, Archive, Forward, Expedite, Merge and Overdraft. They mutate each weapon through its own motif and can form Copy × Forward, Archive × Merge, or Expedite × Overdraft relationships.
+- Phase B now enforces a module-branch gate across all 18 weapon-module mappings: Lv1 must create an independently traceable combat branch, while Lv3 must visibly increase its count, generation, coverage or trigger frequency. Thermos and Sticky Note no longer pass by changing only cooldown, range or duration.
+- Demo V1 slots, armory, materials, secondary departments and support weapons remain deliberately absent from the Phase B runtime.
+- Phase C remains gated by the production brief; Phase B being runnable is not a replacement-gate pass and still requires player feel validation.
+- A separate Marker-only fixed-type experiment is approved in `docs/DEMO_V2_MARKER_FIXED_TEST.md`. It tests four Copy/Archive choices against a three-slot white-to-red component shop and must remain isolated from Phase A, Phase B, the full Demo V1 and the other two weapons.
 
 ## Authoritative development location
 
@@ -114,11 +145,12 @@ The combat page must preserve the player and aiming field as the visual center. 
 When information conflicts, use this order:
 
 1. Explicit direction in the current user conversation.
-2. Active Demo V1 working tree under `cubicle-foundation-test`, including uncommitted changes.
-3. `docs/v2-core-review-principles.md` and `docs/v2-framework/`.
-4. Git history on `codex/weapon-mechanics-contracts`.
-5. Demo V1 early snapshot at `Documents\Cubicle-Survivor-v2`.
-6. Historical archives and `New project 2` only for historical comparison.
+2. `docs/DEMO_V2_PRODUCTION_BRIEF.md` for any Demo V2 planning or implementation decision.
+3. Active Demo V1 working tree under `cubicle-foundation-test`, including uncommitted changes, as the reusable runnable baseline.
+4. `docs/v2-core-review-principles.md` and `docs/v2-framework/` where they do not conflict with the Demo V2 brief.
+5. Git history on `codex/weapon-mechanics-contracts`.
+6. Demo V1 early snapshot at `Documents\Cubicle-Survivor-v2`.
+7. Historical archives and `New project 2` only for historical comparison.
 
 ## Mandatory startup checklist
 
@@ -126,11 +158,12 @@ Before work:
 
 1. Confirm the current directory is the authoritative Demo V1 worktree.
 2. Read this file and `docs/v2-core-review-principles.md`.
-3. Read `docs/DEMO_V1_MECHANIC_AUDIT.md` before judging or changing any of the three priority weapons.
-4. Run `git status --short --branch`.
-5. Inspect `Cubicle-Survivor-demo/README.md` and `package.json`.
-6. Preserve existing uncommitted changes.
-7. State explicitly whether a requested change belongs to the historical web prototype, the Demo V1 early snapshot, or the active Demo V1 worktree.
+3. Read `docs/DEMO_V2_PRODUCTION_BRIEF.md` before any Demo V2 planning or implementation.
+4. Read `docs/DEMO_V1_MECHANIC_AUDIT.md` before judging or changing any of the three priority weapons.
+5. Run `git status --short --branch`.
+6. Inspect `Cubicle-Survivor-demo/README.md` and `package.json`.
+7. Preserve existing uncommitted changes.
+8. State explicitly whether a requested change belongs to the historical web prototype, the Demo V1 early snapshot, the current runnable Demo V1, or the planned Demo V2.
 
 Asset guardrail (verified 2026-07-10): never reactivate `Cubicle-Survivor-demo/assets/v2-ui/flat-*.png`. Those nine crops are fully opaque and contain baked checkerboard backgrounds. Read `assets/v2-ui/manifest.md`; the current CSS office-neon surfaces are the approved Demo V1 runtime UI until clean transparent replacements pass browser QA.
 
@@ -143,6 +176,8 @@ Visual safe-area guardrail (verified 2026-07-13): menu text must be measured aga
 Office-icon guardrail (verified 2026-07-14): department and Build-slot duties use only `assets/generated-ui-v2/office-department-slot-icons-v2.png`. The retired `office-rogue-ui-icons.png` generic RPG/sci-fi atlas and keyed production intermediate are archived outside the runnable package. Preserve the atlas 5×2, 2:1 source ratio, keep slot descriptions result-led and fully visible, and do not reintroduce horizontal menu scrolling. These menu changes must not increase any combat HUD dimension or reduce the verified 542px uninterrupted combat field.
 
 Audio-event guardrail (verified 2026-07-13): `src/v2/audio/audio.js` consumes the same 71 registered event sources and is the only weapon-SFX playback entry. Every source must retain family, role, voice, trigger stage, cooldown and mix metadata. Do not play weapon audio directly from combat functions, bypass browser unlock/mute handling, or let secondary/support roles use primary mix. Read `docs/DEMO_V1_AUDIO_EVENT_MAP.md` before replacing synth voices or adding audio assets.
+
+Demo V2.0 Marker guardrail (verified 2026-07-14): `Cubicle-Survivor-demo/demo-v2-marker.html` is the isolated five-phase, 17-encounter Demo V2.0 candidate for the Marker only. Every encounter has a fixed normal-enemy quota and ends in a 10-second pickup window; normal encounters require the quota to be cleared, while Boss encounters require Boss death plus either timer expiry or add clearance. XP now queues player-assigned universal stat points after the pickup window instead of applying automatic bundled growth. Four module decisions remain after encounters 3/6/9/12 and six positive-only component shops remain after encounters 2/5/8/11/14/16, with cheaper purchasing and improved material supply. Read `docs/DEMO_V2_MARKER_FIXED_TEST.md` before changing this route; do not spread its economy or 17-encounter structure to Phase A, Phase B, the full Demo V1 or the other two weapons.
 
 Music-and-pacing guardrail (verified 2026-07-13): the audio module defines exactly ten phase scenes—normal and boss arrangements for each of the five learning phases—and all use the shared unlock/mute bus. Normal stages target 30–65 seconds and 20–80 kills. Boss completion must depend on the boss death flag rather than total kills; limited adds preserve multi-target Build expression, while per-hit caps prevent one burst from skipping the review. Read `docs/DEMO_V1_PACING_PASS.md` before changing stage duration, spawn pressure, boss health or burst resilience.
 

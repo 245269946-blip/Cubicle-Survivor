@@ -28,6 +28,45 @@
 
   function stagePhase(state) {
     const stage = state.stage || {};
+    if (stage.demoV2Phase === "phase-a") {
+      return {
+        id: "demo-v2-phase-a",
+        key: "demo-v2-phase-a",
+        label: "Demo V2 阶段 A",
+        weaponStage: "基础武器 × 敌群",
+        weaponStageShort: "暴力测试",
+        playerGoal: "只判断武器母题和敌群互动，不判断 Build 深度。",
+        rewardTiming: "60 秒后直接进入测试复盘。",
+        status: "prototype",
+        note: "无工牌、无模块、无卡槽、无军械库"
+      };
+    }
+    if (stage.demoV2Phase === "phase-b") {
+      return {
+        id: "demo-v2-phase-b",
+        key: "demo-v2-phase-b",
+        label: "Demo V2 阶段 B",
+        weaponStage: "代表工牌 × 办公模块",
+        weaponStageShort: "身份膨胀",
+        playerGoal: "验证重武器母题能否承载轻、快、立即可见的成长。",
+        rewardTiming: "30 秒身份定型；随后三次轻模块选择。",
+        status: "prototype",
+        note: "一把武器、一个代表工牌、最多三个模块"
+      };
+    }
+    if (stage.demoV2Phase === "marker-fixed") {
+      return {
+        id: "demo-v2-marker-fixed",
+        key: "demo-v2-marker-fixed",
+        label: "Demo V2 马克笔固定测试",
+        weaponStage: "模块机制 × 组件属性",
+        weaponStageShort: "三线验证",
+        playerGoal: "验证经验稳定成长、模块机制变化与材料组件取舍能否同时成立。",
+        rewardTiming: "八个战斗阶段；指定阶段先选模块，再进入四格组件商店。",
+        status: "prototype",
+        note: "只有马克笔；无工牌、卡牌、协同和其他武器"
+      };
+    }
     const phase = V2.getPhaseMeta ? V2.getPhaseMeta(stage.phaseKey) : {};
     const id = stage.phaseFinal ? "phase-final" : (phase.key || "growth");
     let note = phase.playerGoal || "经验和材料服务当前主形态。";
@@ -156,6 +195,16 @@
 
   function paramSummary(params, theme) {
     const topology = theme.topology || "";
+    if (params.markerFixedTest) {
+      return [
+        { label: "伤害", value: Math.round(params.damage || 0) },
+        { label: "穿透", value: params.pierce || 0 },
+        { label: "攻速", value: (params.cooldown || 0).toFixed(2) + "s" },
+        { label: "数量", value: params.amount || 1 },
+        { label: "范围", value: Math.round(params.range || 0) },
+        { label: "持续", value: (params.markerFixedTrailDuration || 0).toFixed(1) + "s" }
+      ];
+    }
     if (/split/.test(topology)) {
       return [
         { label: "伤害", value: Math.round(params.damage || 0) },
@@ -202,6 +251,11 @@
     const params = state.activeFormParams || {};
     const theme = pageTheme(state);
     const openSlots = V2.progression && V2.progression.getOpenSlots ? V2.progression.getOpenSlots(state) : [];
+    const markerComponents = params.markerFixedTest && state.demoV2 && state.demoV2.marker && V2.demoV2 && V2.demoV2.markerFixed
+      ? Object.keys(V2.demoV2.markerFixed.parts).map(function (id) {
+          return markerComponentPartView(V2.demoV2.markerFixed, state.demoV2.marker, id);
+        })
+      : [];
     return {
       weapon,
       badge: state.badgeDept ? V2.compat.deptName(state.badgeDept) : "未选择工牌",
@@ -219,6 +273,7 @@
       promoted: !!(state.flags && state.flags.promoted),
       promotion: state.promotionLog && state.promotionLog.length ? state.promotionLog[state.promotionLog.length - 1] : null,
       params: paramSummary(params, theme),
+      components: markerComponents,
       slots: ["offense", "survival", "resource", "mechanic", "cost"].map(function (slotId) {
         const def = V2.progression.SLOT_DEFS[slotId];
         return {
@@ -240,6 +295,26 @@
     const mechanic = form.mechanicType || "";
     const zones = state.damageZones || [];
     const enemies = state.enemies || [];
+    if (p.markerFixedTest && state.demoV2 && state.demoV2.marker) {
+      const test = state.demoV2.marker;
+      const base = Math.max(1, p.amount || 1);
+      const instant = base * (1 + (p.markerFixedParallelLines || 0)) * (p.markerFixedSecondRound ? 2 : 1);
+      const trails = base * (p.markerFixedArchiveTrails || 0);
+      const elapsed = V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.totalElapsed
+        ? V2.demoV2.markerFixed.totalElapsed(state)
+        : Math.max(0, 720 - state.stageTime);
+      function readyText(unlocked, readyAt) {
+        if (!unlocked) return "未解锁";
+        const remaining = Math.max(0, (readyAt || 0) - elapsed);
+        return remaining > 0 ? "冷却 " + remaining.toFixed(1) + "s" : "可触发";
+      }
+      return {
+        label: "马克笔三线成长",
+        value: "激光 " + instant + " · 墨迹 " + trails,
+        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 经验点 伤" + test.experienceAllocations.damage + "/生" + test.experienceAllocations.health + "/移" + test.experienceAllocations.moveSpeed + "/拾" + test.experienceAllocations.pickup + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
+        tone: "marker"
+      };
+    }
     if (mechanic === "line_split") {
       return state.stage && state.stage.boss
         ? { label: "分裂回折", value: (p.splitCount || 2) + " 路", hint: "优先锁定工作项；空闲支线以较低伤害回折聚焦 Boss。", tone: "marker" }
@@ -257,6 +332,14 @@
       const heatMax = p.heatMax || 100;
       const heat = Math.round(p.heat || 0);
       const lockout = p.releaseLockout || 0;
+      if (p.demoV2SteamFan) {
+        return {
+          label: lockout > 0 ? "沸点空窗" : "扇面蓄热",
+          value: lockout > 0 ? lockout.toFixed(1) + "s" : heat + " / " + heatMax,
+          hint: lockout > 0 ? "宽幅释放结束，利用减速区拉开距离。" : heat >= heatMax * 0.75 ? "接近沸点：贴近团块，让扩大扇面覆盖更多目标。" : "近距离宽幅蒸汽持续减速灼烧并积热。",
+          tone: "thermos"
+        };
+      }
       return { label: lockout > 0 ? "释放空窗" : "蓄热", value: lockout > 0 ? lockout.toFixed(1) + "s" : heat + " / " + heatMax, hint: lockout > 0 ? "沸点释放后暂时不能攻击，先走位拉开。" : heat >= heatMax * 0.75 ? "接近沸点：让敌人排成直线。" : "攻击自动积热，满热释放蒸汽柱。", tone: "thermos" };
     }
     if (mechanic === "patrol_summon_steam") return { label: "恒温模块", value: zones.filter(function (zone) { return zone.droneModule; }).length + " 个巡航", hint: "模块会从自身位置主动锁敌喷汽。", tone: "thermos" };
@@ -280,14 +363,45 @@
   function hud(state) {
     const form = buildSummary(state);
     const status = mechanicStatus(state);
+    const demoPhase = state.stage && state.stage.demoV2Phase;
+    const phaseA = demoPhase === "phase-a";
+    const phaseB = demoPhase === "phase-b";
+    const markerFixed = demoPhase === "marker-fixed";
+    const markerTest = markerFixed && state.demoV2 ? state.demoV2.marker : null;
+    const waveLabel = (phaseA || phaseB || markerFixed) && state.demoV2 && state.demoV2.waveId
+      ? ({ queue: "队列波", cluster: "团块波", pursuit: "追逐波", review: "混合评审波" }[state.demoV2.waveId] || state.demoV2.waveId.replace(/-\d+$/, ""))
+      : "";
+    if (phaseB && state.demoV2 && state.demoV2.moduleOrder && state.demoV2.moduleOrder.length) {
+      const config = V2.demoV2 && V2.demoV2.phaseB;
+      const seenModules = [];
+      state.demoV2.moduleOrder.forEach(function (id) { if (seenModules.indexOf(id) < 0) seenModules.push(id); });
+      const moduleSummary = seenModules.map(function (id) {
+        return config.modules[id].name + "×" + (state.demoV2.modules[id] || 1);
+      }).join(" · ");
+      status.hint = "模块：" + moduleSummary + "。" + status.hint;
+      if (state.selectedWeaponId === "marker") {
+        const params = state.activeFormParams || {};
+        status.label = "划线流程";
+        status.value = "主线×" + (1 + (params.demoV2ParallelLines || 0)) + " · 分叉" + (params.splitCount || 1) + " · " + (params.secondarySplit ? "二代转发" : "未转发");
+      } else if (state.selectedWeaponId === "thermos") {
+        const params = state.activeFormParams || {};
+        status.label = "蒸汽流程";
+        status.value = "出口×" + (params.demoV2FanCount || 1) + " · 冷凝" + (params.demoV2ThermosArchive || 0) + " · 热浪" + (params.demoV2ForwardHeatwave || 0);
+      } else if (state.selectedWeaponId === "sticky_note") {
+        const noticeNodes = (state.damageZones || []).filter(function (zone) { return zone.noticeNode; });
+        const archiveNodes = noticeNodes.filter(function (zone) { return zone.archiveEcho; }).length;
+        status.label = "公告流程";
+        status.value = "节点" + noticeNodes.length + " · 留档" + archiveNodes + " · 三点闭合";
+      }
+    }
     return {
-      stageMeta: state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
+      stageMeta: phaseA || phaseB || markerFixed ? "Demo V2 · " + (markerFixed ? "阶段 " + (state.demoV2.marker.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : phaseB ? "阶段 B" : "阶段 A") + (!markerFixed && waveLabel ? " · " + waveLabel : "") : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
       phaseMeta: form.theme.phase.label + " · " + form.theme.phase.weaponStageShort,
       stageName: state.stage ? state.stage.name : "热身工位",
-      stageNote: state.stage ? [state.stage.note, state.stage.threatHint].filter(Boolean).join(" · ") : "",
-      time: fmtTime(state.stageTime),
-      remaining: Math.max(0, (state.stage ? state.stage.targetKills : 0) - state.stageKills),
-      kills: state.stageKills + "/" + (state.stage ? state.stage.targetKills : 0),
+      stageNote: state.stage ? [state.stage.note, markerFixed && state.warmupTime > 0 && !(markerTest && markerTest.collecting) ? state.stage.enemyPreview : state.stage.threatHint].filter(Boolean).join(" · ") : "",
+      time: fmtTime(markerTest && markerTest.collecting ? state.warmupTime : state.stageTime),
+      remaining: markerFixed ? Math.max(0, (state.stage ? state.stage.targetKills : 0) - state.stageKills) : phaseA || phaseB ? state.enemies.length : Math.max(0, (state.stage ? state.stage.targetKills : 0) - state.stageKills),
+      kills: markerFixed ? state.stageKills + "/" + (state.stage ? state.stage.targetKills : 0) : phaseA || phaseB ? String(state.stageKills) : state.stageKills + "/" + (state.stage ? state.stage.targetKills : 0),
       level: state.level,
       materials: state.materials,
       hp: Math.max(0, Math.ceil(state.hp)) + " / " + state.maxHp,
@@ -295,7 +409,9 @@
       xpPct: Math.max(0, Math.min(100, state.xp / state.xpNeed * 100)),
       formText: form.formName,
       warmup: state.warmupTime,
-      controlHint: form.mechanicType === "manual_trap_detonate" ? "WASD 移动；开关贴装订后按空格同步引爆。" : "WASD 移动，武器自动攻击。",
+      controlHint: markerTest && markerTest.collecting ? "10秒内自由移动回收经验与材料；结束时自动吸取遗漏资源。" : markerFixed && state.stage && state.stage.enemyPreview ? state.stage.enemyPreview : form.mechanicType === "manual_trap_detonate" ? "WASD 移动；开关贴装订后按空格同步引爆。" : "WASD 移动，武器自动攻击。",
+      collecting: !!(markerTest && markerTest.collecting),
+      pendingExperiencePoints: markerTest ? markerTest.pendingExperiencePoints : 0,
       combatStatus: status,
       build: form,
       theme: form.theme
@@ -303,10 +419,13 @@
   }
 
   function upgrades(state) {
+    const markerFixed = !!(state.demoV2 && state.demoV2.phase === "marker-fixed" && state.demoV2.marker);
     return {
       theme: pageTheme(state),
-      context: state.activeForm ? state.activeForm.displayName + " · " + state.activeForm.short : "当前主武器",
-      choices: state.upgradeChoices || []
+      context: markerFixed ? "待分配经验点 " + state.demoV2.marker.pendingExperiencePoints + " · 已完成第 " + state.demoV2.marker.completedEncounters + "/17 关" : state.activeForm ? state.activeForm.displayName + " · " + state.activeForm.short : "当前主武器",
+      choices: state.upgradeChoices || [],
+      markerFixed,
+      pendingPoints: markerFixed ? state.demoV2.marker.pendingExperiencePoints : 0
     };
   }
 
@@ -329,20 +448,112 @@
     };
   }
 
+  function moduleSelect(state) {
+    const runtime = state.demoV2 || {};
+    if (runtime.phase === "marker-fixed") {
+      const test = runtime.marker;
+      return {
+        theme: pageTheme(state),
+        identity: "马克笔模块路线",
+        totalRounds: 4,
+        round: (test.moduleChoiceIndex || 0) + 1,
+        owned: ["复写 Lv." + test.modules.copy, "留档 Lv." + test.modules.archive],
+        choices: runtime.moduleChoices || []
+      };
+    }
+    const config = V2.demoV2 && V2.demoV2.phaseB;
+    return {
+      theme: pageTheme(state),
+      identity: state.activeForm ? state.activeForm.displayName : "代表工牌",
+      totalRounds: 3,
+      round: (runtime.choiceIndex || 0) + 1,
+      owned: (runtime.moduleOrder || []).map(function (id) { return config.modules[id].name; }),
+      choices: runtime.moduleChoices || []
+    };
+  }
+
+  function markerComponentPartView(config, test, partId) {
+    const part = config.parts[partId];
+    const state = test.parts[partId];
+    const quality = config.qualities[config.qualityIndex(state.copies)];
+    const next = config.nextThreshold(state.copies);
+    return {
+      id: partId,
+      name: part.name,
+      copies: state.copies,
+      quality,
+      progress: state.copies >= 8 ? "已达红色" : state.copies + " / " + next,
+      allocationText: part.stats.map(function (stat) { return part.statNames[stat] + "×" + state.allocations[stat]; }).join(" · ")
+    };
+  }
+
+  function componentShop(state) {
+    const config = V2.demoV2.markerFixed;
+    const test = state.demoV2.marker;
+    return {
+      materials: state.materials,
+      refreshCost: test.refreshCost,
+      shopRound: test.shopIndex,
+      shopCount: config.shopCount,
+      encounterId: test.currentShopEncounter,
+      stageReward: test.lastStageReward,
+      shopIncome: test.lastShopIncome,
+      rerolls: test.rerolls,
+      lockedCount: test.offers.filter(function (offer) { return offer.locked && !offer.sold; }).length,
+      parts: Object.keys(config.parts).map(function (id) { return markerComponentPartView(config, test, id); }),
+      offers: test.offers || []
+    };
+  }
+
+  function componentStat(state) {
+    const config = V2.demoV2.markerFixed;
+    const test = state.demoV2.marker;
+    const part = config.parts[test.pendingStatPart];
+    const quality = config.qualities[test.pendingQualityIndex];
+    return {
+      partName: part.name,
+      quality,
+      choices: part.stats.map(function (stat) {
+        return { id: stat, name: part.statNames[stat], current: test.parts[part.id].allocations[stat] };
+      })
+    };
+  }
+
   function damageSourceLabel(source) {
     const id = String(source || "");
     if (/[一-鿿]/.test(id)) return id;
     const exact = {
       marker_split: "马克笔 · 分裂支线",
       marker_secondary_split: "马克笔 · 二次分裂",
+      marker_module_copy: "马克笔模块 · 复写主线",
+      marker_module_forward: "马克笔模块 · 转发接力",
+      marker_module_archive: "马克笔模块 · 留档墨迹",
+      marker_module_expedite: "马克笔模块 · 加急重划",
+      marker_module_merge: "马克笔模块 · 汇总爆点",
+      marker_module_overdraft: "马克笔模块 · 透支划线",
       secondary_split: "马克笔 · 二次分裂",
       marker_fullscreen: "马克笔 · 全屏贯穿",
+      marker_test_base: "马克笔测试 · 基础激光",
+      marker_test_copy: "马克笔测试 · 平行复写",
+      marker_test_second_round: "马克笔测试 · 第二轮复写",
+      marker_test_archive: "马克笔测试 · 路径墨迹",
+      marker_test_fullscreen_copy: "马克笔测试 · 全屏复写",
+      marker_test_fullscreen_archive: "马克笔测试 · 全屏留档",
       thermos_intern_release: "保温杯 · 沸点释放",
       thermos_release: "保温杯 · 蓄热释放",
       thermos_drone_steam: "保温杯 · 蒸汽无人机",
+      thermos_module_archive: "保温杯模块 · 留档冷凝区",
+      thermos_module_expedite: "保温杯模块 · 加急补喷",
+      thermos_module_merge: "保温杯模块 · 高压汇流",
+      thermos_module_overdraft: "保温杯模块 · 反向过压",
+      thermos_module_heatwave: "保温杯模块 · 转发热浪",
       sticky_attach: "即时贴 · 附着伤害",
       sticky_spread: "即时贴 · 传播伤害",
       sticky_notice_pin: "即时贴 · 公告钉扎",
+      sticky_module_archive: "即时贴模块 · 留档回声",
+      sticky_module_expedite: "即时贴模块 · 加急批注",
+      sticky_module_merge: "即时贴模块 · 汇总脉冲",
+      sticky_module_overdraft: "即时贴模块 · 透支爆破",
       support_marker: "跨武器 · 马克笔",
       support_thermos: "跨武器 · 保温杯",
       support_sticky: "跨武器 · 即时贴",
@@ -366,15 +577,46 @@
       .sort(function (a, b) { return b[1] - a[1]; })
       .slice(0, 5)
       .map(function (entry) { return { source: damageSourceLabel(entry[0]), damage: Math.round(entry[1]) }; });
+    const phaseA = !!(state.stage && state.stage.demoV2Phase === "phase-a");
+    const phaseB = !!(state.stage && state.stage.demoV2Phase === "phase-b");
+    const markerFixed = !!(state.stage && state.stage.demoV2Phase === "marker-fixed");
+    const seen = (phaseA || phaseB || markerFixed) && state.demoV2 && state.demoV2.wavesSeen ? state.demoV2.wavesSeen.length : 0;
+    const peak = phaseA || phaseB || markerFixed ? Math.max(state.stats.peakEnemies || 0, state.demoV2 && state.demoV2.peakEnemies || 0) : 0;
+    const config = V2.demoV2 && V2.demoV2.phaseB;
+    const moduleNames = phaseB && config ? (state.demoV2.moduleOrder || []).map(function (id) { return config.modules[id].name; }) : [];
     return {
-      title: state.flags.won ? "完成终局转正" : "本轮结束",
+      title: markerFixed ? "马克笔 5 阶段 17 关测试完成" : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
       theme: pageTheme(state),
       build: buildSummary(state),
       kills: state.kills,
       level: state.level,
       materials: state.materials,
+      phaseA: phaseA ? { wavesSeen: seen, peakEnemies: peak } : null,
+      phaseB: phaseB ? { wavesSeen: seen, peakEnemies: peak, modules: moduleNames, combo: state.demoV2.lastCombo || [] } : null,
+      markerFixed: markerFixed ? {
+        wavesSeen: seen,
+        peakEnemies: peak,
+        modules: Object.assign({}, state.demoV2.marker.modules),
+        parts: Object.keys(V2.demoV2.markerFixed.parts).map(function (id) { return markerComponentPartView(V2.demoV2.markerFixed, state.demoV2.marker, id); }),
+        fullscreenCopyTriggers: state.demoV2.marker.fullscreenCopyTriggers,
+        fullscreenArchiveTriggers: state.demoV2.marker.fullscreenArchiveTriggers,
+        completedEncounters: state.demoV2.marker.completedEncounters,
+        shopsVisited: state.demoV2.marker.completedStages,
+        experienceLevels: state.demoV2.marker.experienceLevels,
+        experienceAllocations: Object.assign({}, state.demoV2.marker.experienceAllocations),
+        componentsBought: state.demoV2.marker.componentsBought,
+        stageMaterialsEarned: state.demoV2.marker.stageMaterialsEarned,
+        dropMaterialsEarned: state.demoV2.marker.dropMaterialsEarned,
+        materialsSpent: state.demoV2.marker.materialsSpent
+      } : null,
       damage,
-      note: state.flags.won
+      note: markerFixed
+        ? "只复盘三件事：复写与留档是否形成不同攻击结构；混合加点是否值得；模块 Lv3 后组件刷新是否仍有期待。"
+        : phaseB
+        ? "代表工牌：" + (state.badgeDept ? V2.compat.deptName(state.badgeDept) : "未定型") + "；模块：" + (moduleNames.join(" → ") || "无") + "。现在只回答：每次选择是否立刻改变画面，以及能否说清为什么前一个模块让后一个更有用。"
+        : phaseA
+        ? "已经历 " + seen + "/4 类问题波，峰值 " + peak + " 个目标。现在只回答：这把武器是否在 10 秒内显出母题，以及面对四种敌群时是否需要不同走位。"
+        : state.flags.won
         ? "完整构筑已经通过终局压测。换一把武器、工牌或副武器，能跑出另一条打法。"
         : "这次失败应该让你看见哪里没成型，而不是只看见一堆文字。"
     };
@@ -434,6 +676,9 @@
     mechanicStatus,
     hud,
     upgrades,
+    moduleSelect,
+    componentShop,
+    componentStat,
     slots,
     armory,
     result,
@@ -448,6 +693,9 @@
     if (name === "badge_select") return badgeForms(state);
     if (name === "hud") return hud(state);
     if (name === "level_up") return upgrades(state);
+    if (name === "module_select") return moduleSelect(state);
+    if (name === "component_shop") return componentShop(state);
+    if (name === "component_stat_select") return componentStat(state);
     if (name === "slot_select") return slots(state);
     if (name === "armory") return armory(state);
     if (name === "result") return result(state);

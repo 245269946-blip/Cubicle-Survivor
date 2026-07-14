@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工位幸存者 Demo V2 · 阶段 A</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <p>正在进入 Demo V2 阶段 A……</p>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search || "");
+        params.set("demoV2", "phase-a");
+        window.location.replace("index.html?" + params.toString());
+      })();
+    </script>
+  </body>
+</html>

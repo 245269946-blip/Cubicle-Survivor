@@ -1283,6 +1283,14 @@ h2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+#upgradePanel #upgradeChoices.marker-experience-grid {
+  grid-template-columns: 1fr 1fr 1fr 1fr !important;
+}
+
+#upgradePanel #upgradeChoices.marker-experience-grid .learning-card {
+  min-height: 188px;
+}
+
 .upgrade-actions {
   position: sticky;
   bottom: 0;
@@ -3273,6 +3281,95 @@ h2 {
   background: rgba(7, 13, 23, 0.88);
   box-shadow: 0 10px 28px rgba(0,0,0,0.32);
   pointer-events: none;
+}
+
+.marker-component-panel {
+  width: min(1040px, 94vw);
+}
+
+.marker-component-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.marker-component-slot {
+  border: 1px solid color-mix(in srgb, var(--quality-color, #7f8b9a) 62%, #263341);
+  background: rgba(7, 17, 25, 0.8);
+  padding: 10px 12px;
+}
+
+.marker-component-slot strong,
+.marker-component-slot span,
+.marker-component-slot small {
+  display: block;
+}
+
+.marker-component-slot strong { color: var(--quality-color, #eef7ff); }
+.marker-component-slot span { margin-top: 4px; font-size: 0.82rem; }
+.marker-component-slot small { margin-top: 4px; color: #9fb1c2; }
+
+.marker-component-card.sold { opacity: 0.42; }
+.marker-component-card .quality-name { color: var(--quality-color, #eef7ff); }
+.marker-component-card.locked { border-color: #ffd36a; box-shadow: inset 0 0 0 1px rgba(255, 211, 106, 0.28); }
+.marker-component-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+.marker-component-actions .slot-button { min-height: 38px; }
+.marker-lock-button { border-color: rgba(255, 211, 106, 0.52); color: #ffe6a8; }
+
+.shop-panel.marker-component-panel .shop-choices {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  max-height: none;
+  overflow: visible;
+  padding: 3px 0 8px;
+}
+
+.shop-panel.marker-component-panel .marker-component-card {
+  grid-template-rows: auto auto auto auto auto auto;
+  min-height: 214px;
+  padding: 11px;
+  gap: 6px;
+}
+
+.shop-panel.marker-component-panel .marker-component-card strong {
+  font-size: 15px;
+}
+
+.shop-panel.marker-component-panel .marker-component-card .card-desc,
+.shop-panel.marker-component-panel .marker-component-card .compare-line {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.shop-panel.marker-component-panel .marker-component-card .cost {
+  margin-top: 2px;
+}
+
+.shop-panel.marker-component-panel .marker-component-actions .slot-button {
+  min-height: 34px;
+  border: 1px solid rgba(94, 252, 255, 0.42);
+  border-radius: 5px;
+  background: rgba(94, 252, 255, 0.12);
+  color: #eef7ff;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.shop-panel.marker-component-panel .marker-component-actions .marker-lock-button {
+  border-color: rgba(255, 211, 106, 0.52);
+  background: rgba(255, 211, 106, 0.1);
+  color: #ffe6a8;
+}
+
+.shop-panel.marker-component-panel .marker-component-actions .slot-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+@media (max-width: 760px) {
+  .marker-component-slots { grid-template-columns: 1fr; }
+  .shop-panel.marker-component-panel .shop-choices { grid-template-columns: 1fr; }
 }
 
 .combat-status.hidden,
@@ -5815,6 +5912,7 @@ h2 {
 }
 
 /* Clean CSS controls replace the opaque checkerboard button/hud crops. */
+
 .primary-button,
 .secondary-button,
 .tertiary-button,
@@ -6077,4 +6175,41 @@ h2 {
   }
   .slot-roadmap { align-items: stretch; flex-direction: column; }
   .slot-roadmap > span { width: 100%; }
+}
+
+/* Keep the Phase A combat shell free of Demo V1 progression chrome. */
+body .v2-game[data-stage-phase="demo-v2-phase-a"] > .xp-bar,
+body .v2-game[data-stage-phase="demo-v2-phase-a"] > .build-toggle,
+body .v2-game[data-stage-phase="demo-v2-phase-a"] > #buildPanel,
+body .v2-game[data-stage-phase="demo-v2-phase-a"] > .v2-compact-hud > .stat:nth-child(1),
+body .v2-game[data-stage-phase="demo-v2-phase-a"] > .v2-compact-hud > .stat:nth-child(2) {
+  display: none !important;
+}
+
+/* Phase B also stays isolated from Demo V1 progression chrome. */
+body .v2-game[data-stage-phase="demo-v2-phase-b"] > .xp-bar,
+body .v2-game[data-stage-phase="demo-v2-phase-b"] > .build-toggle,
+body .v2-game[data-stage-phase="demo-v2-phase-b"] > #buildPanel,
+body .v2-game[data-stage-phase="demo-v2-phase-b"] > .v2-compact-hud > .stat:nth-child(1),
+body .v2-game[data-stage-phase="demo-v2-phase-b"] > .v2-compact-hud > .stat:nth-child(2) {
+  display: none !important;
+}
+
+.module-panel { max-width: 980px; }
+.module-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.module-card { min-height: 260px; align-content: start; }
+.module-card small { color: #91a9bd; line-height: 1.5; }
+.module-combo {
+  margin-top: auto;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 209, 92, 0.45);
+  background: rgba(255, 209, 92, 0.08);
+  color: #ffe092;
+  font-style: normal;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .module-choices { grid-template-columns: 1fr; }
+  .module-card { min-height: 0; }
 }

@@ -22,7 +22,7 @@
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_drone_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
-    <link rel="stylesheet" href="styles.css?v=28" />
+    <link rel="stylesheet" href="styles.css?v=35" />
     <link rel="stylesheet" href="generated-skin.css?v=41" />
   </head>
   <body>
@@ -70,7 +70,7 @@
             <strong id="levelText">1</strong>
           </div>
           <div class="stat">
-            <span>材料</span>
+            <span id="materialLabel">材料</span>
             <strong id="materialText">0</strong>
           </div>
           <div class="stat">
@@ -192,6 +192,44 @@
           </div>
         </div>
 
+        <div id="modulePanel" class="overlay hidden">
+          <div class="panel upgrade-panel v2-panel module-panel">
+            <p class="eyebrow">办公流程追加</p>
+            <h2>选一个立刻看得见的模块</h2>
+            <p id="moduleContext" class="panel-note">模块只膨胀当前武器，不增加第二把武器。</p>
+            <div id="moduleChoices" class="choices module-choices"></div>
+            <p id="modulePanelFooter" class="weapon-select-footer">三秒内能读懂，选完立即回到战斗。</p>
+          </div>
+        </div>
+
+        <div id="componentShopPanel" class="overlay hidden">
+          <div class="panel upgrade-panel shop-panel v2-panel marker-component-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">马克笔组件商店</p>
+                <h2>只强化属性，不解锁攻击机制</h2>
+                <p id="componentShopNote" class="panel-note">重复购买同部位，按白—蓝—紫—红合成。</p>
+              </div>
+              <div class="material-pill shop-material-pill">材料 <strong id="componentCreditsText">0</strong></div>
+            </div>
+            <div id="componentSlotsStrip" class="marker-component-slots"></div>
+            <div id="componentOffers" class="choices shop-choices"></div>
+            <div class="shop-actions">
+              <button id="componentRefreshButton" class="primary-button tertiary-button" type="button">刷新 · 材料 3</button>
+              <button id="componentContinueButton" class="primary-button secondary-button" type="button">继续战斗</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="componentStatPanel" class="overlay hidden">
+          <div class="panel upgrade-panel v2-panel marker-component-panel">
+            <p class="eyebrow">组件品质提升</p>
+            <h2 id="componentStatTitle">选择本次属性强化</h2>
+            <p id="componentStatNote" class="panel-note">这次选择只增加基础属性，不会生成新激光或新墨迹。</p>
+            <div id="componentStatChoices" class="choices"></div>
+          </div>
+        </div>
+
         <div id="weaponPanel" class="overlay hidden">
           <div class="panel upgrade-panel shop-panel v2-panel">
             <div class="panel-title-row">
@@ -249,14 +287,17 @@
     <script src="src/data/balance.js"></script>
     <script src="src/core/build-state.js"></script>
     <script src="src/v2/data/weapon-forms.js?v=7"></script>
-    <script src="src/v2/data/form-signatures.js?v=4"></script>
+    <script src="src/v2/data/form-signatures.js?v=5"></script>
     <script src="src/v2/audio/audio.js?v=2"></script>
     <script src="src/v2/compat/legacy.js?v=3"></script>
-    <script src="src/v2/runtime/state.js?v=8"></script>
+    <script src="src/v2/demo-v2/phase-a.js?v=2"></script>
+    <script src="src/v2/demo-v2/phase-b.js?v=3"></script>
+    <script src="src/v2/demo-v2/marker-fixed.js?v=2"></script>
+    <script src="src/v2/runtime/state.js?v=13"></script>
     <script src="src/v2/progression/progression.js?v=8"></script>
-  <script src="src/v2/combat/systems.js?v=56"></script>
-    <script src="src/v2/ui/view-model.js?v=8"></script>
-    <script src="src/v2/ui/render.js?v=18"></script>
-    <script src="main.js?v=62"></script>
+  <script src="src/v2/combat/systems.js?v=67"></script>
+    <script src="src/v2/ui/view-model.js?v=17"></script>
+    <script src="src/v2/ui/render.js?v=23"></script>
+    <script src="main.js?v=70"></script>
   </body>
 </html>
