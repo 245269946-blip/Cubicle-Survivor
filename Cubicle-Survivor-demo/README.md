@@ -29,6 +29,14 @@ python3 -m http.server 4173
 http://127.0.0.1:4173/
 ```
 
+## 固定武器测试入口
+
+- `demo-v2-marker.html`：Demo V2.1 马克笔双路线测试。
+- `demo-v2-thermos.html`：Demo V2.2 保温杯双路线测试。
+- `demo-v2-scissors.html`：Demo V2.3 剪刀纯近战双路线测试。
+
+Demo V2.3 继续沿用 5 阶段 17 关、4 次模块选择和 6 次组件商店，只把验证对象替换为剪刀：轻步闪身、合刃突刺、张刃连剪/处决，以及固定携带的低血临时安全区。剪刀仍是隔离测试，不进入 Demo V1 或完整 Demo V2 的三武器池。
+
 ## 验证
 
 ```bash

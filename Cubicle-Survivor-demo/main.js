@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -174,12 +174,34 @@
         }
         if (startButton) startButton.textContent = "进入保温杯双路线测试";
       }
+      if (demoV2Phase === "scissors-fixed") {
+        document.title = "工位幸存者 Demo V2.3 · 剪刀固定测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.3 剪刀固定测试");
+        if (stamp) stamp.textContent = "Demo V2.3 · 剪刀固定测试";
+        if (subtitle) subtitle.textContent = "只验证剪刀：贴身近战时间线、轻步进场、合刃/张刃路线，以及低血临时安全区。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "纯近战动作轮";
+          guideCards[0].querySelector("span:last-child").textContent = "每轮锁定一个方向，先完成合刃，再完成张刃；动作结束前不会开启下一轮。";
+          guideCards[1].querySelector("strong").textContent = "轻步闪身";
+          guideCards[1].querySelector("span:last-child").textContent = "时间与完整攻击轮充能；满后在下次攻击前自动穿入敌群，本身不造成伤害。";
+          guideCards[2].querySelector("strong").textContent = "合刃与张刃";
+          guideCards[2].querySelector("span:last-child").textContent = "窄线突刺可进化为减速裁断；短宽连剪可进化为按命中层数处决。";
+          guideCards[3].querySelector("strong").textContent = "固定低血安全区";
+          guideCards[3].querySelector("span:last-child").textContent = "30% 生命以下短暂挡住外部射弹；近战接触与区域内攻击依旧危险。";
+        }
+        if (startButton) startButton.textContent = "进入剪刀双路线测试";
+      }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
         const debugWeapon = params.get("weapon");
         const debugDept = params.get("dept");
         if (debugScreen === "weapon_select") V2.getState().mode = "weapon_select";
-        if (["marker", "thermos", "sticky_note"].indexOf(debugWeapon) >= 0) {
+        if (["marker", "thermos", "sticky_note", "scissors"].indexOf(debugWeapon) >= 0) {
           V2.startRun({ weaponId: debugWeapon });
           if (["tech", "product", "ops", "marketing", "general"].indexOf(debugDept) >= 0) {
             V2.dispatch({ type: "SET_BADGE", dept: debugDept });
@@ -238,9 +260,10 @@
               }
             }
           }
-          if (demoV2Phase === "thermos-fixed" && V2.demoV2 && V2.demoV2.thermosFixed) {
-            const config = V2.demoV2.thermosFixed;
-            const test = debugState.demoV2.thermos;
+          if ((demoV2Phase === "thermos-fixed" || demoV2Phase === "scissors-fixed") && V2.getDemoV2FixedTestConfig) {
+            const config = V2.getDemoV2FixedTestConfig(demoV2Phase);
+            const test = config && debugState.demoV2[config.runtimeKey];
+            if (!config || !test) throw new Error("Missing fixed-test debug config: " + demoV2Phase);
             String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {
               if (config.modules[moduleId]) config.applyModule(debugState, moduleId, true);
             });
@@ -312,7 +335,7 @@
               debugState.mode = "slot_select";
             }
             if (debugScreen === "badge") debugState.mode = "badge_select";
-            if (debugScreen === "upgrade" && demoV2Phase !== "marker-fixed" && demoV2Phase !== "thermos-fixed") {
+            if (debugScreen === "upgrade" && !V2.getDemoV2FixedTestConfig(demoV2Phase)) {
               debugState.upgradeChoices = V2.progression.makeUpgradeChoices(debugState);
               debugState.previousMode = "combat";
               debugState.mode = "level_up";
@@ -337,7 +360,7 @@
             if (debugScreen === "combat") {
               debugState.mode = "combat";
               debugState.warmupTime = params.get("warmup") === "1" ? 2.4 : 0;
-              if (demoV2Phase === "marker-fixed" || demoV2Phase === "thermos-fixed") {
+              if (V2.getDemoV2FixedTestConfig(demoV2Phase)) {
                 debugState.stageTime = Number(debugState.stage && debugState.stage.duration) || 0;
                 debugState.stageKills = 0;
               } else {

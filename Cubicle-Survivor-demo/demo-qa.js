@@ -156,6 +156,7 @@ const scripts = [
   "src/v2/demo-v2/phase-b.js",
   "src/v2/demo-v2/marker-fixed.js",
   "src/v2/demo-v2/thermos-fixed.js",
+  "src/v2/demo-v2/scissors-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",

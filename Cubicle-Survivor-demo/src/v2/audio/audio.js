@@ -45,7 +45,12 @@
     switch_pulse: { wave: "square", start: 440, end: 720, duration: 0.12, gain: 0.1, dual: 1.5 },
     route_tick: { wave: "square", start: 310, end: 420, duration: 0.05, gain: 0.055, noise: 0.025, filter: 2800 },
     transfer_chirp: { wave: "triangle", start: 720, end: 1080, duration: 0.095, gain: 0.08, dual: 1.26 },
-    link_snap: { wave: "square", start: 700, end: 470, duration: 0.075, gain: 0.075, noise: 0.022, filter: 4200 }
+    link_snap: { wave: "square", start: 700, end: 470, duration: 0.075, gain: 0.075, noise: 0.022, filter: 4200 },
+    scissor_snip: { wave: "square", start: 1180, end: 430, duration: 0.075, gain: 0.09, noise: 0.018, filter: 5200 },
+    scissor_thrust: { wave: "sawtooth", start: 760, end: 210, duration: 0.12, gain: 0.105, noise: 0.028, filter: 4200 },
+    scissor_dash: { wave: "triangle", start: 420, end: 880, duration: 0.11, gain: 0.075, noise: 0.04, filter: 3600 },
+    scissor_finish: { wave: "square", start: 310, end: 92, duration: 0.2, gain: 0.13, noise: 0.065, filter: 2800, dual: 1.5 },
+    shelter_ping: { wave: "sine", start: 620, end: 1040, duration: 0.16, gain: 0.085, dual: 1.5 }
   };
 
   const TOPOLOGY_AUDIO_RULES = {
@@ -79,7 +84,12 @@
     seeking_entity: { voice: "paper_seek", triggers: { circle: "release" }, cooldown: 0.11 },
     switch_pulse: { voice: "switch_pulse", triggers: { circle: "release" }, cooldown: 0.18 },
     trail_route: { voice: "route_tick", triggers: { zone: "residual" }, cooldown: 0.16 },
-    transfer_chain: { voice: "transfer_chirp", triggers: { circle: "release" }, cooldown: 0.12 }
+    transfer_chain: { voice: "transfer_chirp", triggers: { circle: "release" }, cooldown: 0.12 },
+    melee_arc: { voice: "scissor_snip", triggers: { beam: "release", hit: "impact" }, cooldown: 0.055, hitCooldown: 0.07 },
+    melee_thrust: { voice: "scissor_thrust", triggers: { beam: "release", hit: "impact" }, cooldown: 0.075, hitCooldown: 0.08 },
+    dash_trail: { voice: "scissor_dash", triggers: { beam: "release" }, cooldown: 0.16 },
+    execution_cut: { voice: "scissor_finish", triggers: { beam: "release", hit: "impact" }, cooldown: 0.13, hitCooldown: 0.11 },
+    protective_field: { voice: "shelter_ping", triggers: { circle: "release" }, cooldown: 0.13 }
   };
 
   const SOURCE_AUDIO_OVERRIDES = {

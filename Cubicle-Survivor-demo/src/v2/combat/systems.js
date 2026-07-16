@@ -34,6 +34,7 @@
     sticky_burst_art: "assets/generated-vfx/sprites/sticky-burst-office-v2.png",
     sticky_control_art: "assets/generated-vfx/sprites/sticky-control-office-v2.png",
     sticky_link_line_art: "assets/generated-vfx/sprites/sticky-link-line-office-v2.png",
+    scissors_v23: "assets/generated-vfx/sprites/scissors-v23.png",
     status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
     status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
     status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
@@ -1095,10 +1096,7 @@
   }
 
   function fixedTestConfig(state) {
-    const phase = state && state.demoV2 && state.demoV2.phase;
-    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
-    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
-    return null;
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
   }
 
   function fixedTestRuntime(state) {
@@ -1249,6 +1247,200 @@
     const ready = test.pendingRounds.filter(function (round) { return round.due <= elapsed; });
     test.pendingRounds = test.pendingRounds.filter(function (round) { return round.due > elapsed; });
     ready.forEach(function () { fireMarkerFixedTest(state, true); });
+  }
+
+  function scissorsFixedRuntime(state) {
+    return state.demoV2 && state.demoV2.phase === "scissors-fixed" ? state.demoV2.scissors : null;
+  }
+
+  function angleDistance(a, b) {
+    return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  }
+
+  function recordScissorsTargets(test, hits) {
+    if (!test) return;
+    (hits || []).forEach(function (hit) {
+      const enemy = hit.enemy || hit;
+      if (enemy && test.roundTargetIds.indexOf(enemy.id) < 0) test.roundTargetIds.push(enemy.id);
+    });
+  }
+
+  function scissorsLine(state, p, angle, range, width, damage, source) {
+    const x1 = state.player.x + Math.cos(angle) * 16;
+    const y1 = state.player.y + Math.sin(angle) * 16;
+    const x2 = state.player.x + Math.cos(angle) * range;
+    const y2 = state.player.y + Math.sin(angle) * range;
+    const hits = lineHitEnemies(state, x1, y1, x2, y2, width, damage, 99, source, { noKnockback: true });
+    addBeamEvent(state, x1, y1, x2, y2, source === "scissors_test_sever" ? "#ff6d62" : "#e9f3f5", width, source === "scissors_test_sever" ? 0.32 : 0.2, "beam", false, source, {
+      lockedAngle: angle,
+      hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+      actualHitCount: hits.length
+    });
+    recordScissorsTargets(scissorsFixedRuntime(state), hits);
+    return hits;
+  }
+
+  function scissorsFan(state, p, angle, range, halfAngle, damage, source, cutIndex) {
+    const test = scissorsFixedRuntime(state);
+    const hits = [];
+    state.enemies.forEach(function (enemy) {
+      if (enemy.dead) return;
+      const dx = enemy.x - state.player.x;
+      const dy = enemy.y - state.player.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > range + enemy.r) return;
+      if (angleDistance(Math.atan2(dy, dx), angle) > halfAngle) return;
+      damageEnemy(state, enemy, damage, source);
+      hits.push({ enemy });
+      if (source === "scissors_test_open") {
+        test.openHitsByEnemy[enemy.id] = (test.openHitsByEnemy[enemy.id] || 0) + 1;
+        test.totalOpenHits += 1;
+      }
+    });
+    const left = angle - halfAngle;
+    const right = angle + halfAngle;
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, edge: "left", actualHitCount: hits.length });
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, edge: "right", actualHitCount: hits.length });
+    recordScissorsTargets(test, hits);
+    return hits;
+  }
+
+  function executeScissorsAction(state, action) {
+    const p = state.activeFormParams || {};
+    const test = scissorsFixedRuntime(state);
+    if (!test) return;
+    if (action.kind === "base") {
+      scissorsFan(state, p, action.angle, 96, 0.3, p.damage || 24, "scissors_test_base", 0);
+      return;
+    }
+    if (action.kind === "thrust") {
+      const hits = scissorsLine(state, p, action.angle, p.scissorsThrustRange || 150, p.scissorsThrustWidth || 26, p.scissorsThrustDamage || p.damage, "scissors_test_thrust");
+      test.totalClosedHits += hits.length;
+      return;
+    }
+    if (action.kind === "sever") {
+      const hits = scissorsLine(state, p, action.angle, p.scissorsSeverRange || 215, p.scissorsSeverWidth || 52, p.scissorsSeverDamage || p.damage * 1.8, "scissors_test_sever");
+      hits.forEach(function (hit) {
+        const enemy = hit.enemy;
+        const slowScale = enemy.boss ? 0.22 : enemy.markerFixedElite ? 0.55 : 1;
+        enemy.scissorsSlowTime = Math.max(enemy.scissorsSlowTime || 0, (p.scissorsSeverSlowDuration || 1.75) * slowScale);
+        enemy.scissorsSlow = (p.scissorsSeverSlow || 0.35) * slowScale;
+      });
+      test.totalSevers += 1;
+      return;
+    }
+    if (action.kind === "open") {
+      const swing = action.index % 2 === 0 ? -0.045 : 0.045;
+      scissorsFan(state, p, action.angle + swing, p.scissorsFanRange || 112, p.scissorsFanHalfAngle || 0.55, p.scissorsFanDamage || p.damage * 0.5, "scissors_test_open", action.index);
+      return;
+    }
+    if (action.kind === "finale") {
+      const hits = scissorsFan(state, p, action.angle, (p.scissorsFanRange || 112) * 1.08, (p.scissorsFanHalfAngle || 0.55) * 1.12, p.scissorsFinaleDamage || p.damage * 1.35, "scissors_test_finale", 99);
+      hits.forEach(function (hit) {
+        const enemy = hit.enemy;
+        if (!enemy || enemy.dead) return;
+        const priorHits = Math.min(6, test.openHitsByEnemy[enemy.id] || 0);
+        const normalThreshold = Math.min(0.17, (p.scissorsExecuteBase || 0.05) + priorHits * (p.scissorsExecutePerHit || 0.02));
+        const threshold = enemy.boss ? 0.05 : enemy.markerFixedElite ? Math.min(0.11, normalThreshold) : normalThreshold;
+        if (enemy.boss && normalThreshold > threshold) {
+          damageEnemy(state, enemy, (p.scissorsFinaleDamage || p.damage) * (normalThreshold - threshold) * 2.5, "scissors_test_finale_boss_bonus");
+        }
+        if (!enemy.dead && enemy.hp / enemy.maxHp <= threshold) {
+          const crit = p.markerFixedCritChance;
+          const cap = enemy.bossHitCap;
+          p.markerFixedCritChance = 0;
+          enemy.bossHitCap = 0;
+          damageEnemy(state, enemy, enemy.hp + 1, "scissors_test_execution");
+          enemy.bossHitCap = cap;
+          p.markerFixedCritChance = crit;
+          test.totalExecutions += 1;
+          addTextEvent(state, enemy.x, enemy.y - 22, "裁决", "#ff6767", 0.55);
+        }
+      });
+      test.totalFinales += 1;
+    }
+  }
+
+  function finishScissorsRound(state) {
+    const test = scissorsFixedRuntime(state);
+    const config = fixedTestConfig(state);
+    if (!test || !test.activeRound) return;
+    test.activeRound = false;
+    if (config && config.onRoundComplete) config.onRoundComplete(state, test.roundTargetIds.length);
+  }
+
+  function updateScissorsFixedActions(state, dt) {
+    const test = scissorsFixedRuntime(state);
+    if (!test || !test.pendingActions.length) return;
+    test.pendingActions.forEach(function (action) { action.due -= dt; });
+    const ready = test.pendingActions.filter(function (action) { return action.due <= 0; });
+    test.pendingActions = test.pendingActions.filter(function (action) { return action.due > 0; });
+    ready.sort(function (a, b) { return a.order - b.order; }).forEach(function (action) { executeScissorsAction(state, action); });
+    if (!test.pendingActions.length) finishScissorsRound(state);
+  }
+
+  function triggerScissorsDash(state, test, p, target, angle) {
+    if (!test.dashReady) return angle;
+    let dx = 0;
+    let dy = 0;
+    if (state.input.left) dx -= 1;
+    if (state.input.right) dx += 1;
+    if (state.input.up) dy -= 1;
+    if (state.input.down) dy += 1;
+    if (!dx && !dy && target) {
+      dx = target.x - state.player.x;
+      dy = target.y - state.player.y;
+    }
+    if (!dx && !dy) {
+      dx = Math.cos(test.facingAngle || angle);
+      dy = Math.sin(test.facingAngle || angle);
+    }
+    const len = Math.hypot(dx, dy) || 1;
+    const dashAngle = Math.atan2(dy, dx);
+    const x1 = state.player.x;
+    const y1 = state.player.y;
+    const distance = p.scissorsDashDistance || 122;
+    state.player.x = clamp(state.player.x + dx / len * distance, 26, worldWidth(state) - 26);
+    state.player.y = clamp(state.player.y + dy / len * distance, 26, worldHeight(state) - 26);
+    state.player.invuln = Math.max(state.player.invuln || 0, p.scissorsDashWindow || 0.24);
+    test.dashWindow = p.scissorsDashWindow || 0.24;
+    test.dashCharge = 0;
+    test.dashReady = false;
+    test.dashAvoidedIds = {};
+    test.totalDashes += 1;
+    addBeamEvent(state, x1, y1, state.player.x, state.player.y, "#8ff6ee", 18, 0.28, "beam", false, "scissors_test_dash", { dashAngle, noDamage: true });
+    return dashAngle;
+  }
+
+  function fireScissorsFixedTest(state) {
+    const p = state.activeFormParams || {};
+    const test = scissorsFixedRuntime(state);
+    if (!test || test.activeRound) return;
+    const target = nearestEnemy(state, Math.max(360, p.scissorsSeverRange || 255));
+    if (!target) return;
+    let angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+    angle = triggerScissorsDash(state, test, p, target, angle);
+    test.facingAngle = angle;
+    test.roundAngle = angle;
+    test.roundSerial += 1;
+    test.roundTargetIds = [];
+    test.openHitsByEnemy = {};
+    test.activeRound = true;
+    const scale = p.scissorsActionScale || 1;
+    const actions = [];
+    let order = 0;
+    const push = function (kind, due, index) { actions.push({ kind, due: due * scale, index: index || 0, angle, order: order++ }); };
+    const thrusts = p.scissorsThrustCount || 0;
+    const cuts = p.scissorsCutCount || 0;
+    if (!thrusts && !cuts) push("base", 0.06, 0);
+    for (let i = 0; i < thrusts; i++) push("thrust", 0.06 + i * 0.11, i);
+    const thrustEnd = thrusts ? 0.06 + (thrusts - 1) * 0.11 : 0;
+    if (p.scissorsSever) push("sever", thrustEnd + 0.14, 0);
+    const openStart = thrusts ? thrustEnd + 0.16 : 0.06;
+    for (let i = 0; i < cuts; i++) push("open", openStart + i * 0.085, i);
+    if (p.scissorsFinale) push("finale", openStart + Math.max(0, cuts - 1) * 0.085 + 0.14, 0);
+    test.pendingActions = actions;
+    state.stats.shots += 1;
   }
 
   function fireMarker(state) {
@@ -2409,6 +2601,7 @@
     if (id === "marker") fireMarker(state);
     else if (id === "thermos") fireThermos(state);
     else if (id === "sticky_note") fireSticky(state);
+    else if (id === "scissors") fireScissorsFixedTest(state);
     else fireGeneric(state);
   }
 
@@ -2698,6 +2891,8 @@
     if (input.up) y -= 1;
     if (input.down) y += 1;
     const len = Math.hypot(x, y) || 1;
+    const scissors = scissorsFixedRuntime(state);
+    if (scissors && (x || y)) scissors.facingAngle = Math.atan2(y, x);
     state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
     state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
     updateCamera(state);
@@ -2731,6 +2926,11 @@
     state.stats.damageTaken += incoming;
     state.player.invuln = 0.55;
     addParticle(state, state.player.x, state.player.y, color || "#ff6b4a", 8);
+    const config = fixedTestConfig(state);
+    if (config && config.onPlayerDamaged && config.onPlayerDamaged(state)) {
+      addCircleEvent(state, state.player.x, state.player.y, params.scissorsShelterRadius || 108, "#7deaff", 0.48, "shield", false, "scissors_test_shelter");
+      addTextEvent(state, state.player.x, state.player.y - 36, "临时安全区", "#b8f7ff", 0.65);
+    }
     if (state.hp <= 0) V2.dispatch({ type: "END_RUN" });
   }
 
@@ -2746,7 +2946,9 @@
       radius: enemy.boss ? 7 : 5,
       life: enemy.boss ? 3.6 : 2.8,
       source: "enemy_" + (enemy.typeId || "shot"),
-        color: enemy.accent || "#ff8aff"
+        color: enemy.accent || "#ff8aff",
+        originX: enemy.x,
+        originY: enemy.y
       }));
     state.stats.enemyShots = (state.stats.enemyShots || 0) + 1;
     addCircleEvent(state, enemy.x, enemy.y, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
@@ -2798,6 +3000,8 @@
       let mx = dx / len;
       let my = dy / len;
       let moveSpeed = enemy.speed;
+      enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
+      if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
       if (enemy.chargeTime > 0) {
         enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
         mx = enemy.chargeVx || mx;
@@ -2827,8 +3031,16 @@
         enemy.y = clamp(enemy.y + my / mLen * moveSpeed * dt, -44, worldHeight(state) + 44);
       }
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
-      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r && state.player.invuln <= 0) {
-        damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r) {
+        if (state.player.invuln <= 0) {
+          damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+        } else {
+          const scissors = scissorsFixedRuntime(state);
+          if (scissors && scissors.dashWindow > 0 && !scissors.dashAvoidedIds[enemy.id]) {
+            scissors.dashAvoidedIds[enemy.id] = true;
+            scissors.totalDashDodges += 1;
+          }
+        }
       }
     }
     state.enemies = state.enemies.filter(function (enemy) { return !enemy.dead; }).slice(-cap);
@@ -2840,9 +3052,23 @@
         p.x += (p.vx || 0) * dt;
         p.y += (p.vy || 0) * dt;
         p.life -= dt;
-        if (Math.hypot(p.x - state.player.x, p.y - state.player.y) < p.radius + state.player.radius && state.player.invuln <= 0) {
-          damagePlayer(state, p.damage || 6, p.color || "#ff6b4a");
+        const config = fixedTestConfig(state);
+        if (config && config.blocksHostileProjectile && config.blocksHostileProjectile(state, p)) {
+          addCircleEvent(state, p.x, p.y, 18, "#9ff7ff", 0.22, "shield", false, "scissors_test_shelter_block");
           p.life = 0;
+        } else if (Math.hypot(p.x - state.player.x, p.y - state.player.y) < p.radius + state.player.radius) {
+          if (state.player.invuln <= 0) {
+            damagePlayer(state, p.damage || 6, p.color || "#ff6b4a");
+            p.life = 0;
+          } else {
+            const scissors = scissorsFixedRuntime(state);
+            const dodgeKey = p.source + ":" + Math.round((p.originX || 0) * 10) + ":" + Math.round((p.originY || 0) * 10);
+            if (scissors && scissors.dashWindow > 0 && !scissors.dashAvoidedIds[dodgeKey]) {
+              scissors.dashAvoidedIds[dodgeKey] = true;
+              scissors.totalDashDodges += 1;
+              p.life = 0;
+            }
+          }
         }
         if (p.x < -80 || p.x > worldWidth(state) + 80 || p.y < -80 || p.y > worldHeight(state) + 80) p.life = 0;
         continue;
@@ -3194,6 +3420,7 @@
     attackTimer -= dt;
     if (state.stage && state.stage.demoV2Phase === "marker-fixed") updateMarkerFixedPendingRounds(state);
     if (state.stage && state.stage.demoV2Phase === "thermos-fixed") updateThermosFixedPendingFocus(state);
+    if (state.stage && state.stage.demoV2Phase === "scissors-fixed") updateScissorsFixedActions(state, dt);
     if (attackTimer <= 0) {
       fireWeapon(state);
       let nextAttackDelay = state.activeFormParams.cooldown || 1.4;
@@ -3248,6 +3475,17 @@
     ctx.translate(p.x, p.y);
     ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
     drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    const scissors = scissorsFixedRuntime(state);
+    if (scissors) {
+      const angle = scissors.roundAngle || scissors.facingAngle || 0;
+      drawSprite(ctx, "scissors_v23", 27, -2, 52, 52, 0.96, angle);
+      const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
+      drawSprite(ctx, "thermos_charge_art", 0, 35, 66, 12, 0.35 + charge * 0.65, 0);
+      if (scissors.shelterActive) {
+        const radius = state.activeFormParams.scissorsShelterRadius || 108;
+        drawSprite(ctx, "status_shield_art", 0, 0, radius * 2, radius * 2, 0.82, 0);
+      }
+    }
     const shield = state.activeFormParams && state.activeFormParams.shield || 0;
     if (shield > 0) {
       const shieldMax = state.activeFormParams.markerShieldMax || state.activeFormParams.thermosShieldMax || state.activeFormParams.releaseShieldMax || state.activeFormParams.secondaryWarmShieldMax || Math.max(18, shield);
@@ -4040,6 +4278,8 @@
       damageEnemy,
       updateZones,
       updateThermosFixedPendingFocus,
+      updateScissorsFixedActions,
+      fireScissorsFixedTest,
       fireSupportSkill
     }
   };

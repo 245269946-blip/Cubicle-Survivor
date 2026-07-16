@@ -783,4 +783,11 @@
   };
 
   V2.demoV2 = Object.assign(V2.demoV2 || {}, { markerFixed });
+  V2.demoV2.fixedTests = Object.assign(V2.demoV2.fixedTests || {}, { "marker-fixed": markerFixed });
+  V2.getDemoV2FixedTestConfig = function getDemoV2FixedTestConfig(stateOrPhase) {
+    const phase = typeof stateOrPhase === "string"
+      ? stateOrPhase
+      : stateOrPhase && stateOrPhase.demoV2 && stateOrPhase.demoV2.phase;
+    return phase && V2.demoV2 && V2.demoV2.fixedTests ? V2.demoV2.fixedTests[phase] || null : null;
+  };
 })();

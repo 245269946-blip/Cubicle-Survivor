@@ -10,6 +10,8 @@
 | `sprites/thermos_station_v2.png` | Admin Thermos station body |
 | `sprites/sticky_note_v2.png` | Shared physical Sticky Note body |
 
+Demo V2.3 的隔离剪刀测试使用 `assets/generated-vfx/sprites/scissors-v23.png`。该文件是透明背景的单主体像素剪刀，由图像生成后执行色键去背；只作为剪刀武器实体与 UI 识别图，不授权进入 Demo V1 三武器资源池。
+
 All three files are 128×128 RGBA, contain one subject and have transparent
 corners. They are entity bodies only. Ranges, lines, rings, links, impacts and
 timing use the approved office sprites under `assets/generated-vfx/sprites/`;
