@@ -328,6 +328,7 @@
   const scissorsFixed = {
     id: "scissors-fixed",
     version: "Demo V2.3",
+    visualVersion: "Demo V2.4",
     runtimeKey: "scissors",
     weaponId: "scissors",
     weaponName: "剪刀",

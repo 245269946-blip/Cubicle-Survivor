@@ -231,6 +231,7 @@
   const thermosFixed = {
     id: "thermos-fixed",
     version: "Demo V2.2",
+    visualVersion: "Demo V2.4",
     runtimeKey: "thermos",
     weaponId: "thermos",
     weaponName: "保温杯",

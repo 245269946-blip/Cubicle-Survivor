@@ -6159,7 +6159,7 @@ h2 {
   margin: 0 auto 4px;
 }
 
-.scissors-weapon-icon {
+.fixed-weapon-icon {
   display: block;
   width: 72px;
   height: 72px;
@@ -6169,13 +6169,13 @@ h2 {
   filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.3));
 }
 
-.weapon-card > .scissors-weapon-icon {
+.weapon-card > .fixed-weapon-icon {
   width: 76px;
   height: 76px;
   margin: 0 auto 4px;
 }
 
-.learning-card > .scissors-weapon-icon {
+.learning-card > .fixed-weapon-icon {
   position: absolute;
   top: 10px;
   right: 10px;
