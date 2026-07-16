@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -152,6 +152,28 @@
         }
         if (startButton) startButton.textContent = "进入马克笔三线成长测试";
       }
+      if (demoV2Phase === "thermos-fixed") {
+        document.title = "工位幸存者 Demo V2.2 · 保温杯固定测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.2 保温杯固定测试");
+        if (stamp) stamp.textContent = "Demo V2.2 · 保温杯固定测试";
+        if (subtitle) subtitle.textContent = "只验证保温杯：共享近距扇面、冷凝铺场，以及把聚焦击杀转成死亡热浪。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "近距正面扇面";
+          guideCards[0].querySelector("span:last-child").textContent = "所有喷射组共享冷却，只覆盖玩家正面的有限角度。";
+          guideCards[1].querySelector("strong").textContent = "冷凝区域路线";
+          guideCards[1].querySelector("span:last-child").textContent = "沿喷射路径增加持续区域数量，依靠范围与持续时间铺场。";
+          guideCards[2].querySelector("strong").textContent = "击杀热浪路线";
+          guideCards[2].querySelector("span:last-child").textContent = "聚焦低生命目标，真实击杀后释放一次不连锁热浪。";
+          guideCards[3].querySelector("strong").textContent = "同一固定框架";
+          guideCards[3].querySelector("span:last-child").textContent = "17 关、4 次模块与 6 次组件商店和 V2.1 保持可比较。";
+        }
+        if (startButton) startButton.textContent = "进入保温杯双路线测试";
+      }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
         const debugWeapon = params.get("weapon");
@@ -216,6 +238,36 @@
               }
             }
           }
+          if (demoV2Phase === "thermos-fixed" && V2.demoV2 && V2.demoV2.thermosFixed) {
+            const config = V2.demoV2.thermosFixed;
+            const test = debugState.demoV2.thermos;
+            String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {
+              if (config.modules[moduleId]) config.applyModule(debugState, moduleId, true);
+            });
+            if (debugScreen === "module") {
+              config.startEncounter(debugState, 2);
+              config.completeEncounter(debugState, true);
+            }
+            if (debugScreen === "collection") {
+              const encounter = config.currentEncounter(debugState);
+              debugState.pickups = [
+                { type: "xp", amount: 24, x: debugState.player.x + 180, y: debugState.player.y + 60, radius: 7, color: "#4a9eff" },
+                { type: "material", amount: 2, x: debugState.player.x - 160, y: debugState.player.y - 40, radius: 7, color: "#ffd700", markerFixedDrop: true }
+              ];
+              test.encounterSpawned = encounter.spawnTotal;
+              debugState.stageKills = debugState.stage.targetKills;
+              config.completeEncounter(debugState);
+            }
+            if (debugScreen === "upgrade") {
+              test.pendingExperiencePoints = 2;
+              debugState.upgradeChoices = config.makeExperienceChoices(debugState);
+              debugState.mode = "level_up";
+            }
+            if (debugScreen === "component_shop") {
+              test.currentEncounterIndex = 1;
+              config.completeEncounter(debugState, true);
+            }
+          }
           if (V2.progression) {
             if (debugScreen === "weapon_select") debugState.mode = "weapon_select";
             if (debugLayer === "promotion" || debugLayer === "mastery") {
@@ -260,7 +312,7 @@
               debugState.mode = "slot_select";
             }
             if (debugScreen === "badge") debugState.mode = "badge_select";
-            if (debugScreen === "upgrade" && demoV2Phase !== "marker-fixed") {
+            if (debugScreen === "upgrade" && demoV2Phase !== "marker-fixed" && demoV2Phase !== "thermos-fixed") {
               debugState.upgradeChoices = V2.progression.makeUpgradeChoices(debugState);
               debugState.previousMode = "combat";
               debugState.mode = "level_up";
@@ -285,7 +337,7 @@
             if (debugScreen === "combat") {
               debugState.mode = "combat";
               debugState.warmupTime = params.get("warmup") === "1" ? 2.4 : 0;
-              if (demoV2Phase === "marker-fixed") {
+              if (demoV2Phase === "marker-fixed" || demoV2Phase === "thermos-fixed") {
                 debugState.stageTime = Number(debugState.stage && debugState.stage.duration) || 0;
                 debugState.stageKills = 0;
               } else {

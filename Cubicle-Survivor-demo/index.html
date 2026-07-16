@@ -22,7 +22,7 @@
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_drone_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
-    <link rel="stylesheet" href="styles.css?v=39" />
+    <link rel="stylesheet" href="styles.css?v=40" />
     <link rel="stylesheet" href="generated-skin.css?v=42" />
   </head>
   <body>
@@ -218,8 +218,8 @@
           <div class="panel upgrade-panel shop-panel v2-panel marker-component-panel">
             <div class="panel-title-row">
               <div>
-                <p class="eyebrow">马克笔组件商店</p>
-                <h2>只强化属性，不解锁攻击机制</h2>
+                <p id="componentShopEyebrow" class="eyebrow">武器组件商店</p>
+                <h2 id="componentShopTitle">只强化属性，不解锁攻击机制</h2>
                 <p id="componentShopNote" class="panel-note">重复购买同部位，按白—蓝—紫—红合成。</p>
               </div>
               <div class="material-pill shop-material-pill">材料 <strong id="componentCreditsText">0</strong></div>
@@ -307,17 +307,18 @@
     <script src="src/data/balance.js"></script>
     <script src="src/core/build-state.js"></script>
     <script src="src/v2/data/weapon-forms.js?v=7"></script>
-    <script src="src/v2/data/form-signatures.js?v=5"></script>
-    <script src="src/v2/audio/audio.js?v=2"></script>
+    <script src="src/v2/data/form-signatures.js?v=6"></script>
+    <script src="src/v2/audio/audio.js?v=3"></script>
     <script src="src/v2/compat/legacy.js?v=3"></script>
     <script src="src/v2/demo-v2/phase-a.js?v=2"></script>
     <script src="src/v2/demo-v2/phase-b.js?v=3"></script>
     <script src="src/v2/demo-v2/marker-fixed.js?v=6"></script>
-    <script src="src/v2/runtime/state.js?v=14"></script>
+    <script src="src/v2/demo-v2/thermos-fixed.js?v=1"></script>
+    <script src="src/v2/runtime/state.js?v=15"></script>
     <script src="src/v2/progression/progression.js?v=8"></script>
-  <script src="src/v2/combat/systems.js?v=70"></script>
-    <script src="src/v2/ui/view-model.js?v=21"></script>
-    <script src="src/v2/ui/render.js?v=29"></script>
-    <script src="main.js?v=72"></script>
+  <script src="src/v2/combat/systems.js?v=71"></script>
+    <script src="src/v2/ui/view-model.js?v=25"></script>
+    <script src="src/v2/ui/render.js?v=30"></script>
+    <script src="main.js?v=73"></script>
   </body>
 </html>

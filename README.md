@@ -29,6 +29,15 @@ python -m http.server 5174
 
 然后打开 `http://127.0.0.1:5174/`。
 
+独立 Demo V2 验证入口：
+
+- `demo-v2.html`：阶段 A 三武器基础测试。
+- `demo-v2-b.html`：阶段 B Build 对话测试。
+- `demo-v2-marker.html`：Demo V2.1 马克笔固定类型测试。
+- `demo-v2-thermos.html`：Demo V2.2 保温杯固定类型测试。
+
+武器级内容大更新使用新的 Demo 小版本号并保留旧入口，避免把不同机制候选混成同一版本。
+
 ## 当前判断
 
 v1.0 和 v2.0 是两个不同设计范式：

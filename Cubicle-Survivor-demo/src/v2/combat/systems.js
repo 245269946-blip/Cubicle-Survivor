@@ -515,7 +515,7 @@
 
   function damageEnemy(state, enemy, amount, source, knockbackFrom) {
     if (!enemy || enemy.dead) return;
-    const markerTest = markerFixedRuntime(state);
+    const markerTest = fixedTestRuntime(state);
     const markerParams = state.activeFormParams || {};
     if (markerTest && markerParams.markerFixedCritChance > 0 && Math.random() < markerParams.markerFixedCritChance) {
       amount *= 2;
@@ -611,7 +611,7 @@
         spawnChildEnemy(state, enemy, enemy.splitType, -1);
         spawnChildEnemy(state, enemy, enemy.splitType, 1);
       }
-      if (state.stage && state.stage.demoV2Phase === "marker-fixed") {
+      if (fixedTestConfig(state)) {
         const xpAmount = Math.max(1, Math.round((enemy.xp || 4) * (enemy.markerFixedElite ? 1.8 : 1)));
         state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
         const luck = (state.activeFormParams && state.activeFormParams.markerFixedLuck) || 0;
@@ -847,6 +847,7 @@
       debuff: data.debuff,
       teaRadius: data.teaRadius,
       teaDamage: data.teaDamage,
+      noKnockback: !!data.noKnockback,
       visual: data.visual || "thermos_wavefront",
       pulseIndex: data.pulseIndex || 0
     });
@@ -1091,6 +1092,18 @@
       actualHitCount: hits.length
     });
     return hits;
+  }
+
+  function fixedTestConfig(state) {
+    const phase = state && state.demoV2 && state.demoV2.phase;
+    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
+    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
+    return null;
+  }
+
+  function fixedTestRuntime(state) {
+    const config = fixedTestConfig(state);
+    return config && state.demoV2 ? state.demoV2[config.runtimeKey] : null;
   }
 
   function markerFixedRuntime(state) {
@@ -1667,9 +1680,217 @@
     }
   }
 
+  function thermosFixedDirection(state, range) {
+    const nearby = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range * 1.2;
+    });
+    if (!nearby.length) return null;
+    let best = nearby[0];
+    let bestScore = -Infinity;
+    nearby.forEach(function (candidate) {
+      let neighbours = 0;
+      nearby.forEach(function (other) {
+        if (Math.hypot(other.x - candidate.x, other.y - candidate.y) <= 105) neighbours += 1;
+      });
+      const distance = Math.hypot(candidate.x - state.player.x, candidate.y - state.player.y);
+      const score = neighbours * 1000 - distance;
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    });
+    return Math.atan2(best.y - state.player.y, best.x - state.player.x);
+  }
+
+  function thermosFixedAngleDistance(a, b) {
+    return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  }
+
+  function thermosFixedTargetInFan(state, angle, range, halfAngle) {
+    return state.enemies.filter(function (enemy) {
+      if (enemy.dead) return false;
+      const dx = enemy.x - state.player.x;
+      const dy = enemy.y - state.player.y;
+      const distance = Math.hypot(dx, dy);
+      return distance <= range + enemy.r && thermosFixedAngleDistance(Math.atan2(dy, dx), angle) <= halfAngle;
+    }).sort(function (a, b) {
+      if (a.hp !== b.hp) return a.hp - b.hp;
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0] || null;
+  }
+
+  function thermosFixedFanPoints(state, angle, range, width) {
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+    const nx = -uy;
+    const ny = ux;
+    const originDistance = 15;
+    const originHalfWidth = Math.min(30, width * 0.14);
+    const halfWidth = width / 2;
+    const originX = state.player.x + ux * originDistance;
+    const originY = state.player.y + uy * originDistance;
+    const farX = state.player.x + ux * range;
+    const farY = state.player.y + uy * range;
+    return {
+      originX, originY, farX, farY, ux, uy, nx, ny,
+      points: [
+        { x: originX + nx * originHalfWidth, y: originY + ny * originHalfWidth },
+        { x: farX + nx * halfWidth, y: farY + ny * halfWidth },
+        { x: farX - nx * halfWidth, y: farY - ny * halfWidth },
+        { x: originX - nx * originHalfWidth, y: originY - ny * originHalfWidth }
+      ]
+    };
+  }
+
+  function drawThermosFixedFan(state, fan, width, source, groupIndex) {
+    [-0.92, -0.46, 0, 0.46, 0.92].forEach(function (offset) {
+      addBeamEvent(
+        state,
+        fan.originX,
+        fan.originY,
+        fan.farX + fan.nx * width * 0.5 * offset,
+        fan.farY + fan.ny * width * 0.5 * offset,
+        source === "thermos_test_focus" ? "#ffe0a1" : "#b8f6ff",
+        source === "thermos_test_focus" ? 8 : 10,
+        source === "thermos_test_focus" ? 0.2 : 0.26,
+        "steam",
+        false,
+        source,
+        { thermosFixedFan: true, groupIndex, fanOffset: offset }
+      );
+    });
+  }
+
+  function addThermosFixedCondensation(state, p, angle, groupIndex) {
+    const count = p.thermosFixedCondensationZones || 0;
+    if (!count) return;
+    for (let zoneIndex = 0; zoneIndex < count; zoneIndex++) {
+      const distance = (p.range || 225) * (zoneIndex + 1) / (count + 0.35);
+      const radius = Math.max(38, (p.width || 205) * (0.2 + zoneIndex * 0.012));
+      const x = state.player.x + Math.cos(angle) * distance;
+      const y = state.player.y + Math.sin(angle) * distance;
+      const duration = p.thermosFixedCondensationDuration || 1.65;
+      addCircleEvent(state, x, y, radius, "#b9e8ef", Math.min(0.72, duration), "steam_pulse", false, "thermos_test_condensation", { groupIndex, zoneIndex, duration });
+      addDamageZone(state, {
+        type: "circle", source: "thermos_test_condensation", x, y, radius,
+        damage: p.thermosFixedCondensationDamage || 1.6,
+        life: duration, maxLife: duration, tickEvery: 0.38,
+        color: "#b9e8ef", visual: "thermos_station_field", noKnockback: true,
+        condensationZone: true, groupIndex, zoneIndex
+      });
+    }
+  }
+
+  function addThermosFixedHeatwave(state, p, x, y, test) {
+    const radius = Math.max(68, (p.range || 225) * 0.38);
+    addThermosWavefront(state, {
+      source: "thermos_test_kill_heatwave", x, y, radius,
+      damage: p.thermosFixedHeatwaveDamage || 7,
+      duration: 0.44, thickness: 30, color: "#ffd7a0", visual: "thermos_wavefront",
+      noKnockback: true
+    });
+    test.stageHeatwaveTriggers += 1;
+    test.totalHeatwaveTriggers += 1;
+  }
+
+  function performThermosFixedFocus(state, pending) {
+    const p = state.activeFormParams || {};
+    const test = fixedTestRuntime(state);
+    if (!test) return;
+    const target = thermosFixedTargetInFan(state, pending.angle, p.range || 225, 0.5);
+    if (!target) return;
+    const wasAlive = !target.dead;
+    addBeamEvent(state, state.player.x, state.player.y, target.x, target.y, "#ffe0a1", 10, 0.22, "steam", false, "thermos_test_focus", { targetEnemyId: target.id, focusIndex: pending.focusIndex });
+    damageEnemy(state, target, p.thermosFixedFocusDamage || (p.damage || 14) * 1.55, "thermos_test_focus", null);
+    if (wasAlive && target.dead) {
+      test.stageFocusKills += 1;
+      test.totalFocusKills += 1;
+      addThermosFixedHeatwave(state, p, target.x, target.y, test);
+    }
+  }
+
+  function triggerThermosFixedFullscreenCondensation(state, p, test, elapsed) {
+    if (!p.thermosFixedFullscreenCondensation || elapsed < (test.fullscreenCondensationReadyAt || 0)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const x = camera.x + camera.width / 2;
+    const y = camera.y + camera.height / 2;
+    const radius = Math.hypot(camera.width, camera.height) * 0.58;
+    const duration = Math.max(1.1, (p.thermosFixedCondensationDuration || 1.65) * 0.72);
+    addCircleEvent(state, x, y, radius, "#b9e8ef", 0.82, "steam_pulse", false, "thermos_test_fullscreen_condensation", { fullscreen: true, duration });
+    addDamageZone(state, { type: "circle", source: "thermos_test_fullscreen_condensation", x, y, radius, damage: (p.thermosFixedCondensationDamage || 1.6) * 0.76, life: duration, maxLife: duration, tickEvery: 0.38, color: "#b9e8ef", visual: "thermos_station_field", noKnockback: true, fullscreen: true });
+    test.fullscreenCondensationReadyAt = elapsed + (p.thermosFixedFullscreenCooldown || 4.8);
+    test.fullscreenCondensationTriggers += 1;
+  }
+
+  function triggerThermosFixedFullscreenIgnition(state, p, test, elapsed) {
+    if (!p.thermosFixedFullscreenIgnition || elapsed < (test.fullscreenIgnitionReadyAt || 0)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    const targets = state.enemies.filter(function (enemy) { return !enemy.dead; }).sort(function (a, b) {
+      const priorityA = a.boss ? 3 : a.markerFixedElite || a.behavior === "tank" || a.behavior === "shield" ? 2 : 1;
+      const priorityB = b.boss ? 3 : b.markerFixedElite || b.behavior === "tank" || b.behavior === "shield" ? 2 : 1;
+      return priorityB - priorityA || a.hp - b.hp;
+    }).slice(0, 6);
+    targets.forEach(function (target, index) {
+      const wasAlive = !target.dead;
+      addCircleEvent(state, target.x, target.y, target.r + 24, "#ffbe73", 0.3 + index * 0.03, "steam_pulse", false, "thermos_test_fullscreen_ignition", { targetEnemyId: target.id, ignitionIndex: index });
+      damageEnemy(state, target, (p.thermosFixedFocusDamage || (p.damage || 14) * 1.55) * 0.9, "thermos_test_fullscreen_ignition", null);
+      if (wasAlive && target.dead) {
+        test.stageFocusKills += 1;
+        test.totalFocusKills += 1;
+        addThermosFixedHeatwave(state, p, target.x, target.y, test);
+      }
+    });
+    test.fullscreenIgnitionReadyAt = elapsed + (p.thermosFixedFullscreenCooldown || 4.8);
+    test.fullscreenIgnitionTriggers += 1;
+  }
+
+  function fireThermosFixedTest(state) {
+    const p = state.activeFormParams || {};
+    const test = fixedTestRuntime(state);
+    const mainAngle = thermosFixedDirection(state, p.range || 225);
+    if (!test || mainAngle == null) return;
+    state.stats.shots += 1;
+    const count = Math.max(1, p.amount || 1);
+    const spread = count > 1 ? Math.min(0.68, 0.18 + count * 0.1) : 0;
+    const hitThisRound = new Set();
+    for (let groupIndex = 0; groupIndex < count; groupIndex++) {
+      const t = count === 1 ? 0 : groupIndex / (count - 1) - 0.5;
+      const angle = mainAngle + t * spread;
+      const fan = thermosFixedFanPoints(state, angle, p.range || 225, p.width || 205);
+      drawThermosFixedFan(state, fan, p.width || 205, "thermos_test_base", groupIndex);
+      state.enemies.forEach(function (enemy) {
+        if (enemy.dead || hitThisRound.has(enemy) || !pointInPolygon(enemy.x, enemy.y, fan.points)) return;
+        hitThisRound.add(enemy);
+        const resistance = enemy.boss ? 0.22 : enemy.behavior === "tank" || enemy.behavior === "shield" ? 0.45 : 1;
+        damageEnemy(state, enemy, p.damage || 14, "thermos_test_base", { x: state.player.x, y: state.player.y, power: (p.thermosFixedKnockback || 15) * resistance });
+      });
+      addThermosFixedCondensation(state, p, angle, groupIndex);
+    }
+    const now = (V2.demoV2 && V2.demoV2.thermosFixed && V2.demoV2.thermosFixed.totalElapsed) ? V2.demoV2.thermosFixed.totalElapsed(state) : state.totalTime;
+    for (let focusIndex = 0; focusIndex < (p.thermosFixedFocusHits || 0); focusIndex++) {
+      test.pendingFocusHits.push({ due: now + 0.08 + focusIndex * 0.13, angle: mainAngle, focusIndex });
+    }
+    triggerThermosFixedFullscreenCondensation(state, p, test, now);
+    triggerThermosFixedFullscreenIgnition(state, p, test, now);
+  }
+
+  function updateThermosFixedPendingFocus(state) {
+    const test = fixedTestRuntime(state);
+    if (!test || !test.pendingFocusHits || !test.pendingFocusHits.length) return;
+    const now = V2.demoV2.thermosFixed.totalElapsed(state);
+    const ready = test.pendingFocusHits.filter(function (pending) { return pending.due <= now; });
+    test.pendingFocusHits = test.pendingFocusHits.filter(function (pending) { return pending.due > now; });
+    ready.forEach(function (pending) { performThermosFixedFocus(state, pending); });
+  }
+
   function fireThermos(state) {
     const p = state.activeFormParams;
     const form = state.activeForm || {};
+    if (p.thermosFixedTest) {
+      fireThermosFixedTest(state);
+      return;
+    }
     if ((p.releaseLockout || 0) > 0) return;
     const target = nearestEnemy(state, p.demoV2SteamFan ? (p.steamRange || 240) : (p.releaseRange || p.steamRange || 280));
     if (!target && form.mechanicType !== "deployable_safe_station") return;
@@ -2256,16 +2477,16 @@
   }
 
   function markerFixedQuotaAllowsSpawn(state) {
-    if (!(state.stage && state.stage.demoV2Phase === "marker-fixed")) return true;
-    const config = V2.demoV2 && V2.demoV2.markerFixed;
+    const config = fixedTestConfig(state);
+    if (!config) return true;
     const encounter = config && config.currentEncounter ? config.currentEncounter(state) : null;
-    const test = markerFixedRuntime(state);
+    const test = fixedTestRuntime(state);
     return !!(encounter && test && test.encounterSpawned < encounter.spawnTotal);
   }
 
   function recordMarkerFixedQuotaSpawn(state, enemy) {
-    if (!(state.stage && state.stage.demoV2Phase === "marker-fixed") || !enemy || enemy.boss) return;
-    const test = markerFixedRuntime(state);
+    if (!fixedTestConfig(state) || !enemy || enemy.boss) return;
+    const test = fixedTestRuntime(state);
     if (!test) return;
     test.encounterSpawned += 1;
     enemy.markerFixedEncounterEnemy = true;
@@ -2302,11 +2523,12 @@
 
   function addDemoV2Enemy(state, typeId, x, y) {
     const phase = state.stage && state.stage.demoV2Phase;
-    const config = V2.demoV2 && (phase === "marker-fixed" ? V2.demoV2.markerFixed : phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA);
-    const markerEncounter = phase === "marker-fixed" && config && config.currentEncounter ? config.currentEncounter(state) : null;
+    const fixedConfig = fixedTestConfig(state);
+    const config = fixedConfig || (V2.demoV2 && (phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA));
+    const markerEncounter = fixedConfig && config && config.currentEncounter ? config.currentEncounter(state) : null;
     const enemyCap = markerEncounter ? markerEncounter.cap : config && config.enemyCap;
     if (enemyCap && state.enemies.length >= enemyCap) return null;
-    if (phase === "marker-fixed" && !markerFixedQuotaAllowsSpawn(state)) return null;
+    if (fixedConfig && !markerFixedQuotaAllowsSpawn(state)) return null;
     const margin = 44;
     const enemy = makeEnemy(
       state,
@@ -2315,8 +2537,8 @@
       clamp(y, -margin, worldHeight(state) + margin),
       { boss: false }
     );
-    if (phase === "marker-fixed" && state.demoV2 && state.demoV2.marker) {
-      const test = state.demoV2.marker;
+    if (fixedConfig) {
+      const test = fixedTestRuntime(state);
       if (typeId === "meeting" || typeId === "approval" || typeId === "client") {
         test.eliteCandidateSerial += 1;
         if (test.eliteCandidateSerial % 5 === 0) {
@@ -2415,13 +2637,15 @@
 
   function updateDemoV2Director(state, dt) {
     const phase = state.stage && state.stage.demoV2Phase;
-    const config = V2.demoV2 && (phase === "marker-fixed" ? V2.demoV2.markerFixed : phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA);
+    const fixedConfig = fixedTestConfig(state);
+    const config = fixedConfig || (V2.demoV2 && (phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA));
     if (!config) return;
     const runtime = state.demoV2 || (state.demoV2 = {});
-    runtime.elapsed = phase === "marker-fixed" && config.totalElapsed
+    runtime.elapsed = fixedConfig && config.totalElapsed
       ? config.totalElapsed(state)
       : Math.max(0, config.duration - state.stageTime);
-    const markerWaveIndex = phase === "marker-fixed" && runtime.marker ? runtime.marker.currentEncounterIndex : -1;
+    const fixedRuntime = fixedTestRuntime(state);
+    const markerWaveIndex = fixedConfig && fixedRuntime ? fixedRuntime.currentEncounterIndex : -1;
     const waveIndex = markerWaveIndex >= 0 ? markerWaveIndex : Math.max(0, config.waves.findIndex(function (wave) {
       return runtime.elapsed >= wave.start && runtime.elapsed < wave.end;
     }));
@@ -2433,17 +2657,17 @@
       runtime.waveTimer = 0;
       runtime.floorTimer = 0;
       if (runtime.wavesSeen.indexOf(wave.id) < 0) runtime.wavesSeen.push(wave.id);
-      state.stage.name = (phase === "marker-fixed" ? "马克笔测试 · " : phase === "phase-b" ? "阶段 B · " : "阶段 A · ") + wave.label;
+      state.stage.name = (fixedConfig ? fixedConfig.weaponName + "测试 · " : phase === "phase-b" ? "阶段 B · " : "阶段 A · ") + wave.label;
       state.stage.threatHint = wave.hint;
       addTextEvent(state, state.player.x, state.player.y - 72, wave.label, "#bdf5ff", 0.85);
     }
 
-    const markerEncounter = phase === "marker-fixed" && config.currentEncounter ? config.currentEncounter(state) : null;
-    const markerTest = phase === "marker-fixed" ? markerFixedRuntime(state) : null;
+    const markerEncounter = fixedConfig && config.currentEncounter ? config.currentEncounter(state) : null;
+    const markerTest = fixedRuntime;
     const quotaRemaining = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
     const enemyCap = markerEncounter ? markerEncounter.cap : config.enemyCap;
     const enemyFloor = markerEncounter ? markerEncounter.floor : config.enemyFloor;
-    if (phase === "marker-fixed" && markerEncounter && markerEncounter.boss) spawnMarkerFixedBoss(state, config);
+    if (fixedConfig && markerEncounter && markerEncounter.boss) spawnMarkerFixedBoss(state, config);
 
     runtime.waveTimer = (runtime.waveTimer || 0) - dt;
     if (runtime.waveTimer <= 0 && state.enemies.length < enemyCap && quotaRemaining > 0) {
@@ -2552,8 +2776,9 @@
 
   function updateEnemies(state, dt) {
     const demoPhase = state.stage && state.stage.demoV2Phase;
-    const demoConfig = V2.demoV2 && (demoPhase === "marker-fixed" ? V2.demoV2.markerFixed : demoPhase === "phase-b" ? V2.demoV2.phaseB : demoPhase === "phase-a" ? V2.demoV2.phaseA : null);
-    const markerEncounter = demoPhase === "marker-fixed" && demoConfig && demoConfig.currentEncounter ? demoConfig.currentEncounter(state) : null;
+    const fixedConfig = fixedTestConfig(state);
+    const demoConfig = fixedConfig || (V2.demoV2 && (demoPhase === "phase-b" ? V2.demoV2.phaseB : demoPhase === "phase-a" ? V2.demoV2.phaseA : null));
+    const markerEncounter = fixedConfig && demoConfig && demoConfig.currentEncounter ? demoConfig.currentEncounter(state) : null;
     const cap = markerEncounter ? markerEncounter.cap : demoConfig ? demoConfig.enemyCap : state.stage.id >= 4 ? 95 : 75;
     for (const enemy of state.enemies) {
       if (enemy.dead) continue;
@@ -2820,7 +3045,7 @@
           if (z.debuff === "tea") {
             enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
           }
-          damageEnemy(state, enemy, z.damage, z.source || "ring_zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+          damageEnemy(state, enemy, z.damage, z.source || "ring_zone", z.noKnockback ? null : { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
           if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
         }
         continue;
@@ -2835,7 +3060,7 @@
             if (z.debuff === "tea") {
               enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
             }
-            damageEnemy(state, enemy, z.damage, z.source || "zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+            damageEnemy(state, enemy, z.damage, z.source || "zone", z.noKnockback ? null : { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
             if (z.hitOnce) z.hits[enemy.id] = true;
             if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
             if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
@@ -2878,7 +3103,7 @@
       if (z.type === "polygon" && z.points && z.points.length >= 3) {
         for (const enemy of state.enemies) {
           if (enemy.dead || !pointInPolygon(enemy.x, enemy.y, z.points)) continue;
-          damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", { x: z.x, y: z.y });
+          damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", z.noKnockback ? null : { x: z.x, y: z.y });
           if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
           if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
         }
@@ -2889,7 +3114,7 @@
 
   function updatePickups(state, dt) {
     pickupMagnetTimer += dt;
-    const markerTest = markerFixedRuntime(state);
+    const markerTest = fixedTestRuntime(state);
     const magnetRadius = markerTest && markerTest.collecting ? 520 : 150;
     const magnetSpeed = markerTest && markerTest.collecting ? 8.5 : 5;
     for (const p of state.pickups) {
@@ -2904,9 +3129,10 @@
         if (p.type === "material") {
           state.materials += p.amount;
           state.stats.materialsCollected += p.amount;
-          if (p.markerFixedDrop && state.demoV2 && state.demoV2.marker) {
-            state.demoV2.marker.dropMaterialsEarned += p.amount;
-            state.demoV2.marker.materialsSinceLastShop += p.amount;
+          const fixedRuntime = fixedTestRuntime(state);
+          if (p.markerFixedDrop && fixedRuntime) {
+            fixedRuntime.dropMaterialsEarned += p.amount;
+            fixedRuntime.materialsSinceLastShop += p.amount;
           }
         }
       }
@@ -2938,12 +3164,13 @@
     if (state.warmupTime > 0) {
       state.warmupTime = Math.max(0, state.warmupTime - dt);
       updateInput(state, dt);
-      const markerTest = markerFixedRuntime(state);
+      const markerTest = fixedTestRuntime(state);
       if (markerTest && markerTest.collecting) {
         updatePickups(state, dt);
         updateEffects(state, dt);
-        if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state, dt);
-        if (state.warmupTime <= 0 && V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.finishCollection(state);
+        const config = fixedTestConfig(state);
+        if (config) config.tick(state, dt);
+        if (state.warmupTime <= 0 && config) config.finishCollection(state);
       }
       return;
     }
@@ -2952,10 +3179,10 @@
     if (state.activeFormParams) {
       state.activeFormParams.releaseLockout = Math.max(0, (state.activeFormParams.releaseLockout || 0) - dt);
     }
-    if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b" || state.stage.demoV2Phase === "marker-fixed")) {
+    if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b" || fixedTestConfig(state))) {
       updateDemoV2Director(state, dt);
       if (state.stage.demoV2Phase === "phase-b" && V2.demoV2 && V2.demoV2.phaseB) V2.demoV2.phaseB.tick(state);
-      if (state.stage.demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.tick(state, dt);
+      if (fixedTestConfig(state)) fixedTestConfig(state).tick(state, dt);
     } else {
       spawnTimer -= dt;
       if (spawnTimer <= 0 && state.enemies.length < (state.stage.boss ? 5 : 80)) {
@@ -2966,6 +3193,7 @@
     }
     attackTimer -= dt;
     if (state.stage && state.stage.demoV2Phase === "marker-fixed") updateMarkerFixedPendingRounds(state);
+    if (state.stage && state.stage.demoV2Phase === "thermos-fixed") updateThermosFixedPendingFocus(state);
     if (attackTimer <= 0) {
       fireWeapon(state);
       let nextAttackDelay = state.activeFormParams.cooldown || 1.4;
@@ -2986,10 +3214,11 @@
     updateEnemies(state, dt);
     updatePickups(state, dt);
     updateEffects(state, dt);
-    const markerFixed = state.stage && state.stage.demoV2Phase === "marker-fixed";
-    const markerTest = markerFixed ? markerFixedRuntime(state) : null;
-    const markerEncounter = markerFixed && V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.currentEncounter
-      ? V2.demoV2.markerFixed.currentEncounter(state) : null;
+    const markerFixed = !!fixedTestConfig(state);
+    const markerTest = markerFixed ? fixedTestRuntime(state) : null;
+    const fixedConfig = fixedTestConfig(state);
+    const markerEncounter = markerFixed && fixedConfig && fixedConfig.currentEncounter
+      ? fixedConfig.currentEncounter(state) : null;
     const markerAddsAlive = markerFixed ? state.enemies.filter(function (enemy) { return !enemy.dead && !enemy.boss; }).length : 0;
     const markerQuotaCleared = markerEncounter && markerTest && markerTest.encounterSpawned >= markerEncounter.spawnTotal && markerAddsAlive <= 0;
     const markerCleared = markerFixed && markerEncounter
@@ -3810,6 +4039,7 @@
       resourceSourceMatches: formResourceSourceMatches,
       damageEnemy,
       updateZones,
+      updateThermosFixedPendingFocus,
       fireSupportSkill
     }
   };

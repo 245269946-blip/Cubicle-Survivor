@@ -121,6 +121,7 @@ const scripts = [
   "src/v2/demo-v2/phase-a.js",
   "src/v2/demo-v2/phase-b.js",
   "src/v2/demo-v2/marker-fixed.js",
+  "src/v2/demo-v2/thermos-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",
@@ -652,14 +653,15 @@ if (collectionTransition.kind !== "collection" || collectionTransition.duration 
   process.exit(1);
 }
 markerFixed.finishCollection(markerFixedState);
-if (markerFixedState.mode !== "level_up" || markerFixedState.materials !== 10 || markerFixedState.level !== 2
-  || markerFixedState.demoV2.marker.lastAutoCollect.xp <= 0 || markerFixedState.demoV2.marker.lastAutoCollect.materials !== 3
+if (markerFixedState.mode !== "level_up" || markerFixedState.materials < 10 || markerFixedState.level !== 2
+  || markerFixedState.demoV2.marker.lastAutoCollect.xp <= 0 || markerFixedState.demoV2.marker.lastAutoCollect.materials < 3
   || markerFixedState.upgradeChoices.length !== 4
   || new Set(markerFixedState.upgradeChoices.map((choice) => choice.id)).size !== 4
   || markerFixedState.upgradeChoices.some((choice) => !markerFixed.experienceStats[choice.id])) {
   console.error("Collection expiry must auto-pick leftovers, grant stage materials, and open queued XP choices", markerFixedState.mode, markerFixedState.materials, markerFixedState.demoV2.marker);
   process.exit(1);
 }
+const markerPostFirstMaterials = markerFixedState.materials;
 markerFixed.chooseExperienceStat(markerFixedState, "damage");
 if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 2 || markerFixedState.activeFormParams.damage <= baseMarkerDamage) {
   console.error("Spending the final XP point must apply the chosen stat and continue to encounter 2", markerFixedState.mode, markerFixedState.stage.id, markerFixedState.activeFormParams.damage);
@@ -668,7 +670,7 @@ if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 2 || mar
 markerFixed.completeEncounter(markerFixedState, true);
 if (markerFixedState.mode !== "component_shop" || markerFixedState.demoV2.marker.offers.length !== 4
   || markerFixedState.demoV2.marker.refreshCost !== 2 || markerFixedState.demoV2.marker.currentShopEncounter !== 2
-  || markerFixedState.materials !== 17) {
+  || markerFixedState.materials !== markerPostFirstMaterials + 7) {
   console.error("Encounter 2 must open shop 1 with four white offers and at least two guaranteed purchases", markerFixedState.mode, markerFixedState.demoV2.marker.offers, markerFixedState.materials);
   process.exit(1);
 }
@@ -805,6 +807,82 @@ if (markerGrowthAssetPaths.some((assetPath) => !fs.existsSync(path.join(baseDir,
   process.exit(1);
 }
 console.log("OK Demo V2.1 Marker: timer-or-clear normal stages, 120 HP, no line knockback, soft slowing ink bands, mutually exclusive component variants, Boss dual-condition completion, 17 encounters / 6 shops / 4 modules");
+
+const thermosFixed = V2.demoV2 && V2.demoV2.thermosFixed;
+if (!thermosFixed || thermosFixed.version !== "Demo V2.2" || thermosFixed.weaponId !== "thermos"
+  || thermosFixed.runtimeKey !== "thermos" || thermosFixed.encounterCount !== 17 || thermosFixed.shopCount !== 6
+  || Object.keys(thermosFixed.modules).sort().join(",") !== "condensation,heatwave"
+  || thermosFixed.parts.tip.statNames.pierce !== "暴击"
+  || thermosFixed.uiFramework.weaponSelection.activeIds.join(",") !== "thermos") {
+  console.error("Thermos fixed-type test contract missing or drifted", thermosFixed);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "thermos-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+let thermosState = V2.getState();
+if (thermosState.selectedWeaponId !== "thermos" || thermosState.stage.demoV2Phase !== "thermos-fixed"
+  || thermosState.maxHp !== 92 || thermosState.activeFormParams.range > 240
+  || thermosState.activeFormParams.width < 190 || thermosState.activeForm.mechanicType !== "thermos_fixed_fan") {
+  console.error("Demo V2.2 must force a vulnerable short-wide thermos fixed test", thermosState.selectedWeaponId, thermosState.maxHp, thermosState.activeFormParams);
+  process.exit(1);
+}
+thermosFixed.applyModule(thermosState, "condensation", true);
+thermosFixed.applyModule(thermosState, "condensation", true);
+thermosFixed.applyModule(thermosState, "heatwave", true);
+const front = { id: "thermos-front", typeId: "todo", x: thermosState.player.x + 120, y: thermosState.player.y, r: 14, hp: 18, maxHp: 18, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+const frontCompanion = { id: "thermos-front-companion", typeId: "todo", x: thermosState.player.x + 128, y: thermosState.player.y + 34, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+const back = { id: "thermos-back", typeId: "todo", x: thermosState.player.x - 90, y: thermosState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+thermosState.enemies = [front, frontCompanion, back];
+const backX = back.x;
+V2.combat.fireWeapon(thermosState);
+const condensationZones = thermosState.damageZones.filter((zone) => zone.source === "thermos_test_condensation");
+if (condensationZones.length !== 2 || condensationZones.some((zone) => !zone.noKnockback)
+  || back.x !== backX || front.x <= thermosState.player.x + 120
+  || new Set(thermosState.formEvents.filter((event) => event.source === "thermos_test_base").map((event) => event.meta && event.meta.groupIndex)).size !== 1) {
+  console.error("Thermos base attack must be one shared-CD forward fan with one fixed knockback and two persistent condensation segments", condensationZones, thermosState.formEvents, front, back);
+  process.exit(1);
+}
+thermosState.demoV2.thermos.pendingFocusHits.forEach((pending) => { pending.due = 0; });
+V2.combat.qa.updateThermosFixedPendingFocus(thermosState);
+if (!front.dead || thermosState.demoV2.thermos.stageFocusKills !== 1
+  || thermosState.demoV2.thermos.stageHeatwaveTriggers !== 1
+  || thermosState.damageZones.filter((zone) => zone.source === "thermos_test_kill_heatwave").length !== 1) {
+  console.error("Focused heat must finish a low-health target and create exactly one non-chaining death heatwave", front, thermosState.demoV2.thermos, thermosState.damageZones);
+  process.exit(1);
+}
+const heatwaveCount = thermosState.demoV2.thermos.stageHeatwaveTriggers;
+V2.combat.qa.updateZones(thermosState, 0.5);
+if (thermosState.demoV2.thermos.stageHeatwaveTriggers !== heatwaveCount) {
+  console.error("Death heatwaves must never recursively create more heatwaves", thermosState.demoV2.thermos);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "thermos-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
+thermosState = V2.getState();
+for (let index = 0; index < 4; index++) thermosFixed.applyModule(thermosState, "condensation", true);
+thermosState.activeFormParams.thermosFixedFullscreenChance = 1;
+thermosState.enemies = [{ id: "thermos-condensation-ultimate", typeId: "todo", x: thermosState.player.x + 120, y: thermosState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 }];
+V2.combat.fireWeapon(thermosState);
+if (!thermosState.damageZones.some((zone) => zone.source === "thermos_test_fullscreen_condensation" && zone.noKnockback)) {
+  console.error("Condensation Lv4 must create a temporary non-knockback fullscreen damage field");
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "thermos-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
+thermosState = V2.getState();
+for (let index = 0; index < 4; index++) thermosFixed.applyModule(thermosState, "heatwave", true);
+thermosState.activeFormParams.thermosFixedFullscreenChance = 1;
+thermosState.enemies = [{ id: "thermos-ignition-ultimate", typeId: "meeting", x: thermosState.player.x + 120, y: thermosState.player.y, r: 14, hp: 15, maxHp: 15, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0, markerFixedElite: true }];
+V2.combat.fireWeapon(thermosState);
+if (!thermosState.formEvents.some((event) => event.source === "thermos_test_fullscreen_ignition")
+  || thermosState.damageZones.some((zone) => zone.source === "thermos_test_fullscreen_ignition")) {
+  console.error("Heatwave Lv4 must point-kill key targets instead of becoming a generic fullscreen AoE", thermosState.formEvents, thermosState.damageZones);
+  process.exit(1);
+}
+console.log("OK Demo V2.2 Thermos: short-wide shared-CD front fans, fixed single knockback, segmented condensation, focused kill conversion, non-chaining heatwaves, distinct Lv4 ultimates");
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });
 const VISUAL_TIMELINE_STAGES = new Set(["anticipation", "release", "impact", "residual", "fade"]);

@@ -380,8 +380,20 @@
     resetCombatEntities(state);
   }
 
-  function startDemoV2MarkerFixed(state) {
-    const config = V2.demoV2 && V2.demoV2.markerFixed;
+  function fixedTestConfig(state) {
+    const phase = state && state.demoV2 && state.demoV2.phase;
+    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
+    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
+    return null;
+  }
+
+  function fixedTestRuntime(state, config) {
+    const activeConfig = config || fixedTestConfig(state);
+    return activeConfig && state.demoV2 ? state.demoV2[activeConfig.runtimeKey] : null;
+  }
+
+  function startDemoV2FixedTest(state, phase) {
+    const config = V2.demoV2 && (phase === "thermos-fixed" ? V2.demoV2.thermosFixed : V2.demoV2.markerFixed);
     if (!config) {
       startStage(state, 0);
       return;
@@ -389,11 +401,11 @@
     state.stageIndex = 0;
     state.stage = deepClone(config.stage);
     state.phaseMeta = {
-      key: "demo_v2_marker_fixed",
-      label: "Demo V2 马克笔固定测试",
-      weaponStage: "经验保底 × 模块机制 × 组件属性",
-      weaponStageShort: "三线验证",
-      playerGoal: "验证经验稳定成长、复写/留档机制轴与材料组件轴能否各司其职。",
+      key: "demo_v2_" + config.id.replace(/-/g, "_"),
+      label: (config.version || "Demo V2.1") + " " + config.weaponName + "固定测试",
+      weaponStage: "经验保底 × 双路线模块 × 组件属性",
+      weaponStageShort: config.weaponId === "thermos" ? "近距双路线" : "三线验证",
+      playerGoal: config.subtitle || "验证稳定成长、模块机制轴与材料组件轴能否各司其职。",
       rewardTiming: "5 阶段 17 关；Boss 后模块与关中商店始终由战斗隔开",
       status: "playable"
     };
@@ -403,24 +415,27 @@
     state.stageBossSpawned = false;
     state.stageBossDefeated = false;
     state.mode = "combat";
-    state.maxHp = 120;
+    state.maxHp = config.weaponId === "thermos" ? 92 : 120;
     state.hp = state.maxHp;
     state.xp = 0;
     state.xpNeed = 90;
     state.demoV2 = {
-      phase: "marker-fixed",
+      phase: config.id,
       elapsed: 0,
       waveId: "",
       waveIndex: -1,
       waveTimer: 0,
       wavesSeen: [],
       peakEnemies: 0,
-      moduleChoices: [],
-      marker: config.makeRuntime()
+      moduleChoices: []
     };
+    state.demoV2[config.runtimeKey] = config.makeRuntime();
     config.rebuildParams(state);
     config.startEncounter(state, 0);
   }
+
+  function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
+  function startDemoV2ThermosFixed(state) { startDemoV2FixedTest(state, "thermos-fixed"); }
 
   function openArmory(state, reason) {
     state.mode = "armory";
@@ -439,8 +454,11 @@
     state.flags.debug = previousDebug;
     state.loop = previousLoop;
     state.demoV2.phase = previousDemoV2Phase;
-    state.selectedWeaponId = previousDemoV2Phase === "marker-fixed"
-      ? "marker"
+    const requestedFixedConfig = previousDemoV2Phase === "thermos-fixed"
+      ? V2.demoV2 && V2.demoV2.thermosFixed
+      : previousDemoV2Phase === "marker-fixed" ? V2.demoV2 && V2.demoV2.markerFixed : null;
+    state.selectedWeaponId = requestedFixedConfig
+      ? requestedFixedConfig.weaponId
       : (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
     state.maxHp = 124;
     state.hp = state.maxHp;
@@ -452,6 +470,7 @@
     if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
     else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
     else if (previousDemoV2Phase === "marker-fixed") startDemoV2MarkerFixed(state);
+    else if (previousDemoV2Phase === "thermos-fixed") startDemoV2ThermosFixed(state);
     else startStage(state, 0);
   }
 
@@ -499,8 +518,9 @@
   }
 
   function completeStage(state) {
-    if (state.stage && state.stage.demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) {
-      V2.demoV2.markerFixed.completeEncounter(state);
+    const fixedConfig = fixedTestConfig(state);
+    if (fixedConfig) {
+      fixedConfig.completeEncounter(state);
       return;
     }
     if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b")) {
@@ -557,8 +577,9 @@
   }
 
   function gainXp(state, amount) {
-    if (state.stage && state.stage.demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) {
-      V2.demoV2.markerFixed.gainExperience(state, amount);
+    const fixedConfig = fixedTestConfig(state);
+    if (fixedConfig) {
+      fixedConfig.gainExperience(state, amount);
       return;
     }
     state.xp += amount;
@@ -620,33 +641,33 @@
           completeStage(state);
           break;
         case "SELECT_UPGRADE":
-          if (state.demoV2 && state.demoV2.phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) {
-            V2.demoV2.markerFixed.chooseExperienceStat(state, action.upgradeId);
+          if (fixedTestConfig(state)) {
+            fixedTestConfig(state).chooseExperienceStat(state, action.upgradeId);
           } else {
             applyUpgrade(state, action.upgradeId);
           }
           break;
         case "SELECT_DEMO_V2_MODULE":
-          if (state.demoV2 && state.demoV2.phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) {
-            V2.demoV2.markerFixed.applyModule(state, action.moduleId);
+          if (fixedTestConfig(state)) {
+            fixedTestConfig(state).applyModule(state, action.moduleId);
           } else if (V2.demoV2 && V2.demoV2.phaseB) {
             V2.demoV2.phaseB.applyModule(state, action.moduleId);
           }
           break;
         case "BUY_MARKER_COMPONENT":
-          if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.buyComponent(state, action.offerId);
+          if (fixedTestConfig(state)) fixedTestConfig(state).buyComponent(state, action.offerId);
           break;
         case "SELECT_MARKER_COMPONENT_STAT":
-          if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.chooseComponentStat(state, action.statId);
+          if (fixedTestConfig(state)) fixedTestConfig(state).chooseComponentStat(state, action.statId);
           break;
         case "REFRESH_MARKER_COMPONENTS":
-          if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.refreshShop(state);
+          if (fixedTestConfig(state)) fixedTestConfig(state).refreshShop(state);
           break;
         case "TOGGLE_MARKER_COMPONENT_LOCK":
-          if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.toggleOfferLock(state, action.offerId);
+          if (fixedTestConfig(state)) fixedTestConfig(state).toggleOfferLock(state, action.offerId);
           break;
         case "CONTINUE_MARKER_TEST":
-          if (V2.demoV2 && V2.demoV2.markerFixed) V2.demoV2.markerFixed.closeShop(state);
+          if (fixedTestConfig(state)) fixedTestConfig(state).closeShop(state);
           break;
         case "SKIP_UPGRADE":
           state.mode = state.previousMode || "combat";
@@ -730,6 +751,7 @@
     startStage,
     startDemoV2PhaseA,
     startDemoV2MarkerFixed,
+    startDemoV2ThermosFixed,
     applyActiveForm
   });
 })();
