@@ -209,7 +209,7 @@
                 debugGuard += 1;
               }
               if (debugScreen === "component_stat") {
-                const offer = { id: "debug-component", partId: "body", cost: 10, sold: false, locked: false };
+                const offer = { id: "debug-component", partId: "body", statId: "attackSpeed", cost: 7, sold: false, locked: false };
                 debugState.demoV2.marker.offers = [offer];
                 debugState.materials = Math.max(20, debugState.materials);
                 V2.demoV2.markerFixed.buyComponent(debugState, offer.id);

@@ -511,7 +511,7 @@ if (!markerFixed || markerFixed.duration !== 890 || markerFixed.phaseCount !== 5
   || markerFixed.moduleTimes.length !== 4 || markerFixed.shopTimes.length !== 6
   || markerFixed.componentCost !== 7 || markerFixed.refreshBaseCost !== 2 || markerFixed.collectionDuration !== 10 || markerFixed.guaranteedMaterialTotal !== 124
   || markerFixed.encounters.some((encounter) => !encounter.spawnTotal || !encounter.enemyTypes || !encounter.preview)
-  || markerFixed.encounters[9].enemyHp < markerFixed.encounters[7].enemyHp * 1.8
+  || [0, 3, 6, 9, 12].some((index) => markerFixed.encounters[index + 1] && markerFixed.encounters[index].enemyHp >= markerFixed.encounters[index + 1].enemyHp)
   || [1, 2, 3, 4, 5].map((phase) => markerFixed.encounters.filter((encounter) => encounter.phase === phase).length).join(",") !== "3,3,3,3,5"
   || Object.keys(markerFixed.modules).sort().join(",") !== "archive,copy"
   || Object.keys(markerFixed.parts).sort().join(",") !== "body,tail,tip"
@@ -524,7 +524,7 @@ V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
 V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
 let markerFixedState = V2.getState();
 if (markerFixedState.selectedWeaponId !== "marker" || markerFixedState.stage.demoV2Phase !== "marker-fixed"
-  || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1) {
+  || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1 || markerFixedState.maxHp !== 120 || markerFixedState.hp !== 120) {
   console.error("Marker fixed test must force the marker and remain isolated", markerFixedState.selectedWeaponId, markerFixedState.stage);
   process.exit(1);
 }
@@ -582,25 +582,39 @@ if (markerFixedState.activeFormParams.markerFixedParallelLines !== 2 || markerFi
   process.exit(1);
 }
 markerFixedState.enemies = [{ id: "marker-fixed-target", typeId: "todo", x: markerFixedState.player.x + 180, y: markerFixedState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, baseSpeed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 }];
+const markerTargetXBefore = markerFixedState.enemies[0].x;
 V2.combat.fireWeapon(markerFixedState);
 if (!markerFixedState.formEvents.some((event) => event.source === "marker_test_copy")
   || !markerFixedState.damageZones.some((zone) => zone.source === "marker_test_archive")) {
   console.error("Copy and Archive must create distinct instant-line and persistent-zone branches", markerFixedState.formEvents, markerFixedState.damageZones);
   process.exit(1);
 }
+const markerArchiveZone = markerFixedState.damageZones.find((zone) => zone.source === "marker_test_archive");
+if (markerFixedState.enemies[0].x !== markerTargetXBefore || !markerArchiveZone.inkTrail || !markerArchiveZone.noKnockback
+  || markerArchiveZone.width < 24 || markerArchiveZone.slow < 0.24 || markerArchiveZone.damage >= baseMarkerDamage * 0.1) {
+  console.error("Marker fixed beams must not knock back; Archive must be a wide, low-damage slowing ink band", markerFixedState.enemies[0], markerArchiveZone);
+  process.exit(1);
+}
 const markerRuntime = markerFixedState.demoV2.marker;
 const modulesBeforeComponents = JSON.stringify(markerRuntime.modules);
 markerFixedState.materials = 500;
 for (let copy = 0; copy < 8; copy++) {
-  const offer = { id: "forced-tip-" + copy, partId: "tip", cost: 10, sold: false, locked: false };
+  const offer = { id: "forced-tip-" + copy, partId: "tip", statId: "damage", cost: 7, sold: false, locked: false };
   markerRuntime.offers = [offer];
   markerFixed.buyComponent(markerFixedState, offer.id);
-  if (markerRuntime.pendingStatPart) markerFixed.chooseComponentStat(markerFixedState, copy % 2 ? "pierce" : "damage");
 }
 if (markerRuntime.parts.tip.copies !== 8 || markerFixed.qualityIndex(markerRuntime.parts.tip.copies) !== 4
-  || markerRuntime.parts.tip.allocations.damage + markerRuntime.parts.tip.allocations.pierce !== 4
+  || markerRuntime.parts.tip.activeStat !== "damage" || markerRuntime.parts.tip.allocations.damage !== 4 || markerRuntime.parts.tip.allocations.pierce !== 0
   || JSON.stringify(markerRuntime.modules) !== modulesBeforeComponents) {
-  console.error("Component quality/stat choices must be cumulative and must not mutate modules", markerRuntime.parts.tip, markerRuntime.modules);
+  console.error("Only identical component variants may accumulate to red without mutating modules", markerRuntime.parts.tip, markerRuntime.modules);
+  process.exit(1);
+}
+const replacementOffer = { id: "forced-tip-replace", partId: "tip", statId: "pierce", cost: 7, sold: false, locked: false };
+markerRuntime.offers = [replacementOffer];
+markerFixed.buyComponent(markerFixedState, replacementOffer.id);
+if (markerRuntime.parts.tip.copies !== 1 || markerRuntime.parts.tip.activeStat !== "pierce"
+  || markerRuntime.parts.tip.allocations.damage !== 0 || markerRuntime.parts.tip.allocations.pierce !== 1) {
+  console.error("Buying the mutually exclusive component variant must replace and reset the whole slot", markerRuntime.parts.tip);
   process.exit(1);
 }
 
@@ -612,21 +626,15 @@ markerFixedState.warmupTime = 0;
 markerFixedState.stageTime = 0;
 markerFixedState.demoV2.marker.encounterSpawned = markerFixed.encounters[0].spawnTotal - 1;
 markerFixedState.enemies = [{ id: "quota-not-cleared", typeId: "todo", hp: 10, maxHp: 10, dead: false, boss: false, x: 500, y: 360, r: 12, speed: 0, baseSpeed: 0, damage: 0, rooted: 0 }];
-V2.combat.update(0.05);
-if (markerFixedState.mode !== "combat" || markerFixedState.demoV2.marker.collecting) {
-  console.error("Timer expiry alone must not clear a fixed-quota normal encounter", markerFixedState.mode, markerFixedState.demoV2.marker);
-  process.exit(1);
-}
 markerFixedState.pickups = [
   { type: "xp", amount: markerFixedState.xpNeed, x: 0, y: 0, radius: 6 },
   { type: "material", amount: 3, x: 0, y: 0, radius: 6, markerFixedDrop: true }
 ];
-markerFixedState.enemies = [];
-markerFixedState.demoV2.marker.encounterSpawned = markerFixed.encounters[0].spawnTotal;
 V2.combat.update(0.05);
 if (markerFixedState.mode !== "combat" || !markerFixedState.demoV2.marker.collecting || markerFixedState.warmupTime !== 10
-  || markerFixedState.pickups.length !== 2 || markerFixedState.enemies.length !== 0) {
-  console.error("Every encounter must enter a 10-second pickup window before routing onward", markerFixedState.mode, markerFixedState.demoV2.marker, markerFixedState.pickups);
+  || markerFixedState.pickups.length < 2 || markerFixedState.enemies.length !== 0
+  || !markerFixedState.pickups.some((pickup) => pickup.type === "material" && pickup.amount === 3)) {
+  console.error("A normal encounter must enter collection when either its timer expires or its quota is cleared", markerFixedState.mode, markerFixedState.demoV2.marker, markerFixedState.pickups);
   process.exit(1);
 }
 markerFixed.finishCollection(markerFixedState);
@@ -651,10 +659,11 @@ if (markerFixedState.mode !== "component_shop" || markerFixedState.demoV2.marker
   process.exit(1);
 }
 const lockedPart = markerFixedState.demoV2.marker.offers[0].partId;
+const lockedStat = markerFixedState.demoV2.marker.offers[0].statId;
 markerFixed.toggleOfferLock(markerFixedState, markerFixedState.demoV2.marker.offers[0].id);
 markerFixed.refreshShop(markerFixedState);
 if (markerFixedState.demoV2.marker.refreshCost !== 4
-  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.locked)) {
+  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.statId === lockedStat && offer.locked)) {
   console.error("Shop refresh cost must rise and locked offers must survive rerolls", markerFixedState.demoV2.marker.refreshCost, markerFixedState.demoV2.marker.offers);
   process.exit(1);
 }
@@ -696,14 +705,16 @@ if (markerFixedState.mode !== "combat" || markerFixedState.stage.id !== 4) {
 markerFixed.completeEncounter(markerFixedState, true);
 markerFixed.completeEncounter(markerFixedState, true);
 if (markerFixedState.mode !== "component_shop" || markerFixedState.demoV2.marker.shopIndex !== 2
-  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.locked)) {
+  || !markerFixedState.demoV2.marker.offers.some((offer) => offer.partId === lockedPart && offer.statId === lockedStat && offer.locked)) {
   console.error("Encounter 5 must open shop 2 and carry the previously locked offer", markerFixedState.mode, markerFixedState.demoV2.marker.offers);
   process.exit(1);
 }
 markerFixedState.demoV2.marker.parts.tail.copies = 4;
+markerFixedState.demoV2.marker.parts.tail.activeStat = "range";
+markerFixedState.demoV2.marker.parts.tail.allocations.range = 3;
 const guaranteedOffers = markerFixed.makeShopOffers(markerFixedState, [], true);
-if (!guaranteedOffers.some((offer) => offer.partId === "tail")) {
-  console.error("A purple unfinished component must be guaranteed once on first shop open", guaranteedOffers);
+if (!guaranteedOffers.some((offer) => offer.partId === "tail" && offer.statId === "range" && offer.action === "upgrade")) {
+  console.error("An unfinished equipped variant must receive one guaranteed identical upgrade offer on first shop open", guaranteedOffers);
   process.exit(1);
 }
 
@@ -765,7 +776,7 @@ if (!markerFixedState.damageZones.some((zone) => zone.source === "marker_test_fu
   console.error("Archive Lv4 must produce a temporary fullscreen ink zone");
   process.exit(1);
 }
-console.log("OK Demo V2.0 Marker: fixed quotas, 10-second collection, player-assigned XP stats, Boss dual-condition completion, cheaper components, stage-4 damage falloff, 17 encounters / 6 shops / 4 modules");
+console.log("OK Demo V2.0 Marker: timer-or-clear normal stages, 120 HP, no line knockback, soft slowing ink bands, mutually exclusive component variants, Boss dual-condition completion, 17 encounters / 6 shops / 4 modules");
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });
 const VISUAL_TIMELINE_STAGES = new Set(["anticipation", "release", "impact", "residual", "fade"]);

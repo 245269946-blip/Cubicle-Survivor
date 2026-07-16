@@ -360,7 +360,7 @@
   function renderComponentShop() {
     const vm = V2.getViewModel("component_shop");
     setText("componentCreditsText", vm.materials);
-    setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 第 " + vm.encounterId + " 关后开放 · 距上次商店累计 +" + vm.shopIncome + " 材料 · 同部位累计 1/2/4/8 件提升品质。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
+    setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
         '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
@@ -372,14 +372,22 @@
       const affordable = vm.materials >= offer.cost;
       const nextCount = Math.min(8, offer.owned + 1);
       const willUpgrade = nextCount === offer.nextThreshold;
-      return '<div class="choice shop-card theme-card marker-component-card ' + (offer.sold ? "sold" : "") + (offer.locked ? " locked" : "") + '" style="--quality-color:' + escapeHtml(offer.nextQuality.color) + '">' +
-        '<span class="tag route-tag quality-name">' + escapeHtml(offer.name) + '</span>' +
-        '<strong>' + (offer.sold ? "已购买" : "白色基础" + escapeHtml(offer.name)) + '</strong>' +
-        '<span class="compare-line">' + (willUpgrade ? "购买后合成为" + escapeHtml(offer.nextQuality.name) + "组件" : "购买后累计 " + nextCount + " / " + offer.nextThreshold) + ' · 当前累计 ' + offer.owned + '</span>' +
-        '<span class="card-desc">当前 ' + escapeHtml(offer.quality.name) + ' · 组件不添加任何攻击事件</span>' +
+      const actionLabel = offer.action === "install" ? "装入" : offer.action === "upgrade" ? "同类升级" : "替换并重置";
+      const resultLine = offer.action === "replace"
+        ? "当前" + offer.partName + "为“" + offer.activeStatName + "”累计 " + offer.slotCopies + " 件；购买后重置为白色“" + offer.statName + "”"
+        : offer.action === "install"
+          ? "空槽装入后获得白色“" + offer.statName + "”组件"
+          : willUpgrade
+            ? "同类购买后合成为" + offer.nextQuality.name + "组件"
+            : "同类购买后累计 " + nextCount + " / " + offer.nextThreshold;
+      return '<div class="choice shop-card theme-card marker-component-card ' + (offer.sold ? "sold" : "") + (offer.locked ? " locked" : "") + '" style="--quality-color:' + escapeHtml(offer.purchaseQuality.color) + '">' +
+        '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
+        '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
+        '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
+        '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>' +
         '<span class="cost">材料 ' + offer.cost + '</span>' +
         '<div class="marker-component-actions">' +
-          '<button class="slot-button" type="button" data-marker-offer="' + escapeHtml(offer.id) + '"' + (offer.sold || !affordable ? " disabled" : "") + '>' + (offer.sold ? "已购买" : "购买") + '</button>' +
+          '<button class="slot-button" type="button" data-marker-offer="' + escapeHtml(offer.id) + '"' + (offer.sold || !affordable ? " disabled" : "") + '>' + (offer.sold ? "已购买" : actionLabel) + '</button>' +
           '<button class="slot-button marker-lock-button" type="button" data-marker-lock="' + escapeHtml(offer.id) + '"' + (offer.sold ? " disabled" : "") + '>' + (offer.locked ? "已锁定" : "锁定") + '</button>' +
         '</div>' +
       '</div>';

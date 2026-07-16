@@ -23,6 +23,7 @@
     marker_branch_art: "assets/generated-vfx/sprites/marker-branch-office-v2.png",
     marker_impact_art: "assets/generated-vfx/sprites/marker-impact-office-v2.png",
     marker_grid_art: "assets/generated-vfx/sprites/marker-grid-field-office-v2.png",
+    marker_ink_art: "assets/generated-vfx/sprites/marker-ink-trail-office-v2.svg",
     marker_wave_art: "assets/generated-vfx/sprites/marker-wave-office-v2.png",
     thermos_steam_art: "assets/generated-vfx/sprites/thermos-steam-line-office-v2.png",
     thermos_charge_art: "assets/generated-vfx/sprites/thermos-charge-gauge-office-v2.png",
@@ -654,7 +655,7 @@
     hits.sort(function (a, b) { return a.t - b.t; });
     const limited = hits.slice(0, Math.max(1, pierce || 1));
     limited.forEach(function (hit) {
-      damageEnemy(state, hit.enemy, damage, source, { x: x1, y: y1 });
+      damageEnemy(state, hit.enemy, damage, source, options && options.noKnockback ? null : { x: x1, y: y1 });
     });
     return limited;
   }
@@ -1109,7 +1110,8 @@
       state, x1, y1, x2, y2, width,
       (p.damage || 18) * damageScale,
       p.pierce || 4,
-      source
+      source,
+      { noKnockback: true }
     );
     addBeamEvent(state, x1, y1, x2, y2, source === "marker_test_copy" ? "#79efff" : "#d8ffff", width, 0.2, "beam", false, source, {
       baseIndex, laneIndex,
@@ -1123,7 +1125,7 @@
   function addMarkerFixedArchive(state, p, line, baseIndex) {
     const trailCount = p.markerFixedArchiveTrails || 0;
     if (!trailCount) return;
-    const spacing = Math.max(18, (p.width || 8) * 2.7);
+    const spacing = Math.max(28, (p.width || 8) * 3.4);
     const offsets = trailCount === 1 ? [0] : trailCount === 2 ? [-spacing * 0.55, spacing * 0.55] : [-spacing, 0, spacing];
     const nx = -Math.sin(line.angle);
     const ny = Math.cos(line.angle);
@@ -1133,15 +1135,13 @@
       const x2 = line.x2 + nx * offset;
       const y2 = line.y2 + ny * offset;
       const duration = p.markerFixedTrailDuration || 2;
-      addBeamEvent(state, x1, y1, x2, y2, "#9fdfff", Math.max(7, line.width * 1.45), Math.min(0.55, duration), "grid", false, "marker_test_archive", {
-        baseIndex, trailIndex, duration
-      });
       addDamageZone(state, {
         type: "line", source: "marker_test_archive", x1, y1, x2, y2,
-        width: Math.max(11, line.width * 1.75),
+        width: Math.max(32, line.width * 3.6),
         damage: (p.markerFixedTrailDamage || 5) * ([1, 0.75, 0.58, 0.44, 0.38][p.markerFixedArchiveLevel || 0] || 0.38),
-        life: duration, maxLife: duration, tickEvery: 0.38,
-        color: "#9fdfff", slow: 0.12, visual: "marker_grid_line"
+        life: duration, maxLife: duration, tickEvery: 0.44,
+        color: "#77b9d8", slow: 0.24, visual: "marker_grid_line",
+        inkTrail: true, inkSeed: baseIndex * 7 + trailIndex * 13, noKnockback: true
       });
     });
   }
@@ -1158,7 +1158,7 @@
       [camera.x + camera.width * 0.92, camera.y - 24, camera.x + camera.width * 0.08, camera.y + camera.height + 24]
     ];
     lines.forEach(function (line, lineIndex) {
-      const hits = lineHitEnemies(state, line[0], line[1], line[2], line[3], Math.max(8, (p.width || 8) * 1.25), (p.damage || 18) * 0.46, p.pierce || 4, "marker_test_fullscreen_copy");
+      const hits = lineHitEnemies(state, line[0], line[1], line[2], line[3], Math.max(8, (p.width || 8) * 1.25), (p.damage || 18) * 0.46, p.pierce || 4, "marker_test_fullscreen_copy", { noKnockback: true });
       addBeamEvent(state, line[0], line[1], line[2], line[3], "#e9ffff", Math.max(8, (p.width || 8) * 1.25), 0.42, "beam", false, "marker_test_fullscreen_copy", {
         lineIndex,
         hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
@@ -1185,7 +1185,7 @@
         width: camera.height / bands * 0.56 * rangeScale,
         damage: (p.markerFixedTrailDamage || 5) * 0.48,
         life: duration, maxLife: duration, tickEvery: 0.42,
-        color: "#6eaee7", slow: 0.18, visual: "marker_grid_line"
+        color: "#6eaee7", slow: 0.26, visual: "marker_grid_line", inkTrail: true, inkSeed: index * 11, noKnockback: true
       });
     }
     test.fullscreenArchiveReadyAt = elapsed + (p.markerFixedFullscreenCooldown || 4.5);
@@ -2867,7 +2867,7 @@
         }
       }
       if (z.type === "line") {
-        const lineZoneHits = lineHitEnemies(state, z.x1, z.y1, z.x2, z.y2, z.width || 8, z.damage, 99, z.source || "line_zone");
+        const lineZoneHits = lineHitEnemies(state, z.x1, z.y1, z.x2, z.y2, z.width || 8, z.damage, 99, z.source || "line_zone", { noKnockback: !!z.noKnockback });
         if (z.slow || z.root) {
           lineZoneHits.forEach(function (hit) {
             if (z.slow) hit.enemy.speed *= 1 - z.slow * 0.08;
@@ -2993,7 +2993,7 @@
     const markerAddsAlive = markerFixed ? state.enemies.filter(function (enemy) { return !enemy.dead && !enemy.boss; }).length : 0;
     const markerQuotaCleared = markerEncounter && markerTest && markerTest.encounterSpawned >= markerEncounter.spawnTotal && markerAddsAlive <= 0;
     const markerCleared = markerFixed && markerEncounter
-      ? (markerEncounter.boss ? state.stageBossDefeated && (state.stageTime <= 0 || markerQuotaCleared) : markerQuotaCleared)
+      ? (markerEncounter.boss ? state.stageBossDefeated && (state.stageTime <= 0 || markerQuotaCleared) : (state.stageTime <= 0 || markerQuotaCleared))
       : false;
     const targetCleared = state.stage.boss ? state.stageBossDefeated : state.stageKills >= state.stage.targetKills;
     const timerCleared = state.stageTime <= 0 && !state.stage.boss;
@@ -3240,6 +3240,17 @@
         continue;
       }
       if (z.type === "line") {
+        if (z.inkTrail) {
+          const dx = z.x2 - z.x1;
+          const dy = z.y2 - z.y1;
+          const length = Math.hypot(dx, dy) || 1;
+          const width = z.width || 24;
+          drawSprite(ctx, "marker_ink_art",
+            z.x1 + dx / 2, z.y1 + dy / 2,
+            Math.max(96, length + 44), Math.max(48, width * 1.65),
+            Math.min(0.72, alpha * 0.62 + 0.1), Math.atan2(dy, dx));
+          continue;
+        }
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), z.x1, z.y1, z.x2, z.y2, z.width || 8, Math.min(0.94, alpha + 0.12));
         continue;
       }

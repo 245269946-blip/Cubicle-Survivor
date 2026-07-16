@@ -487,13 +487,18 @@
     const state = test.parts[partId];
     const quality = config.qualities[config.qualityIndex(state.copies)];
     const next = config.nextThreshold(state.copies);
+    const activeStatName = state.activeStat ? part.statNames[state.activeStat] : "未选择";
     return {
       id: partId,
       name: part.name,
       copies: state.copies,
+      activeStat: state.activeStat,
+      activeStatName,
       quality,
       progress: state.copies >= 8 ? "已达红色" : state.copies + " / " + next,
-      allocationText: part.stats.map(function (stat) { return part.statNames[stat] + "×" + state.allocations[stat]; }).join(" · ")
+      allocationText: state.activeStat
+        ? activeStatName + "专精 · 强化 " + state.allocations[state.activeStat] + " 次"
+        : part.stats.map(function (stat) { return part.statNames[stat]; }).join(" / ") + " · 二选一互斥"
     };
   }
 

@@ -403,7 +403,7 @@
     state.stageBossSpawned = false;
     state.stageBossDefeated = false;
     state.mode = "combat";
-    state.maxHp = 600;
+    state.maxHp = 120;
     state.hp = state.maxHp;
     state.xp = 0;
     state.xpNeed = 90;

@@ -30,19 +30,19 @@
     { id: 17, phase: 5, step: 5, kind: "final_boss", pattern: "review", label: "老板最终确认", duration: 80, materialReward: 6, bossMaterial: 6, boss: true, bossType: "ceo", enemyHp: 3400, enemySpeed: 80, bossHitCap: 0.075, floor: 18, cap: 46, batchSize: 8, cadence: 3.2, hint: "最终 Boss 与有限工作项共同检验群体、单体、空间和持续移动。" }
   ];
   const DEMO_V2_0_ENCOUNTER_OVERRIDES = [
-    { spawnTotal: 44, materialReward: 7, enemyTypes: ["待办", "邮件"], preview: "基础近战队列；先观察单线贯穿与覆盖空档。" },
+    { spawnTotal: 44, materialReward: 7, enemyHp: 12, enemyTypes: ["待办", "邮件"], preview: "基础近战队列；先观察单线贯穿与覆盖空档。" },
     { spawnTotal: 52, materialReward: 7, enemyTypes: ["待办", "会议"], preview: "团块会压缩走位；第一次商店前确认最缺的属性。" },
     { spawnTotal: 20, materialReward: 4, enemyTypes: ["待办", "实习导师 Boss"], preview: "Boss 必须击破；同时处理有限待办，不能秒杀后直接跳关。" },
-    { spawnTotal: 60, materialReward: 5, enemyTypes: ["待办", "邮件"], preview: "数量上升；第一次模块需要立刻吃到更多目标。" },
+    { spawnTotal: 60, materialReward: 5, enemyHp: 18, enemyTypes: ["待办", "邮件"], preview: "数量上升；第一次模块需要立刻吃到更多目标。" },
     { spawnTotal: 68, materialReward: 6, enemyTypes: ["截止日期", "邮件"], preview: "低血快速目标混入，要求持续转向和移动。" },
     { spawnTotal: 28, materialReward: 4, enemyTypes: ["会议", "部门总监 Boss"], preview: "护甲总监与团块并存；Boss 与清杂缺一不可。" },
-    { spawnTotal: 76, materialReward: 5, enemyTypes: ["截止日期", "邮件"], preview: "多方向追逐；重新瞄准比原地输出更重要。" },
+    { spawnTotal: 76, materialReward: 5, enemyHp: 24, enemyTypes: ["截止日期", "邮件"], preview: "多方向追逐；重新瞄准比原地输出更重要。" },
     { spawnTotal: 84, materialReward: 6, enemyTypes: ["催办", "审批", "快速敌人"], preview: "远程与快速压力混合，持续寻找安全输出角度。" },
     { spawnTotal: 36, materialReward: 5, enemyTypes: ["冲刺敌人", "交付负责人 Boss"], preview: "冲刺 Boss 带杂兵进场；检验移动、铺场和单体输出。" },
-    { spawnTotal: 92, materialReward: 5, enemyHp: 68, enemyTypes: ["高密度团块", "重型敌人"], preview: "阶段4耐久上升；武器已成型，但站桩仍会被包围。" },
+    { spawnTotal: 92, materialReward: 5, enemyHp: 48, enemyTypes: ["高密度团块", "重型敌人"], preview: "阶段4第一关降低基础血量，用密度而不是厚血检验成型武器。" },
     { spawnTotal: 100, materialReward: 6, enemyHp: 78, enemyTypes: ["重型", "远程", "快速敌人"], preview: "三类威胁并存；用组件补短板，不能只堆瞬间伤害。" },
     { spawnTotal: 44, materialReward: 6, enemyHp: 2600, bossHitCap: 0.085, enemyTypes: ["客户远程压力", "混合杂兵", "大客户 Boss"], preview: "阶段4终审；必须持续移动并同时完成清杂与Boss处理。" },
-    { spawnTotal: 108, materialReward: 5, enemyHp: 88, enemyTypes: ["高密度团块", "重型敌人"], preview: "完整模块进入成型测试，固定配额不会因倒计时消失。" },
+    { spawnTotal: 108, materialReward: 5, enemyHp: 68, enemyTypes: ["高密度团块", "重型敌人"], preview: "完整模块进入成型测试；倒计时或清场均可结束本关。" },
     { spawnTotal: 116, materialReward: 6, enemyHp: 96, enemyTypes: ["精英", "远程", "快速敌人"], preview: "精英混合压力；为第五次商店争取更多材料。" },
     { spawnTotal: 52, materialReward: 6, enemyHp: 3150, bossHitCap: 0.075, enemyTypes: ["混合敌群", "预审总监 Boss"], preview: "成型 Build 预审；Boss材料用于最后一轮组件成长。" },
     { spawnTotal: 124, materialReward: 6, enemyHp: 108, enemyTypes: ["高压追逐", "精英"], preview: "最终压力关；清完固定配额后进入最后商店。" },
@@ -110,12 +110,12 @@
       ]
     },
     archive: {
-      id: "archive", name: "留档", family: "持续墨迹",
+      id: "archive", name: "留档", family: "持续墨迹减速",
       levels: [
-        "每条基础激光路径留下 1 条持续伤害墨迹。",
-        "每条基础激光留下 2 条平行墨迹。",
-        "每条基础激光留下 3 条平行墨迹。",
-        "每轮有 15% 概率让整个可视区域短暂进入墨迹覆盖。"
+        "每条基础激光路径留下 1 条宽墨迹，低伤并减速群体。",
+        "每条基础激光留下 2 条平行宽墨迹，扩大控制覆盖。",
+        "每条基础激光留下 3 条平行宽墨迹，加快铺满通道。",
+        "每轮有 15% 概率让整个可视区域短暂进入低伤墨迹覆盖。"
       ]
     }
   };
@@ -155,7 +155,7 @@
     const part = PARTS[partId];
     const allocations = {};
     part.stats.forEach(function (stat) { allocations[stat] = 0; });
-    return { copies: 0, allocations };
+    return { copies: 0, activeStat: "", allocations };
   }
 
   function runtime(state) {
@@ -294,11 +294,11 @@
       markerFixedArchiveTrails: Math.min(3, archiveLevel),
       markerFixedFullscreenArchive: archiveLevel >= 4,
       markerFixedTrailDuration: 2 * Math.pow(1.25, tail.duration),
-      markerFixedTrailDamage: Math.max(3.2, damage * 0.18),
+      markerFixedTrailDamage: Math.max(1.6, damage * 0.1),
       markerFixedFullscreenChance: 0.15,
       markerFixedFullscreenCooldown: 4.5
     });
-    const expectedMaxHp = 600 + (experience.maxHp || 0) * 12;
+    const expectedMaxHp = 120 + (experience.maxHp || 0) * 12;
     if (state.maxHp !== expectedMaxHp) state.maxHp = expectedMaxHp;
     state.hp = Math.min(state.hp, state.maxHp);
     state.player.speed = 220 * Math.pow(1.03, experience.moveSpeed || 0);
@@ -345,46 +345,77 @@
     else advanceToNextEncounter(state);
   }
 
-  function weightedPart(test) {
-    const candidates = Object.keys(PARTS).filter(function (id) { return test.parts[id].copies < 8; });
+  function weightedVariant(test) {
+    const candidates = [];
+    Object.keys(PARTS).forEach(function (partId) {
+      PARTS[partId].stats.forEach(function (statId) {
+        const partState = test.parts[partId];
+        if (partState.activeStat === statId && partState.copies >= 8) return;
+        candidates.push({ partId, statId });
+      });
+    });
     if (!candidates.length) return null;
-    const weighted = candidates.map(function (id) {
-      const copies = test.parts[id].copies;
+    const weighted = candidates.map(function (candidate) {
+      const partState = test.parts[candidate.partId];
+      const copies = partState.activeStat === candidate.statId ? partState.copies : 0;
       let weight = 1;
-      if (copies >= 2) weight += 2.4;
-      else if (copies > 0) weight += 1.2;
-      if (nextThreshold(copies) - copies === 1) weight += 2.2;
-      const leading = Math.max.apply(null, candidates.map(function (candidate) { return test.parts[candidate].copies; }));
-      if (test.shopIndex > SHOP_ENCOUNTERS.length / 2 && copies === leading && copies < 8) weight += 0.9;
-      return { id, weight };
+      if (!partState.activeStat) weight += 0.35;
+      else if (partState.activeStat === candidate.statId) {
+        weight += 3;
+        if (nextThreshold(copies) - copies === 1) weight += 2.4;
+      } else {
+        weight *= 0.58;
+      }
+      return { partId: candidate.partId, statId: candidate.statId, weight };
     });
     let roll = Math.random() * weighted.reduce(function (sum, item) { return sum + item.weight; }, 0);
     for (const item of weighted) {
       roll -= item.weight;
-      if (roll <= 0) return item.id;
+      if (roll <= 0) return item;
     }
-    return weighted[weighted.length - 1].id;
+    return weighted[weighted.length - 1];
   }
 
-  function offerForPart(test, partId, slot, locked) {
-    if (!partId) return null;
-    const owned = test.parts[partId].copies;
+  function offerForVariant(test, partId, statId, slot, locked) {
+    if (!partId || !statId) return null;
+    const part = PARTS[partId];
+    const partState = test.parts[partId];
+    const sameType = partState.activeStat === statId;
+    const replacing = !!partState.activeStat && !sameType;
+    const owned = sameType ? partState.copies : 0;
     return {
       id: "marker-part-" + test.shopIndex + "-" + test.rerolls + "-" + slot,
       partId,
-      name: PARTS[partId].name,
+      statId,
+      name: part.statNames[statId] + part.name,
+      partName: part.name,
+      statName: part.statNames[statId],
       cost: COMPONENT_COST,
       sold: false,
       locked: !!locked,
       owned,
+      slotCopies: partState.copies,
+      activeStat: partState.activeStat,
+      activeStatName: partState.activeStat ? part.statNames[partState.activeStat] : "空槽",
+      action: !partState.activeStat ? "install" : sameType ? "upgrade" : "replace",
+      replacing,
       quality: QUALITY[qualityIndex(owned)],
+      purchaseQuality: QUALITY[qualityIndex(replacing || !partState.activeStat ? 1 : Math.min(8, owned + 1))],
       nextQuality: QUALITY[Math.min(4, qualityIndex(owned) + 1)],
       nextThreshold: nextThreshold(owned)
     };
   }
 
+  function syncOfferState(test, offer) {
+    const fresh = offerForVariant(test, offer.partId, offer.statId, 0, offer.locked);
+    if (!fresh) return;
+    const identity = { id: offer.id, sold: offer.sold, locked: offer.locked };
+    Object.assign(offer, fresh, identity);
+  }
+
   function offerFor(test, slot) {
-    return offerForPart(test, weightedPart(test), slot, false);
+    const variant = weightedVariant(test);
+    return variant ? offerForVariant(test, variant.partId, variant.statId, slot, false) : null;
   }
 
   function makeShopOffers(state, preservedOffers, firstOpen) {
@@ -392,15 +423,19 @@
     if (!test) return [];
     const offers = [];
     (preservedOffers || []).forEach(function (offer) {
-      if (offers.length >= 4 || !offer || test.parts[offer.partId].copies >= 8) return;
-      offers.push(offerForPart(test, offer.partId, offers.length, true));
+      if (offers.length >= 4 || !offer) return;
+      const partState = test.parts[offer.partId];
+      if (partState.activeStat === offer.statId && partState.copies >= 8) return;
+      offers.push(offerForVariant(test, offer.partId, offer.statId, offers.length, true));
     });
     if (firstOpen) {
       Object.keys(PARTS).filter(function (partId) {
-        const copies = test.parts[partId].copies;
-        return copies >= 4 && copies < 8 && !offers.some(function (offer) { return offer.partId === partId; });
+        const partState = test.parts[partId];
+        return partState.activeStat && partState.copies < 8
+          && !offers.some(function (offer) { return offer.partId === partId && offer.statId === partState.activeStat; });
       }).forEach(function (partId) {
-        if (offers.length < 4) offers.push(offerForPart(test, partId, offers.length, false));
+        const partState = test.parts[partId];
+        if (offers.length < 4) offers.push(offerForVariant(test, partId, partState.activeStat, offers.length, false));
       });
     }
     while (offers.length < 4) {
@@ -433,30 +468,27 @@
     const offer = test.offers.find(function (item) { return item.id === offerId; });
     if (!offer || offer.sold || state.materials < offer.cost) return;
     const partState = test.parts[offer.partId];
-    const before = partState.copies;
     state.materials -= offer.cost;
     test.materialsSpent += offer.cost;
     test.componentsBought += 1;
-    partState.copies = Math.min(8, partState.copies + 1);
-    offer.sold = true;
-    const crossed = QUALITY_THRESHOLDS.find(function (threshold) { return before < threshold && partState.copies >= threshold; });
-    if (crossed) {
-      test.pendingStatPart = offer.partId;
-      test.pendingQualityIndex = qualityIndex(partState.copies);
-      state.mode = "component_stat_select";
+    const actualAction = !partState.activeStat ? "install" : partState.activeStat === offer.statId ? "upgrade" : "replace";
+    if (!partState.activeStat || partState.activeStat !== offer.statId) {
+      partState.activeStat = offer.statId;
+      partState.copies = 1;
+    } else {
+      partState.copies = Math.min(8, partState.copies + 1);
     }
+    Object.keys(partState.allocations).forEach(function (statId) {
+      partState.allocations[statId] = statId === partState.activeStat ? qualityIndex(partState.copies) : 0;
+    });
+    offer.sold = true;
+    test.lastComponentAction = { partId: offer.partId, statId: offer.statId, action: actualAction, copies: partState.copies };
+    test.offers.forEach(function (item) { if (!item.sold) syncOfferState(test, item); });
+    rebuildParams(state);
   }
 
   function chooseComponentStat(state, statId) {
-    const test = runtime(state);
-    if (!test || !test.pendingStatPart) return;
-    const part = PARTS[test.pendingStatPart];
-    if (part.stats.indexOf(statId) < 0) return;
-    test.parts[test.pendingStatPart].allocations[statId] += 1;
-    test.pendingStatPart = "";
-    test.pendingQualityIndex = 0;
-    rebuildParams(state);
-    state.mode = "component_shop";
+    return statId;
   }
 
   function refreshShop(state) {
@@ -482,7 +514,7 @@
     const test = runtime(state);
     if (!test || test.pendingStatPart) return;
     test.carriedLocks = test.offers.filter(function (offer) { return offer.locked && !offer.sold; }).map(function (offer) {
-      return { partId: offer.partId };
+      return { partId: offer.partId, statId: offer.statId };
     });
     test.completedStages = Math.max(test.completedStages, test.currentShopStage || 0);
     test.currentShopStage = 0;
