@@ -162,7 +162,10 @@
 
   function weaponIconHtml(weaponId, label) {
     if (weaponId === "scissors") {
-      return '<img class="scissors-weapon-icon" src="assets/generated-vfx/sprites/scissors-v23.png" alt="' + escapeHtml(label || "剪刀") + '" />';
+      return '<img class="fixed-weapon-icon scissors-weapon-icon" src="assets/generated-vfx/sprites/scissors-v23.png" alt="' + escapeHtml(label || "剪刀") + '" />';
+    }
+    if (weaponId === "thermos") {
+      return '<img class="fixed-weapon-icon thermos-weapon-icon" src="assets/generated-vfx/sprites/thermos-body-v24.png" alt="' + escapeHtml(label || "保温杯") + '" />';
     }
     return atlasIconHtml("office", "weapon-" + weaponId, label);
   }
@@ -299,7 +302,7 @@
     if (framework && framework.weaponSelection) {
       items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
     }
-    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName + "固定测试" : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
+    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName + "固定测试" + (fixedConfig.visualVersion ? " · 视觉 " + fixedConfig.visualVersion : "") : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
     setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : markerFixed ? "本轮只测试" + fixedConfig.weaponName : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
     setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
     setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关测试 · 纯战斗约 14 分 50 秒" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");

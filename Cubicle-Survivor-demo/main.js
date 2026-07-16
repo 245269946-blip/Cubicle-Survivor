@@ -153,14 +153,14 @@
         if (startButton) startButton.textContent = "进入马克笔三线成长测试";
       }
       if (demoV2Phase === "thermos-fixed") {
-        document.title = "工位幸存者 Demo V2.2 · 保温杯固定测试";
+        document.title = "工位幸存者 Demo V2.2 · 保温杯固定测试 · 视觉 V2.4";
         const shell = document.querySelector(".game-wrap");
         const stamp = document.querySelector(".title-stamp");
         const subtitle = document.querySelector(".title-hero .subtitle");
         const guideCards = document.querySelectorAll(".quick-guide .guide-card");
         const startButton = document.getElementById("startButton");
         if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.2 保温杯固定测试");
-        if (stamp) stamp.textContent = "Demo V2.2 · 保温杯固定测试";
+        if (stamp) stamp.textContent = "Demo V2.2 · 保温杯固定测试 · 视觉 V2.4";
         if (subtitle) subtitle.textContent = "只验证保温杯：共享近距扇面、冷凝铺场，以及把聚焦击杀转成死亡热浪。";
         if (guideCards.length >= 4) {
           guideCards[0].querySelector("strong").textContent = "近距正面扇面";
@@ -175,14 +175,14 @@
         if (startButton) startButton.textContent = "进入保温杯双路线测试";
       }
       if (demoV2Phase === "scissors-fixed") {
-        document.title = "工位幸存者 Demo V2.3 · 剪刀固定测试";
+        document.title = "工位幸存者 Demo V2.3 · 剪刀固定测试 · 视觉 V2.4";
         const shell = document.querySelector(".game-wrap");
         const stamp = document.querySelector(".title-stamp");
         const subtitle = document.querySelector(".title-hero .subtitle");
         const guideCards = document.querySelectorAll(".quick-guide .guide-card");
         const startButton = document.getElementById("startButton");
         if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.3 剪刀固定测试");
-        if (stamp) stamp.textContent = "Demo V2.3 · 剪刀固定测试";
+        if (stamp) stamp.textContent = "Demo V2.3 · 剪刀固定测试 · 视觉 V2.4";
         if (subtitle) subtitle.textContent = "只验证剪刀：贴身近战时间线、轻步进场、合刃/张刃路线，以及低血临时安全区。";
         if (guideCards.length >= 4) {
           guideCards[0].querySelector("strong").textContent = "纯近战动作轮";

@@ -12,6 +12,8 @@
 
 Demo V2.3 的隔离剪刀测试使用 `assets/generated-vfx/sprites/scissors-v23.png`。该文件是透明背景的单主体像素剪刀，由图像生成后执行色键去背；只作为剪刀武器实体与 UI 识别图，不授权进入 Demo V1 三武器资源池。
 
+Demo V2.4 为隔离的 Demo V2.2 / V2.3 测试追加以下透明资产，不覆盖上述实体与 Demo V1 白名单：`thermos-body-v24.png`、`thermos-fan-v24-sheet.png`、`thermos-condensation-v24-sheet.png`、`thermos-focus-v24-sheet.png`、`thermos-heatwave-v24-sheet.png`、`scissors-dash-v24-sheet.png`、`scissors-slash-v24-sheet.png`、`scissors-thrust-v24-sheet.png`、`scissors-shelter-v24-sheet.png`。8 张 `sheet` 均为 2×2、4 帧精灵表，只能由现有 `thermos_test_*` / `scissors_test_*` 事件的真实位置、方向、范围和寿命驱动。
+
 All three files are 128×128 RGBA, contain one subject and have transparent
 corners. They are entity bodies only. Ranges, lines, rings, links, impacts and
 timing use the approved office sprites under `assets/generated-vfx/sprites/`;

@@ -29,12 +29,21 @@
     thermos_charge_art: "assets/generated-vfx/sprites/thermos-charge-gauge-office-v2.png",
     thermos_release_art: "assets/generated-vfx/sprites/thermos-release-office-v2.png",
     thermos_wave_art: "assets/generated-vfx/sprites/thermos-wave-office-v2.png",
+    thermos_body_v24: "assets/generated-vfx/sprites/thermos-body-v24.png",
+    thermos_fan_v24: "assets/generated-vfx/sprites/thermos-fan-v24-sheet.png",
+    thermos_condensation_v24: "assets/generated-vfx/sprites/thermos-condensation-v24-sheet.png",
+    thermos_focus_v24: "assets/generated-vfx/sprites/thermos-focus-v24-sheet.png",
+    thermos_heatwave_v24: "assets/generated-vfx/sprites/thermos-heatwave-v24-sheet.png",
     sticky_trap_art: "assets/v2-weapon-vfx/sprites/sticky_note_v2.png",
     sticky_seek_art: "assets/generated-vfx/sprites/sticky-seek-office-v2.png",
     sticky_burst_art: "assets/generated-vfx/sprites/sticky-burst-office-v2.png",
     sticky_control_art: "assets/generated-vfx/sprites/sticky-control-office-v2.png",
     sticky_link_line_art: "assets/generated-vfx/sprites/sticky-link-line-office-v2.png",
     scissors_v23: "assets/generated-vfx/sprites/scissors-v23.png",
+    scissors_dash_v24: "assets/generated-vfx/sprites/scissors-dash-v24-sheet.png",
+    scissors_slash_v24: "assets/generated-vfx/sprites/scissors-slash-v24-sheet.png",
+    scissors_thrust_v24: "assets/generated-vfx/sprites/scissors-thrust-v24-sheet.png",
+    scissors_shelter_v24: "assets/generated-vfx/sprites/scissors-shelter-v24-sheet.png",
     status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
     status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
     status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
@@ -303,6 +312,89 @@
       : clamp((radius || 48) * 1.18, 72, 120);
     drawSprite(ctx, sprite, x, y, size, size, Math.min(0.84, alpha), (progress || 0) * 0.04);
     return true;
+  }
+
+  function drawSpriteFrame(ctx, id, frame, x, y, width, height, alpha, rotation) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const index = clamp(Math.floor(frame || 0), 0, 3);
+    const sourceWidth = Math.floor(img.naturalWidth / 2);
+    const sourceHeight = Math.floor(img.naturalHeight / 2);
+    const sourceX = index % 2 * sourceWidth;
+    const sourceY = Math.floor(index / 2) * sourceHeight;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function v24Frame(progress) {
+    return clamp(Math.floor(clamp(progress || 0, 0, 0.999) * 4), 0, 3);
+  }
+
+  function drawV24LinearEvent(ctx, event, alpha, progress) {
+    const source = event.source || "";
+    const meta = event.meta || {};
+    const dx = event.x2 - event.x1;
+    const dy = event.y2 - event.y1;
+    const length = Math.hypot(dx, dy) || 1;
+    const angle = Math.atan2(dy, dx);
+    if (source === "thermos_test_base") {
+      if (Math.abs(meta.fanOffset || 0) > 0.001) return true;
+      const fanWidth = meta.fanWidth || Math.max(150, (event.width || 10) * 18);
+      drawSpriteFrame(ctx, "thermos_fan_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.18, fanWidth * 1.08, Math.min(0.96, alpha + 0.12), angle);
+      return true;
+    }
+    if (source === "thermos_test_focus") {
+      drawSpriteFrame(ctx, "thermos_focus_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(64, (event.width || 10) * 7.2), Math.min(1, alpha + 0.14), angle);
+      return true;
+    }
+    if (source === "scissors_test_dash") {
+      drawSpriteFrame(ctx, "scissors_dash_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.18, Math.max(70, (event.width || 18) * 4.4), Math.min(0.9, alpha + 0.06), angle);
+      return true;
+    }
+    if (source === "scissors_test_thrust" || source === "scissors_test_sever") {
+      const frame = source === "scissors_test_sever" ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
+      const height = source === "scissors_test_sever" ? Math.max(92, (event.width || 52) * 2.2) : Math.max(58, (event.width || 26) * 2.35);
+      drawSpriteFrame(ctx, "scissors_thrust_v24", frame, event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.2, height, Math.min(1, alpha + 0.12), angle);
+      return true;
+    }
+    if (source === "scissors_test_base" || source === "scissors_test_open" || source === "scissors_test_finale") {
+      if (meta.edge && meta.edge !== "left") return true;
+      const lockedAngle = meta.lockedAngle == null ? angle : meta.lockedAngle;
+      const range = meta.fanRange || length;
+      const halfAngle = meta.fanHalfAngle || 0.45;
+      const heavy = source === "scissors_test_finale";
+      const frame = heavy ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
+      const width = range * (heavy ? 1.32 : 1.2);
+      const height = Math.max(82, Math.sin(halfAngle) * range * (heavy ? 2.35 : 2.1));
+      drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.5, event.y1 + Math.sin(lockedAngle) * range * 0.5, width, height, Math.min(1, alpha + 0.12), lockedAngle);
+      return true;
+    }
+    return false;
+  }
+
+  function drawV24AreaEvent(ctx, item, alpha, progress, radius) {
+    const source = item.source || "";
+    if (source === "thermos_test_condensation" || source === "thermos_test_fullscreen_condensation") {
+      if (item.primitive === "circle_event") return true;
+      drawSpriteFrame(ctx, "thermos_condensation_v24", v24Frame(progress), item.x, item.y, radius * 2.18, radius * 2.18, Math.min(0.78, alpha + 0.08), 0);
+      return true;
+    }
+    if (source === "thermos_test_kill_heatwave" || source === "thermos_test_fullscreen_ignition") {
+      drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, Math.max(66, radius * 2.08), Math.max(66, radius * 2.08), Math.min(0.96, alpha + 0.12), 0);
+      return true;
+    }
+    if (source === "scissors_test_shelter") return true;
+    if (source === "scissors_test_shelter_block") {
+      drawSpriteFrame(ctx, "scissors_shelter_v24", 2, item.x, item.y, 58, 58, Math.min(1, alpha + 0.16), 0);
+      return true;
+    }
+    return false;
   }
 
   function beamSpriteFor(kind) {
@@ -1299,8 +1391,8 @@
     });
     const left = angle - halfAngle;
     const right = angle + halfAngle;
-    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, edge: "left", actualHitCount: hits.length });
-    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, edge: "right", actualHitCount: hits.length });
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "left", actualHitCount: hits.length });
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "right", actualHitCount: hits.length });
     recordScissorsTargets(test, hits);
     return hits;
   }
@@ -1924,7 +2016,7 @@
     const farX = state.player.x + ux * range;
     const farY = state.player.y + uy * range;
     return {
-      originX, originY, farX, farY, ux, uy, nx, ny,
+      originX, originY, farX, farY, ux, uy, nx, ny, angle, range, width,
       points: [
         { x: originX + nx * originHalfWidth, y: originY + ny * originHalfWidth },
         { x: farX + nx * halfWidth, y: farY + ny * halfWidth },
@@ -1948,7 +2040,7 @@
         "steam",
         false,
         source,
-        { thermosFixedFan: true, groupIndex, fanOffset: offset }
+        { thermosFixedFan: true, groupIndex, fanOffset: offset, fanAngle: fan.angle, fanRange: fan.range, fanWidth: width }
       );
     });
   }
@@ -2042,6 +2134,7 @@
     const test = fixedTestRuntime(state);
     const mainAngle = thermosFixedDirection(state, p.range || 225);
     if (!test || mainAngle == null) return;
+    test.facingAngle = mainAngle;
     state.stats.shots += 1;
     const count = Math.max(1, p.amount || 1);
     const spread = count > 1 ? Math.min(0.68, 0.18 + count * 0.1) : 0;
@@ -3475,6 +3568,10 @@
     ctx.translate(p.x, p.y);
     ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
     drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    const thermos = state.demoV2 && state.demoV2.phase === "thermos-fixed" ? fixedTestRuntime(state) : null;
+    if (thermos) {
+      drawSprite(ctx, "thermos_body_v24", 28, -3, 50, 50, 0.96, 0);
+    }
     const scissors = scissorsFixedRuntime(state);
     if (scissors) {
       const angle = scissors.roundAngle || scissors.facingAngle || 0;
@@ -3483,7 +3580,11 @@
       drawSprite(ctx, "thermos_charge_art", 0, 35, 66, 12, 0.35 + charge * 0.65, 0);
       if (scissors.shelterActive) {
         const radius = state.activeFormParams.scissorsShelterRadius || 108;
-        drawSprite(ctx, "status_shield_art", 0, 0, radius * 2, radius * 2, 0.82, 0);
+        const duration = state.activeFormParams.scissorsShelterDuration || 3.2;
+        const remaining = Math.max(0, scissors.shelterTime || 0);
+        const elapsed = duration - remaining;
+        const shelterFrame = elapsed < 0.28 ? 0 : remaining < 0.36 ? 3 : 1;
+        drawSpriteFrame(ctx, "scissors_shelter_v24", shelterFrame, 0, 0, radius * 2.08, radius * 2.08, 0.86, 0);
       }
     }
     const shield = state.activeFormParams && state.activeFormParams.shield || 0;
@@ -3698,6 +3799,7 @@
   function drawGeneratedEffects(ctx, state) {
     for (const z of state.damageZones) {
       if (z.delay && (z.age || 0) < z.delay) continue;
+      if (z.source === "thermos_test_kill_heatwave") continue;
       const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
       const progress = eventProgress(z);
       const profile = z.visualProfile || eventVisual(z.source || z.visual || z.type);
@@ -3727,6 +3829,7 @@
       if (z.type === "polygon" && profile.family === "sticky_note") continue;
       const radius = Math.max(24, z.radius || 44);
       const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
+      if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, z.source, z.type, z.visual, z.x, z.y, mechanicRadius, Math.min(0.9, alpha + 0.1), progress)) continue;
       const size = Math.min(520, radius * (z.type === "polygon" ? 2.2 : 1.55 + progress * 0.8));
@@ -3757,6 +3860,7 @@
         continue;
       }
       if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
+        if (drawV24LinearEvent(ctx, event, alpha, progress)) continue;
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
         const impactSize = profile.family === "thermos"
           ? Math.min(92, Math.max(48, (event.width || 6) * 4.5))
@@ -3767,6 +3871,7 @@
         continue;
       }
       const radius = Math.max(26, event.radius || 44);
+      if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, event.source, event.kind, event.visual, event.x, event.y, radius, Math.min(0.94, alpha + 0.1), progress)) continue;
       const size = Math.min(440, radius * (1.25 + progress * 1.2));
@@ -3775,6 +3880,17 @@
         const bodySize = event.kind === "station" ? 68 : event.kind === "trap" || event.kind === "sticky_attach" ? 46 : Math.max(44, radius * 0.9);
         drawSprite(ctx, event.sprite, event.x, event.y, bodySize, bodySize, Math.min(0.98, alpha + 0.16), 0);
       }
+    }
+
+    // A death heatwave is the reward for a successful focus kill. Keep the
+    // single real ring event above the originating steam fan so the conversion
+    // stays legible; condensation and other persistent fields remain below it.
+    for (const z of state.damageZones) {
+      if (z.source !== "thermos_test_kill_heatwave" || (z.delay && (z.age || 0) < z.delay)) continue;
+      const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
+      const progress = eventProgress(z);
+      const radius = Math.max(8, ringCurrentRadius(z));
+      drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius);
     }
 
     for (const projectile of state.projectiles) {
@@ -4040,6 +4156,12 @@
       addLabEnemy("station-a", 520, 360);
       addLabEnemy("station-b", 500, 420);
       state.activeFormParams.heat = 90;
+    } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      const focus = addLabEnemy("thermos-fixed-focus", 525, 360);
+      if (kind === "thermos_fixed_heatwave") focus.hp = 20;
+      addLabEnemy("thermos-fixed-upper", 560, 315);
+      addLabEnemy("thermos-fixed-lower", 585, 405);
+      addLabEnemy("thermos-fixed-edge", 620, 350);
     } else if (kind === "sticky_seek") {
       addLabEnemy("seek-a", 570, 350);
       addLabEnemy("seek-b", 650, 420);
@@ -4060,6 +4182,19 @@
       addLabEnemy("notice-center", 600, 360).hp = 600;
       state.enemies[0].maxHp = 600;
       addLabEnemy("notice-inside", 600, 380);
+    } else if (kind === "scissors_fixed" || kind === "scissors_fixed_dash") {
+      addLabEnemy("scissors-fixed-center", 510, 360);
+      addLabEnemy("scissors-fixed-upper", 535, 320);
+      addLabEnemy("scissors-fixed-lower", 540, 405);
+      const scissorsTest = scissorsFixedRuntime(state);
+      if (kind === "scissors_fixed_dash" && scissorsTest) scissorsTest.dashReady = true;
+    } else if (kind === "scissors_fixed_shelter") {
+      const scissorsTest = scissorsFixedRuntime(state);
+      if (scissorsTest) {
+        scissorsTest.shelterActive = true;
+        scissorsTest.shelterTime = Math.max(0.4, (state.activeFormParams.scissorsShelterDuration || 3.2) - 0.5);
+      }
+      addCircleEvent(state, state.player.x + (state.activeFormParams.scissorsShelterRadius || 108), state.player.y, 18, "#9ff7ff", 0.22, "shield", false, "scissors_test_shelter_block");
     } else if (kind === "scale") {
       addLabEnemy("scale-normal-a", 560, 330);
       addLabEnemy("scale-normal-b", 630, 405);
@@ -4130,6 +4265,12 @@
         fireThermos(state);
         updateZones(state, 0.18);
       }
+    } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      if (kind === "thermos_fixed_heatwave") state.activeFormParams.thermosFixedFullscreenChance = 0;
+      fireThermos(state);
+      if (kind === "thermos_fixed_heatwave" && (state.activeFormParams.thermosFixedFocusHits || 0) > 0) {
+        performThermosFixedFocus(state, { angle: 0, focusIndex: 0 });
+      }
     } else if (kind === "sticky_seek") {
       fireSticky(state);
       updateZones(state, 0.2);
@@ -4163,6 +4304,12 @@
       fireSticky(state);
       fireSticky(state);
       updateZones(state, 0.34);
+    } else if (kind === "scissors_fixed" || kind === "scissors_fixed_dash") {
+      fireScissorsFixedTest(state);
+      for (let actionStep = 0; actionStep < 12; actionStep++) updateScissorsFixedActions(state, 0.18);
+    } else if (kind === "scissors_fixed_shelter") {
+      // The persistent field is read from the same fixed-test runtime state;
+      // the boundary impact above uses the real shelter-block event source.
     } else if (kind && kind.indexOf("thermos_") === 0) {
       fireThermos(state);
     } else if (kind && kind.indexOf("sticky_") === 0) {
@@ -4246,6 +4393,12 @@
       }
       event.debugHold = true;
     });
+    if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      state.damageZones.forEach(function (zone) {
+        zone.age = Math.max(zone.age || 0, (zone.duration || zone.maxLife || 0.5) * 0.55);
+        zone.life = Math.max(0.08, (zone.maxLife || zone.duration || 0.5) * 0.45);
+      });
+    }
     if (kind === "wave") {
       state.damageZones.filter(function (zone) { return zone.type === "ring"; }).forEach(function (zone, index) {
         zone.duration = 3.2;

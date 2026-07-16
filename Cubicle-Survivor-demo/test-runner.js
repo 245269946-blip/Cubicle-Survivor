@@ -885,9 +885,13 @@ if (!thermosState.formEvents.some((event) => event.source === "thermos_test_full
 }
 console.log("OK Demo V2.2 Thermos: short-wide shared-CD front fans, fixed single knockback, segmented condensation, focused kill conversion, non-chaining heatwaves, distinct Lv4 ultimates");
 
+if (thermosFixed.visualVersion !== "Demo V2.4") {
+  console.error("Thermos fixed test must expose the Demo V2.4 visual-pass identity", thermosFixed.visualVersion);
+  process.exit(1);
+}
 const scissorsFixed = V2.demoV2 && V2.demoV2.scissorsFixed;
 if (!scissorsFixed || scissorsFixed.version !== "Demo V2.3" || scissorsFixed.weaponId !== "scissors"
-  || scissorsFixed.runtimeKey !== "scissors" || scissorsFixed.baseMaxHp !== 78
+  || scissorsFixed.runtimeKey !== "scissors" || scissorsFixed.baseMaxHp !== 78 || scissorsFixed.visualVersion !== "Demo V2.4"
   || Object.keys(scissorsFixed.modules).sort().join(",") !== "closed,open"
   || scissorsFixed.parts.tip.statNames.pierce !== "暴击"
   || scissorsFixed.parts.body.statNames.amount !== "闪避"
@@ -1029,6 +1033,27 @@ if (scissorsState.hp >= hpInsideShelter || scissorsState.demoV2.scissors.totalSh
   process.exit(1);
 }
 console.log("OK Demo V2.3 Scissors: pure-melee locked timeline, fixed no-damage Light Step, Closed/Open routes, capped components, execution, and directional low-HP shelter");
+
+const combatVisualSource = fs.readFileSync(path.join(baseDir, "src/v2/combat/systems.js"), "utf8");
+const v24VisualAssets = [
+  "thermos-body-v24.png",
+  "thermos-fan-v24-sheet.png",
+  "thermos-condensation-v24-sheet.png",
+  "thermos-focus-v24-sheet.png",
+  "thermos-heatwave-v24-sheet.png",
+  "scissors-dash-v24-sheet.png",
+  "scissors-slash-v24-sheet.png",
+  "scissors-thrust-v24-sheet.png",
+  "scissors-shelter-v24-sheet.png"
+];
+if (!combatVisualSource.includes("function drawSpriteFrame")
+  || !combatVisualSource.includes("function drawV24LinearEvent")
+  || !combatVisualSource.includes("function drawV24AreaEvent")
+  || v24VisualAssets.some((asset) => !combatVisualSource.includes(asset) || !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", asset)))) {
+  console.error("Demo V2.4 must keep all Thermos/Scissors frame assets and judgment-driven render hooks", v24VisualAssets);
+  process.exit(1);
+}
+console.log("OK Demo V2.4 combat visuals: Thermos/Scissors static identity plus judgment-driven 2x2 frame animation assets");
 
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });
