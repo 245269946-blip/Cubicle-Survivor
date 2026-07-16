@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -196,12 +196,56 @@
         }
         if (startButton) startButton.textContent = "进入剪刀双路线测试";
       }
+      if (demoV2Phase === "correction-fluid-fixed") {
+        document.title = "工位幸存者 Demo V2.5 · 修正液固定测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.5 修正液固定测试");
+        if (stamp) stamp.textContent = "Demo V2.5 · 修正液错误系统";
+        if (subtitle) subtitle.textContent = "白色修正介质制造错误；青与品红故障霓虹提示污染扩散和最终纠错。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "三层错误状态";
+          guideCards[0].querySelector("span:last-child").textContent = "减速、修正液易伤、错误过载逐层显形；基础喷射不是主要输出。";
+          guideCards[1].querySelector("strong").textContent = "错误扩散";
+          guideCards[1].querySelector("span:last-child").textContent = "过载目标死亡后留下污染区，后期融合并触发系统崩溃。";
+          guideCards[2].querySelector("strong").textContent = "致命纠错";
+          guideCards[2].querySelector("span:last-child").textContent = "同时培养多个错误目标，最终锁定最高错误目标执行纠错。";
+          guideCards[3].querySelector("strong").textContent = "潮流故障视觉";
+          guideCards[3].querySelector("span:last-child").textContent = "办公物件只保留在武器本体；战斗层使用白漆、扫描线和赛博霓虹错误码。";
+        }
+        if (startButton) startButton.textContent = "进入修正液错误系统测试";
+      }
+      if (demoV2Phase === "four-weapon-fixed") {
+        document.title = "工位幸存者 Demo V2.6 · 四武器霓虹整合测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.6 四武器霓虹整合测试");
+        if (stamp) stamp.textContent = "Demo V2.6 · 疯狂办公室霓虹整合版";
+        if (subtitle) subtitle.textContent = "暗色办公室只是底板：四种办公工具在持续压力中异化成路径、空间、位移和错误状态超能力。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "四种战斗关系";
+          guideCards[0].querySelector("span:last-child").textContent = "马克笔改路径，保温杯改空间，剪刀改自身位置，修正液改敌人状态。";
+          guideCards[1].querySelector("strong").textContent = "同一固定框架";
+          guideCards[1].querySelector("span:last-child").textContent = "每把武器都使用 5 阶段 17 关、4 次模块和 6 次组件商店。";
+          guideCards[2].querySelector("strong").textContent = "霓虹不是统一换皮";
+          guideCards[2].querySelector("span:last-child").textContent = "每把武器保留材质母题，只在攻击、状态和终局节点出现赛博高光。";
+          guideCards[3].querySelector("strong").textContent = "修正液最强故障感";
+          guideCards[3].querySelector("span:last-child").textContent = "白色修正介质承载可读性，青/品红错误码承载污染、过载与纠错爆发。";
+        }
+        if (startButton) startButton.textContent = "选择一把异化办公武器";
+      }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
         const debugWeapon = params.get("weapon");
         const debugDept = params.get("dept");
         if (debugScreen === "weapon_select") V2.getState().mode = "weapon_select";
-        if (["marker", "thermos", "sticky_note", "scissors"].indexOf(debugWeapon) >= 0) {
+        if (["marker", "thermos", "sticky_note", "scissors", "correction_fluid"].indexOf(debugWeapon) >= 0) {
           V2.startRun({ weaponId: debugWeapon });
           if (["tech", "product", "ops", "marketing", "general"].indexOf(debugDept) >= 0) {
             V2.dispatch({ type: "SET_BADGE", dept: debugDept });
@@ -260,8 +304,8 @@
               }
             }
           }
-          if ((demoV2Phase === "thermos-fixed" || demoV2Phase === "scissors-fixed") && V2.getDemoV2FixedTestConfig) {
-            const config = V2.getDemoV2FixedTestConfig(demoV2Phase);
+          if (demoV2Phase && demoV2Phase !== "phase-a" && demoV2Phase !== "phase-b" && demoV2Phase !== "marker-fixed" && V2.getDemoV2FixedTestConfig) {
+            const config = V2.getDemoV2FixedTestConfig(debugState);
             const test = config && debugState.demoV2[config.runtimeKey];
             if (!config || !test) throw new Error("Missing fixed-test debug config: " + demoV2Phase);
             String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {

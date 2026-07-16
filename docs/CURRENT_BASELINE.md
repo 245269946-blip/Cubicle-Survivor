@@ -1,13 +1,13 @@
 # Cubicle Survivor Demo V1 Current Baseline
 
-Last verified: 2026-07-14
+Last verified: 2026-07-16
 
 This file is the first source to read before any project audit, plan, implementation, or playtest. Its purpose is to prevent the historical web prototype, early Demo V1 snapshots, and the active Demo V1 worktree from being confused again.
 
 ## Official naming
 
 - **Demo V1**: the current product version. It means this active worktree and the `Cubicle-Survivor-demo/` runnable package.
-- **Demo V2**: the newly approved production target documented in `docs/DEMO_V2_PRODUCTION_BRIEF.md`. Its isolated Phase A, Phase B, Demo V2.1 Marker, Demo V2.2 Thermos and Demo V2.3 Scissors tests have separate runnable entries; none has replaced the active Demo V1 package.
+- **Demo V2**: the approved production target documented in `docs/DEMO_V2_PRODUCTION_BRIEF.md`. Phase A/B and Demo V2.1—V2.5 keep separate regression entries; Demo V2.6 adds one four-weapon fixed-framework comparison entry. None has replaced the active Demo V1 package.
 - **Demo V1 early snapshot**: the earlier `Documents\Cubicle-Survivor-v2` clone at `91d32fb`.
 - **Historical web prototype**: the old static `Documents\New project 2` export and archived legacy content.
 - Avoid bare `V1` and `V2` in future user-facing work. Internal paths such as `src/v2/` may remain until a deliberate refactor, but they do not change the product name Demo V1.
@@ -41,11 +41,13 @@ Implementation status on 2026-07-14:
 - Demo V1 slots, armory, materials, secondary departments and support weapons remain deliberately absent from the Phase B runtime.
 - Phase C remains gated by the production brief; Phase B being runnable is not a replacement-gate pass and still requires player feel validation.
 - A separate Marker-only fixed-type experiment is approved in `docs/DEMO_V2_MARKER_FIXED_TEST.md`. It tests four Copy/Archive choices against a three-slot white-to-red component shop and must remain isolated from Phase A, Phase B, the full Demo V1 and the other two weapons.
+- Demo V2.5 adds the isolated Correction Fluid error-state test documented in `docs/DEMO_V2_CORRECTION_FLUID_FIXED_TEST.md`.
+- Demo V2.6 adds `demo-v2-6.html`, a unified selection entry for Marker, Thermos, Scissors and Correction Fluid. It routes each choice to the existing isolated fixed configuration and adds only shared version identity plus event-driven cyber-neon highlights.
 
 ## Authoritative development location
 
 - Worktree: `C:\Users\Administrator\.qclaw\workspace\cubicle-foundation-test`
-- Git branch: `codex/weapon-mechanics-contracts`
+- Git branch: `codex/demo-v2-6-four-weapon-neon`
 - Remote: `https://github.com/245269946-blip/Cubicle-Survivor.git`
 - Latest committed baseline at verification time: `c7dd046` (`Make weapon build signatures visible`)
 - Active runnable package: `Cubicle-Survivor-demo/`
@@ -126,7 +128,7 @@ The planned public distribution target is TapTap. Steam-specific packaging, Stea
 - Art assets and VFX must match the implemented attack range and weapon identity.
 - Music and SFX must communicate weapon rhythm, state changes, promotion and collaboration.
 - Build choices must be understandable in combat, not only in panels or text.
-- New systems and additional weapons are out of scope until the three-weapon slice passes player-facing acceptance.
+- New systems and additional weapons remain out of scope for the default Demo V1 and the 8—10 minute full Demo V2 mainline. The explicitly approved Scissors, Correction Fluid and Demo V2.6 fixed-framework entries are controlled comparison exceptions, not an automatic mainline expansion.
 - Read `docs/DEMO_V1_TAPTAP_DIRECTION.md` before proposing release-engineering or platform-specific work.
 
 ## Combat display-space hard contract
@@ -169,13 +171,13 @@ Asset guardrail (verified 2026-07-10): never reactivate `Cubicle-Survivor-demo/a
 
 Weapon-VFX guardrail (verified 2026-07-13): files listed under “Legacy Crop Pass” in `Cubicle-Survivor-demo/assets/v2-weapon-vfx/manifest.md` are reference-only and must not be loaded at runtime. The approved entity-sprite whitelist is `thermos_drone_v2.png`, `thermos_station_v2.png`, and `sticky_note_v2.png`; attack lines, wavefronts, blast radii, station ranges, routes, links and polygons use the generated office VFX sprites under `assets/generated-vfx/sprites/`, with their position, rotation and scale driven by the same runtime objects used for combat judgment. Visible Canvas geometry primitives are forbidden in the active renderer.
 
-Visual-event guardrail (verified 2026-07-13): `src/v2/data/form-signatures.js` is the only event-to-visual contract. Every registered source must expose family, phase, topology, cue, role, palette and a timeline built from anticipation/release/impact/residual/fade. Do not add an effect directly in the renderer without registering its event source, and do not let secondary or support visuals use primary intensity. Read `docs/DEMO_V1_VISUAL_EVENT_MAP.md` before changing weapon feedback or beginning audio-event mapping.
+Visual-event guardrail (verified 2026-07-16): `src/v2/data/form-signatures.js` is the only event-to-visual contract. Every registered source must expose family, phase, topology, cue, role, palette and a timeline built from anticipation/release/impact/residual/fade. Do not add an effect directly in the renderer without registering its event source, and do not let secondary or support visuals use primary intensity. Read `docs/DEMO_V1_VISUAL_EVENT_MAP.md` before changing weapon feedback or beginning audio-event mapping.
 
 Visual safe-area guardrail (verified 2026-07-13): menu text must be measured against the inner content edge of the raster frame, not merely against the outer panel rectangle. The weapon chooser and armory title stacks were re-inset after browser measurement; their card trays and footers must not be moved upward to make room. Combat HUD dimensions remain governed by the separate combat display-space hard contract. `office-rogue-props.png` and production-source atlases are archived outside the runnable package and QA must reject their return. See `docs/DEMO_V1_VISUAL_SAFE_AREA_ADDENDUM.md`.
 
 Office-icon guardrail (verified 2026-07-14): department and Build-slot duties use only `assets/generated-ui-v2/office-department-slot-icons-v2.png`. The retired `office-rogue-ui-icons.png` generic RPG/sci-fi atlas and keyed production intermediate are archived outside the runnable package. Preserve the atlas 5×2, 2:1 source ratio, keep slot descriptions result-led and fully visible, and do not reintroduce horizontal menu scrolling. These menu changes must not increase any combat HUD dimension or reduce the verified 542px uninterrupted combat field.
 
-Audio-event guardrail (verified 2026-07-13): `src/v2/audio/audio.js` consumes the same 71 registered event sources and is the only weapon-SFX playback entry. Every source must retain family, role, voice, trigger stage, cooldown and mix metadata. Do not play weapon audio directly from combat functions, bypass browser unlock/mute handling, or let secondary/support roles use primary mix. Read `docs/DEMO_V1_AUDIO_EVENT_MAP.md` before replacing synth voices or adding audio assets.
+Audio-event guardrail (verified 2026-07-16): `src/v2/audio/audio.js` consumes the same registered visual-event source set and is the only weapon-SFX playback entry. Every source must retain family, role, voice, trigger stage, cooldown and mix metadata. Do not play weapon audio directly from combat functions, bypass browser unlock/mute handling, or let secondary/support roles use primary mix. Read `docs/DEMO_V1_AUDIO_EVENT_MAP.md` before replacing synth voices or adding audio assets.
 
 Demo V2.1 Marker guardrail (verified 2026-07-16): `Cubicle-Survivor-demo/demo-v2-marker.html` is the isolated five-phase, 17-encounter Demo V2.1 candidate for the Marker only. Every encounter has a fixed normal-enemy spawn cap and ends in a 10-second pickup window; normal encounters finish on timer expiry or quota clearance, while Boss encounters require Boss death plus either timer expiry or add clearance. Marker starts at 120 HP, its instant lines do not knock enemies back, and Archive is a wider low-damage slowing ink band. XP queues player-assigned universal stat points after the pickup window. Component slots now sell their two concrete stat variants directly: variants are mutually exclusive per slot, identical purchases alone progress 1/2/4/8 quality, and buying the opposite variant replaces and resets that slot. Read `docs/DEMO_V2_MARKER_FIXED_TEST.md` before changing this route; do not spread its economy or 17-encounter structure to Phase A, Phase B, the full Demo V1 or the other two weapons.
 
@@ -184,6 +186,10 @@ Demo V2.2 Thermos guardrail (verified 2026-07-16): `Cubicle-Survivor-demo/demo-v
 Demo V2.3 Scissors guardrail (verified 2026-07-16): `Cubicle-Survivor-demo/demo-v2-scissors.html` is a separate Scissors-only fixed test and an explicit fourth-weapon exception requested by the user. It reuses the fixed 17-encounter economy only to test the first pure melee weapon: a non-overlapping attack timeline, predictable no-damage Light-Step dash, Closed-Blade thrust and Open-Blade combo routes (player-facing names 合刃/张刃), hit-count execution, melee-capped range, Dodge/Move Speed components, and one fixed low-HP projectile shelter item. Read `docs/DEMO_V2_SCISSORS_FIXED_TEST.md` before changing it. Scissors is not added to Phase A, Phase B, Demo V1, the full Demo V2 runtime or cross-weapon pools, and the shelter does not authorize a random item shop.
 
 Demo V2.4 combat-visual guardrail (verified 2026-07-16): `docs/DEMO_V2_4_COMBAT_VISUAL_PASS.md` is a visual-only pass for the isolated Demo V2.2 Thermos and Demo V2.3 Scissors entries. New `v24` sprite strips must derive frame, position, rotation and scale from the existing event objects used by combat judgment. Do not change weapon balance, add event sources, overwrite the old assets, expand Scissors into other runtimes, or draw visible Canvas geometry.
+
+Demo V2.5 Correction Fluid guardrail (verified 2026-07-16): `Cubicle-Survivor-demo/demo-v2-correction-fluid.html` is an isolated fourth-relation test. Error stacks are capped at three; the second-stack vulnerability applies only to correction-fluid-family damage; Error Spread owns infection fields and System Crash; Fatal Correction owns multi-target cultivation and Final Correction. Components remain attribute-only and mutually exclusive. Read `docs/DEMO_V2_CORRECTION_FLUID_FIXED_TEST.md` before changing it.
+
+Demo V2.6 four-weapon neon guardrail (verified 2026-07-16): `Cubicle-Survivor-demo/demo-v2-6.html` owns only unified weapon selection, suite identity and low-intensity event-driven neon accents. Every choice must still route into its isolated fixed configuration. The dark office is a background substrate, not a requirement that every attack look like normal desk stationery. Shared neon uses transparent sprites driven by real `*_test_*` events; no fake hit areas, visible Canvas geometry, global recolor or mechanism merge is allowed. Read `docs/DEMO_V2_6_FOUR_WEAPON_NEON_TEST.md` before changing the suite.
 
 Music-and-pacing guardrail (verified 2026-07-13): the audio module defines exactly ten phase scenes—normal and boss arrangements for each of the five learning phases—and all use the shared unlock/mute bus. Normal stages target 30–65 seconds and 20–80 kills. Boss completion must depend on the boss death flag rather than total kills; limited adds preserve multi-target Build expression, while per-hit caps prevent one burst from skipping the review. Read `docs/DEMO_V1_PACING_PASS.md` before changing stage duration, spawn pressure, boss health or burst resilience.
 

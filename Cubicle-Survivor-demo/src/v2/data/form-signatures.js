@@ -85,6 +85,13 @@
       focus: ["纯近战", "轻步进场", "锁向动作轮", "合刃突刺", "张刃连剪", "处决"],
       sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block"]
     },
+    correction_fluid_fixed: {
+      topology: "错误状态循环",
+      process: "喷射制造三层错误；过载死亡可污染战场，或被最终纠错集中清除并处决。",
+      visualCue: "白色修正痕迹说明状态层数，青/品红故障扫描提示过载，橙红错误码只用于系统崩溃与处决。",
+      focus: ["错误层数", "过载目标", "污染区域", "区域融合", "系统崩溃", "最终纠错"],
+      sources: ["correction_test_spray", "correction_test_error_apply", "correction_test_error_overload", "correction_test_error_expire", "correction_test_error_area", "correction_test_area_merge", "correction_test_system_crash", "correction_test_final", "correction_test_final_blast"]
+    },
     shield_break_pulse: {
       topology: "破盾热浪",
       process: "蒸汽命中充盾，敌方伤害把真实护盾打空后传播反击热浪",
@@ -227,6 +234,15 @@
     scissors_test_execution: "detonate",
     scissors_test_shelter: "shield",
     scissors_test_shelter_block: "counter",
+    correction_test_spray: "cast",
+    correction_test_error_apply: "mark",
+    correction_test_error_overload: "mark",
+    correction_test_error_expire: "expire",
+    correction_test_error_area: "linger",
+    correction_test_area_merge: "field",
+    correction_test_system_crash: "ultimate",
+    correction_test_final: "detonate",
+    correction_test_final_blast: "detonate",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -292,6 +308,7 @@
     marker: { core: "#9ffcff", accent: "#d8ffff", warning: "#ffb067" },
     thermos: { core: "#bdf5ff", accent: "#8fffe7", warning: "#ffb067" },
     scissors: { core: "#f1f5f6", accent: "#ff7b5f", warning: "#ffe58f" },
+    correction_fluid: { core: "#f4ffff", accent: "#61f5ff", warning: "#ff3f7d" },
     sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" }
   };
 
@@ -375,6 +392,16 @@
     scissors_test_shelter: ["protective_field", "low_health_shelter"],
     scissors_test_shelter_block: ["protective_field", "projectile_block"],
 
+    correction_test_spray: ["correction_spray", "white_jet"],
+    correction_test_error_apply: ["error_mark", "stack_apply"],
+    correction_test_error_overload: ["error_mark", "overload_glitch"],
+    correction_test_error_expire: ["error_mark", "glitch_fade"],
+    correction_test_error_area: ["error_field", "white_contamination"],
+    correction_test_area_merge: ["error_field", "neon_merge"],
+    correction_test_system_crash: ["error_burst", "system_crash"],
+    correction_test_final: ["correction_execute", "final_overwrite"],
+    correction_test_final_blast: ["error_burst", "death_error_blast"],
+
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],
     sticky_base_trigger: ["radial_blast", "contact_trigger"],
@@ -412,6 +439,7 @@
   };
 
   function visualFamily(source) {
+    if (/correction/.test(source)) return "correction_fluid";
     if (/scissors/.test(source)) return "scissors";
     if (/thermos/.test(source)) return "thermos";
     if (/sticky/.test(source)) return "sticky_note";

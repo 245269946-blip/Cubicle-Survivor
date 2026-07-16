@@ -51,6 +51,11 @@
     scissor_dash: { wave: "triangle", start: 420, end: 880, duration: 0.11, gain: 0.075, noise: 0.04, filter: 3600 },
     scissor_finish: { wave: "square", start: 310, end: 92, duration: 0.2, gain: 0.13, noise: 0.065, filter: 2800, dual: 1.5 },
     shelter_ping: { wave: "sine", start: 620, end: 1040, duration: 0.16, gain: 0.085, dual: 1.5 }
+    ,correction_spray: { wave: "triangle", start: 840, end: 360, duration: 0.095, gain: 0.075, noise: 0.075, filter: 3900 }
+    ,error_glitch: { wave: "square", start: 760, end: 1120, duration: 0.075, gain: 0.068, noise: 0.028, filter: 5200, dual: 1.47 }
+    ,error_field: { wave: "sine", start: 205, end: 155, duration: 0.2, gain: 0.068, noise: 0.026, filter: 1800, dual: 1.5 }
+    ,system_crash: { wave: "sawtooth", start: 520, end: 72, duration: 0.24, gain: 0.13, noise: 0.082, filter: 3000, dual: 0.5 }
+    ,correction_execute: { wave: "square", start: 1180, end: 96, duration: 0.21, gain: 0.125, noise: 0.05, filter: 4300, dual: 1.5 }
   };
 
   const TOPOLOGY_AUDIO_RULES = {
@@ -89,7 +94,12 @@
     melee_thrust: { voice: "scissor_thrust", triggers: { beam: "release", hit: "impact" }, cooldown: 0.075, hitCooldown: 0.08 },
     dash_trail: { voice: "scissor_dash", triggers: { beam: "release" }, cooldown: 0.16 },
     execution_cut: { voice: "scissor_finish", triggers: { beam: "release", hit: "impact" }, cooldown: 0.13, hitCooldown: 0.11 },
-    protective_field: { voice: "shelter_ping", triggers: { circle: "release" }, cooldown: 0.13 }
+    protective_field: { voice: "shelter_ping", triggers: { circle: "release" }, cooldown: 0.13 },
+    correction_spray: { voice: "correction_spray", triggers: { beam: "release", hit: "impact" }, cooldown: 0.075, hitCooldown: 0.09 },
+    error_mark: { voice: "error_glitch", triggers: { circle: "impact", state: "fade" }, cooldown: 0.11 },
+    error_field: { voice: "error_field", triggers: { zone: "residual", circle: "release" }, cooldown: 0.24 },
+    error_burst: { voice: "system_crash", triggers: { circle: "release", hit: "impact" }, cooldown: 0.16, hitCooldown: 0.12 },
+    correction_execute: { voice: "correction_execute", triggers: { circle: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.13 }
   };
 
   const SOURCE_AUDIO_OVERRIDES = {

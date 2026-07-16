@@ -434,6 +434,7 @@
   function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
   function startDemoV2ThermosFixed(state) { startDemoV2FixedTest(state, "thermos-fixed"); }
   function startDemoV2ScissorsFixed(state) { startDemoV2FixedTest(state, "scissors-fixed"); }
+  function startDemoV2CorrectionFluidFixed(state) { startDemoV2FixedTest(state, "correction-fluid-fixed"); }
 
   function openArmory(state, reason) {
     state.mode = "armory";
@@ -453,8 +454,13 @@
     state.loop = previousLoop;
     state.demoV2.phase = previousDemoV2Phase;
     const requestedFixedConfig = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(previousDemoV2Phase) : null;
-    state.selectedWeaponId = requestedFixedConfig
-      ? requestedFixedConfig.weaponId
+    const selectedPhase = requestedFixedConfig && requestedFixedConfig.coordinator
+      ? requestedFixedConfig.childPhaseByWeapon[weaponId]
+      : previousDemoV2Phase;
+    const selectedFixedConfig = selectedPhase && V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(selectedPhase) : requestedFixedConfig;
+    if (selectedFixedConfig) state.demoV2.phase = selectedFixedConfig.id;
+    state.selectedWeaponId = selectedFixedConfig
+      ? selectedFixedConfig.weaponId
       : (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
     state.maxHp = 124;
     state.hp = state.maxHp;
@@ -465,7 +471,15 @@
     }
     if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
     else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
-    else if (requestedFixedConfig) startDemoV2FixedTest(state, previousDemoV2Phase);
+    else if (selectedFixedConfig) {
+      startDemoV2FixedTest(state, selectedFixedConfig.id);
+      if (requestedFixedConfig && requestedFixedConfig.coordinator) {
+        state.demoV2.suiteVersion = requestedFixedConfig.version;
+        state.demoV2.suiteLabel = requestedFixedConfig.title;
+        state.demoV2.cyberNeonSuite = true;
+        state.demoV2.coordinatorPhase = requestedFixedConfig.id;
+      }
+    }
     else startStage(state, 0);
   }
 
@@ -748,6 +762,7 @@
     startDemoV2MarkerFixed,
     startDemoV2ThermosFixed,
     startDemoV2ScissorsFixed,
+    startDemoV2CorrectionFluidFixed,
     applyActiveForm
   });
 })();

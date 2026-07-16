@@ -123,6 +123,8 @@ const scripts = [
   "src/v2/demo-v2/marker-fixed.js",
   "src/v2/demo-v2/thermos-fixed.js",
   "src/v2/demo-v2/scissors-fixed.js",
+  "src/v2/demo-v2/correction-fluid-fixed.js",
+  "src/v2/demo-v2/four-weapon-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",
@@ -1054,6 +1056,122 @@ if (!combatVisualSource.includes("function drawSpriteFrame")
   process.exit(1);
 }
 console.log("OK Demo V2.4 combat visuals: Thermos/Scissors static identity plus judgment-driven 2x2 frame animation assets");
+
+const correctionFixed = V2.demoV2 && V2.demoV2.correctionFluidFixed;
+if (!correctionFixed || correctionFixed.version !== "Demo V2.5" || correctionFixed.weaponId !== "correction_fluid"
+  || correctionFixed.runtimeKey !== "correctionFluid" || correctionFixed.encounterCount !== 17 || correctionFixed.shopCount !== 6
+  || Object.keys(correctionFixed.modules).sort().join(",") !== "correction,spread"
+  || correctionFixed.parts.tip.statNames.pierce !== "攻速"
+  || correctionFixed.parts.body.statNames.attackSpeed !== "暴击"
+  || correctionFixed.parts.body.statNames.amount !== "范围"
+  || correctionFixed.parts.tail.statNames.range !== "持续时间"
+  || correctionFixed.parts.tail.statNames.duration !== "移动速度"
+  || correctionFixed.uiFramework.weaponSelection.activeIds.join(",") !== "correction_fluid") {
+  console.error("Correction-fluid fixed-type test contract missing or drifted", correctionFixed);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "correction-fluid-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+let correctionState = V2.getState();
+correctionState.warmupTime = 0;
+const correctionTarget = { id: "correction-base", typeId: "meeting", x: correctionState.player.x + 150, y: correctionState.player.y, r: 15, hp: 900, maxHp: 900, speed: 100, damage: 0, dead: false, color: "#fff", rooted: 0 };
+correctionState.enemies = [correctionTarget];
+V2.combat.fireWeapon(correctionState);
+if (correctionState.selectedWeaponId !== "correction_fluid" || correctionTarget.correctionErrorStacks !== 1
+  || !correctionState.formEvents.some((event) => event.source === "correction_test_spray")
+  || !correctionState.formEvents.some((event) => event.source === "correction_test_error_apply")) {
+  console.error("Correction-fluid base spray must force the weapon and create one readable error stack", correctionState.selectedWeaponId, correctionTarget, correctionState.formEvents);
+  process.exit(1);
+}
+correctionFixed.applyModule(correctionState, "spread", true);
+correctionTarget.correctionErrorStacks = 3;
+correctionTarget.correctionErrorTime = 4;
+V2.combat.qa.damageEnemy(correctionState, correctionTarget, 9999, "correction_test_spray");
+const firstErrorArea = correctionState.damageZones.find((zone) => zone.correctionArea);
+if (!firstErrorArea || firstErrorArea.damage >= correctionState.activeFormParams.damage * 0.5 || !firstErrorArea.noKnockback) {
+  console.error("An overloaded death must create a low-damage, no-knockback error area", firstErrorArea);
+  process.exit(1);
+}
+const areaVictim = { id: "correction-area-victim", typeId: "todo", x: firstErrorArea.x, y: firstErrorArea.y, r: 12, hp: 100, maxHp: 100, speed: 100, damage: 0, dead: false, color: "#fff", rooted: 0 };
+correctionState.enemies = [areaVictim];
+firstErrorArea.tick = 0;
+V2.combat.qa.updateZones(correctionState, 0.01);
+if (areaVictim.correctionErrorStacks !== 1 || areaVictim.hp >= 100) {
+  console.error("Error areas must both infect and deal auxiliary correction-fluid damage", areaVictim);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "correction-fluid-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "correction_fluid" });
+correctionState = V2.getState();
+correctionState.warmupTime = 0;
+for (let index = 0; index < 4; index++) correctionFixed.applyModule(correctionState, "spread", true);
+for (let index = 0; index < 3; index++) {
+  const overloaded = { id: "correction-crash-source-" + index, typeId: "todo", x: correctionState.player.x + 90 + index * 240, y: correctionState.player.y + (index % 2) * 180, r: 12, hp: 1, maxHp: 100, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0, correctionErrorStacks: 3, correctionErrorTime: 4 };
+  correctionState.enemies.push(overloaded);
+  V2.combat.qa.damageEnemy(correctionState, overloaded, 999, "correction_test_spray");
+}
+const crashTarget = { id: "correction-crash-target", typeId: "meeting", x: correctionState.player.x + 120, y: correctionState.player.y, r: 14, hp: 900, maxHp: 900, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0, correctionErrorStacks: 2, correctionErrorTime: 4 };
+correctionState.enemies.push(crashTarget);
+V2.combat.fireWeapon(correctionState);
+if (correctionState.demoV2.correctionFluid.totalSystemCrashes !== 1
+  || !correctionState.formEvents.some((event) => event.source === "correction_test_system_crash")) {
+  console.error("Spread Lv4 must consume three live areas in a real System Crash", correctionState.demoV2.correctionFluid, correctionState.formEvents);
+  process.exit(1);
+}
+
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "correction-fluid-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "correction_fluid" });
+correctionState = V2.getState();
+correctionState.warmupTime = 0;
+for (let index = 0; index < 4; index++) correctionFixed.applyModule(correctionState, "correction", true);
+const finalTarget = { id: "correction-final-target", typeId: "meeting", x: correctionState.player.x + 140, y: correctionState.player.y, r: 14, hp: 16, maxHp: 240, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0, correctionErrorStacks: 3, correctionErrorTime: 5 };
+correctionState.enemies = [finalTarget];
+V2.combat.fireWeapon(correctionState);
+if (correctionState.demoV2.correctionFluid.totalFinalCorrections !== 1
+  || !correctionState.formEvents.some((event) => event.source === "correction_test_final")) {
+  console.error("Fatal Correction Lv4 must consume the highest error target and emit Final Correction", correctionState.demoV2.correctionFluid, correctionState.formEvents);
+  process.exit(1);
+}
+
+const correctionVisualAssets = [
+  "correction-fluid-body-v25.png",
+  "correction-fluid-spray-v25-sheet.png",
+  "correction-fluid-error-v25-sheet.png",
+  "correction-fluid-area-v25-sheet.png",
+  "correction-fluid-crash-v25-sheet.png",
+  "correction-fluid-glitch-v25-sheet.png",
+  "correction-fluid-final-v25-sheet.png"
+];
+if (correctionVisualAssets.some((asset) => !combatVisualSource.includes(asset) || !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", asset)))) {
+  console.error("Demo V2.5 must keep all correction-fluid identity and four-frame dynamic assets", correctionVisualAssets);
+  process.exit(1);
+}
+console.log("OK Demo V2.5 Correction Fluid: three error stacks, infection fields, System Crash, Final Correction, exclusive components and seven cyber-neon assets");
+
+const fourWeaponFixed = V2.demoV2 && V2.demoV2.fourWeaponFixed;
+if (!fourWeaponFixed || fourWeaponFixed.version !== "Demo V2.6" || !fourWeaponFixed.coordinator
+  || fourWeaponFixed.weaponCards.map((weapon) => weapon.id).join(",") !== "marker,thermos,scissors,correction_fluid"
+  || Object.keys(fourWeaponFixed.childPhaseByWeapon).length !== 4
+  || !combatVisualSource.includes("function drawSuiteNeonLine") || !combatVisualSource.includes("function drawSuiteNeonArea")) {
+  console.error("Demo V2.6 four-weapon coordinator or shared cyber-neon combat layer missing", fourWeaponFixed);
+  process.exit(1);
+}
+for (const weapon of fourWeaponFixed.weaponCards) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-fixed" });
+  V2.dispatch({ type: "START_RUN", weaponId: weapon.id });
+  const suiteState = V2.getState();
+  if (suiteState.selectedWeaponId !== weapon.id || suiteState.demoV2.suiteVersion !== "Demo V2.6"
+    || !suiteState.demoV2.cyberNeonSuite || suiteState.stage.demoV2Phase !== fourWeaponFixed.childPhaseByWeapon[weapon.id]) {
+    console.error("Demo V2.6 must route every selection into its isolated fixed test while preserving suite identity", weapon.id, suiteState.demoV2, suiteState.stage);
+    process.exit(1);
+  }
+}
+console.log("OK Demo V2.6 integration: four weapons share one selection/version and neon layer while retaining isolated fixed mechanisms");
 
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });

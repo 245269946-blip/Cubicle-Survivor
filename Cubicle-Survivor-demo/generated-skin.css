@@ -662,6 +662,72 @@ button:disabled,
   overflow: visible !important;
 }
 
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-panel {
+  background-image: url("assets/generated-ui-v2/menu-shell-office-5col.png") !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid {
+  inset: 23.3% 7.4% 19.3% 7.4% !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid::after {
+  content: "扩展接口\A武器 / 道具预留";
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18%;
+  color: rgba(101, 244, 255, 0.55);
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 800;
+  line-height: 1.55;
+  text-align: center;
+  white-space: pre-line;
+  text-shadow: 1px 0 rgba(255, 63, 189, 0.4);
+}
+
+/* The unified roster is a quick relationship choice, not a design-document
+   reader. Keep one combat sentence and leave the detailed signatures inside
+   each isolated fixed test. */
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card {
+  padding: 7% 8% 6% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .runtime-atlas-icon {
+  width: clamp(62px, 5vw, 78px) !important;
+  height: clamp(62px, 5vw, 78px) !important;
+  flex-basis: clamp(62px, 5vw, 78px) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card strong {
+  font-size: clamp(17px, 1.35vw, 22px) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card em {
+  min-height: 2.5em !important;
+  margin-bottom: 2% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .weapon-vfx-preview {
+  flex-basis: 58px !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 0 3% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card p {
+  margin-bottom: 0 !important;
+  font-size: clamp(11px, 0.78vw, 13px) !important;
+  line-height: 1.4 !important;
+  -webkit-line-clamp: 3 !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card small,
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .v2-signature-tags.compact {
+  display: none !important;
+}
+
 #weaponSelectPanel .weapon-card {
   box-sizing: border-box !important;
   display: flex !important;

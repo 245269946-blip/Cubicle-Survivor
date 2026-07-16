@@ -44,6 +44,13 @@
     scissors_slash_v24: "assets/generated-vfx/sprites/scissors-slash-v24-sheet.png",
     scissors_thrust_v24: "assets/generated-vfx/sprites/scissors-thrust-v24-sheet.png",
     scissors_shelter_v24: "assets/generated-vfx/sprites/scissors-shelter-v24-sheet.png",
+    correction_fluid_body_v25: "assets/generated-vfx/sprites/correction-fluid-body-v25.png",
+    correction_fluid_spray_v25: "assets/generated-vfx/sprites/correction-fluid-spray-v25-sheet.png",
+    correction_fluid_error_v25: "assets/generated-vfx/sprites/correction-fluid-error-v25-sheet.png",
+    correction_fluid_area_v25: "assets/generated-vfx/sprites/correction-fluid-area-v25-sheet.png",
+    correction_fluid_crash_v25: "assets/generated-vfx/sprites/correction-fluid-crash-v25-sheet.png",
+    correction_fluid_glitch_v25: "assets/generated-vfx/sprites/correction-fluid-glitch-v25-sheet.png",
+    correction_fluid_final_v25: "assets/generated-vfx/sprites/correction-fluid-final-v25-sheet.png",
     status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
     status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
     status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
@@ -336,6 +343,21 @@
     return clamp(Math.floor(clamp(progress || 0, 0, 0.999) * 4), 0, 3);
   }
 
+  function drawSuiteNeonLine(ctx, state, item, alpha, progress) {
+    const source = item.source || "";
+    if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x1 == null || item.x2 == null) return;
+    const size = clamp((item.width || 8) * 3.2, 28, /correction/.test(source) ? 72 : 52);
+    drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x2, item.y2, size, size, Math.min(/correction/.test(source) ? 0.58 : 0.22, (alpha || 0.5) * 0.5), 0);
+  }
+
+  function drawSuiteNeonArea(ctx, state, item, alpha, progress, radius) {
+    const source = item.source || "";
+    if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x == null) return;
+    const r = Math.max(16, radius || item.radius || 40);
+    const scale = /correction/.test(source) ? 1.72 : 1.36;
+    drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(/correction/.test(source) ? 0.46 : 0.16, (alpha || 0.5) * 0.45), 0);
+  }
+
   function drawV24LinearEvent(ctx, event, alpha, progress) {
     const source = event.source || "";
     const meta = event.meta || {};
@@ -343,6 +365,10 @@
     const dy = event.y2 - event.y1;
     const length = Math.hypot(dx, dy) || 1;
     const angle = Math.atan2(dy, dx);
+    if (source === "correction_test_spray") {
+      drawSpriteFrame(ctx, "correction_fluid_spray_v25", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(52, (event.width || 18) * 3.2), Math.min(1, alpha + 0.14), angle);
+      return true;
+    }
     if (source === "thermos_test_base") {
       if (Math.abs(meta.fanOffset || 0) > 0.001) return true;
       const fanWidth = meta.fanWidth || Math.max(150, (event.width || 10) * 18);
@@ -380,6 +406,27 @@
 
   function drawV24AreaEvent(ctx, item, alpha, progress, radius) {
     const source = item.source || "";
+    if (source === "correction_test_error_area" || source === "correction_test_area_merge") {
+      const frame = source === "correction_test_area_merge" ? 3 : clamp((item.mergeCount || 1) - 1, 0, 3);
+      drawSpriteFrame(ctx, "correction_fluid_area_v25", frame, item.x, item.y, radius * 2.35, radius * 2.05, Math.min(0.86, alpha + 0.08), (item.areaRotation || 0));
+      if (source === "correction_test_area_merge" || item.mergedArea) {
+        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, radius * 1.72, radius * 1.72, Math.min(0.66, alpha), 0);
+      }
+      return true;
+    }
+    if (source === "correction_test_system_crash") {
+      drawSpriteFrame(ctx, "correction_fluid_crash_v25", v24Frame(progress), item.x, item.y, radius * 2.22, radius * 2.22, Math.min(1, alpha + 0.12), 0);
+      return true;
+    }
+    if (source === "correction_test_final" || source === "correction_test_final_blast") {
+      drawSpriteFrame(ctx, "correction_fluid_final_v25", v24Frame(progress), item.x, item.y, radius * 2.25, radius * 2.25, Math.min(1, alpha + 0.14), 0);
+      return true;
+    }
+    if (source === "correction_test_error_apply" || source === "correction_test_error_overload") {
+      const frame = source === "correction_test_error_overload" ? 3 : clamp((item.errorStacks || 1) - 1, 0, 2);
+      drawSpriteFrame(ctx, "correction_fluid_glitch_v25", frame, item.x, item.y, radius * 2.05, radius * 2.05, Math.min(0.94, alpha + 0.12), 0);
+      return true;
+    }
     if (source === "thermos_test_condensation" || source === "thermos_test_fullscreen_condensation") {
       if (item.primitive === "circle_event") return true;
       drawSpriteFrame(ctx, "thermos_condensation_v24", v24Frame(progress), item.x, item.y, radius * 2.18, radius * 2.18, Math.min(0.78, alpha + 0.08), 0);
@@ -640,6 +687,7 @@
     }
     if (enemy.hp <= 0) {
       enemy.dead = true;
+      handleCorrectionEnemyDeath(state, enemy, source);
       if (enemy.boss) state.stageBossDefeated = true;
       state.kills += 1;
       state.stageKills += 1;
@@ -1198,6 +1246,184 @@
 
   function markerFixedRuntime(state) {
     return state.demoV2 && state.demoV2.phase === "marker-fixed" ? state.demoV2.marker : null;
+  }
+
+  function correctionFluidRuntime(state) {
+    return state.demoV2 && state.demoV2.phase === "correction-fluid-fixed" ? state.demoV2.correctionFluid : null;
+  }
+
+  function correctionElapsed(state) {
+    const config = fixedTestConfig(state);
+    return config && config.totalElapsed ? config.totalElapsed(state) : state.totalTime || 0;
+  }
+
+  function applyCorrectionError(state, enemy, amount, source) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy || enemy.dead) return 0;
+    const before = enemy.correctionErrorStacks || 0;
+    const after = Math.min(3, before + Math.max(1, amount || 1));
+    enemy.correctionErrorStacks = after;
+    enemy.correctionErrorTime = p.correctionErrorDuration || 4.8;
+    if (after > before) {
+      test.totalErrorsApplied += after - before;
+      if (after === 3 && before < 3) test.totalOverloads += 1;
+      const overload = after >= 3;
+      addCircleEvent(state, enemy.x, enemy.y, enemy.r + (overload ? 25 : 16), overload ? "#ff3f7d" : "#67f7ff", overload ? 0.38 : 0.24, "mark", false, overload ? "correction_test_error_overload" : "correction_test_error_apply", {
+        errorStacks: after,
+        triggerSource: source || "correction_test_spray"
+      });
+    }
+    return after;
+  }
+
+  function correctionDamageEnemy(state, enemy, amount, source) {
+    if (!enemy || enemy.dead) return;
+    const p = state.activeFormParams || {};
+    const stacks = enemy.correctionErrorStacks || 0;
+    const scale = stacks >= 2 ? (p.correctionVulnerability || 1.28) : 1;
+    damageEnemy(state, enemy, amount * scale, source || "correction_test_spray");
+  }
+
+  function createCorrectionArea(state, x, y, options) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || (p.correctionSpreadLevel || 0) < 1) return null;
+    const baseRadius = (p.correctionAreaRadius || 72) * ((options && options.small) ? 0.68 : 1);
+    const duration = (p.correctionAreaDuration || 3.5) * ((options && options.small) ? 0.55 : 1);
+    if (p.correctionAreaMerge && !(options && options.small)) {
+      const nearby = state.damageZones.find(function (zone) {
+        return zone.correctionArea && zone.life > 0 && Math.hypot(zone.x - x, zone.y - y) <= zone.radius + baseRadius * 0.72;
+      });
+      if (nearby) {
+        const oldRadius = nearby.radius;
+        nearby.x = (nearby.x + x) * 0.5;
+        nearby.y = (nearby.y + y) * 0.5;
+        nearby.radius = Math.min((p.correctionAreaRadius || 72) * 2.15, Math.sqrt(oldRadius * oldRadius + baseRadius * baseRadius) * 1.08);
+        nearby.life = Math.max(nearby.life, duration);
+        nearby.maxLife = Math.max(nearby.maxLife || 0, nearby.life);
+        nearby.source = "correction_test_area_merge";
+        nearby.mergedArea = true;
+        nearby.mergeCount = Math.min(4, (nearby.mergeCount || 1) + 1);
+        nearby.errorApplied = {};
+        test.totalAreaMerges += 1;
+        test.largestErrorArea = Math.max(test.largestErrorArea || 0, nearby.radius);
+        addCircleEvent(state, nearby.x, nearby.y, nearby.radius, "#ff42c7", 0.48, "field", false, "correction_test_area_merge", { mergeCount: nearby.mergeCount });
+        return nearby;
+      }
+    }
+    const zone = {
+      type: "circle",
+      source: "correction_test_error_area",
+      x, y,
+      radius: baseRadius,
+      damage: (p.correctionAreaDamage || 1.2) * ((options && options.small) ? 0.55 : 1),
+      life: duration,
+      maxLife: duration,
+      tickEvery: p.correctionAreaTick || 0.7,
+      color: "#eafcff",
+      noKnockback: true,
+      visual: "correction_error_field",
+      correctionArea: true,
+      correctionAreaId: test.nextAreaId++,
+      errorApplied: {},
+      mergedArea: false,
+      mergeCount: 1,
+      areaRotation: (test.nextAreaId % 5 - 2) * 0.08,
+      smallCorrectionArea: !!(options && options.small)
+    };
+    addDamageZone(state, zone);
+    test.totalAreasCreated += 1;
+    test.largestErrorArea = Math.max(test.largestErrorArea || 0, baseRadius);
+    return zone;
+  }
+
+  function triggerCorrectionFinalBlast(state, enemy) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy) return;
+    const radius = p.correctionFinalBlastRadius || 72;
+    addCircleEvent(state, enemy.x, enemy.y, radius, "#67f7ff", 0.42, "blast", false, "correction_test_final_blast", { finalKill: true });
+    state.enemies.slice().forEach(function (other) {
+      if (other.dead || other === enemy || Math.hypot(other.x - enemy.x, other.y - enemy.y) > radius + other.r) return;
+      applyCorrectionError(state, other, 1, "correction_test_final_blast");
+      correctionDamageEnemy(state, other, p.correctionFinalBlastDamage || 7, "correction_test_final_blast");
+    });
+  }
+
+  function handleCorrectionEnemyDeath(state, enemy, source) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy) return;
+    const stacks = enemy.correctionErrorStacks || 0;
+    if (source !== "correction_test_system_crash" && stacks >= 3 && (p.correctionSpreadLevel || 0) >= 1) createCorrectionArea(state, enemy.x, enemy.y);
+    if (source === "correction_test_final") {
+      test.totalFinalKills += 1;
+      triggerCorrectionFinalBlast(state, enemy);
+    }
+  }
+
+  function triggerCorrectionSystemCrash(state, test, p, elapsed) {
+    if (!p.correctionCrashEnabled || elapsed < (test.crashReadyAt || 0)) return false;
+    const areas = state.damageZones.filter(function (zone) { return zone.correctionArea && zone.life > 0; });
+    if (areas.length < (p.correctionCrashAreaThreshold || 3)) return false;
+    const affected = new Set();
+    areas.forEach(function (area) {
+      addCircleEvent(state, area.x, area.y, area.radius * 1.08, "#ff3f7d", 0.62, "blast", false, "correction_test_system_crash", { areaId: area.correctionAreaId, mergeCount: area.mergeCount || 1 });
+      state.enemies.forEach(function (enemy) {
+        if (!enemy.dead && Math.hypot(enemy.x - area.x, enemy.y - area.y) <= area.radius + enemy.r) affected.add(enemy);
+      });
+      area.life = 0;
+    });
+    affected.forEach(function (enemy) {
+      const stacks = enemy.correctionErrorStacks || 0;
+      correctionDamageEnemy(state, enemy, (p.correctionCrashDamage || 20) * (1 + stacks * 0.34), "correction_test_system_crash");
+    });
+    test.crashReadyAt = elapsed + (p.correctionCrashCooldown || 5.4);
+    test.totalSystemCrashes += 1;
+    return true;
+  }
+
+  function triggerFinalCorrection(state, test, p, elapsed) {
+    if (!p.correctionFinalEnabled || elapsed < (test.finalReadyAt || 0)) return false;
+    const candidates = state.enemies.filter(function (enemy) { return !enemy.dead && (enemy.correctionErrorStacks || 0) > 0; });
+    if (!candidates.length) return false;
+    candidates.sort(function (a, b) {
+      return (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || b.maxHp - a.maxHp || a.hp - b.hp;
+    });
+    const target = candidates[0];
+    const stacks = target.correctionErrorStacks || 0;
+    target.correctionErrorStacks = 0;
+    target.correctionErrorTime = 0;
+    const damage = (p.correctionFinalDamage || 16) + target.maxHp * (p.correctionFinalPercentPerStack || 0.025) * stacks;
+    addCircleEvent(state, target.x, target.y, target.r + 46, "#79f7ff", 0.6, "detonate", false, "correction_test_final", { errorStacks: stacks, targetId: target.id });
+    correctionDamageEnemy(state, target, damage, "correction_test_final");
+    test.finalReadyAt = elapsed + (p.correctionFinalCooldown || 3.8);
+    test.totalFinalCorrections += 1;
+    return true;
+  }
+
+  function fireCorrectionFluidFixedTest(state) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test) return;
+    const elapsed = correctionElapsed(state);
+    triggerCorrectionSystemCrash(state, test, p, elapsed);
+    const targets = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= (p.range || 360) + enemy.r;
+    }).sort(function (a, b) {
+      return (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || b.maxHp - a.maxHp || Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    }).slice(0, p.correctionTargetCount || 1);
+    targets.forEach(function (target, index) {
+      const angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+      const x1 = state.player.x + Math.cos(angle) * 20;
+      const y1 = state.player.y + Math.sin(angle) * 20;
+      applyCorrectionError(state, target, 1, "correction_test_spray");
+      correctionDamageEnemy(state, target, (p.damage || 7) * (index ? 0.86 : 1), "correction_test_spray");
+      addBeamEvent(state, x1, y1, target.x, target.y, index % 2 ? "#ff5bd5" : "#dfffff", p.width || 24, 0.27, "steam", false, "correction_test_spray", { targetId: target.id, targetIndex: index, errorStacks: target.correctionErrorStacks || 0 });
+    });
+    if (targets.length) state.stats.shots += 1;
+    triggerFinalCorrection(state, test, p, elapsed);
   }
 
   function markerFixedLine(state, p, angle, offset, source, damageScale, baseIndex, laneIndex) {
@@ -2695,6 +2921,7 @@
     else if (id === "thermos") fireThermos(state);
     else if (id === "sticky_note") fireSticky(state);
     else if (id === "scissors") fireScissorsFixedTest(state);
+    else if (id === "correction_fluid") fireCorrectionFluidFixedTest(state);
     else fireGeneric(state);
   }
 
@@ -3086,6 +3313,13 @@
         }
       }
       enemy.rooted = Math.max(0, (enemy.rooted || 0) - dt);
+      if (enemy.correctionErrorStacks) {
+        enemy.correctionErrorTime = Math.max(0, (enemy.correctionErrorTime || 0) - dt);
+        if (enemy.correctionErrorTime <= 0) {
+          enemy.correctionErrorStacks = 0;
+          traceWeaponEvent(state, "state", { source: "correction_test_error_expire", enemyId: enemy.id, vfxPhase: eventPhase("correction_test_error_expire") });
+        }
+      }
       const dx = state.player.x - enemy.x;
       const dy = state.player.y - enemy.y;
       const len = Math.hypot(dx, dy) || 1;
@@ -3093,6 +3327,7 @@
       let mx = dx / len;
       let my = dy / len;
       let moveSpeed = enemy.speed;
+      if ((enemy.correctionErrorStacks || 0) >= 1) moveSpeed *= state.activeFormParams.correctionSlowMultiplier || 0.82;
       enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
       if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
       if (enemy.chargeTime > 0) {
@@ -3210,6 +3445,15 @@
           trapId, armed: true, armDelay: 0, noticeNode: true, linked: false,
           archiveEcho: true, zoneDamage: p.zoneDamage || 0, visual: "notice_node"
         });
+      }
+    }
+    const correction = correctionFluidRuntime(state);
+    if (correction) {
+      const target = nearestEnemy(state, state.activeFormParams.range || 360);
+      const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : 0;
+      drawSprite(ctx, "correction_fluid_body_v25", 28, -3, 50, 50, 0.98, angle * 0.16);
+      if ((correction.activeErrorAreas || 0) >= (state.activeFormParams.correctionCrashAreaThreshold || 3) && state.activeFormParams.correctionCrashEnabled) {
+        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 2, 0, 34, 70, 70, 0.72, 0);
       }
     }
   }
@@ -3376,6 +3620,15 @@
         for (const enemy of state.enemies) {
           if (!enemy.dead && Math.hypot(enemy.x - z.x, enemy.y - z.y) <= z.radius + enemy.r) {
             if (z.hitOnce && z.hits[enemy.id]) continue;
+            if (z.correctionArea) {
+              const mayRepeatError = (state.activeFormParams.correctionSpreadLevel || 0) >= 3;
+              if (mayRepeatError || !z.errorApplied[enemy.id]) {
+                applyCorrectionError(state, enemy, 1, z.source || "correction_test_error_area");
+                z.errorApplied[enemy.id] = true;
+              }
+              correctionDamageEnemy(state, enemy, z.damage, z.source || "correction_test_error_area");
+              continue;
+            }
             if (z.debuff === "tea") {
               enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
             }
@@ -3429,6 +3682,12 @@
       }
     }
     state.damageZones = state.damageZones.filter(function (z) { return z.life > 0; });
+    const correction = correctionFluidRuntime(state);
+    if (correction) {
+      const areas = state.damageZones.filter(function (zone) { return zone.correctionArea && zone.life > 0; });
+      correction.activeErrorAreas = areas.length;
+      correction.largestErrorArea = areas.reduce(function (max, zone) { return Math.max(max, zone.radius || 0); }, 0);
+    }
   }
 
   function updatePickups(state, dt) {
@@ -3615,6 +3874,13 @@
       if (e.p0Marked) {
         const markRatio = clamp((e.p0MarkTime || 0) / Math.max(0.01, e.p0MarkMax || 1), 0, 1);
         drawSprite(ctx, "status_mark_art", 0, -2, bodySize + 18, bodySize + 18, 0.55 + markRatio * 0.4, 0);
+      }
+      if (e.correctionErrorStacks) {
+        const errorFrame = clamp((e.correctionErrorStacks || 1) - 1, 0, 3);
+        drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2, bodySize + 24, bodySize + 24, 0.9, 0);
+        if (e.correctionErrorStacks >= 3) {
+          drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 3, 0, -2, bodySize + 38, bodySize + 38, 0.76 + Math.sin((e.age || 0) * 9) * 0.08, 0);
+        }
       }
       if (e.rooted > 0) {
         const rootWidth = bodySize + 18;
@@ -3809,6 +4075,7 @@
         continue;
       }
       if (z.type === "line") {
+        drawSuiteNeonLine(ctx, state, z, alpha, progress);
         if (z.inkTrail) {
           const dx = z.x2 - z.x1;
           const dy = z.y2 - z.y1;
@@ -3829,6 +4096,7 @@
       if (z.type === "polygon" && profile.family === "sticky_note") continue;
       const radius = Math.max(24, z.radius || 44);
       const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
+      drawSuiteNeonArea(ctx, state, z, alpha, progress, mechanicRadius);
       if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, z.source, z.type, z.visual, z.x, z.y, mechanicRadius, Math.min(0.9, alpha + 0.1), progress)) continue;
@@ -3860,6 +4128,7 @@
         continue;
       }
       if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
+        drawSuiteNeonLine(ctx, state, event, alpha, progress);
         if (drawV24LinearEvent(ctx, event, alpha, progress)) continue;
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
         const impactSize = profile.family === "thermos"
@@ -3871,6 +4140,7 @@
         continue;
       }
       const radius = Math.max(26, event.radius || 44);
+      drawSuiteNeonArea(ctx, state, event, alpha, progress, radius);
       if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, event.source, event.kind, event.visual, event.x, event.y, radius, Math.min(0.94, alpha + 0.1), progress)) continue;

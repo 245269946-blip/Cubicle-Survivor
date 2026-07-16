@@ -14,6 +14,8 @@ Demo V2.3 的隔离剪刀测试使用 `assets/generated-vfx/sprites/scissors-v23
 
 Demo V2.4 为隔离的 Demo V2.2 / V2.3 测试追加以下透明资产，不覆盖上述实体与 Demo V1 白名单：`thermos-body-v24.png`、`thermos-fan-v24-sheet.png`、`thermos-condensation-v24-sheet.png`、`thermos-focus-v24-sheet.png`、`thermos-heatwave-v24-sheet.png`、`scissors-dash-v24-sheet.png`、`scissors-slash-v24-sheet.png`、`scissors-thrust-v24-sheet.png`、`scissors-shelter-v24-sheet.png`。8 张 `sheet` 均为 2×2、4 帧精灵表，只能由现有 `thermos_test_*` / `scissors_test_*` 事件的真实位置、方向、范围和寿命驱动。
 
+Demo V2.5 修正液固定测试追加 7 张透明资产：`correction-fluid-body-v25.png`、`correction-fluid-spray-v25-sheet.png`、`correction-fluid-error-v25-sheet.png`、`correction-fluid-area-v25-sheet.png`、`correction-fluid-crash-v25-sheet.png`、`correction-fluid-glitch-v25-sheet.png`、`correction-fluid-final-v25-sheet.png`。除瓶体外均为 2×2、4 帧精灵表。白色修正介质负责状态可读，青/品红故障霓虹负责错误升级，橙红只用于崩溃与纠错。Demo V2.6 可在其他三把固定武器的真实 `*_test_*` 事件上低透明度复用故障环作为共享高光；不得新增虚假判定、可见 Canvas 几何或把四把武器统一成同一颜色。
+
 All three files are 128×128 RGBA, contain one subject and have transparent
 corners. They are entity bodies only. Ranges, lines, rings, links, impacts and
 timing use the approved office sprites under `assets/generated-vfx/sprites/`;

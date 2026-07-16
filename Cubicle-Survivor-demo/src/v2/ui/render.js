@@ -99,6 +99,7 @@
     route_buff_trap: "sticky_route",
     sticky_debuff_spread: "sticky_spread",
     trap_link_control_zone: "sticky_notice_zone"
+    ,correction_fluid_fixed: "correction_test_error_overload"
   };
 
   const BADGE_COMBAT_COPY = {
@@ -145,7 +146,7 @@
   }
 
   function vfxPreviewHtml(weaponId, mechanicType, className) {
-    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "scissors" ? "scissors_test_base" : weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
+    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "correction_fluid" ? "correction_test_error_overload" : weaponId === "scissors" ? "scissors_test_base" : weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
     const visual = V2.getWeaponVisualEvent ? V2.getWeaponVisualEvent(source) : { family: weaponId || "marker", topology: "piercing_line", cue: "preview" };
     const spriteId = approvedPreviewSprite(weaponId, mechanicType);
     const sprite = spriteId
@@ -167,6 +168,9 @@
     if (weaponId === "thermos") {
       return '<img class="fixed-weapon-icon thermos-weapon-icon" src="assets/generated-vfx/sprites/thermos-body-v24.png" alt="' + escapeHtml(label || "保温杯") + '" />';
     }
+    if (weaponId === "correction_fluid") {
+      return '<img class="fixed-weapon-icon correction-fluid-weapon-icon" src="assets/generated-vfx/sprites/correction-fluid-body-v25.png" alt="' + escapeHtml(label || "修正液") + '" />';
+    }
     return atlasIconHtml("office", "weapon-" + weaponId, label);
   }
 
@@ -184,8 +188,8 @@
   }
 
   function fixedComponentIconHtml(config, id, label) {
-    return config && config.weaponId === "scissors"
-      ? weaponIconHtml("scissors", label)
+    return config && (config.weaponId === "scissors" || config.weaponId === "correction_fluid")
+      ? weaponIconHtml(config.weaponId, label)
       : markerGrowthIconHtml("build", "component-" + id, label);
   }
 
@@ -196,6 +200,8 @@
     wrap.dataset.weaponTheme = theme.id;
     wrap.dataset.pageMode = state.mode;
     wrap.dataset.stagePhase = theme.phase.id;
+    const fixedConfig = fixedTestConfig(state);
+    wrap.dataset.fixedSuite = fixedConfig && fixedConfig.coordinator ? "four-weapon" : "";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
   }
 
@@ -303,9 +309,10 @@
       items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
     }
     setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName + "固定测试" + (fixedConfig.visualVersion ? " · 视觉 " + fixedConfig.visualVersion : "") : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
-    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : markerFixed ? "本轮只测试" + fixedConfig.weaponName : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
-    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
-    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关测试 · 纯战斗约 14 分 50 秒" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    const coordinator = !!(fixedConfig && fixedConfig.coordinator);
+    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : coordinator ? "选择一种异化关系" : markerFixed ? "本轮只测试" + fixedConfig.weaponName : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
+    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : coordinator ? "四把武器共用同一关卡与成长骨架，但各自只验证一种不可替代的关系：路径、空间、自身位置或敌人状态。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
+    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : coordinator ? "选择一把武器进入 5 阶段 17 关固定测试" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关测试 · 纯战斗约 14 分 50 秒" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
     setHtml("weaponSelectFlow", markerFixed
       ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
       : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
@@ -314,7 +321,7 @@
       const showFramework = !!(framework && framework.weaponSelection);
       rosterMeta.classList.toggle("hidden", !showFramework);
       if (showFramework) {
-        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' ' + items.length + '/' + framework.weaponSelection.cardCapacity + '</strong><span>本轮固定' + escapeHtml(fixedConfig.weaponName) + '；后续武器与道具继续从预留入口接入。</span>';
+        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' ' + items.length + '/' + framework.weaponSelection.cardCapacity + '</strong><span>' + (coordinator ? '本轮固定四武器；后续武器与道具继续从预留入口接入。' : '本轮固定' + escapeHtml(fixedConfig.weaponName) + '；后续武器与道具继续从预留入口接入。') + '</span>';
       }
     }
     setHtml("weaponSelectGrid", items.map(function (w) {
@@ -584,7 +591,7 @@
           '<p>' + escapeHtml(vm.markerFixed.moduleLabels[0]) + ' Lv.' + vm.markerFixed.modules.copy + ' / ' + escapeHtml(vm.markerFixed.moduleLabels[1]) + ' Lv.' + vm.markerFixed.modules.archive + '</p>' +
           '<p>经验基础属性 ' + escapeHtml(vm.markerFixed.experienceSummary) + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
           '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + '（收获追加 ' + vm.markerFixed.harvestingMaterialsEarned + '） / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
-          '<p>' + escapeHtml(vm.markerFixed.fullscreenLabels[0]) + ' ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · ' + escapeHtml(vm.markerFixed.fullscreenLabels[1]) + ' ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次' + (vm.markerFixed.weaponId === "thermos" ? ' · 聚焦击杀 ' + vm.markerFixed.focusKills + ' · 死亡热浪 ' + vm.markerFixed.heatwaveTriggers : vm.markerFixed.weaponId === "scissors" ? ' · 轻步 ' + vm.markerFixed.dashes + '（闪避 ' + vm.markerFixed.dashDodges + '）· 合刃命中 ' + vm.markerFixed.closedHits + ' · 张刃命中 ' + vm.markerFixed.openHits + ' · 处决 ' + vm.markerFixed.executions + ' · 安全区 ' + vm.markerFixed.shelterTriggers + ' 次 / 挡弹 ' + vm.markerFixed.blockedShots : '') + '</p>' +
+          '<p>' + escapeHtml(vm.markerFixed.fullscreenLabels[0]) + ' ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · ' + escapeHtml(vm.markerFixed.fullscreenLabels[1]) + ' ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次' + (vm.markerFixed.weaponId === "thermos" ? ' · 聚焦击杀 ' + vm.markerFixed.focusKills + ' · 死亡热浪 ' + vm.markerFixed.heatwaveTriggers : vm.markerFixed.weaponId === "scissors" ? ' · 轻步 ' + vm.markerFixed.dashes + '（闪避 ' + vm.markerFixed.dashDodges + '）· 合刃命中 ' + vm.markerFixed.closedHits + ' · 张刃命中 ' + vm.markerFixed.openHits + ' · 处决 ' + vm.markerFixed.executions + ' · 安全区 ' + vm.markerFixed.shelterTriggers + ' 次 / 挡弹 ' + vm.markerFixed.blockedShots : vm.markerFixed.weaponId === "correction_fluid" ? ' · 错误 ' + vm.markerFixed.errorsApplied + ' 层 · 过载 ' + vm.markerFixed.overloads + ' · 污染区 ' + vm.markerFixed.errorAreas + ' · 融合 ' + vm.markerFixed.areaMerges + ' · 纠错击杀 ' + vm.markerFixed.finalKills : '') + '</p>' +
           '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' + (part.activeStat ? fixedComponentIconHtml(fixedTestConfig(V2.getState()), part.activeStat, part.activeStatName + part.name) : "") + '<div class="marker-component-slot-copy"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div></div>'; }).join("") + '</div>'
         : vm.phaseB
         ? '<p>击破 ' + vm.kills + ' · 峰值目标 ' + vm.phaseB.peakEnemies + ' · 模块 ' + escapeHtml(vm.phaseB.modules.join(" → ") || "无") + '</p>'
