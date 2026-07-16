@@ -3287,6 +3287,60 @@ h2 {
   width: min(1040px, 94vw);
 }
 
+.marker-growth-icon {
+  display: block;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.marker-growth-build {
+  background-image: url("assets/generated-ui-v2/marker-v21-build-icons.png");
+  background-size: 400% 200%;
+}
+
+.marker-growth-experience {
+  background-image: url("assets/generated-ui-v2/marker-v21-experience-icons.png");
+  background-size: 400% 300%;
+}
+
+.marker-growth-build.icon-copy { background-position: 0 0; }
+.marker-growth-build.icon-archive { background-position: 33.333% 0; }
+.marker-growth-build.icon-component-damage { background-position: 66.667% 0; }
+.marker-growth-build.icon-component-pierce { background-position: 100% 0; }
+.marker-growth-build.icon-component-attackSpeed { background-position: 0 100%; }
+.marker-growth-build.icon-component-amount { background-position: 33.333% 100%; }
+.marker-growth-build.icon-component-range { background-position: 66.667% 100%; }
+.marker-growth-build.icon-component-duration { background-position: 100% 100%; }
+
+.marker-growth-experience.icon-maxHp { background-position: 0 0; }
+.marker-growth-experience.icon-hpRegen { background-position: 33.333% 0; }
+.marker-growth-experience.icon-lifeSteal { background-position: 66.667% 0; }
+.marker-growth-experience.icon-damage { background-position: 100% 0; }
+.marker-growth-experience.icon-attackSpeed { background-position: 0 50%; }
+.marker-growth-experience.icon-critChance { background-position: 33.333% 50%; }
+.marker-growth-experience.icon-range { background-position: 66.667% 50%; }
+.marker-growth-experience.icon-armor { background-position: 100% 50%; }
+.marker-growth-experience.icon-dodge { background-position: 0 100%; }
+.marker-growth-experience.icon-moveSpeed { background-position: 33.333% 100%; }
+.marker-growth-experience.icon-luck { background-position: 66.667% 100%; }
+.marker-growth-experience.icon-harvesting { background-position: 100% 100%; }
+
+#upgradePanel #upgradeChoices.marker-experience-grid .marker-growth-icon,
+#componentStatPanel .marker-growth-icon {
+  margin: 0 auto 4px;
+}
+
+#modulePanel .module-card .marker-growth-icon {
+  width: 96px;
+  height: 96px;
+  flex-basis: 96px;
+  margin: 0 auto 4px;
+}
+
 .marker-component-slots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3295,9 +3349,22 @@ h2 {
 }
 
 .marker-component-slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid color-mix(in srgb, var(--quality-color, #7f8b9a) 62%, #263341);
   background: rgba(7, 17, 25, 0.8);
   padding: 10px 12px;
+}
+
+.marker-component-slot .marker-growth-icon {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+}
+
+.marker-component-slot-copy {
+  min-width: 0;
 }
 
 .marker-component-slot strong,
@@ -3326,10 +3393,35 @@ h2 {
 }
 
 .shop-panel.marker-component-panel .marker-component-card {
-  grid-template-rows: auto auto auto auto auto auto;
+  grid-template-rows: auto auto auto auto auto;
   min-height: 214px;
   padding: 11px;
   gap: 6px;
+}
+
+.marker-component-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.marker-component-heading .marker-growth-icon {
+  width: 58px;
+  height: 58px;
+  flex-basis: 58px;
+}
+
+.marker-component-heading-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.marker-component-heading-copy > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .shop-panel.marker-component-panel .marker-component-card strong {
@@ -3347,7 +3439,9 @@ h2 {
 }
 
 .shop-panel.marker-component-panel .marker-component-actions .slot-button {
-  min-height: 34px;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 4px 10px !important;
   border: 1px solid rgba(94, 252, 255, 0.42);
   border-radius: 5px;
   background: rgba(94, 252, 255, 0.12);

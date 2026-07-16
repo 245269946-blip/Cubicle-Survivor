@@ -778,6 +778,20 @@ if (!markerFixedState.damageZones.some((zone) => zone.source === "marker_test_fu
   console.error("Archive Lv4 must produce a temporary fullscreen ink zone");
   process.exit(1);
 }
+const markerGrowthAssetPaths = [
+  "assets/generated-ui-v2/marker-v21-build-icons.png",
+  "assets/generated-ui-v2/marker-v21-experience-icons.png"
+];
+const markerGrowthCss = fs.readFileSync(path.join(baseDir, "styles.css"), "utf8");
+const markerGrowthRender = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.js"), "utf8");
+if (markerGrowthAssetPaths.some((assetPath) => !fs.existsSync(path.join(baseDir, assetPath)))
+  || markerGrowthAssetPaths.some((assetPath) => !markerGrowthCss.includes(assetPath))
+  || !markerGrowthRender.includes('markerGrowthIconHtml("experience", choice.id')
+  || !markerGrowthRender.includes('markerGrowthIconHtml("build", "component-" + offer.statId')
+  || !markerGrowthRender.includes('markerGrowthIconHtml("build", choice.id')) {
+  console.error("Demo V2.1 growth icon assets must remain wired into XP, module, and component decisions");
+  process.exit(1);
+}
 console.log("OK Demo V2.1 Marker: timer-or-clear normal stages, 120 HP, no line knockback, soft slowing ink bands, mutually exclusive component variants, Boss dual-condition completion, 17 encounters / 6 shops / 4 modules");
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });

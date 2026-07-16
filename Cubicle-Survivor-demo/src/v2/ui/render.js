@@ -168,6 +168,11 @@
     return atlasIconHtml("ui", "dept-" + dept, label);
   }
 
+  function markerGrowthIconHtml(group, id, label) {
+    const safeGroup = group === "experience" ? "experience" : "build";
+    return '<span class="marker-growth-icon marker-growth-' + safeGroup + ' icon-' + escapeHtml(id) + '" role="img" aria-label="' + escapeHtml(label || "") + '"></span>';
+  }
+
   function applyShellState(state) {
     const wrap = document.querySelector(".v2-game");
     if (!wrap || !V2.viewModel) return;
@@ -323,7 +328,7 @@
     setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
     setHtml("upgradeChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-upgrade="' + escapeHtml(choice.id) + '">' +
-        atlasIconHtml("ui", "upgrade", choice.title) +
+        (vm.markerFixed ? markerGrowthIconHtml("experience", choice.id, choice.title) : atlasIconHtml("ui", "upgrade", choice.title)) +
         '<span class="tag route-tag">' + escapeHtml(choice.formLine) + '</span>' +
         '<strong>' + escapeHtml(choice.title) + '</strong>' +
         '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
@@ -343,6 +348,7 @@
     setText("modulePanelFooter", markerFixed ? "Boss 奖励确定后直接进入下一阶段战斗；商店不会与模块连续出现。" : "三秒内能读懂，选完立即回到战斗。");
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
+        (markerFixed ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : "") +
         '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · Lv.' + (choice.level + 1) + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
         '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
@@ -363,9 +369,12 @@
     setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
+        (part.activeStat ? markerGrowthIconHtml("build", "component-" + part.activeStat, part.activeStatName + part.name) : "") +
+        '<div class="marker-component-slot-copy">' +
         '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
         '<span>' + escapeHtml(part.allocationText) + '</span>' +
         '<small>品质进度：' + escapeHtml(part.progress) + '</small>' +
+        '</div>' +
       '</div>';
     }).join(""));
     setHtml("componentOffers", vm.offers.length ? vm.offers.map(function (offer) {
@@ -381,8 +390,13 @@
             ? "同类购买后合成为" + offer.nextQuality.name + "组件"
             : "同类购买后累计 " + nextCount + " / " + offer.nextThreshold;
       return '<div class="choice shop-card theme-card marker-component-card ' + (offer.sold ? "sold" : "") + (offer.locked ? " locked" : "") + '" style="--quality-color:' + escapeHtml(offer.purchaseQuality.color) + '">' +
-        '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
-        '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
+        '<div class="marker-component-heading">' +
+          markerGrowthIconHtml("build", "component-" + offer.statId, offer.statName + offer.partName) +
+          '<div class="marker-component-heading-copy">' +
+            '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
+            '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
+          '</div>' +
+        '</div>' +
         '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
         '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>' +
         '<span class="cost">材料 ' + offer.cost + '</span>' +
@@ -413,6 +427,7 @@
     setText("componentStatNote", "本次强化只作用于" + vm.partName + "的基础参数；品质不会解锁模块等级。");
     setHtml("componentStatChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-marker-stat="' + escapeHtml(choice.id) + '">' +
+        markerGrowthIconHtml("build", "component-" + choice.id, choice.name) +
         '<span class="tag route-tag">当前投入 ' + choice.current + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
         '<span class="card-desc">选择后立即提高' + escapeHtml(choice.name) + '，并返回本次组件商店。</span>' +
@@ -506,7 +521,7 @@
           '<p>经验基础属性 ' + escapeHtml(vm.markerFixed.experienceSummary) + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
           '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + '（收获追加 ' + vm.markerFixed.harvestingMaterialsEarned + '） / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
           '<p>全屏复写 ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · 全屏留档 ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次</p>' +
-          '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div>'; }).join("") + '</div>'
+          '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' + (part.activeStat ? markerGrowthIconHtml("build", "component-" + part.activeStat, part.activeStatName + part.name) : "") + '<div class="marker-component-slot-copy"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div></div>'; }).join("") + '</div>'
         : vm.phaseB
         ? '<p>击破 ' + vm.kills + ' · 峰值目标 ' + vm.phaseB.peakEnemies + ' · 模块 ' + escapeHtml(vm.phaseB.modules.join(" → ") || "无") + '</p>'
         : vm.phaseA

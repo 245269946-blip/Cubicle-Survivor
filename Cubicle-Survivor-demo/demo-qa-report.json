@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-07-16T02:25:08.973Z",
+  "checkedAt": "2026-07-16T02:46:35.917Z",
   "package": "Cubicle-Survivor-demo",
-  "staticRefs": 45,
+  "staticRefs": 47,
   "enemyThreatTypes": [
     "approval",
     "client",
