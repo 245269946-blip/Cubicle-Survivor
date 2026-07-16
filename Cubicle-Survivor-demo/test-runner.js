@@ -122,6 +122,7 @@ const scripts = [
   "src/v2/demo-v2/phase-b.js",
   "src/v2/demo-v2/marker-fixed.js",
   "src/v2/demo-v2/thermos-fixed.js",
+  "src/v2/demo-v2/scissors-fixed.js",
   "src/v2/runtime/state.js",
   "src/v2/progression/progression.js",
   "src/v2/combat/systems.js",
@@ -801,8 +802,8 @@ const markerGrowthRender = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.
 if (markerGrowthAssetPaths.some((assetPath) => !fs.existsSync(path.join(baseDir, assetPath)))
   || markerGrowthAssetPaths.some((assetPath) => !markerGrowthCss.includes(assetPath))
   || !markerGrowthRender.includes('markerGrowthIconHtml("experience", choice.id')
-  || !markerGrowthRender.includes('markerGrowthIconHtml("build", "component-" + offer.statId')
-  || !markerGrowthRender.includes('markerGrowthIconHtml("build", choice.id')) {
+  || !markerGrowthRender.includes('fixedComponentIconHtml(fixedConfig, offer.statId')
+  || !markerGrowthRender.includes('fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id')) {
   console.error("Demo V2.1 growth icon assets must remain wired into XP, module, and component decisions");
   process.exit(1);
 }
@@ -883,6 +884,152 @@ if (!thermosState.formEvents.some((event) => event.source === "thermos_test_full
   process.exit(1);
 }
 console.log("OK Demo V2.2 Thermos: short-wide shared-CD front fans, fixed single knockback, segmented condensation, focused kill conversion, non-chaining heatwaves, distinct Lv4 ultimates");
+
+const scissorsFixed = V2.demoV2 && V2.demoV2.scissorsFixed;
+if (!scissorsFixed || scissorsFixed.version !== "Demo V2.3" || scissorsFixed.weaponId !== "scissors"
+  || scissorsFixed.runtimeKey !== "scissors" || scissorsFixed.baseMaxHp !== 78
+  || Object.keys(scissorsFixed.modules).sort().join(",") !== "closed,open"
+  || scissorsFixed.parts.tip.statNames.pierce !== "暴击"
+  || scissorsFixed.parts.body.statNames.amount !== "闪避"
+  || scissorsFixed.parts.tail.statNames.duration !== "移速"
+  || !scissorsFixed.fixedItem || scissorsFixed.uiFramework.itemShop.enabled !== false
+  || scissorsFixed.uiFramework.weaponSelection.activeIds.join(",") !== "scissors") {
+  console.error("Scissors fixed-type test contract missing or drifted", scissorsFixed);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+let scissorsState = V2.getState();
+if (scissorsState.selectedWeaponId !== "scissors" || scissorsState.stage.demoV2Phase !== "scissors-fixed"
+  || scissorsState.maxHp !== 78 || scissorsState.activeForm.mechanicType !== "scissors_fixed_melee"
+  || scissorsState.activeFormParams.range > 205 || scissorsState.player.speed < 250) {
+  console.error("Demo V2.3 must force a vulnerable, mobile, capped-range melee test", scissorsState.selectedWeaponId, scissorsState.maxHp, scissorsState.activeFormParams);
+  process.exit(1);
+}
+const scissorsFront = { id: "scissors-front", typeId: "todo", x: scissorsState.player.x + 82, y: scissorsState.player.y, r: 12, hp: 500, maxHp: 500, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+const scissorsBack = { id: "scissors-back", typeId: "todo", x: scissorsState.player.x - 82, y: scissorsState.player.y, r: 12, hp: 500, maxHp: 500, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+scissorsState.enemies = [scissorsFront, scissorsBack];
+V2.combat.qa.fireScissorsFixedTest(scissorsState);
+V2.combat.qa.fireScissorsFixedTest(scissorsState);
+if (scissorsState.demoV2.scissors.pendingActions.length !== 1 || scissorsState.stats.shots !== 1) {
+  console.error("Scissors may not start a second attack round while the current timeline is active", scissorsState.demoV2.scissors);
+  process.exit(1);
+}
+V2.combat.qa.updateScissorsFixedActions(scissorsState, 0.2);
+if (scissorsFront.hp >= scissorsFront.maxHp || scissorsBack.hp !== scissorsBack.maxHp
+  || !scissorsState.formEvents.some((event) => event.source === "scissors_test_base")) {
+  console.error("Unmodded scissors must be a short forward cut with no rear hit", scissorsFront, scissorsBack, scissorsState.formEvents);
+  process.exit(1);
+}
+
+// Light Step is a fixed no-damage movement action before the next attack.
+scissorsState.demoV2.scissors.dashCharge = 1;
+scissorsState.demoV2.scissors.dashReady = true;
+scissorsState.input.right = true;
+const dashStartX = scissorsState.player.x;
+const dashTargetHp = scissorsFront.hp;
+V2.combat.qa.fireScissorsFixedTest(scissorsState);
+if (Math.abs(scissorsState.player.x - dashStartX - 122) > 0.01 || scissorsFront.hp !== dashTargetHp
+  || !scissorsState.formEvents.some((event) => event.source === "scissors_test_dash" && event.meta && event.meta.noDamage)
+  || scissorsState.demoV2.scissors.dashWindow !== 0.24) {
+  console.error("Light Step must move a fixed distance, grant its fixed dodge window, and deal no damage", scissorsState.player, scissorsState.demoV2.scissors, scissorsState.formEvents);
+  process.exit(1);
+}
+V2.combat.qa.updateScissorsFixedActions(scissorsState, 1);
+scissorsState.input.right = false;
+
+// Component attack speed scales the complete timeline once; range and movement
+// cannot mutate the fixed dash distance/window.
+const baseScissorsCooldown = scissorsState.activeFormParams.cooldown;
+const baseDashDistance = scissorsState.activeFormParams.scissorsDashDistance;
+scissorsState.demoV2.scissors.parts.body.allocations.attackSpeed = 2;
+scissorsState.demoV2.scissors.parts.tail.allocations.range = 4;
+scissorsState.demoV2.scissors.parts.tail.allocations.duration = 4;
+scissorsFixed.rebuildParams(scissorsState);
+if (scissorsState.activeFormParams.cooldown >= baseScissorsCooldown
+  || scissorsState.activeFormParams.scissorsDashDistance !== baseDashDistance
+  || scissorsState.activeFormParams.scissorsDashWindow !== 0.24
+  || scissorsState.activeFormParams.scissorsThrustRange > 205
+  || scissorsState.activeFormParams.scissorsFanRange > 148
+  || scissorsState.player.speed <= 250) {
+  console.error("Scissors components must improve the intended stat without scaling dash or breaking the melee cap", scissorsState.activeFormParams, scissorsState.player.speed);
+  process.exit(1);
+}
+
+// Closed Blade Lv4 stays a long strip and applies reduced slow to elites/Bosses.
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+scissorsState = V2.getState();
+for (let index = 0; index < 4; index++) scissorsFixed.applyModule(scissorsState, "closed", true);
+const severTarget = { id: "scissors-sever-target", typeId: "meeting", x: scissorsState.player.x + 150, y: scissorsState.player.y, r: 15, hp: 2000, maxHp: 2000, speed: 100, damage: 0, dead: false, color: "#fff", rooted: 0, markerFixedElite: true };
+scissorsState.enemies = [severTarget];
+V2.combat.qa.fireScissorsFixedTest(scissorsState);
+V2.combat.qa.updateScissorsFixedActions(scissorsState, 2);
+if (scissorsState.demoV2.scissors.totalClosedHits !== 3 || scissorsState.demoV2.scissors.totalSevers !== 1
+  || severTarget.scissorsSlowTime <= 0 || severTarget.scissorsSlow >= scissorsState.activeFormParams.scissorsSeverSlow
+  || !scissorsState.formEvents.some((event) => event.source === "scissors_test_sever")) {
+  console.error("Closed Blade Lv4 must be three locked thrusts followed by a reduced-on-elite slowing sever", scissorsState.demoV2.scissors, severTarget, scissorsState.formEvents);
+  process.exit(1);
+}
+
+// Open Blade Lv4 has six cuts plus one non-crit execution check.
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+scissorsState = V2.getState();
+for (let index = 0; index < 4; index++) scissorsFixed.applyModule(scissorsState, "open", true);
+const executeTarget = { id: "scissors-execute-target", typeId: "todo", x: scissorsState.player.x + 78, y: scissorsState.player.y, r: 13, hp: 150, maxHp: 1000, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+scissorsState.enemies = [executeTarget];
+V2.combat.qa.fireScissorsFixedTest(scissorsState);
+V2.combat.qa.updateScissorsFixedActions(scissorsState, 2);
+if (!executeTarget.dead || scissorsState.demoV2.scissors.totalOpenHits !== 6
+  || scissorsState.demoV2.scissors.totalFinales !== 1 || scissorsState.demoV2.scissors.totalExecutions !== 1
+  || !scissorsState.formEvents.some((event) => event.source === "scissors_test_finale")) {
+  console.error("Open Blade Lv4 must perform six locked cuts and execute only on the closing hit", executeTarget, scissorsState.demoV2.scissors, scissorsState.formEvents);
+  process.exit(1);
+}
+
+// A 2/2 mixed route preserves both phases and is longer than either Lv2 route.
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+scissorsState = V2.getState();
+for (let index = 0; index < 2; index++) scissorsFixed.applyModule(scissorsState, "closed", true);
+const closedTwoDuration = scissorsState.activeFormParams.scissorsActionDuration;
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+scissorsState = V2.getState();
+for (let index = 0; index < 2; index++) scissorsFixed.applyModule(scissorsState, "open", true);
+const openTwoDuration = scissorsState.activeFormParams.scissorsActionDuration;
+for (let index = 0; index < 2; index++) scissorsFixed.applyModule(scissorsState, "closed", true);
+if (scissorsState.activeFormParams.scissorsActionDuration <= Math.max(closedTwoDuration, openTwoDuration)
+  || scissorsState.activeFormParams.scissorsThrustCount !== 2 || scissorsState.activeFormParams.scissorsCutCount !== 4
+  || scissorsState.activeFormParams.scissorsSever || scissorsState.activeFormParams.scissorsFinale) {
+  console.error("Mixed scissors routes must contain both sequential phases, last longer, and gain neither Lv4 finisher", scissorsState.activeFormParams);
+  process.exit(1);
+}
+
+// Fixed low-HP shelter blocks exterior shots, but is not invulnerability.
+scissorsState.hp = scissorsState.maxHp * 0.3 + 1;
+V2.combat.damagePlayer(scissorsState, 3, "#fff");
+const hpInsideShelter = scissorsState.hp;
+const outsideShot = { x: scissorsState.player.x + 100, y: scissorsState.player.y, originX: scissorsState.player.x + 240, originY: scissorsState.player.y, radius: 5 };
+const insideShot = { x: scissorsState.player.x + 40, y: scissorsState.player.y, originX: scissorsState.player.x + 40, originY: scissorsState.player.y, radius: 5 };
+if (!scissorsState.demoV2.scissors.shelterActive || !scissorsFixed.blocksHostileProjectile(scissorsState, outsideShot)
+  || scissorsFixed.blocksHostileProjectile(scissorsState, insideShot)) {
+  console.error("Low-HP shelter must block only projectiles that originate outside its zone", scissorsState.demoV2.scissors);
+  process.exit(1);
+}
+V2.combat.damagePlayer(scissorsState, 2, "#fff");
+if (scissorsState.hp >= hpInsideShelter || scissorsState.demoV2.scissors.totalShelterTriggers !== 1) {
+  console.error("Low-HP shelter must not block contact/direct damage or retrigger in the same low-health state", scissorsState.hp, scissorsState.demoV2.scissors);
+  process.exit(1);
+}
+console.log("OK Demo V2.3 Scissors: pure-melee locked timeline, fixed no-damage Light Step, Closed/Open routes, capped components, execution, and directional low-HP shelter");
+
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });
 const VISUAL_TIMELINE_STAGES = new Set(["anticipation", "release", "impact", "residual", "fade"]);

@@ -284,4 +284,5 @@
   };
 
   V2.demoV2 = Object.assign(V2.demoV2 || {}, { thermosFixed });
+  V2.demoV2.fixedTests = Object.assign(V2.demoV2.fixedTests || {}, { "thermos-fixed": thermosFixed });
 })();

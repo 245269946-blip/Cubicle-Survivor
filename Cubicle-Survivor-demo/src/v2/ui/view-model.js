@@ -27,10 +27,7 @@
   }
 
   function fixedTestConfig(state) {
-    const phase = state && state.demoV2 && state.demoV2.phase;
-    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
-    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
-    return null;
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
   }
 
   function fixedTestRuntime(state, config) {
@@ -102,6 +99,19 @@
         note: "只有保温杯；无工牌、卡牌、协同和其他武器"
       };
     }
+    if (stage.demoV2Phase === "scissors-fixed") {
+      return {
+        id: "demo-v2-scissors-fixed",
+        key: "demo-v2-scissors-fixed",
+        label: "Demo V2.3 剪刀固定测试",
+        weaponStage: "轻步进场 × 双段近战时间线",
+        weaponStageShort: "贴身双路线",
+        playerGoal: "验证纯近战风险、自动闪身进场，以及合刃/张刃两段动作能否形成清晰取舍。",
+        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
+        status: "prototype",
+        note: "只有剪刀；固定携带低血安全区；无随机道具池"
+      };
+    }
     const phase = V2.getPhaseMeta ? V2.getPhaseMeta(stage.phaseKey) : {};
     const id = stage.phaseFinal ? "phase-final" : (phase.key || "growth");
     let note = phase.playerGoal || "经验和材料服务当前主形态。";
@@ -120,10 +130,11 @@
   }
 
   function pageTheme(state) {
-    const weapon = state.selectedWeaponId ? CS.weapons && CS.weapons[state.selectedWeaponId] : null;
+    const config = fixedTestConfig(state);
+    const weapon = state.selectedWeaponId ? CS.weapons && CS.weapons[state.selectedWeaponId] || config && config.weaponCard : null;
     const form = state.activeForm || {};
-    const topology = form.mechanicType || (weapon && weapon.formTopology) || "basic";
-    const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(form.mechanicType || weapon && weapon.formTopology) : null;
+    const topology = form.mechanicType || (weapon && (weapon.formTopology || weapon.topology)) || "basic";
+    const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(form.mechanicType || weapon && (weapon.formTopology || weapon.topology)) : null;
     const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(topology)) || { id: "generic", label: "基础形态", action: "先看攻击方式，再决定如何强化。" };
     const dept = state.badgeDept;
     return {
@@ -147,27 +158,30 @@
     };
   }
 
-  function weaponList() {
+  function weaponList(state) {
     const weapons = CS.weapons || {};
-    return WEAPON_ORDER.map(function (id) {
-      const w = weapons[id];
+    const config = fixedTestConfig(state);
+    const order = config && config.weaponCard ? [config.weaponId] : WEAPON_ORDER;
+    return order.map(function (id) {
+      const w = weapons[id] || config && config.weaponCard;
       if (!w) return null;
-      const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(w.formTopology || "")) || { id: "generic", label: "基础形态" };
-      const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(w.formTopology || "") : null;
+      const topology = w.formTopology || w.topology || "";
+      const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(topology)) || { id: "generic", label: "基础形态" };
+      const signature = V2.getWeaponFormSignature ? V2.getWeaponFormSignature(topology) : null;
       return {
         id,
         name: w.name,
         emoji: w.emoji,
         motif: w.motif,
         description: w.description,
-        topology: w.formTopology,
+        topology,
         tagDescription: w.tagDescription,
         themeId: theme.id,
         themeLabel: theme.label,
         signatureLabel: signature ? signature.topology : theme.label,
         signatureProcess: signature ? signature.process : w.description,
         signatureFocus: signature ? signature.focus : [],
-        implemented: id === "marker" || id === "thermos" || id === "sticky_note"
+        implemented: !!w.implemented || id === "marker" || id === "thermos" || id === "sticky_note"
       };
     }).filter(Boolean);
   }
@@ -230,6 +244,16 @@
 
   function paramSummary(params, theme) {
     const topology = theme.topology || "";
+    if (params.scissorsFixedTest) {
+      return [
+        { label: "伤害", value: Math.round(params.damage || 0) },
+        { label: "暴击", value: Math.round((params.markerFixedCritChance || 0) * 100) + "%" },
+        { label: "动作轮", value: (params.cooldown || 0).toFixed(2) + "s" },
+        { label: "闪避", value: Math.round((params.markerFixedDodgeChance || 0) * 100) + "%" },
+        { label: "突刺", value: params.scissorsThrustCount || 0 },
+        { label: "连剪", value: params.scissorsCutCount || 0 }
+      ];
+    }
     if (params.thermosFixedTest) {
       return [
         { label: "伤害", value: Math.round(params.damage || 0) },
@@ -342,6 +366,15 @@
     const mechanic = form.mechanicType || "";
     const zones = state.damageZones || [];
     const enemies = state.enemies || [];
+    if (p.scissorsFixedTest && state.demoV2 && state.demoV2.scissors) {
+      const test = state.demoV2.scissors;
+      return {
+        label: "剪刀近战流程",
+        value: "轻步 " + (test.dashReady ? "已就绪" : Math.round((test.dashCharge || 0) * 100) + "%") + " · 合刃 " + (p.scissorsThrustCount || 0) + " · 张刃 " + (p.scissorsCutCount || 0),
+        hint: "合刃 Lv." + test.modules.copy + " / 张刃 Lv." + test.modules.archive + " · 当前动作轮 " + (test.activeRound ? "进行中" : "待机") + " · 裁断 " + (p.scissorsSever ? "已解锁" : "未解锁") + " / 合剪 " + (p.scissorsFinale ? "已解锁" : "未解锁") + " · 安全区 " + (test.shelterActive ? test.shelterTime.toFixed(1) + "s" : test.shelterCooldown > 0 ? "冷却 " + test.shelterCooldown.toFixed(1) + "s" : "可触发"),
+        tone: "scissors"
+      };
+    }
     if (p.thermosFixedTest && state.demoV2 && state.demoV2.thermos) {
       const test = state.demoV2.thermos;
       const config = V2.demoV2.thermosFixed;
@@ -576,9 +609,11 @@
         identity: fixedConfig.weaponName + "模块路线",
         totalRounds: 4,
         round: (test.moduleChoiceIndex || 0) + 1,
-        owned: fixedConfig.weaponId === "thermos"
-          ? ["冷凝 Lv." + test.modules.copy, "击杀热浪 Lv." + test.modules.archive]
-          : ["复写 Lv." + test.modules.copy, "留档 Lv." + test.modules.archive],
+        owned: fixedConfig.weaponId === "scissors"
+          ? ["合刃 Lv." + test.modules.copy, "张刃 Lv." + test.modules.archive]
+          : fixedConfig.weaponId === "thermos"
+            ? ["冷凝 Lv." + test.modules.copy, "击杀热浪 Lv." + test.modules.archive]
+            : ["复写 Lv." + test.modules.copy, "留档 Lv." + test.modules.archive],
         choices: fixedConfig.makeModuleChoices(state)
       };
     }
@@ -681,6 +716,13 @@
       thermos_test_kill_heatwave: "保温杯测试 · 击杀热浪",
       thermos_test_fullscreen_condensation: "保温杯测试 · 全屏冷凝",
       thermos_test_fullscreen_ignition: "保温杯测试 · 全场点杀",
+      scissors_test_base: "剪刀测试 · 基础剪击",
+      scissors_test_thrust: "剪刀测试 · 合刃突刺",
+      scissors_test_sever: "剪刀测试 · 贯穿裁断",
+      scissors_test_open: "剪刀测试 · 张刃连剪",
+      scissors_test_finale: "剪刀测试 · 合剪终结",
+      scissors_test_finale_boss_bonus: "剪刀测试 · Boss 终剪转化",
+      scissors_test_execution: "剪刀测试 · 裁决处决",
       sticky_attach: "即时贴 · 附着伤害",
       sticky_spread: "即时贴 · 传播伤害",
       sticky_notice_pin: "即时贴 · 公告钉扎",
@@ -721,6 +763,7 @@
     const config = V2.demoV2 && V2.demoV2.phaseB;
     const moduleNames = phaseB && config ? (state.demoV2.moduleOrder || []).map(function (id) { return config.modules[id].name; }) : [];
     const isThermos = markerFixed && fixedConfig.weaponId === "thermos";
+    const isScissors = markerFixed && fixedConfig.weaponId === "scissors";
     return {
       title: markerFixed ? fixedConfig.weaponName + (state.flags.won ? " 5 阶段 17 关测试完成" : " 固定测试中止") : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
       theme: pageTheme(state),
@@ -736,13 +779,20 @@
         wavesSeen: seen,
         peakEnemies: peak,
         modules: Object.assign({}, fixedRuntime.modules),
-        moduleLabels: isThermos ? ["冷凝", "击杀热浪"] : ["复写", "留档"],
+        moduleLabels: isScissors ? ["合刃", "张刃"] : isThermos ? ["冷凝", "击杀热浪"] : ["复写", "留档"],
         parts: Object.keys(fixedConfig.parts).map(function (id) { return markerComponentPartView(fixedConfig, fixedRuntime, id); }),
-        fullscreenLabels: isThermos ? ["全屏冷凝", "全场点杀"] : ["全屏复写", "全屏留档"],
-        fullscreenCopyTriggers: isThermos ? fixedRuntime.fullscreenCondensationTriggers : fixedRuntime.fullscreenCopyTriggers,
-        fullscreenArchiveTriggers: isThermos ? fixedRuntime.fullscreenIgnitionTriggers : fixedRuntime.fullscreenArchiveTriggers,
+        fullscreenLabels: isScissors ? ["裁断", "合剪终结"] : isThermos ? ["全屏冷凝", "全场点杀"] : ["全屏复写", "全屏留档"],
+        fullscreenCopyTriggers: isScissors ? fixedRuntime.totalSevers : isThermos ? fixedRuntime.fullscreenCondensationTriggers : fixedRuntime.fullscreenCopyTriggers,
+        fullscreenArchiveTriggers: isScissors ? fixedRuntime.totalFinales : isThermos ? fixedRuntime.fullscreenIgnitionTriggers : fixedRuntime.fullscreenArchiveTriggers,
         focusKills: isThermos ? fixedRuntime.totalFocusKills : 0,
         heatwaveTriggers: isThermos ? fixedRuntime.totalHeatwaveTriggers : 0,
+        dashes: isScissors ? fixedRuntime.totalDashes : 0,
+        dashDodges: isScissors ? fixedRuntime.totalDashDodges : 0,
+        closedHits: isScissors ? fixedRuntime.totalClosedHits : 0,
+        openHits: isScissors ? fixedRuntime.totalOpenHits : 0,
+        executions: isScissors ? fixedRuntime.totalExecutions : 0,
+        shelterTriggers: isScissors ? fixedRuntime.totalShelterTriggers : 0,
+        blockedShots: isScissors ? fixedRuntime.totalBlockedShots : 0,
         completedEncounters: fixedRuntime.completedEncounters,
         shopsVisited: fixedRuntime.completedStages,
         experienceLevels: fixedRuntime.experienceLevels,
@@ -756,7 +806,9 @@
       } : null,
       damage,
       note: markerFixed
-        ? (isThermos
+        ? (isScissors
+          ? "只复盘三件事：贴身风险是否真实；轻步是否帮助进场而非代替走位；合刃、张刃与混合路线是否形成不同动作节奏和组件判断。"
+          : isThermos
           ? "只复盘三件事：近距扇面是否真的要求靠近和转向；冷凝与击杀热浪是否形成不同购买判断；混合路线是否以适应性而非数值碾压成立。"
           : "只复盘三件事：复写与留档是否形成不同攻击结构；混合加点是否值得；模块 Lv3 后组件刷新是否仍有期待。")
         : phaseB
@@ -835,7 +887,7 @@
 
   V2.getViewModel = function getViewModel(name) {
     const state = V2.getState();
-    if (name === "weapon_select") return weaponList();
+    if (name === "weapon_select") return weaponList(state);
     if (name === "support_weapon_select") return supportWeaponList(state);
     if (name === "badge_select") return badgeForms(state);
     if (name === "hud") return hud(state);

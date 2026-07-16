@@ -145,7 +145,7 @@
   }
 
   function vfxPreviewHtml(weaponId, mechanicType, className) {
-    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
+    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "scissors" ? "scissors_test_base" : weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
     const visual = V2.getWeaponVisualEvent ? V2.getWeaponVisualEvent(source) : { family: weaponId || "marker", topology: "piercing_line", cue: "preview" };
     const spriteId = approvedPreviewSprite(weaponId, mechanicType);
     const sprite = spriteId
@@ -161,6 +161,9 @@
   }
 
   function weaponIconHtml(weaponId, label) {
+    if (weaponId === "scissors") {
+      return '<img class="scissors-weapon-icon" src="assets/generated-vfx/sprites/scissors-v23.png" alt="' + escapeHtml(label || "剪刀") + '" />';
+    }
     return atlasIconHtml("office", "weapon-" + weaponId, label);
   }
 
@@ -174,10 +177,13 @@
   }
 
   function fixedTestConfig(state) {
-    const phase = state && state.demoV2 && state.demoV2.phase;
-    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
-    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
-    return null;
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
+  }
+
+  function fixedComponentIconHtml(config, id, label) {
+    return config && config.weaponId === "scissors"
+      ? weaponIconHtml("scissors", label)
+      : markerGrowthIconHtml("build", "component-" + id, label);
   }
 
   function applyShellState(state) {
@@ -395,7 +401,7 @@
     setHtml("moduleFlow", decisionFlowHtml(["Boss战斗", "10秒回收", "模块选择", "下一阶段"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
-        (markerFixed ? (fixedConfig.weaponId === "thermos" ? weaponIconHtml("thermos", choice.name + "模块") : markerGrowthIconHtml("build", choice.id, choice.name + "模块")) : "") +
+        (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
         '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · Lv.' + (choice.level + 1) + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
         '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
@@ -412,6 +418,7 @@
 
   function renderComponentShop() {
     const vm = V2.getViewModel("component_shop");
+    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
     setText("componentShopEyebrow", vm.version + " · " + vm.weaponName + "组件商店");
     setText("componentShopTitle", "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
     setText("componentCreditsText", vm.materials);
@@ -419,7 +426,7 @@
     setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
-        (part.activeStat ? markerGrowthIconHtml("build", "component-" + part.activeStat, part.activeStatName + part.name) : "") +
+        (part.activeStat ? fixedComponentIconHtml(fixedConfig, part.activeStat, part.activeStatName + part.name) : "") +
         '<div class="marker-component-slot-copy">' +
         '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
         '<span>' + escapeHtml(part.allocationText) + '</span>' +
@@ -441,7 +448,7 @@
             : "同类购买后累计 " + nextCount + " / " + offer.nextThreshold;
       return '<div class="choice shop-card theme-card marker-component-card ' + (offer.sold ? "sold" : "") + (offer.locked ? " locked" : "") + '" style="--quality-color:' + escapeHtml(offer.purchaseQuality.color) + '">' +
         '<div class="marker-component-heading">' +
-          markerGrowthIconHtml("build", "component-" + offer.statId, offer.statName + offer.partName) +
+          fixedComponentIconHtml(fixedConfig, offer.statId, offer.statName + offer.partName) +
           '<div class="marker-component-heading-copy">' +
             '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
             '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
@@ -476,11 +483,12 @@
 
   function renderComponentStat() {
     const vm = V2.getViewModel("component_stat_select");
+    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
     setText("componentStatTitle", vm.partName + "提升为" + vm.quality.name + " · 选择一次属性");
     setText("componentStatNote", "本次强化只作用于" + vm.partName + "的基础参数；品质不会解锁模块等级。");
     setHtml("componentStatChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-marker-stat="' + escapeHtml(choice.id) + '">' +
-        markerGrowthIconHtml("build", "component-" + choice.id, choice.name) +
+        fixedComponentIconHtml(fixedConfig, choice.id, choice.name) +
         '<span class="tag route-tag">当前投入 ' + choice.current + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
         '<span class="card-desc">选择后立即提高' + escapeHtml(choice.name) + '，并返回本次组件商店。</span>' +
@@ -573,8 +581,8 @@
           '<p>' + escapeHtml(vm.markerFixed.moduleLabels[0]) + ' Lv.' + vm.markerFixed.modules.copy + ' / ' + escapeHtml(vm.markerFixed.moduleLabels[1]) + ' Lv.' + vm.markerFixed.modules.archive + '</p>' +
           '<p>经验基础属性 ' + escapeHtml(vm.markerFixed.experienceSummary) + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
           '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + '（收获追加 ' + vm.markerFixed.harvestingMaterialsEarned + '） / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
-          '<p>' + escapeHtml(vm.markerFixed.fullscreenLabels[0]) + ' ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · ' + escapeHtml(vm.markerFixed.fullscreenLabels[1]) + ' ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次' + (vm.markerFixed.weaponId === "thermos" ? ' · 聚焦击杀 ' + vm.markerFixed.focusKills + ' · 死亡热浪 ' + vm.markerFixed.heatwaveTriggers : '') + '</p>' +
-          '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' + (part.activeStat ? markerGrowthIconHtml("build", "component-" + part.activeStat, part.activeStatName + part.name) : "") + '<div class="marker-component-slot-copy"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div></div>'; }).join("") + '</div>'
+          '<p>' + escapeHtml(vm.markerFixed.fullscreenLabels[0]) + ' ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · ' + escapeHtml(vm.markerFixed.fullscreenLabels[1]) + ' ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次' + (vm.markerFixed.weaponId === "thermos" ? ' · 聚焦击杀 ' + vm.markerFixed.focusKills + ' · 死亡热浪 ' + vm.markerFixed.heatwaveTriggers : vm.markerFixed.weaponId === "scissors" ? ' · 轻步 ' + vm.markerFixed.dashes + '（闪避 ' + vm.markerFixed.dashDodges + '）· 合刃命中 ' + vm.markerFixed.closedHits + ' · 张刃命中 ' + vm.markerFixed.openHits + ' · 处决 ' + vm.markerFixed.executions + ' · 安全区 ' + vm.markerFixed.shelterTriggers + ' 次 / 挡弹 ' + vm.markerFixed.blockedShots : '') + '</p>' +
+          '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' + (part.activeStat ? fixedComponentIconHtml(fixedTestConfig(V2.getState()), part.activeStat, part.activeStatName + part.name) : "") + '<div class="marker-component-slot-copy"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div></div>'; }).join("") + '</div>'
         : vm.phaseB
         ? '<p>击破 ' + vm.kills + ' · 峰值目标 ' + vm.phaseB.peakEnemies + ' · 模块 ' + escapeHtml(vm.phaseB.modules.join(" → ") || "无") + '</p>'
         : vm.phaseA

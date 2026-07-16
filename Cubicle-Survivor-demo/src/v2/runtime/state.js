@@ -381,10 +381,7 @@
   }
 
   function fixedTestConfig(state) {
-    const phase = state && state.demoV2 && state.demoV2.phase;
-    if (phase === "marker-fixed") return V2.demoV2 && V2.demoV2.markerFixed;
-    if (phase === "thermos-fixed") return V2.demoV2 && V2.demoV2.thermosFixed;
-    return null;
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
   }
 
   function fixedTestRuntime(state, config) {
@@ -393,7 +390,7 @@
   }
 
   function startDemoV2FixedTest(state, phase) {
-    const config = V2.demoV2 && (phase === "thermos-fixed" ? V2.demoV2.thermosFixed : V2.demoV2.markerFixed);
+    const config = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(phase) : null;
     if (!config) {
       startStage(state, 0);
       return;
@@ -404,7 +401,7 @@
       key: "demo_v2_" + config.id.replace(/-/g, "_"),
       label: (config.version || "Demo V2.1") + " " + config.weaponName + "固定测试",
       weaponStage: "经验保底 × 双路线模块 × 组件属性",
-      weaponStageShort: config.weaponId === "thermos" ? "近距双路线" : "三线验证",
+      weaponStageShort: config.weaponStageShort || (config.weaponId === "thermos" ? "近距双路线" : "三线验证"),
       playerGoal: config.subtitle || "验证稳定成长、模块机制轴与材料组件轴能否各司其职。",
       rewardTiming: "5 阶段 17 关；Boss 后模块与关中商店始终由战斗隔开",
       status: "playable"
@@ -415,7 +412,7 @@
     state.stageBossSpawned = false;
     state.stageBossDefeated = false;
     state.mode = "combat";
-    state.maxHp = config.weaponId === "thermos" ? 92 : 120;
+    state.maxHp = config.baseMaxHp || (config.weaponId === "thermos" ? 92 : 120);
     state.hp = state.maxHp;
     state.xp = 0;
     state.xpNeed = 90;
@@ -436,6 +433,7 @@
 
   function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
   function startDemoV2ThermosFixed(state) { startDemoV2FixedTest(state, "thermos-fixed"); }
+  function startDemoV2ScissorsFixed(state) { startDemoV2FixedTest(state, "scissors-fixed"); }
 
   function openArmory(state, reason) {
     state.mode = "armory";
@@ -454,9 +452,7 @@
     state.flags.debug = previousDebug;
     state.loop = previousLoop;
     state.demoV2.phase = previousDemoV2Phase;
-    const requestedFixedConfig = previousDemoV2Phase === "thermos-fixed"
-      ? V2.demoV2 && V2.demoV2.thermosFixed
-      : previousDemoV2Phase === "marker-fixed" ? V2.demoV2 && V2.demoV2.markerFixed : null;
+    const requestedFixedConfig = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(previousDemoV2Phase) : null;
     state.selectedWeaponId = requestedFixedConfig
       ? requestedFixedConfig.weaponId
       : (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
@@ -469,8 +465,7 @@
     }
     if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
     else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
-    else if (previousDemoV2Phase === "marker-fixed") startDemoV2MarkerFixed(state);
-    else if (previousDemoV2Phase === "thermos-fixed") startDemoV2ThermosFixed(state);
+    else if (requestedFixedConfig) startDemoV2FixedTest(state, previousDemoV2Phase);
     else startStage(state, 0);
   }
 
@@ -752,6 +747,7 @@
     startDemoV2PhaseA,
     startDemoV2MarkerFixed,
     startDemoV2ThermosFixed,
+    startDemoV2ScissorsFixed,
     applyActiveForm
   });
 })();

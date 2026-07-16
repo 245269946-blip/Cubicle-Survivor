@@ -78,6 +78,13 @@
       focus: ["近距转向", "前向扇面", "分段冷凝", "聚焦击杀", "死亡热浪"],
       sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition"]
     },
+    scissors_fixed_melee: {
+      topology: "贴身剪切时间线",
+      process: "轻步先完成无伤害位移；整轮锁定一个方向，依次完成合刃窄线突刺与张刃短宽连剪。",
+      visualCue: "红柄钢刃贴身闪过，青色轻步残影与白橙剪切弧分离；裁断和合剪终结拥有独立重击反馈。",
+      focus: ["纯近战", "轻步进场", "锁向动作轮", "合刃突刺", "张刃连剪", "处决"],
+      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block"]
+    },
     shield_break_pulse: {
       topology: "破盾热浪",
       process: "蒸汽命中充盾，敌方伤害把真实护盾打空后传播反击热浪",
@@ -210,6 +217,16 @@
     thermos_test_kill_heatwave: "expand",
     thermos_test_fullscreen_condensation: "ultimate",
     thermos_test_fullscreen_ignition: "ultimate",
+    scissors_test_base: "cast",
+    scissors_test_dash: "release",
+    scissors_test_thrust: "cast",
+    scissors_test_sever: "ultimate",
+    scissors_test_open: "cast",
+    scissors_test_finale: "detonate",
+    scissors_test_finale_boss_bonus: "impact",
+    scissors_test_execution: "detonate",
+    scissors_test_shelter: "shield",
+    scissors_test_shelter_block: "counter",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -274,6 +291,7 @@
   const FAMILY_PALETTES = {
     marker: { core: "#9ffcff", accent: "#d8ffff", warning: "#ffb067" },
     thermos: { core: "#bdf5ff", accent: "#8fffe7", warning: "#ffb067" },
+    scissors: { core: "#f1f5f6", accent: "#ff7b5f", warning: "#ffe58f" },
     sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" }
   };
 
@@ -346,6 +364,17 @@
     thermos_test_fullscreen_condensation: ["deployable_field", "fullscreen_condensation"],
     thermos_test_fullscreen_ignition: ["target_barrage", "key_target_ignition"],
 
+    scissors_test_base: ["melee_arc", "base_snip"],
+    scissors_test_dash: ["dash_trail", "light_step"],
+    scissors_test_thrust: ["melee_thrust", "closed_blade"],
+    scissors_test_sever: ["melee_thrust", "sever_slow"],
+    scissors_test_open: ["melee_arc", "open_blade_chain"],
+    scissors_test_finale: ["execution_cut", "closing_finale"],
+    scissors_test_finale_boss_bonus: ["execution_cut", "boss_conversion"],
+    scissors_test_execution: ["execution_cut", "execute"],
+    scissors_test_shelter: ["protective_field", "low_health_shelter"],
+    scissors_test_shelter_block: ["protective_field", "projectile_block"],
+
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],
     sticky_base_trigger: ["radial_blast", "contact_trigger"],
@@ -383,6 +412,7 @@
   };
 
   function visualFamily(source) {
+    if (/scissors/.test(source)) return "scissors";
     if (/thermos/.test(source)) return "thermos";
     if (/sticky/.test(source)) return "sticky_note";
     return "marker";
