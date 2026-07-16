@@ -370,6 +370,56 @@
     return { label: "基础贯穿", value: (p.pierce || 2) + " 个目标", hint: "移动让敌人排成线，武器自动攻击。", tone: "marker" };
   }
 
+  function transitionView(state, markerTest, markerFixed) {
+    const config = markerFixed && V2.demoV2 && V2.demoV2.markerFixed;
+    const encounter = config && config.currentEncounter ? config.currentEncounter(state) : null;
+    if (!markerFixed || !markerTest || !encounter) {
+      return {
+        kind: "encounter",
+        symbol: "预告",
+        eyebrow: state.stage ? "第 " + state.stage.id + " 关 · 关卡预告" : "关卡预告",
+        title: state.stage ? state.stage.name : "准备中",
+        hint: "WASD 移动，武器自动攻击。",
+        tags: [],
+        rule: "观察本关目标与敌人压力",
+        next: "下一步：开始战斗",
+        duration: 3
+      };
+    }
+    const scheduledRoute = encounter.id >= config.encounterCount
+      ? "本局结算"
+      : encounter.shopAfter
+        ? "组件商店"
+        : encounter.moduleAfter
+          ? "模块选择"
+          : "第 " + (encounter.id + 1) + " 关";
+    const nextRoute = markerTest.pendingExperiencePoints > 0 ? "经验属性选择" : scheduledRoute;
+    if (markerTest.collecting) {
+      return {
+        kind: "collection",
+        symbol: "回收",
+        eyebrow: "第 " + encounter.id + "/" + config.encounterCount + " 关完成 · 10 秒收集窗口",
+        title: "资源回收进行中",
+        hint: "自由移动拾取经验与材料；倒计时结束会自动吸取遗漏资源。",
+        tags: ["经验靠近拾取", "材料靠近拾取", "结束自动吸取"],
+        rule: "战斗已暂停生成，不会出现新敌人",
+        next: "下一步：" + (markerTest.pendingExperiencePoints > 0 || (state.pickups || []).some(function (pickup) { return pickup.type === "xp"; }) ? "经验结算 → " + scheduledRoute : nextRoute),
+        duration: config.collectionDuration
+      };
+    }
+    return {
+      kind: "encounter",
+      symbol: encounter.boss ? "BOSS" : encounter.kind === "reinforced" || encounter.kind === "pressure" ? "强化" : "预告",
+      eyebrow: "阶段 " + encounter.phase + "/" + config.phaseCount + " · 第 " + encounter.id + "/" + config.encounterCount + " 关",
+      title: encounter.label,
+      hint: encounter.preview,
+      tags: encounter.enemyTypes.slice(),
+      rule: encounter.boss ? "通关：Boss 必须击破，且倒计时结束或杂兵清空" : "通关：倒计时结束或固定怪量清空",
+      next: "下一步：开始战斗",
+      duration: 3
+    };
+  }
+
   function hud(state) {
     const form = buildSummary(state);
     const status = mechanicStatus(state);
@@ -404,6 +454,7 @@
         status.value = "节点" + noticeNodes.length + " · 留档" + archiveNodes + " · 三点闭合";
       }
     }
+    const transition = transitionView(state, markerTest, markerFixed);
     return {
       stageMeta: phaseA || phaseB || markerFixed ? (markerFixed ? "Demo V2.1 · 阶段 " + (state.demoV2.marker.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
       phaseMeta: form.theme.phase.label + " · " + form.theme.phase.weaponStageShort,
@@ -421,6 +472,7 @@
       warmup: state.warmupTime,
       controlHint: markerTest && markerTest.collecting ? "10秒内自由移动回收经验与材料；结束时自动吸取遗漏资源。" : markerFixed && state.stage && state.stage.enemyPreview ? state.stage.enemyPreview : form.mechanicType === "manual_trap_detonate" ? "WASD 移动；开关贴装订后按空格同步引爆。" : "WASD 移动，武器自动攻击。",
       collecting: !!(markerTest && markerTest.collecting),
+      transition,
       pendingExperiencePoints: markerTest ? markerTest.pendingExperiencePoints : 0,
       combatStatus: status,
       build: form,

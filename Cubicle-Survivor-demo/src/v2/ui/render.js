@@ -210,6 +210,13 @@
     }).join("") + '</div>';
   }
 
+  function decisionFlowHtml(steps, activeIndex) {
+    return (steps || []).map(function (step, index) {
+      const stateClass = index < activeIndex ? "is-done" : index === activeIndex ? "is-active" : "is-next";
+      return '<span class="decision-flow-step ' + stateClass + '"><b>' + (index + 1) + '</b><em>' + escapeHtml(step) + '</em></span>';
+    }).join('<i aria-hidden="true"></i>');
+  }
+
   function renderHud(state) {
     const vm = V2.getViewModel("hud");
     setText("objectiveStageMeta", vm.stageMeta);
@@ -227,11 +234,21 @@
     if (hpFill) hpFill.style.width = vm.hpPct + "%";
     const xpFill = el("xpFill");
     if (xpFill) xpFill.style.width = vm.xpPct + "%";
-    setText("warmupTitle", vm.collecting ? "本关完成 · 资源回收" : state.stage ? state.stage.name + " 准备中" : "准备中");
+    const transition = vm.transition || {};
+    const warmupOverlay = el("warmupOverlay");
+    if (warmupOverlay) warmupOverlay.setAttribute("data-transition-kind", transition.kind || "encounter");
+    setText("warmupEmoji", transition.symbol || "预告");
+    setText("warmupEyebrow", transition.eyebrow || "关卡预告");
+    setText("warmupTitle", transition.title || (state.stage ? state.stage.name + " 准备中" : "准备中"));
     setText("warmupTimer", Math.ceil(vm.warmup) + "s");
-    setText("warmupHint", vm.controlHint);
+    setText("warmupHint", transition.hint || vm.controlHint);
+    setText("warmupRule", transition.rule || "观察本关目标与敌人压力");
+    setText("warmupNext", transition.next || "下一步：开始战斗");
+    setHtml("warmupTags", (transition.tags || []).map(function (tag) {
+      return '<span>' + escapeHtml(tag) + '</span>';
+    }).join(""));
     const warmupFill = el("warmupFill");
-    if (warmupFill) warmupFill.style.width = Math.max(0, Math.min(100, (1 - vm.warmup / (vm.collecting ? 10 : 3)) * 100)) + "%";
+    if (warmupFill) warmupFill.style.width = Math.max(0, Math.min(100, (1 - vm.warmup / (transition.duration || (vm.collecting ? 10 : 3))) * 100)) + "%";
     const combatStatus = el("combatStatus");
     if (combatStatus && vm.combatStatus) {
       combatStatus.classList.remove("hidden", "tone-marker", "tone-thermos", "tone-sticky");
@@ -263,12 +280,26 @@
     const phaseA = !supportMode && state.demoV2 && state.demoV2.phase === "phase-a";
     const phaseB = !supportMode && state.demoV2 && state.demoV2.phase === "phase-b";
     const markerFixed = !supportMode && state.demoV2 && state.demoV2.phase === "marker-fixed";
+    const framework = markerFixed && V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.uiFramework;
     let items = V2.getViewModel(supportMode ? "support_weapon_select" : "weapon_select");
-    if (markerFixed) items = items.filter(function (item) { return item.id === "marker"; });
+    if (framework && framework.weaponSelection) {
+      items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
+    }
     setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : markerFixed ? "Demo V2.1 · 马克笔固定测试" : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
     setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : markerFixed ? "本轮只测试马克笔" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
     setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : markerFixed ? "经验提供稳定保底；模块只改变攻击机制；组件只增加六项基础属性。三条线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
     setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : markerFixed ? "点击马克笔进入 5 阶段 17 关测试 · 纯战斗约 14 分 50 秒" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    setHtml("weaponSelectFlow", markerFixed
+      ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
+      : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
+    const rosterMeta = el("weaponRosterMeta");
+    if (rosterMeta) {
+      const showFramework = !!(framework && framework.weaponSelection);
+      rosterMeta.classList.toggle("hidden", !showFramework);
+      if (showFramework) {
+        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' ' + items.length + '/' + framework.weaponSelection.cardCapacity + '</strong><span>本轮固定马克笔；后续武器继续从同一选择入口接入。</span>';
+      }
+    }
     setHtml("weaponSelectGrid", items.map(function (w) {
       return '<button class="weapon-card theme-' + escapeHtml(w.themeId) + ' ' + previewClass(w.topology) + '" type="button" data-weapon="' + escapeHtml(w.id) + '">' +
         weaponIconHtml(w.id, w.name) +
@@ -324,7 +355,11 @@
       choices.style.gridTemplateColumns = vm.markerFixed ? "1fr 1fr 1fr 1fr" : "";
     }
     const skip = el("skipUpgradeButton");
-    if (skip) skip.classList.toggle("hidden", !!vm.markerFixed);
+    if (skip) {
+      skip.classList.toggle("hidden", !!vm.markerFixed);
+      if (skip.parentElement) skip.parentElement.classList.toggle("hidden", !!vm.markerFixed);
+    }
+    setHtml("upgradeFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "经验分配", "继续流程"], 2));
     setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
     setHtml("upgradeChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-upgrade="' + escapeHtml(choice.id) + '">' +
@@ -344,8 +379,11 @@
   function renderModuleSelect() {
     const vm = V2.getViewModel("module_select");
     const markerFixed = V2.getState && V2.getState().demoV2 && V2.getState().demoV2.phase === "marker-fixed";
+    const choices = el("moduleChoices");
+    if (choices) choices.classList.toggle("marker-module-grid", !!markerFixed);
     setText("moduleContext", "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
     setText("modulePanelFooter", markerFixed ? "Boss 奖励确定后直接进入下一阶段战斗；商店不会与模块连续出现。" : "三秒内能读懂，选完立即回到战斗。");
+    setHtml("moduleFlow", decisionFlowHtml(["Boss战斗", "10秒回收", "模块选择", "下一阶段"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
         (markerFixed ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : "") +
@@ -366,6 +404,7 @@
   function renderComponentShop() {
     const vm = V2.getViewModel("component_shop");
     setText("componentCreditsText", vm.materials);
+    setHtml("componentShopFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "组件商店", vm.shopRound >= vm.shopCount ? "最终 Boss" : "下一关"], 2));
     setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
@@ -419,6 +458,9 @@
     }
     const cont = el("componentContinueButton");
     if (cont) cont.textContent = vm.shopRound >= vm.shopCount ? "进入最终 Boss" : "进入下一关";
+    const framework = V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.uiFramework;
+    const itemSection = el("itemOfferSection");
+    if (itemSection) itemSection.classList.toggle("hidden", !(framework && framework.itemShop && framework.itemShop.enabled));
   }
 
   function renderComponentStat() {

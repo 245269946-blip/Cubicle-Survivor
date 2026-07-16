@@ -6307,3 +6307,237 @@ body .v2-game[data-stage-phase="demo-v2-phase-b"] > .v2-compact-hud > .stat:nth-
   .module-choices { grid-template-columns: 1fr; }
   .module-card { min-height: 0; }
 }
+
+/* Demo V2.1 transition language and extensible selection surfaces. */
+.warmup-overlay.transition-card {
+  bottom: 62px;
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) minmax(210px, 0.45fr) 62px;
+  grid-template-rows: auto 7px;
+  align-items: center;
+  gap: 8px 14px;
+  width: min(900px, calc(100% - 64px));
+  min-width: 0;
+  padding: 12px 14px 11px;
+  border-color: rgba(82, 255, 225, 0.72);
+  border-radius: 9px;
+  background:
+    linear-gradient(90deg, rgba(82, 255, 225, 0.12), rgba(7, 13, 23, 0.96) 30%, rgba(7, 13, 23, 0.96)),
+    rgba(7, 13, 23, 0.96);
+  box-shadow: 0 0 0 1px rgba(82, 255, 225, 0.14), 0 16px 40px rgba(0, 0, 0, 0.42);
+}
+
+.warmup-overlay.transition-card[data-transition-kind="collection"] {
+  border-color: rgba(255, 209, 92, 0.78);
+  background:
+    linear-gradient(90deg, rgba(255, 209, 92, 0.16), rgba(7, 13, 23, 0.96) 30%, rgba(7, 13, 23, 0.96)),
+    rgba(7, 13, 23, 0.96);
+}
+
+.transition-symbol {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(82, 255, 225, 0.58);
+  border-radius: 8px;
+  background: rgba(82, 255, 225, 0.1);
+  color: #52ffe1;
+  font-size: 13px !important;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  animation: warmupPulse 1.5s ease-in-out infinite;
+}
+
+[data-transition-kind="collection"] .transition-symbol {
+  border-color: rgba(255, 209, 92, 0.62);
+  background: rgba(255, 209, 92, 0.12);
+  color: #ffd15c;
+}
+
+.transition-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.transition-eyebrow {
+  color: #8da4b8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.warmup-overlay.transition-card #warmupTitle {
+  overflow: hidden;
+  color: #f3f8ff;
+  font-size: 18px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.warmup-overlay.transition-card #warmupHint {
+  overflow: hidden;
+  color: #b7c6d5;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transition-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.transition-tags span {
+  padding: 2px 6px;
+  border: 1px solid rgba(82, 255, 225, 0.28);
+  border-radius: 999px;
+  background: rgba(82, 255, 225, 0.08);
+  color: #b9fff2;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+[data-transition-kind="collection"] .transition-tags span {
+  border-color: rgba(255, 209, 92, 0.32);
+  background: rgba(255, 209, 92, 0.08);
+  color: #ffe49c;
+}
+
+.transition-side {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid rgba(151, 170, 197, 0.22);
+}
+
+.transition-side span,
+.transition-side b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transition-side span { color: #9fb1c2; font-size: 10px; }
+.transition-side b { color: #ffd15c; font-size: 11px; }
+
+.warmup-overlay.transition-card .transition-timer {
+  justify-self: end;
+  color: #f8dda2;
+  font-size: 24px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.warmup-overlay.transition-card .warmup-bar {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 7px;
+}
+
+.decision-flow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  margin: 9px 0 12px;
+  padding: 6px 8px;
+  border: 1px solid rgba(151, 170, 197, 0.22);
+  border-radius: 6px;
+  background: rgba(5, 12, 22, 0.64);
+}
+
+.decision-flow > i {
+  flex: 1 1 20px;
+  height: 1px;
+  max-width: 56px;
+  background: linear-gradient(90deg, rgba(82, 255, 225, 0.4), rgba(151, 170, 197, 0.18));
+}
+
+.decision-flow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #74879b;
+}
+
+.decision-flow-step b {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 9px;
+}
+
+.decision-flow-step em {
+  overflow: hidden;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decision-flow-step.is-done { color: #78a69f; }
+.decision-flow-step.is-active { color: #52ffe1; }
+.decision-flow-step.is-active b { background: rgba(82, 255, 225, 0.14); box-shadow: 0 0 12px rgba(82, 255, 225, 0.18); }
+
+.selection-framework-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(151, 170, 197, 0.3);
+  background: rgba(5, 12, 22, 0.55);
+  color: #8fa2b5;
+  font-size: 10px;
+}
+
+.selection-framework-note strong { color: #dce8f4; }
+.selection-framework-note.hidden { display: none; }
+
+.module-choices.marker-module-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.future-system-slot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(151, 170, 197, 0.2);
+}
+
+.future-system-slot.hidden { display: none; }
+.future-system-slot-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.future-system-slot-head span { color: #f3f8ff; font-weight: 900; }
+.future-system-slot-head small { color: #8295a9; }
+
+@media (max-width: 760px) {
+  .warmup-overlay.transition-card {
+    bottom: 56px;
+    grid-template-columns: 48px minmax(0, 1fr) 52px;
+    width: calc(100% - 24px);
+    padding: 9px 10px;
+  }
+  .transition-symbol { width: 44px; height: 44px; font-size: 10px !important; }
+  .transition-side { display: none; }
+  .warmup-overlay.transition-card #warmupTitle { font-size: 15px; }
+  .warmup-overlay.transition-card #warmupHint { white-space: normal; }
+  .decision-flow { overflow: hidden; }
+  .decision-flow-step em { max-width: 64px; }
+  .selection-framework-note { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .module-choices.marker-module-grid { grid-template-columns: 1fr; }
+}

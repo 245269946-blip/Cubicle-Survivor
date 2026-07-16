@@ -510,6 +510,9 @@ if (!markerFixed || markerFixed.duration !== 890 || markerFixed.phaseCount !== 5
   || markerFixed.shopEncounters.join(",") !== "2,5,8,11,14,16"
   || markerFixed.moduleTimes.length !== 4 || markerFixed.shopTimes.length !== 6
   || markerFixed.componentCost !== 7 || markerFixed.refreshBaseCost !== 2 || markerFixed.collectionDuration !== 10 || markerFixed.guaranteedMaterialTotal !== 124
+  || !markerFixed.uiFramework || markerFixed.uiFramework.weaponSelection.activeIds.join(",") !== "marker"
+  || markerFixed.uiFramework.weaponSelection.cardCapacity !== 6 || markerFixed.uiFramework.itemShop.enabled !== false
+  || markerFixed.uiFramework.itemShop.mountId !== "itemOfferSection" || markerFixed.uiFramework.itemShop.offerCapacity !== 4
   || markerFixed.encounters.some((encounter) => !encounter.spawnTotal || !encounter.enemyTypes || !encounter.preview)
   || [0, 3, 6, 9, 12].some((index) => markerFixed.encounters[index + 1] && markerFixed.encounters[index].enemyHp >= markerFixed.encounters[index + 1].enemyHp)
   || [1, 2, 3, 4, 5].map((phase) => markerFixed.encounters.filter((encounter) => encounter.phase === phase).length).join(",") !== "3,3,3,3,5"
@@ -523,10 +526,13 @@ V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
 V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
 let markerFixedState = V2.getState();
+const openingTransition = V2.getViewModel("hud").transition;
 if (markerFixedState.selectedWeaponId !== "marker" || markerFixedState.stage.demoV2Phase !== "marker-fixed"
   || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1 || markerFixedState.maxHp !== 120 || markerFixedState.hp !== 120
   || markerFixedState.stage.phase.indexOf("Demo V2.1 马克笔固定测试") !== 0
-  || V2.getViewModel("hud").stageMeta.indexOf("Demo V2.1 · 阶段 1/5") !== 0) {
+  || V2.getViewModel("hud").stageMeta.indexOf("Demo V2.1 · 阶段 1/5") !== 0
+  || openingTransition.kind !== "encounter" || openingTransition.tags.join(",") !== "待办,邮件"
+  || openingTransition.rule.indexOf("倒计时结束或固定怪量清空") < 0) {
   console.error("Marker fixed test must force the marker and remain isolated", markerFixedState.selectedWeaponId, markerFixedState.stage);
   process.exit(1);
 }
@@ -637,6 +643,12 @@ if (markerFixedState.mode !== "combat" || !markerFixedState.demoV2.marker.collec
   || markerFixedState.pickups.length < 2 || markerFixedState.enemies.length !== 0
   || !markerFixedState.pickups.some((pickup) => pickup.type === "material" && pickup.amount === 3)) {
   console.error("A normal encounter must enter collection when either its timer expires or its quota is cleared", markerFixedState.mode, markerFixedState.demoV2.marker, markerFixedState.pickups);
+  process.exit(1);
+}
+const collectionTransition = V2.getViewModel("hud").transition;
+if (collectionTransition.kind !== "collection" || collectionTransition.duration !== 10
+  || collectionTransition.tags.length !== 3 || collectionTransition.next.indexOf("经验") < 0) {
+  console.error("Marker collection transition must explain pickup rules and the next growth node", collectionTransition);
   process.exit(1);
 }
 markerFixed.finishCollection(markerFixedState);

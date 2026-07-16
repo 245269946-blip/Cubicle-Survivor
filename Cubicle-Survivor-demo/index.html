@@ -22,8 +22,8 @@
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_drone_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
-    <link rel="stylesheet" href="styles.css?v=38" />
-    <link rel="stylesheet" href="generated-skin.css?v=41" />
+    <link rel="stylesheet" href="styles.css?v=39" />
+    <link rel="stylesheet" href="generated-skin.css?v=42" />
   </head>
   <body>
     <script>
@@ -101,12 +101,20 @@
           <span id="combatStatusHint">观察当前主武器的触发节奏。</span>
         </div>
 
-        <div id="warmupOverlay" class="warmup-overlay hidden">
-          <span id="warmupEmoji">ID</span>
-          <strong id="warmupTitle">热身中</strong>
-          <div class="warmup-bar"><div id="warmupFill"></div></div>
-          <span id="warmupTimer">3s</span>
-          <span id="warmupHint">WASD 移动，武器自动攻击。</span>
+        <div id="warmupOverlay" class="warmup-overlay transition-card hidden" data-transition-kind="encounter" aria-live="polite">
+          <div id="warmupEmoji" class="transition-symbol" aria-hidden="true">预告</div>
+          <div class="transition-copy">
+            <span id="warmupEyebrow" class="transition-eyebrow">第 1 关 · 关卡预告</span>
+            <strong id="warmupTitle">热身中</strong>
+            <span id="warmupHint">WASD 移动，武器自动攻击。</span>
+            <div id="warmupTags" class="transition-tags" aria-label="本关敌人"></div>
+          </div>
+          <div class="transition-side">
+            <span id="warmupRule">倒计时结束或固定怪量清空</span>
+            <b id="warmupNext">下一步：开始战斗</b>
+          </div>
+          <span id="warmupTimer" class="transition-timer">3s</span>
+          <div class="warmup-bar" aria-hidden="true"><div id="warmupFill"></div></div>
         </div>
 
         <div id="stageBanner" class="stage-banner hidden">
@@ -156,7 +164,9 @@
             <p id="weaponSelectEyebrow" class="eyebrow">选择初始武器</p>
             <h2 id="weaponSelectTitle">先决定你怎么清场</h2>
             <p id="weaponSelectNote" class="panel-note">武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。</p>
+            <div id="weaponSelectFlow" class="decision-flow" aria-label="本局成长流程"></div>
             <div id="weaponSelectGrid" class="weapon-select-grid"></div>
+            <div id="weaponRosterMeta" class="selection-framework-note hidden"></div>
             <p id="weaponSelectFooter" class="weapon-select-footer">点击卡片确定武器 · 下一步选择工牌形态</p>
           </div>
         </div>
@@ -175,6 +185,7 @@
             <p class="eyebrow">经验结算</p>
             <h2>选择本次成长</h2>
             <div id="upgradeContext" class="v2-context-line"></div>
+            <div id="upgradeFlow" class="decision-flow" aria-label="本局成长流程"></div>
             <div id="upgradeChoices" class="choices"></div>
             <div class="upgrade-actions">
               <button id="skipUpgradeButton" class="primary-button tertiary-button" type="button">暂不选择</button>
@@ -197,6 +208,7 @@
             <p class="eyebrow">办公流程追加</p>
             <h2>选一个立刻看得见的模块</h2>
             <p id="moduleContext" class="panel-note">模块只膨胀当前武器，不增加第二把武器。</p>
+            <div id="moduleFlow" class="decision-flow" aria-label="本局成长流程"></div>
             <div id="moduleChoices" class="choices module-choices"></div>
             <p id="modulePanelFooter" class="weapon-select-footer">三秒内能读懂，选完立即回到战斗。</p>
           </div>
@@ -212,8 +224,16 @@
               </div>
               <div class="material-pill shop-material-pill">材料 <strong id="componentCreditsText">0</strong></div>
             </div>
+            <div id="componentShopFlow" class="decision-flow" aria-label="本局成长流程"></div>
             <div id="componentSlotsStrip" class="marker-component-slots"></div>
             <div id="componentOffers" class="choices shop-choices"></div>
+            <section id="itemOfferSection" class="future-system-slot hidden" data-system-slot="item-shop" aria-label="道具候选区">
+              <div class="future-system-slot-head">
+                <span>道具方案</span>
+                <small>预留扩展位，不属于当前 Demo V2.1 测试范围</small>
+              </div>
+              <div id="itemOffers" class="choices shop-choices"></div>
+            </section>
             <div class="shop-actions">
               <button id="componentRefreshButton" class="primary-button tertiary-button" type="button">刷新 · 材料 3</button>
               <button id="componentContinueButton" class="primary-button secondary-button" type="button">继续战斗</button>
@@ -292,12 +312,12 @@
     <script src="src/v2/compat/legacy.js?v=3"></script>
     <script src="src/v2/demo-v2/phase-a.js?v=2"></script>
     <script src="src/v2/demo-v2/phase-b.js?v=3"></script>
-    <script src="src/v2/demo-v2/marker-fixed.js?v=5"></script>
+    <script src="src/v2/demo-v2/marker-fixed.js?v=6"></script>
     <script src="src/v2/runtime/state.js?v=14"></script>
     <script src="src/v2/progression/progression.js?v=8"></script>
   <script src="src/v2/combat/systems.js?v=70"></script>
-    <script src="src/v2/ui/view-model.js?v=20"></script>
-    <script src="src/v2/ui/render.js?v=28"></script>
+    <script src="src/v2/ui/view-model.js?v=21"></script>
+    <script src="src/v2/ui/render.js?v=29"></script>
     <script src="main.js?v=72"></script>
   </body>
 </html>

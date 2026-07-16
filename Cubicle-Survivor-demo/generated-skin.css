@@ -3241,33 +3241,53 @@ button:disabled,
   line-height: 0 !important;
 }
 
-/* The warmup notice is temporary, but it must still leave the player and the
-   aiming field unobstructed. Keep it as a shallow task slip below the header. */
-.v2-game[data-page-mode="combat"] > .warmup-overlay {
+/* Temporary transition card: richer than the old task slip, still shallow
+   enough to keep the player and the center aiming field visible. */
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card {
   top: 82px !important;
   bottom: auto !important;
   left: 50% !important;
   display: grid !important;
-  width: min(430px, calc(100% - 500px)) !important;
-  min-width: 330px !important;
+  width: min(620px, calc(100% - 420px)) !important;
+  max-width: 620px !important;
+  min-width: 520px !important;
   min-height: 0 !important;
-  grid-template-columns: auto minmax(0, 1fr) auto !important;
-  grid-template-rows: 18px 4px !important;
+  grid-template-columns: 46px minmax(0, 1fr) minmax(160px, 0.48fr) 42px !important;
+  grid-template-rows: auto 5px !important;
   align-items: center !important;
-  gap: 4px 10px !important;
-  padding: 7px 11px !important;
+  gap: 6px 10px !important;
+  padding: 8px 11px !important;
   border-left: 5px solid #b48b4f !important;
   transform: translateX(-50%) !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupTitle {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  color: #eee4d2 !important;
-  font-size: 12px !important;
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card[data-transition-kind="collection"] {
+  border-left-color: #d7bc78 !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupHint {
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupEmoji {
+  display: grid !important;
+  width: 42px !important;
+  height: 42px !important;
+  color: #d7bc78 !important;
+  font-size: 9px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-copy {
+  gap: 1px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-eyebrow {
+  color: #817b70 !important;
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupTitle {
+  color: #eee4d2 !important;
+  font-size: 13px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupHint {
   min-width: 0 !important;
   overflow: hidden !important;
   color: #aaa295 !important;
@@ -3275,16 +3295,39 @@ button:disabled,
   text-overflow: ellipsis !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupTimer {
-  color: #c9a96f !important;
-  font-size: 13px !important;
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-tags {
+  margin-top: 2px !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay .warmup-bar {
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-tags span {
+  padding: 1px 5px !important;
+  border-color: rgba(180, 139, 79, 0.38) !important;
+  background: rgba(180, 139, 79, 0.1) !important;
+  color: #d8c8aa !important;
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side {
+  gap: 3px !important;
+  padding-left: 9px !important;
+  border-left-color: rgba(190, 166, 119, 0.25) !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side span,
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side b {
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupTimer {
+  color: #c9a96f !important;
+  font-size: 14px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .warmup-bar {
   grid-column: 1 / -1 !important;
   grid-row: 2 !important;
   width: 100% !important;
-  height: 4px !important;
+  height: 5px !important;
   margin: 0 !important;
 }
 
@@ -3302,6 +3345,17 @@ body[data-debug-quiet="1"] .debug-panel {
 }
 
 @media (max-width: 920px) {
+  .v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card {
+    width: calc(100% - 24px) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    grid-template-columns: 42px minmax(0, 1fr) 48px !important;
+  }
+
+  .v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side {
+    display: none !important;
+  }
+
   .v2-game[data-page-mode="combat"] > .objective-hud {
     width: 360px !important;
   }

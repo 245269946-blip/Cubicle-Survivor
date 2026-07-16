@@ -10,6 +10,18 @@
   const ENCOUNTER_COUNT = 17;
   const MODULE_ENCOUNTERS = [3, 6, 9, 12];
   const SHOP_ENCOUNTERS = [2, 5, 8, 11, 14, 16];
+  const UI_FRAMEWORK = {
+    weaponSelection: {
+      activeIds: ["marker"],
+      cardCapacity: 6,
+      registryLabel: "当前验证武器"
+    },
+    itemShop: {
+      enabled: false,
+      mountId: "itemOfferSection",
+      offerCapacity: 4
+    }
+  };
   const ENCOUNTERS = [
     { id: 1, phase: 1, step: 1, kind: "normal", pattern: "queue", label: "基础队列", duration: 40, materialReward: 5, enemyHp: 18, enemySpeed: 70, floor: 12, cap: 34, batchSize: 6, cadence: 2.55, hint: "低至中密度近战队列，先看懂单线贯穿与覆盖不足。" },
     { id: 2, phase: 1, step: 2, kind: "reinforced", pattern: "cluster", label: "强化团块", duration: 40, materialReward: 5, shopAfter: true, enemyHp: 20, enemySpeed: 72, floor: 14, cap: 38, batchSize: 7, cadence: 2.45, hint: "团块逐渐变厚，在第一次商店前建立清楚的属性短板。" },
@@ -230,6 +242,7 @@
     state.stage.bossType = encounter.bossType || "";
     state.stage.bossHitCap = encounter.bossHitCap || 0;
     state.stage.threatHint = encounter.hint;
+    state.stage.enemyTypes = encounter.enemyTypes.slice();
     state.stage.enemyPreview = "本关怪物：" + encounter.enemyTypes.join("、") + " · " + encounter.preview;
     state.stage.note = "阶段 " + encounter.phase + "/" + PHASE_COUNT + " · " + (encounter.boss ? "Boss 评审" : encounter.kind === "reinforced" || encounter.kind === "pressure" ? "强化战斗" : "基础战斗");
     state.stageTime = encounter.duration;
@@ -697,6 +710,7 @@
     refreshCostStep: REFRESH_COST_STEP,
     collectionDuration: COLLECTION_DURATION,
     guaranteedMaterialTotal: GUARANTEED_MATERIAL_TOTAL,
+    uiFramework: UI_FRAMEWORK,
     waves: makeWaves(),
     stage: {
       id: 1,
