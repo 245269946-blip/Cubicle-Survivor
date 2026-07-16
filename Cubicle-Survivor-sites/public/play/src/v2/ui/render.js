@@ -13,6 +13,9 @@
     secondary_badge_select: "badgePanel",
     support_weapon_select: "weaponSelectPanel",
     level_up: "upgradePanel",
+    module_select: "modulePanel",
+    component_shop: "componentShopPanel",
+    component_stat_select: "componentStatPanel",
     slot_select: "slotPanel",
     armory: "weaponPanel",
     result: "resultPanel",
@@ -96,6 +99,7 @@
     route_buff_trap: "sticky_route",
     sticky_debuff_spread: "sticky_spread",
     trap_link_control_zone: "sticky_notice_zone"
+    ,correction_fluid_fixed: "correction_test_error_overload"
   };
 
   const BADGE_COMBAT_COPY = {
@@ -142,7 +146,7 @@
   }
 
   function vfxPreviewHtml(weaponId, mechanicType, className) {
-    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
+    const source = PREVIEW_SOURCE_BY_MECHANIC[mechanicType] || (weaponId === "correction_fluid" ? "correction_test_error_overload" : weaponId === "scissors" ? "scissors_test_base" : weaponId === "thermos" ? "thermos_release" : weaponId === "sticky_note" ? "sticky_base" : "marker_main");
     const visual = V2.getWeaponVisualEvent ? V2.getWeaponVisualEvent(source) : { family: weaponId || "marker", topology: "piercing_line", cue: "preview" };
     const spriteId = approvedPreviewSprite(weaponId, mechanicType);
     const sprite = spriteId
@@ -158,11 +162,35 @@
   }
 
   function weaponIconHtml(weaponId, label) {
+    if (weaponId === "scissors") {
+      return '<img class="fixed-weapon-icon scissors-weapon-icon" src="assets/generated-vfx/sprites/scissors-v23.png" alt="' + escapeHtml(label || "剪刀") + '" />';
+    }
+    if (weaponId === "thermos") {
+      return '<img class="fixed-weapon-icon thermos-weapon-icon" src="assets/generated-vfx/sprites/thermos-body-v24.png" alt="' + escapeHtml(label || "保温杯") + '" />';
+    }
+    if (weaponId === "correction_fluid") {
+      return '<img class="fixed-weapon-icon correction-fluid-weapon-icon" src="assets/generated-vfx/sprites/correction-fluid-body-v25.png" alt="' + escapeHtml(label || "修正液") + '" />';
+    }
     return atlasIconHtml("office", "weapon-" + weaponId, label);
   }
 
   function departmentIconHtml(dept, label) {
     return atlasIconHtml("ui", "dept-" + dept, label);
+  }
+
+  function markerGrowthIconHtml(group, id, label) {
+    const safeGroup = group === "experience" ? "experience" : "build";
+    return '<span class="marker-growth-icon marker-growth-' + safeGroup + ' icon-' + escapeHtml(id) + '" role="img" aria-label="' + escapeHtml(label || "") + '"></span>';
+  }
+
+  function fixedTestConfig(state) {
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
+  }
+
+  function fixedComponentIconHtml(config, id, label) {
+    return config && (config.weaponId === "scissors" || config.weaponId === "correction_fluid")
+      ? weaponIconHtml(config.weaponId, label)
+      : markerGrowthIconHtml("build", "component-" + id, label);
   }
 
   function applyShellState(state) {
@@ -172,6 +200,8 @@
     wrap.dataset.weaponTheme = theme.id;
     wrap.dataset.pageMode = state.mode;
     wrap.dataset.stagePhase = theme.phase.id;
+    const fixedConfig = fixedTestConfig(state);
+    wrap.dataset.fixedSuite = fixedConfig && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)) ? "four-weapon" : "";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
   }
 
@@ -202,6 +232,13 @@
     }).join("") + '</div>';
   }
 
+  function decisionFlowHtml(steps, activeIndex) {
+    return (steps || []).map(function (step, index) {
+      const stateClass = index < activeIndex ? "is-done" : index === activeIndex ? "is-active" : "is-next";
+      return '<span class="decision-flow-step ' + stateClass + '"><b>' + (index + 1) + '</b><em>' + escapeHtml(step) + '</em></span>';
+    }).join('<i aria-hidden="true"></i>');
+  }
+
   function renderHud(state) {
     const vm = V2.getViewModel("hud");
     setText("objectiveStageMeta", vm.stageMeta);
@@ -211,6 +248,7 @@
     setText("objectiveKills", vm.kills);
     setText("objectiveAlert", vm.stageNote);
     setText("levelText", vm.level);
+    setText("materialLabel", "材料");
     setText("materialText", vm.materials);
     setText("formText", vm.formText);
     setText("hpText", vm.hp);
@@ -218,11 +256,21 @@
     if (hpFill) hpFill.style.width = vm.hpPct + "%";
     const xpFill = el("xpFill");
     if (xpFill) xpFill.style.width = vm.xpPct + "%";
-    setText("warmupTitle", state.stage ? state.stage.name + " 准备中" : "准备中");
+    const transition = vm.transition || {};
+    const warmupOverlay = el("warmupOverlay");
+    if (warmupOverlay) warmupOverlay.setAttribute("data-transition-kind", transition.kind || "encounter");
+    setText("warmupEmoji", transition.symbol || "预告");
+    setText("warmupEyebrow", transition.eyebrow || "关卡预告");
+    setText("warmupTitle", transition.title || (state.stage ? state.stage.name + " 准备中" : "准备中"));
     setText("warmupTimer", Math.ceil(vm.warmup) + "s");
-    setText("warmupHint", vm.controlHint);
+    setText("warmupHint", transition.hint || vm.controlHint);
+    setText("warmupRule", transition.rule || "观察本关目标与敌人压力");
+    setText("warmupNext", transition.next || "下一步：开始战斗");
+    setHtml("warmupTags", (transition.tags || []).map(function (tag) {
+      return '<span>' + escapeHtml(tag) + '</span>';
+    }).join(""));
     const warmupFill = el("warmupFill");
-    if (warmupFill) warmupFill.style.width = Math.max(0, Math.min(100, (1 - vm.warmup / 3) * 100)) + "%";
+    if (warmupFill) warmupFill.style.width = Math.max(0, Math.min(100, (1 - vm.warmup / (transition.duration || (vm.collecting ? 10 : 3))) * 100)) + "%";
     const combatStatus = el("combatStatus");
     if (combatStatus && vm.combatStatus) {
       combatStatus.classList.remove("hidden", "tone-marker", "tone-thermos", "tone-sticky");
@@ -241,19 +289,43 @@
     setHtml("routeMap", '<div class="v2-form-chip theme-' + escapeHtml(b.theme.id) + '"><b>' + escapeHtml(b.weapon) + '</b><span>' + escapeHtml(b.theme.phase.weaponStageShort) + '</span><em>' + escapeHtml(b.formShort) + '</em>' + extraBuildBits + '</div>');
     setHtml("buildList", b.params.map(function (item) {
       return '<div><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong></div>';
-    }).join("") + b.slots.map(function (slot) {
+    }).join("") + (b.components || []).map(function (part) {
+      return '<div><span>' + escapeHtml(part.name + " · " + part.quality.name) + '</span><strong>' + escapeHtml(part.allocationText) + '</strong></div>';
+    }).join("") + ((b.components || []).length ? "" : b.slots.map(function (slot) {
       return '<div class="' + (slot.open ? "" : "dim") + '"><span>' + escapeHtml(slot.name) + '</span><strong>' + escapeHtml(slot.open ? slot.value : slot.unlockLabel) + '</strong></div>';
-    }).join(""));
+    }).join("")));
   }
 
   function renderWeaponSelect() {
     const state = V2.getState();
     const supportMode = state.mode === "support_weapon_select";
-    const items = V2.getViewModel(supportMode ? "support_weapon_select" : "weapon_select");
-    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : "选择初始武器");
-    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : "先决定你怎么清场");
-    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
-    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : "点击卡片确定武器 · 下一步选择工牌形态");
+    const phaseA = !supportMode && state.demoV2 && state.demoV2.phase === "phase-a";
+    const phaseB = !supportMode && state.demoV2 && state.demoV2.phase === "phase-b";
+    const fixedConfig = !supportMode && fixedTestConfig(state);
+    const markerFixed = !!fixedConfig;
+    const suitePlayable = !!(markerFixed && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)));
+    const publicVersion = suitePlayable ? (state.demoV2 && state.demoV2.suiteVersion || fixedConfig.version) : fixedConfig && fixedConfig.version;
+    const framework = fixedConfig && fixedConfig.uiFramework;
+    let items = V2.getViewModel(supportMode ? "support_weapon_select" : "weapon_select");
+    if (framework && framework.weaponSelection) {
+      items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
+    }
+    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : suitePlayable ? publicVersion + " · 可玩版本" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
+    const coordinator = !!(fixedConfig && fixedConfig.coordinator);
+    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : coordinator ? "选择一种异化关系" : markerFixed ? "选择" + fixedConfig.weaponName + "开始本局" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
+    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
+    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    setHtml("weaponSelectFlow", markerFixed
+      ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
+      : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
+    const rosterMeta = el("weaponRosterMeta");
+    if (rosterMeta) {
+      const showFramework = !!(framework && framework.weaponSelection);
+      rosterMeta.classList.toggle("hidden", !showFramework);
+      if (showFramework) {
+        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' · ' + items.length + ' 把</strong><span>' + (coordinator ? '每把武器拥有独立攻击关系与双路线成长。' : '当前武器：' + escapeHtml(fixedConfig.weaponName) + '。') + '</span>';
+      }
+    }
     setHtml("weaponSelectGrid", items.map(function (w) {
       return '<button class="weapon-card theme-' + escapeHtml(w.themeId) + ' ' + previewClass(w.topology) + '" type="button" data-weapon="' + escapeHtml(w.id) + '">' +
         weaponIconHtml(w.id, w.name) +
@@ -303,10 +375,21 @@
 
   function renderUpgrade() {
     const vm = V2.getViewModel("level_up");
-    setHtml("upgradeContext", themeBrief(vm.theme, "经验成长", "只选一个通用成长，但它会直接作用在当前主形态上。"));
+    const choices = el("upgradeChoices");
+    if (choices) {
+      choices.classList.toggle("marker-experience-grid", !!vm.markerFixed);
+      choices.style.gridTemplateColumns = vm.markerFixed ? "1fr 1fr 1fr 1fr" : "";
+    }
+    const skip = el("skipUpgradeButton");
+    if (skip) {
+      skip.classList.toggle("hidden", !!vm.markerFixed);
+      if (skip.parentElement) skip.parentElement.classList.toggle("hidden", !!vm.markerFixed);
+    }
+    setHtml("upgradeFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "经验分配", "继续流程"], 2));
+    setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
     setHtml("upgradeChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-upgrade="' + escapeHtml(choice.id) + '">' +
-        atlasIconHtml("ui", "upgrade", choice.title) +
+        (vm.markerFixed ? markerGrowthIconHtml("experience", choice.id, choice.title) : atlasIconHtml("ui", "upgrade", choice.title)) +
         '<span class="tag route-tag">' + escapeHtml(choice.formLine) + '</span>' +
         '<strong>' + escapeHtml(choice.title) + '</strong>' +
         '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
@@ -316,6 +399,115 @@
       button.onclick = function () {
         V2.dispatch({ type: "SELECT_UPGRADE", upgradeId: button.getAttribute("data-upgrade") });
       };
+    });
+  }
+
+  function renderModuleSelect() {
+    const vm = V2.getViewModel("module_select");
+    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
+    const markerFixed = !!fixedConfig;
+    const choices = el("moduleChoices");
+    if (choices) choices.classList.toggle("marker-module-grid", !!markerFixed);
+    setText("moduleContext", "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
+    setText("modulePanelFooter", markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
+    setHtml("moduleFlow", decisionFlowHtml(["关卡完成", "10秒回收", "模块选择", "下一关"], 2));
+    setHtml("moduleChoices", vm.choices.map(function (choice) {
+      return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
+        (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
+        '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · Lv.' + (choice.level + 1) + '</span>' +
+        '<strong>' + escapeHtml(choice.name) + '</strong>' +
+        '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
+        '<small>' + escapeHtml(choice.intent) + '</small>' +
+        (choice.combo ? '<em class="module-combo">' + escapeHtml(choice.combo) + '</em>' : '') +
+      '</button>';
+    }).join(""));
+    document.querySelectorAll("[data-module]").forEach(function (button) {
+      button.onclick = function () {
+        V2.dispatch({ type: "SELECT_DEMO_V2_MODULE", moduleId: button.getAttribute("data-module") });
+      };
+    });
+  }
+
+  function renderComponentShop() {
+    const vm = V2.getViewModel("component_shop");
+    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
+    setText("componentShopEyebrow", vm.version + " · " + vm.weaponName + "组件商店");
+    setText("componentShopTitle", "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
+    setText("componentCreditsText", vm.materials);
+    setHtml("componentShopFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "组件商店", vm.shopRound >= vm.shopCount ? "最终 Boss" : "下一关"], 2));
+    setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
+    setHtml("componentSlotsStrip", vm.parts.map(function (part) {
+      return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
+        (part.activeStat ? fixedComponentIconHtml(fixedConfig, part.activeStat, part.activeStatName + part.name) : "") +
+        '<div class="marker-component-slot-copy">' +
+        '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
+        '<span>' + escapeHtml(part.allocationText) + '</span>' +
+        '<small>品质进度：' + escapeHtml(part.progress) + '</small>' +
+        '</div>' +
+      '</div>';
+    }).join(""));
+    setHtml("componentOffers", vm.offers.length ? vm.offers.map(function (offer) {
+      const affordable = vm.materials >= offer.cost;
+      const nextCount = Math.min(8, offer.owned + 1);
+      const willUpgrade = nextCount === offer.nextThreshold;
+      const actionLabel = offer.action === "install" ? "装入" : offer.action === "upgrade" ? "同类升级" : "替换并重置";
+      const resultLine = offer.action === "replace"
+        ? "当前" + offer.partName + "为“" + offer.activeStatName + "”累计 " + offer.slotCopies + " 件；购买后重置为白色“" + offer.statName + "”"
+        : offer.action === "install"
+          ? "空槽装入后获得白色“" + offer.statName + "”组件"
+          : willUpgrade
+            ? "同类购买后合成为" + offer.nextQuality.name + "组件"
+            : "同类购买后累计 " + nextCount + " / " + offer.nextThreshold;
+      return '<div class="choice shop-card theme-card marker-component-card ' + (offer.sold ? "sold" : "") + (offer.locked ? " locked" : "") + '" style="--quality-color:' + escapeHtml(offer.purchaseQuality.color) + '">' +
+        '<div class="marker-component-heading">' +
+          fixedComponentIconHtml(fixedConfig, offer.statId, offer.statName + offer.partName) +
+          '<div class="marker-component-heading-copy">' +
+            '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
+            '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
+          '</div>' +
+        '</div>' +
+        '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
+        '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>' +
+        '<span class="cost">材料 ' + offer.cost + '</span>' +
+        '<div class="marker-component-actions">' +
+          '<button class="slot-button" type="button" data-marker-offer="' + escapeHtml(offer.id) + '"' + (offer.sold || !affordable ? " disabled" : "") + '>' + (offer.sold ? "已购买" : actionLabel) + '</button>' +
+          '<button class="slot-button marker-lock-button" type="button" data-marker-lock="' + escapeHtml(offer.id) + '"' + (offer.sold ? " disabled" : "") + '>' + (offer.locked ? "已锁定" : "锁定") + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join("") : '<p class="panel-note">三个部位都已达到红色，本轮不再刷新组件。</p>');
+    document.querySelectorAll("[data-marker-offer]").forEach(function (button) {
+      button.onclick = function () { V2.dispatch({ type: "BUY_MARKER_COMPONENT", offerId: button.getAttribute("data-marker-offer") }); };
+    });
+    document.querySelectorAll("[data-marker-lock]").forEach(function (button) {
+      button.onclick = function () { V2.dispatch({ type: "TOGGLE_MARKER_COMPONENT_LOCK", offerId: button.getAttribute("data-marker-lock") }); };
+    });
+    const refresh = el("componentRefreshButton");
+    if (refresh) {
+      refresh.disabled = vm.materials < vm.refreshCost || !vm.offers.length;
+      refresh.textContent = "刷新 · 材料 " + vm.refreshCost + (vm.rerolls ? "（本轮第 " + (vm.rerolls + 1) + " 次）" : "");
+    }
+    const cont = el("componentContinueButton");
+    if (cont) cont.textContent = vm.shopRound >= vm.shopCount ? "进入最终 Boss" : "进入下一关";
+    const framework = V2.getState && fixedTestConfig(V2.getState()) && fixedTestConfig(V2.getState()).uiFramework;
+    const itemSection = el("itemOfferSection");
+    if (itemSection) itemSection.classList.toggle("hidden", !(framework && framework.itemShop && framework.itemShop.enabled));
+  }
+
+  function renderComponentStat() {
+    const vm = V2.getViewModel("component_stat_select");
+    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
+    setText("componentStatTitle", vm.partName + "提升为" + vm.quality.name + " · 选择一次属性");
+    setText("componentStatNote", "本次强化只作用于当前部位的基础参数；品质不会解锁模块等级。");
+    setHtml("componentStatChoices", vm.choices.map(function (choice) {
+      return '<button class="choice learning-card theme-card" type="button" data-marker-stat="' + escapeHtml(choice.id) + '">' +
+        fixedComponentIconHtml(fixedConfig, choice.id, choice.name) +
+        '<span class="tag route-tag">当前投入 ' + choice.current + '</span>' +
+        '<strong>' + escapeHtml(choice.name) + '</strong>' +
+        '<span class="card-desc">选择后立即提高' + escapeHtml(choice.name) + '，并返回本次组件商店。</span>' +
+      '</button>';
+    }).join(""));
+    document.querySelectorAll("[data-marker-stat]").forEach(function (button) {
+      button.onclick = function () { V2.dispatch({ type: "SELECT_MARKER_COMPONENT_STAT", statId: button.getAttribute("data-marker-stat") }); };
     });
   }
 
@@ -395,8 +587,19 @@
   function renderResult() {
     const vm = V2.getViewModel("result");
     setText("resultTitle", vm.title);
-    setHtml("deathRecap", themeBrief(vm.theme, "本局主形态", "复盘先看这把武器最后实际成了什么打法。") +
-      '<p>等级 ' + vm.level + ' · 击破 ' + vm.kills + ' · 材料 ' + vm.materials + '</p>' +
+    setHtml("deathRecap", themeBrief(vm.theme, "本局主形态", "先看这把武器最后实际形成了什么打法。") +
+      (vm.markerFixed
+        ? '<p>完成 ' + vm.markerFixed.completedEncounters + '/17 关 · 商店 ' + vm.markerFixed.shopsVisited + '/6 · 击破 ' + vm.kills + ' · 峰值目标 ' + vm.markerFixed.peakEnemies + '</p>' +
+          '<p>' + escapeHtml(vm.markerFixed.moduleLabels[0]) + ' Lv.' + vm.markerFixed.modules.copy + ' / ' + escapeHtml(vm.markerFixed.moduleLabels[1]) + ' Lv.' + vm.markerFixed.modules.archive + '</p>' +
+          '<p>经验基础属性 ' + escapeHtml(vm.markerFixed.experienceSummary) + ' · 购买白色组件 ' + vm.markerFixed.componentsBought + ' 个</p>' +
+          '<p>阶段材料 ' + vm.markerFixed.stageMaterialsEarned + '（收获追加 ' + vm.markerFixed.harvestingMaterialsEarned + '） / 拾取材料 ' + vm.markerFixed.dropMaterialsEarned + ' / 消耗 ' + vm.markerFixed.materialsSpent + '</p>' +
+          '<p>' + escapeHtml(vm.markerFixed.fullscreenLabels[0]) + ' ' + vm.markerFixed.fullscreenCopyTriggers + ' 次 · ' + escapeHtml(vm.markerFixed.fullscreenLabels[1]) + ' ' + vm.markerFixed.fullscreenArchiveTriggers + ' 次' + (vm.markerFixed.weaponId === "thermos" ? ' · 聚焦击杀 ' + vm.markerFixed.focusKills + ' · 死亡热浪 ' + vm.markerFixed.heatwaveTriggers : vm.markerFixed.weaponId === "scissors" ? ' · 轻步 ' + vm.markerFixed.dashes + '（闪避 ' + vm.markerFixed.dashDodges + '）· 合刃命中 ' + vm.markerFixed.closedHits + ' · 张刃命中 ' + vm.markerFixed.openHits + ' · 处决 ' + vm.markerFixed.executions + ' · 安全区 ' + vm.markerFixed.shelterTriggers + ' 次 / 挡弹 ' + vm.markerFixed.blockedShots : vm.markerFixed.weaponId === "correction_fluid" ? ' · 错误 ' + vm.markerFixed.errorsApplied + ' 层 · 过载 ' + vm.markerFixed.overloads + ' · 污染区 ' + vm.markerFixed.errorAreas + ' · 融合 ' + vm.markerFixed.areaMerges + ' · 纠错击杀 ' + vm.markerFixed.finalKills : '') + '</p>' +
+          '<div class="marker-component-slots">' + vm.markerFixed.parts.map(function (part) { return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' + (part.activeStat ? fixedComponentIconHtml(fixedTestConfig(V2.getState()), part.activeStat, part.activeStatName + part.name) : "") + '<div class="marker-component-slot-copy"><strong>' + escapeHtml(part.name + " · " + part.quality.name) + '</strong><span>' + escapeHtml(part.allocationText) + '</span><small>' + escapeHtml(part.progress) + '</small></div></div>'; }).join("") + '</div>'
+        : vm.phaseB
+        ? '<p>击破 ' + vm.kills + ' · 峰值目标 ' + vm.phaseB.peakEnemies + ' · 模块 ' + escapeHtml(vm.phaseB.modules.join(" → ") || "无") + '</p>'
+        : vm.phaseA
+          ? '<p>击破 ' + vm.kills + ' · 峰值目标 ' + vm.phaseA.peakEnemies + ' · 问题波 ' + vm.phaseA.wavesSeen + '/4</p>'
+          : '<p>等级 ' + vm.level + ' · 击破 ' + vm.kills + ' · 材料 ' + vm.materials + '</p>') +
       '<div class="v2-damage-list">' + vm.damage.map(function (row) {
         return '<div><span>' + escapeHtml(row.source) + '</span><b>' + row.damage + '</b></div>';
       }).join("") + '</div>' +
@@ -492,6 +695,9 @@
     if (state.mode === "weapon_select" || state.mode === "support_weapon_select") renderWeaponSelect();
     if (state.mode === "badge_select" || state.mode === "secondary_badge_select") renderBadgeSelect(state);
     if (state.mode === "level_up") renderUpgrade();
+    if (state.mode === "module_select") renderModuleSelect();
+    if (state.mode === "component_shop") renderComponentShop();
+    if (state.mode === "component_stat_select") renderComponentStat();
     if (state.mode === "slot_select") renderSlots();
     if (state.mode === "armory") renderArmory();
     if (state.mode === "result") renderResult();
@@ -524,6 +730,10 @@
     if (refresh) refresh.onclick = function () { V2.dispatch({ type: "REFRESH_ARMORY" }); };
     const cont = el("continueButton");
     if (cont) cont.onclick = function () { V2.dispatch({ type: "CONTINUE_NEXT_STAGE" }); };
+    const componentRefresh = el("componentRefreshButton");
+    if (componentRefresh) componentRefresh.onclick = function () { V2.dispatch({ type: "REFRESH_MARKER_COMPONENTS" }); };
+    const componentContinue = el("componentContinueButton");
+    if (componentContinue) componentContinue.onclick = function () { V2.dispatch({ type: "CONTINUE_MARKER_TEST" }); };
     const toggle = el("buildToggle");
     if (toggle) toggle.onclick = function () {
       const panel = el("buildPanel");

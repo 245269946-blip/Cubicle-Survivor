@@ -1,4 +1,10 @@
-# vinext-starter
+# 工位幸存者公开试玩站
+
+该站点包装并发布当前可分享的 Demo V2.9 四武器试玩版本。游戏源文件来自 `../Cubicle-Survivor-demo/`，通过 `node ../scripts/sync-demo-v2-site.mjs` 同步到 `public/play/`；不要直接修改生成后的公开副本。
+
+完整验证与发布门禁见 `../docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md`。
+
+## Sites runtime
 
 A clean full-stack starter running on
 [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and

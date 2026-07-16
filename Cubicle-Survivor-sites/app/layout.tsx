@@ -12,18 +12,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V1",
-    description: "选择马克笔、保温杯或即时贴，在浏览器中完成 16 关办公室生存挑战。",
+    title: "工位幸存者 Demo V2.9",
+    description: "选择马克笔、保温杯、剪刀或修正液，在浏览器中完成 17 关办公室异化生存挑战。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V1",
-      description: "三种办公武器、五阶段构筑成长、16 关在线试玩。",
+      title: "工位幸存者 Demo V2.9",
+      description: "四种异化办公武器、双路线模块成长、五阶段17关在线试玩。",
       images: [`${origin}/og.png`],
     },
     twitter: {
       card: "summary_large_image",
-      title: "工位幸存者 Demo V1",
-      description: "三种办公武器、五阶段构筑成长、16 关在线试玩。",
+      title: "工位幸存者 Demo V2.9",
+      description: "四种异化办公武器、双路线模块成长、五阶段17关在线试玩。",
       images: [`${origin}/og.png`],
     },
   };

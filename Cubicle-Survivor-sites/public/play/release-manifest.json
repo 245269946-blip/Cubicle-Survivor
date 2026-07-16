@@ -1,0 +1,6 @@
+{
+  "version": "Demo V2.9",
+  "entry": "/play/demo-v2-9.html",
+  "source": "Cubicle-Survivor-demo",
+  "validation": "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md"
+}

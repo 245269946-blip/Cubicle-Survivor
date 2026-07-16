@@ -24,6 +24,8 @@
         stageTime: state.stageTime,
         warmupTime: state.warmupTime,
         selectedWeaponId: state.selectedWeaponId,
+        demoV2Phase: state.demoV2 && state.demoV2.phase || "",
+        demoV2Wave: state.demoV2 && state.demoV2.waveId || "",
         badgeDept: state.badgeDept,
         activeForm: state.activeForm && state.activeForm.displayName,
         loop: state.loop,
@@ -81,19 +83,265 @@
       const debugLab = params.get("lab");
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
-      V2.dispatch({ type: "INIT", debug: debugEnabled });
+      const requestedDemoV2Phase = params.get("demoV2");
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" ? requestedDemoV2Phase : "";
+      V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
+      if (demoV2Phase === "phase-a") {
+        document.title = "工位幸存者 Demo V2 · 阶段 A";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2 阶段 A");
+        if (stamp) stamp.textContent = "Demo V2 · 阶段 A";
+        if (subtitle) subtitle.textContent = "先验证武器和敌群是否好玩；本轮没有工牌、模块、卡槽和工坊。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "三把基础武器";
+          guideCards[0].querySelector("span:last-child").textContent = "马克笔贯穿分叉、保温杯蓄热释放、即时贴落点触发。";
+          guideCards[1].querySelector("strong").textContent = "四类问题波";
+          guideCards[1].querySelector("span:last-child").textContent = "队列、团块、追逐和混合评审依次出现。";
+          guideCards[2].querySelector("strong").textContent = "60 秒单关";
+          guideCards[2].querySelector("span:last-child").textContent = "只判断武器母题，不用成长系统掩盖问题。";
+          guideCards[3].querySelector("strong").textContent = "阶段门禁";
+          guideCards[3].querySelector("span:last-child").textContent = "阶段 A 未通过前，不开放工牌和办公模块。";
+        }
+        if (startButton) startButton.textContent = "进入 60 秒测试";
+      }
+      if (demoV2Phase === "phase-b") {
+        document.title = "工位幸存者 Demo V2 · 阶段 B";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2 阶段 B");
+        if (stamp) stamp.textContent = "Demo V2 · 阶段 B";
+        if (subtitle) subtitle.textContent = "一把武器、一个代表工牌、三次轻模块选择；验证重母题能否快速膨胀。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "30 秒读懂武器";
+          guideCards[0].querySelector("span:last-child").textContent = "开局保留阶段 A 基础形态，不用成长掩盖母题。";
+          guideCards[1].querySelector("strong").textContent = "唯一代表工牌";
+          guideCards[1].querySelector("span:last-child").textContent = "马克笔研发、保温杯产品、即时贴行政自动定型。";
+          guideCards[2].querySelector("strong").textContent = "六类办公模块";
+          guideCards[2].querySelector("span:last-child").textContent = "复写、留档、转发、加急、合并、透支，单次只读一个效果。";
+          guideCards[3].querySelector("strong").textContent = "3 分钟门禁";
+          guideCards[3].querySelector("span:last-child").textContent = "最终必须能说清两个模块为什么互相有用。";
+        }
+        if (startButton) startButton.textContent = "进入 3 分钟测试";
+      }
+      if (demoV2Phase === "marker-fixed") {
+        document.title = "工位幸存者 Demo V2.1 · 马克笔固定测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.1 马克笔固定测试");
+        if (stamp) stamp.textContent = "Demo V2.1 · 马克笔固定测试";
+        if (subtitle) subtitle.textContent = "只验证马克笔：经验稳定成长，模块改变机制，材料组件制造取舍。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "一把马克笔";
+          guideCards[0].querySelector("span:last-child").textContent = "远程直线激光贯穿，不开放其他武器和工牌。";
+          guideCards[1].querySelector("strong").textContent = "经验属性商店";
+          guideCards[1].querySelector("span:last-child").textContent = "靠近拾取经验，关后用升级点选择伤害、生命、移速或拾取。";
+          guideCards[2].querySelector("strong").textContent = "四次模块选择";
+          guideCards[2].querySelector("span:last-child").textContent = "前四阶段 Boss 后选择复写或留档，选择后先打一关。";
+          guideCards[3].querySelector("strong").textContent = "材料组件商店";
+          guideCards[3].querySelector("span:last-child").textContent = "17 关中开放 6 次四格商店，集中合成红色组件。";
+        }
+        if (startButton) startButton.textContent = "进入马克笔三线成长测试";
+      }
+      if (demoV2Phase === "thermos-fixed") {
+        document.title = "工位幸存者 Demo V2.2 · 保温杯固定测试 · 视觉 V2.4";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.2 保温杯固定测试");
+        if (stamp) stamp.textContent = "Demo V2.2 · 保温杯固定测试 · 视觉 V2.4";
+        if (subtitle) subtitle.textContent = "只验证保温杯：共享近距扇面、冷凝铺场，以及把聚焦击杀转成死亡热浪。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "近距正面扇面";
+          guideCards[0].querySelector("span:last-child").textContent = "所有喷射组共享冷却，只覆盖玩家正面的有限角度。";
+          guideCards[1].querySelector("strong").textContent = "冷凝区域路线";
+          guideCards[1].querySelector("span:last-child").textContent = "沿喷射路径增加持续区域数量，依靠范围与持续时间铺场。";
+          guideCards[2].querySelector("strong").textContent = "击杀热浪路线";
+          guideCards[2].querySelector("span:last-child").textContent = "聚焦低生命目标，真实击杀后释放一次不连锁热浪。";
+          guideCards[3].querySelector("strong").textContent = "同一固定框架";
+          guideCards[3].querySelector("span:last-child").textContent = "17 关、4 次模块与 6 次组件商店和 V2.1 保持可比较。";
+        }
+        if (startButton) startButton.textContent = "进入保温杯双路线测试";
+      }
+      if (demoV2Phase === "scissors-fixed") {
+        document.title = "工位幸存者 Demo V2.3 · 剪刀固定测试 · 视觉 V2.4";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.3 剪刀固定测试");
+        if (stamp) stamp.textContent = "Demo V2.3 · 剪刀固定测试 · 视觉 V2.4";
+        if (subtitle) subtitle.textContent = "只验证剪刀：贴身近战时间线、轻步进场、合刃/张刃路线，以及低血临时安全区。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "纯近战动作轮";
+          guideCards[0].querySelector("span:last-child").textContent = "每轮锁定一个方向，先完成合刃，再完成张刃；动作结束前不会开启下一轮。";
+          guideCards[1].querySelector("strong").textContent = "轻步闪身";
+          guideCards[1].querySelector("span:last-child").textContent = "时间与完整攻击轮充能；满后在下次攻击前自动穿入敌群，本身不造成伤害。";
+          guideCards[2].querySelector("strong").textContent = "合刃与张刃";
+          guideCards[2].querySelector("span:last-child").textContent = "窄线突刺可进化为减速裁断；短宽连剪可进化为按命中层数处决。";
+          guideCards[3].querySelector("strong").textContent = "固定低血安全区";
+          guideCards[3].querySelector("span:last-child").textContent = "30% 生命以下短暂挡住外部射弹；近战接触与区域内攻击依旧危险。";
+        }
+        if (startButton) startButton.textContent = "进入剪刀双路线测试";
+      }
+      if (demoV2Phase === "correction-fluid-fixed") {
+        document.title = "工位幸存者 Demo V2.5 · 修正液固定测试";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.5 修正液固定测试");
+        if (stamp) stamp.textContent = "Demo V2.5 · 修正液错误系统";
+        if (subtitle) subtitle.textContent = "白色修正介质制造错误；青与品红故障霓虹提示污染扩散和最终纠错。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "三层错误状态";
+          guideCards[0].querySelector("span:last-child").textContent = "减速、修正液易伤、错误过载逐层显形；基础喷射不是主要输出。";
+          guideCards[1].querySelector("strong").textContent = "错误扩散";
+          guideCards[1].querySelector("span:last-child").textContent = "过载目标死亡后留下污染区，后期融合并触发系统崩溃。";
+          guideCards[2].querySelector("strong").textContent = "致命纠错";
+          guideCards[2].querySelector("span:last-child").textContent = "同时培养多个错误目标，最终锁定最高错误目标执行纠错。";
+          guideCards[3].querySelector("strong").textContent = "潮流故障视觉";
+          guideCards[3].querySelector("span:last-child").textContent = "办公物件只保留在武器本体；战斗层使用白漆、扫描线和赛博霓虹错误码。";
+        }
+        if (startButton) startButton.textContent = "进入修正液错误系统测试";
+      }
+      if (demoV2Phase === "four-weapon-fixed") {
+        document.title = "工位幸存者 Demo V2.7 · 四武器可玩版";
+        const shell = document.querySelector(".game-wrap");
+        const stamp = document.querySelector(".title-stamp");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.7 四武器可玩版");
+        if (stamp) stamp.textContent = "Demo V2.7 · 四武器可玩版";
+        if (subtitle) subtitle.textContent = "暗色办公室只是底板：四种办公工具在持续压力中异化成路径、空间、位移和错误状态超能力。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "四种战斗关系";
+          guideCards[0].querySelector("span:last-child").textContent = "马克笔改路径，保温杯改空间，剪刀改自身位置，修正液改敌人状态。";
+          guideCards[1].querySelector("strong").textContent = "同一成长框架";
+          guideCards[1].querySelector("span:last-child").textContent = "每把武器都使用 5 阶段 17 关、5 次模块选择和 6 次组件商店。";
+          guideCards[2].querySelector("strong").textContent = "武器保持独立母题";
+          guideCards[2].querySelector("span:last-child").textContent = "每把武器保留材质母题，只在攻击、状态和终局节点出现赛博高光。";
+          guideCards[3].querySelector("strong").textContent = "错误系统故障感";
+          guideCards[3].querySelector("span:last-child").textContent = "白色修正介质承载可读性，青/品红错误码承载污染、过载与纠错爆发。";
+        }
+        if (startButton) startButton.textContent = "选择一把异化办公武器";
+      }
+      if (demoV2Phase === "four-weapon-fixed") {
+        document.title = "工位幸存者 Demo V2.9 · 四武器一致性修正版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        if (stamp) stamp.textContent = "Demo V2.9 · 四武器一致性修正版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.9 四武器一致性修正版");
+      }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
         const debugWeapon = params.get("weapon");
         const debugDept = params.get("dept");
         if (debugScreen === "weapon_select") V2.getState().mode = "weapon_select";
-        if (["marker", "thermos", "sticky_note"].indexOf(debugWeapon) >= 0) {
+        if (["marker", "thermos", "sticky_note", "scissors", "correction_fluid"].indexOf(debugWeapon) >= 0) {
           V2.startRun({ weaponId: debugWeapon });
           if (["tech", "product", "ops", "marketing", "general"].indexOf(debugDept) >= 0) {
             V2.dispatch({ type: "SET_BADGE", dept: debugDept });
           }
           const debugState = V2.getState();
           debugState.warmupTime = 0;
+          if (demoV2Phase === "phase-b" && debugScreen !== "module" && params.get("modules") && V2.demoV2 && V2.demoV2.phaseB) {
+            V2.demoV2.phaseB.applyIdentity(debugState);
+            String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {
+              if (V2.demoV2.phaseB.modules[moduleId]) V2.demoV2.phaseB.applyModule(debugState, moduleId);
+            });
+          }
+          if (demoV2Phase === "marker-fixed" && V2.demoV2 && V2.demoV2.markerFixed) {
+            String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {
+              if (V2.demoV2.markerFixed.modules[moduleId]) V2.demoV2.markerFixed.applyModule(debugState, moduleId, true);
+            });
+            if (debugScreen === "module") {
+              V2.demoV2.markerFixed.startEncounter(debugState, 2);
+              V2.demoV2.markerFixed.completeEncounter(debugState, true);
+            }
+            if (debugScreen === "collection") {
+              const encounter = V2.demoV2.markerFixed.currentEncounter(debugState);
+              debugState.pickups = [
+                { type: "xp", amount: 24, x: debugState.player.x + 180, y: debugState.player.y + 60, radius: 7, color: "#4a9eff" },
+                { type: "material", amount: 2, x: debugState.player.x - 160, y: debugState.player.y - 40, radius: 7, color: "#ffd700", markerFixedDrop: true }
+              ];
+              debugState.demoV2.marker.encounterSpawned = encounter.spawnTotal;
+              debugState.stageKills = debugState.stage.targetKills;
+              V2.demoV2.markerFixed.completeEncounter(debugState);
+            }
+            if (debugScreen === "upgrade") {
+              debugState.demoV2.marker.pendingExperiencePoints = 2;
+              debugState.upgradeChoices = V2.demoV2.markerFixed.makeExperienceChoices(debugState);
+              debugState.mode = "level_up";
+            }
+            if (debugScreen === "component_shop" || debugScreen === "component_stat") {
+              const requestedShop = debugScreen === "component_stat" ? 1 : Math.max(1, Math.min(6, Number(params.get("markerShop") || 1)));
+              const targetShopEncounter = V2.demoV2.markerFixed.shopEncounters[requestedShop - 1];
+              let debugGuard = 0;
+              while (debugState.demoV2.marker.currentEncounterIndex + 1 <= targetShopEncounter && debugGuard < 20) {
+                V2.demoV2.markerFixed.completeEncounter(debugState, true);
+                if (debugState.mode === "module_select") {
+                  V2.demoV2.markerFixed.applyModule(debugState, "copy");
+                }
+                if (debugState.mode === "component_shop") {
+                  if (debugState.demoV2.marker.currentShopEncounter === targetShopEncounter) break;
+                  V2.demoV2.markerFixed.closeShop(debugState);
+                }
+                debugGuard += 1;
+              }
+              if (debugScreen === "component_stat") {
+                const offer = { id: "debug-component", partId: "body", statId: "attackSpeed", cost: 7, sold: false, locked: false };
+                debugState.demoV2.marker.offers = [offer];
+                debugState.materials = Math.max(20, debugState.materials);
+                V2.demoV2.markerFixed.buyComponent(debugState, offer.id);
+              }
+            }
+          }
+          if (demoV2Phase && demoV2Phase !== "phase-a" && demoV2Phase !== "phase-b" && demoV2Phase !== "marker-fixed" && V2.getDemoV2FixedTestConfig) {
+            const config = V2.getDemoV2FixedTestConfig(debugState);
+            const test = config && debugState.demoV2[config.runtimeKey];
+            if (!config || !test) throw new Error("Missing fixed-test debug config: " + demoV2Phase);
+            String(params.get("modules") || "").split(",").filter(Boolean).forEach(function (moduleId) {
+              if (config.modules[moduleId]) config.applyModule(debugState, moduleId, true);
+            });
+            if (debugScreen === "module") {
+              config.startEncounter(debugState, 2);
+              config.completeEncounter(debugState, true);
+            }
+            if (debugScreen === "collection") {
+              const encounter = config.currentEncounter(debugState);
+              debugState.pickups = [
+                { type: "xp", amount: 24, x: debugState.player.x + 180, y: debugState.player.y + 60, radius: 7, color: "#4a9eff" },
+                { type: "material", amount: 2, x: debugState.player.x - 160, y: debugState.player.y - 40, radius: 7, color: "#ffd700", markerFixedDrop: true }
+              ];
+              test.encounterSpawned = encounter.spawnTotal;
+              debugState.stageKills = debugState.stage.targetKills;
+              config.completeEncounter(debugState);
+            }
+            if (debugScreen === "upgrade") {
+              test.pendingExperiencePoints = 2;
+              debugState.upgradeChoices = config.makeExperienceChoices(debugState);
+              debugState.mode = "level_up";
+            }
+            if (debugScreen === "component_shop") {
+              test.currentEncounterIndex = 1;
+              config.completeEncounter(debugState, true);
+            }
+          }
           if (V2.progression) {
             if (debugScreen === "weapon_select") debugState.mode = "weapon_select";
             if (debugLayer === "promotion" || debugLayer === "mastery") {
@@ -138,10 +386,20 @@
               debugState.mode = "slot_select";
             }
             if (debugScreen === "badge") debugState.mode = "badge_select";
-            if (debugScreen === "upgrade") {
+            if (debugScreen === "upgrade" && !V2.getDemoV2FixedTestConfig(demoV2Phase)) {
               debugState.upgradeChoices = V2.progression.makeUpgradeChoices(debugState);
               debugState.previousMode = "combat";
               debugState.mode = "level_up";
+            }
+            if (debugScreen === "module" && demoV2Phase === "phase-b" && V2.demoV2 && V2.demoV2.phaseB) {
+              V2.demoV2.phaseB.applyIdentity(debugState);
+              const debugModules = String(params.get("modules") || "").split(",").filter(Boolean);
+              debugModules.forEach(function (moduleId) {
+                if (V2.demoV2.phaseB.modules[moduleId]) V2.demoV2.phaseB.applyModule(debugState, moduleId);
+              });
+              debugState.demoV2.moduleChoices = V2.demoV2.phaseB.makeChoices(debugState);
+              debugState.previousMode = "combat";
+              debugState.mode = "module_select";
             }
             if (debugScreen === "armory") {
               debugState.materials = Math.max(60, debugState.materials || 0);
@@ -153,8 +411,13 @@
             if (debugScreen === "combat") {
               debugState.mode = "combat";
               debugState.warmupTime = params.get("warmup") === "1" ? 2.4 : 0;
-              debugState.stageTime = Math.max(45, Number(debugState.stage && debugState.stage.duration) || 0);
-              debugState.stageKills = Math.min(6, Math.max(0, (debugState.stage && debugState.stage.targetKills || 1) - 1));
+              if (V2.getDemoV2FixedTestConfig(demoV2Phase)) {
+                debugState.stageTime = Number(debugState.stage && debugState.stage.duration) || 0;
+                debugState.stageKills = 0;
+              } else {
+                debugState.stageTime = Math.max(45, Number(debugState.stage && debugState.stage.duration) || 0);
+                debugState.stageKills = Math.min(6, Math.max(0, (debugState.stage && debugState.stage.targetKills || 1) - 1));
+              }
             }
             if (debugScreen === "result") {
               debugState.flags.won = true;
@@ -169,6 +432,13 @@
                   support_thermos: 1760,
                   line_zone: 920
                 };
+                if (demoV2Phase === "phase-a") {
+                  debugState.level = 1;
+                  debugState.materials = 0;
+                  debugState.demoV2.wavesSeen = ["queue", "cluster", "pursuit", "review"];
+                  debugState.demoV2.peakEnemies = 58;
+                  debugState.stats.peakEnemies = 58;
+                }
               }
               debugState.mode = "result";
             }

@@ -44,6 +44,9 @@
     scissors_slash_v24: "assets/generated-vfx/sprites/scissors-slash-v24-sheet.png",
     scissors_thrust_v24: "assets/generated-vfx/sprites/scissors-thrust-v24-sheet.png",
     scissors_shelter_v24: "assets/generated-vfx/sprites/scissors-shelter-v24-sheet.png",
+    scissors_strike_v27: "assets/generated-vfx/sprites/scissors-strike-v27-sheet.png",
+    scissors_shelter_v27: "assets/generated-vfx/sprites/scissors-shelter-v27-sheet.png",
+    scissors_dash_direction_v27: "assets/generated-vfx/sprites/scissors-dash-direction-v27-sheet.png",
     correction_fluid_body_v25: "assets/generated-vfx/sprites/correction-fluid-body-v25.png",
     correction_fluid_spray_v25: "assets/generated-vfx/sprites/correction-fluid-spray-v25-sheet.png",
     correction_fluid_error_v25: "assets/generated-vfx/sprites/correction-fluid-error-v25-sheet.png",
@@ -386,7 +389,10 @@
     if (source === "scissors_test_thrust" || source === "scissors_test_sever") {
       const frame = source === "scissors_test_sever" ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
       const height = source === "scissors_test_sever" ? Math.max(92, (event.width || 52) * 2.2) : Math.max(58, (event.width || 26) * 2.35);
-      drawSpriteFrame(ctx, "scissors_thrust_v24", frame, event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.2, height, Math.min(1, alpha + 0.12), angle);
+      drawSpriteFrame(ctx, "scissors_thrust_v24", frame, event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.28, height * 1.12, Math.min(1, alpha + 0.16), angle);
+      if (source === "scissors_test_sever") {
+        drawSpriteFrame(ctx, "scissors_slash_v24", 3, event.x2, event.y2, Math.max(132, height * 1.55), Math.max(132, height * 1.55), Math.min(0.92, alpha + 0.08), angle);
+      }
       return true;
     }
     if (source === "scissors_test_base" || source === "scissors_test_open" || source === "scissors_test_finale") {
@@ -396,9 +402,12 @@
       const halfAngle = meta.fanHalfAngle || 0.45;
       const heavy = source === "scissors_test_finale";
       const frame = heavy ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
-      const width = range * (heavy ? 1.32 : 1.2);
-      const height = Math.max(82, Math.sin(halfAngle) * range * (heavy ? 2.35 : 2.1));
-      drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.5, event.y1 + Math.sin(lockedAngle) * range * 0.5, width, height, Math.min(1, alpha + 0.12), lockedAngle);
+      const width = range * (heavy ? 1.42 : 1.3);
+      const height = Math.max(94, Math.sin(halfAngle) * range * (heavy ? 2.5 : 2.24));
+      // The held red scissors remains the only weapon body. This sheet is a
+      // blade arc rooted at the player, so the attack no longer looks like a
+      // second unrelated pair of scissors flying in front of the character.
+      drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.52, event.y1 + Math.sin(lockedAngle) * range * 0.52, width, Math.max(width * 0.84, height), Math.min(1, alpha + 0.14), lockedAngle);
       return true;
     }
     return false;
@@ -438,7 +447,7 @@
     }
     if (source === "scissors_test_shelter") return true;
     if (source === "scissors_test_shelter_block") {
-      drawSpriteFrame(ctx, "scissors_shelter_v24", 2, item.x, item.y, 58, 58, Math.min(1, alpha + 0.16), 0);
+      drawSpriteFrame(ctx, "scissors_shelter_v27", 2, item.x, item.y, 64, 64, Math.min(1, alpha + 0.16), 0);
       return true;
     }
     return false;
@@ -762,6 +771,11 @@
           : enemy.markerFixedElite ? 2 : Math.random() < materialDropChance ? 1 : 0;
         if (materialAmount > 0) {
           state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: materialAmount, radius: enemy.markerFixedBoss ? 9 : 6, color: "#ffd700", markerFixedDrop: true });
+        }
+        const healDropChance = enemy.boss || enemy.markerFixedBoss ? 1 : enemy.markerFixedElite ? 0.16 : 0.045;
+        if (Math.random() < healDropChance) {
+          const healAmount = Math.max(6, Math.round(state.maxHp * (enemy.boss || enemy.markerFixedBoss ? 0.24 : 0.14)));
+          state.pickups.push({ type: "heal", x: enemy.x - 8, y: enemy.y + 5, amount: healAmount, radius: 8, color: "#ff6c82", fixedHealDrop: true });
         }
       } else if (!(state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b"))) {
         const sourceMatchesResource = formResourceSourceMatches(state, source);
@@ -1299,7 +1313,7 @@
         const oldRadius = nearby.radius;
         nearby.x = (nearby.x + x) * 0.5;
         nearby.y = (nearby.y + y) * 0.5;
-        nearby.radius = Math.min((p.correctionAreaRadius || 72) * 2.15, Math.sqrt(oldRadius * oldRadius + baseRadius * baseRadius) * 1.08);
+        nearby.radius = Math.min((p.correctionAreaRadius || 72) * 1.55, Math.sqrt(oldRadius * oldRadius + baseRadius * baseRadius) * 1.02);
         nearby.life = Math.max(nearby.life, duration);
         nearby.maxLife = Math.max(nearby.maxLife || 0, nearby.life);
         nearby.source = "correction_test_area_merge";
@@ -1409,17 +1423,33 @@
     if (!test) return;
     const elapsed = correctionElapsed(state);
     triggerCorrectionSystemCrash(state, test, p, elapsed);
-    const targets = state.enemies.filter(function (enemy) {
+    const candidates = state.enemies.filter(function (enemy) {
       return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= (p.range || 360) + enemy.r;
-    }).sort(function (a, b) {
-      return (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || b.maxHp - a.maxHp || Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
-    }).slice(0, p.correctionTargetCount || 1);
+    });
+    const distanceToPlayer = function (enemy) { return Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y); };
+    candidates.sort(function (a, b) { return distanceToPlayer(a) - distanceToPlayer(b); });
+    const targets = [];
+    if (candidates.length) targets.push(candidates.shift());
+    candidates.sort(function (a, b) {
+      const distanceBand = Math.floor(distanceToPlayer(a) / 90) - Math.floor(distanceToPlayer(b) / 90);
+      return distanceBand || a.hp - b.hp || (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || distanceToPlayer(a) - distanceToPlayer(b);
+    });
+    targets.push.apply(targets, candidates.slice(0, Math.max(0, (p.correctionTargetCount || 1) - 1)));
     targets.forEach(function (target, index) {
       const angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
       const x1 = state.player.x + Math.cos(angle) * 20;
       const y1 = state.player.y + Math.sin(angle) * 20;
       applyCorrectionError(state, target, 1, "correction_test_spray");
       correctionDamageEnemy(state, target, (p.damage || 7) * (index ? 0.86 : 1), "correction_test_spray");
+      // A spread build cannot rely on killing the Boss to create its core
+      // battlefield object. An overloaded Boss periodically leaks one real
+      // error area, keeping the route alive without turning it into poison DPS.
+      if (target.boss && (target.correctionErrorStacks || 0) >= 3 && (p.correctionSpreadLevel || 0) >= 1
+        && elapsed >= (test.bossAreaLeakReadyAt || 0)) {
+        createCorrectionArea(state, target.x, target.y, { bossLeak: true });
+        test.bossAreaLeakReadyAt = elapsed + 3.2;
+        addTextEvent(state, target.x, target.y - target.r - 18, "错误泄漏", "#ff72d8", 0.52);
+      }
       addBeamEvent(state, x1, y1, target.x, target.y, index % 2 ? "#ff5bd5" : "#dfffff", p.width || 24, 0.27, "steam", false, "correction_test_spray", { targetId: target.id, targetIndex: index, errorStacks: target.correctionErrorStacks || 0 });
     });
     if (targets.length) state.stats.shots += 1;
@@ -1525,7 +1555,15 @@
     const p = state.activeFormParams || {};
     const test = markerFixedRuntime(state);
     if (!test) return;
-    const target = nearestEnemy(state, p.range || 720);
+    const range = p.range || 720;
+    // A Boss is the mandatory objective of its encounter. When it is already
+    // inside the line's real acquisition range, aim the piercing attack at it;
+    // the line can still cut through adds on the same path. This prevents a
+    // nearby stream of disposable enemies from making the objective invisible.
+    const target = state.enemies.find(function (enemy) {
+      return !enemy.dead && enemy.boss
+        && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range + enemy.r;
+    }) || nearestEnemy(state, range);
     if (!target) return;
     const baseAngle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
     const baseAmount = Math.max(1, p.amount || 1);
@@ -1589,7 +1627,7 @@
     const x2 = state.player.x + Math.cos(angle) * range;
     const y2 = state.player.y + Math.sin(angle) * range;
     const hits = lineHitEnemies(state, x1, y1, x2, y2, width, damage, 99, source, { noKnockback: true });
-    addBeamEvent(state, x1, y1, x2, y2, source === "scissors_test_sever" ? "#ff6d62" : "#e9f3f5", width, source === "scissors_test_sever" ? 0.32 : 0.2, "beam", false, source, {
+    addBeamEvent(state, x1, y1, x2, y2, source === "scissors_test_sever" ? "#ff6d62" : "#e9f3f5", width, source === "scissors_test_sever" ? 0.42 : 0.3, "beam", false, source, {
       lockedAngle: angle,
       hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
       actualHitCount: hits.length
@@ -1617,8 +1655,9 @@
     });
     const left = angle - halfAngle;
     const right = angle + halfAngle;
-    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "left", actualHitCount: hits.length });
-    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, 0.18, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "right", actualHitCount: hits.length });
+    const cutDuration = source === "scissors_test_finale" ? 0.42 : 0.3;
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, cutDuration, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "left", actualHitCount: hits.length });
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, cutDuration, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "right", actualHitCount: hits.length });
     recordScissorsTargets(test, hits);
     return hits;
   }
@@ -1627,8 +1666,10 @@
     const p = state.activeFormParams || {};
     const test = scissorsFixedRuntime(state);
     if (!test) return;
+    test.weaponVisualAngle = action.angle;
+    test.weaponVisualTime = action.kind === "finale" || action.kind === "sever" ? 0.42 : 0.3;
     if (action.kind === "base") {
-      scissorsFan(state, p, action.angle, 96, 0.3, p.damage || 24, "scissors_test_base", 0);
+      scissorsFan(state, p, action.angle, 138, 0.44, p.damage || 28, "scissors_test_base", 0);
       return;
     }
     if (action.kind === "thrust") {
@@ -1705,28 +1746,27 @@
     if (state.input.right) dx += 1;
     if (state.input.up) dy -= 1;
     if (state.input.down) dy += 1;
-    if (!dx && !dy && target) {
-      dx = target.x - state.player.x;
-      dy = target.y - state.player.y;
-    }
-    if (!dx && !dy) {
-      dx = Math.cos(test.facingAngle || angle);
-      dy = Math.sin(test.facingAngle || angle);
-    }
+    // Light Step is a movement tool, not an auto-aim teleport. If the player
+    // is standing still the charge is preserved and the regular attack fires.
+    if (!dx && !dy) return angle;
     const len = Math.hypot(dx, dy) || 1;
     const dashAngle = Math.atan2(dy, dx);
     const x1 = state.player.x;
     const y1 = state.player.y;
-    const distance = p.scissorsDashDistance || 122;
-    state.player.x = clamp(state.player.x + dx / len * distance, 26, worldWidth(state) - 26);
-    state.player.y = clamp(state.player.y + dy / len * distance, 26, worldHeight(state) - 26);
+    const distance = p.scissorsDashDistance || 82;
+    const duration = p.scissorsDashDuration || 0.18;
+    test.dashMotionTime = duration;
+    test.dashMotionDuration = duration;
+    test.dashMotionVx = dx / len * distance / duration;
+    test.dashMotionVy = dy / len * distance / duration;
+    test.dashActionDelay = duration;
     state.player.invuln = Math.max(state.player.invuln || 0, p.scissorsDashWindow || 0.24);
     test.dashWindow = p.scissorsDashWindow || 0.24;
     test.dashCharge = 0;
     test.dashReady = false;
     test.dashAvoidedIds = {};
     test.totalDashes += 1;
-    addBeamEvent(state, x1, y1, state.player.x, state.player.y, "#8ff6ee", 18, 0.28, "beam", false, "scissors_test_dash", { dashAngle, noDamage: true });
+    addBeamEvent(state, x1, y1, x1 + dx / len * distance, y1 + dy / len * distance, "#8ff6ee", 18, duration + 0.1, "beam", false, "scissors_test_dash", { dashAngle, noDamage: true });
     return dashAngle;
   }
 
@@ -1734,9 +1774,19 @@
     const p = state.activeFormParams || {};
     const test = scissorsFixedRuntime(state);
     if (!test || test.activeRound) return;
-    const target = nearestEnemy(state, Math.max(360, p.scissorsSeverRange || 255));
+    const engageRange = Math.max(330, p.scissorsSeverRange || 305);
+    const target = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= engageRange + enemy.r;
+    }).sort(function (a, b) {
+      // Scissors still has to enter melee range, but once a Boss is reachable
+      // it owns the attack direction. Wide cuts keep add-clear intact while
+      // the required objective receives deliberate pressure.
+      if (!!a.boss !== !!b.boss) return a.boss ? -1 : 1;
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0];
     if (!target) return;
     let angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+    test.dashActionDelay = 0;
     angle = triggerScissorsDash(state, test, p, target, angle);
     test.facingAngle = angle;
     test.roundAngle = angle;
@@ -1747,7 +1797,7 @@
     const scale = p.scissorsActionScale || 1;
     const actions = [];
     let order = 0;
-    const push = function (kind, due, index) { actions.push({ kind, due: due * scale, index: index || 0, angle, order: order++ }); };
+    const push = function (kind, due, index) { actions.push({ kind, due: (test.dashActionDelay || 0) + due * scale, index: index || 0, angle, order: order++ }); };
     const thrusts = p.scissorsThrustCount || 0;
     const cuts = p.scissorsCutCount || 0;
     if (!thrusts && !cuts) push("base", 0.06, 0);
@@ -2195,6 +2245,13 @@
       return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range * 1.2;
     });
     if (!nearby.length) return null;
+    // The fan normally values a dense group, but a Boss inside its working
+    // distance must not become an accidental blind spot behind its own adds.
+    // Aiming at the Boss still lets the wide fan catch that surrounding pack.
+    const nearbyBoss = nearby.filter(function (enemy) { return enemy.boss; }).sort(function (a, b) {
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0];
+    if (nearbyBoss) return Math.atan2(nearbyBoss.y - state.player.y, nearbyBoss.x - state.player.x);
     let best = nearby[0];
     let bestScore = -Infinity;
     nearby.forEach(function (candidate) {
@@ -2365,11 +2422,23 @@
     const count = Math.max(1, p.amount || 1);
     const spread = count > 1 ? Math.min(0.68, 0.18 + count * 0.1) : 0;
     const hitThisRound = new Set();
+    const sharedSteamHits = {};
     for (let groupIndex = 0; groupIndex < count; groupIndex++) {
       const t = count === 1 ? 0 : groupIndex / (count - 1) - 0.5;
       const angle = mainAngle + t * spread;
       const fan = thermosFixedFanPoints(state, angle, p.range || 225, p.width || 205);
       drawThermosFixedFan(state, fan, p.width || 205, "thermos_test_base", groupIndex);
+      const steamDuration = p.thermosFixedBaseSteamDuration || 0.68;
+      addDamageZone(state, {
+        type: "polygon", source: "thermos_test_base", points: fan.points,
+        x: (fan.originX + fan.farX) / 2, y: (fan.originY + fan.farY) / 2,
+        radius: Math.max((p.width || 205) / 2, (p.range || 225) * 0.5),
+        damage: p.thermosFixedBaseSteamDamage || 1.4,
+        life: steamDuration, maxLife: steamDuration, tickEvery: 0.28,
+        color: "#aeefff", slow: p.thermosFixedBaseSteamSlow || 0.3,
+        visual: "thermos_steam_fan", noKnockback: true,
+        thermosFixedSharedHits: sharedSteamHits, groupIndex
+      });
       state.enemies.forEach(function (enemy) {
         if (enemy.dead || hitThisRound.has(enemy) || !pointInPolygon(enemy.x, enemy.y, fan.points)) return;
         hitThisRound.add(enemy);
@@ -2946,9 +3015,10 @@
     const boss = !!(options && options.boss);
     const fragment = !!(options && options.fragment);
     const def = boss ? (BOSS_DEFS[stage.bossType] || BOSS_DEFS.lead) : (ENEMY_DEFS[typeId] || ENEMY_DEFS.todo);
+    const normalEnemyHp = stage.normalEnemyHp == null ? stage.enemyHp : stage.normalEnemyHp;
     const hp = boss
       ? stage.enemyHp
-      : Math.max(6, stage.enemyHp * (def.hp || 1) + Math.random() * stage.id * 3);
+      : Math.max(6, normalEnemyHp * (def.hp || 1) + Math.random() * stage.id * 3);
     const speed = boss
       ? stage.enemySpeed * (def.speed || 1)
       : stage.enemySpeed * (def.speed || 1) + Math.random() * 8;
@@ -2963,7 +3033,7 @@
       hp: fragment ? hp * 0.34 : hp,
       maxHp: fragment ? hp * 0.34 : hp,
       speed: fragment ? speed * 1.18 : speed,
-      damage: boss ? 18 + stage.id * 0.45 : def.damage || 7,
+      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1),
       xp: boss ? 50 : Math.max(3, Math.round((def.xp || 5) * (fragment ? 0.45 : 1))),
       boss,
       fragment,
@@ -3103,8 +3173,14 @@
     const side = serial % 4;
     for (let i = 0; i < wave.batchSize; i++) {
       const point = demoV2EdgePoint(state, side, (i % 2 ? 1 : -1) * Math.floor(i / 2) * 7, i * 34);
-      addDemoV2Enemy(state, i % 3 === 1 ? "email" : "todo", point.x, point.y);
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i % 3 === 1 ? "email" : "todo"), point.x, point.y);
     }
+  }
+
+  function demoV2WaveEnemyType(wave, index, serial, fallback) {
+    const roster = wave && wave.enemyRoster;
+    if (!Array.isArray(roster) || !roster.length) return fallback || "todo";
+    return roster[(index + serial) % roster.length] || fallback || "todo";
   }
 
   function spawnDemoV2ClusterWave(state, wave, serial) {
@@ -3113,7 +3189,7 @@
     for (let i = 0; i < wave.batchSize; i++) {
       const angle = Math.PI * 2 * i / wave.batchSize;
       const radius = 18 + (i % 3) * 12;
-      addDemoV2Enemy(state, i === wave.batchSize - 1 ? "meeting" : "todo", center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i === wave.batchSize - 1 ? "meeting" : "todo"), center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
     }
   }
 
@@ -3121,7 +3197,7 @@
     for (let i = 0; i < wave.batchSize; i++) {
       const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.37;
       const radius = 430 + (i % 2) * 48;
-      const typeId = i % 4 === 0 ? "deadline" : i % 3 === 0 ? "email" : "todo";
+      const typeId = demoV2WaveEnemyType(wave, i, serial, i % 4 === 0 ? "deadline" : i % 3 === 0 ? "email" : "todo");
       addDemoV2Enemy(state, typeId, state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
     }
   }
@@ -3131,7 +3207,7 @@
     for (let i = 0; i < wave.batchSize; i++) {
       const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.29;
       const radius = 410 + (i % 3) * 42;
-      addDemoV2Enemy(state, types[(i + serial) % types.length], state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, types[(i + serial) % types.length]), state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
     }
   }
 
@@ -3170,7 +3246,7 @@
       runtime.waveTimer = 0;
       runtime.floorTimer = 0;
       if (runtime.wavesSeen.indexOf(wave.id) < 0) runtime.wavesSeen.push(wave.id);
-      state.stage.name = (fixedConfig ? fixedConfig.weaponName + "测试 · " : phase === "phase-b" ? "阶段 B · " : "阶段 A · ") + wave.label;
+      state.stage.name = (fixedConfig ? fixedConfig.weaponName + " · " : phase === "phase-b" ? "阶段 B · " : "阶段 A · ") + wave.label;
       state.stage.threatHint = wave.hint;
       addTextEvent(state, state.player.x, state.player.y - 72, wave.label, "#bdf5ff", 0.85);
     }
@@ -3193,7 +3269,7 @@
     const encounterLocalElapsed = markerEncounter ? Math.max(0, markerEncounter.duration - state.stageTime) : runtime.elapsed;
     const remainingAfterWave = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
     if (encounterLocalElapsed >= 2 && state.enemies.length < enemyFloor && runtime.floorTimer <= 0 && remainingAfterWave > 0) {
-      const fillWave = { id: "cluster", batchSize: Math.min(6, enemyFloor - state.enemies.length, remainingAfterWave) };
+      const fillWave = { id: "cluster", batchSize: Math.min(6, enemyFloor - state.enemies.length, remainingAfterWave), enemyRoster: wave.enemyRoster };
       spawnDemoV2ClusterWave(state, fillWave, runtime.waveSerial || 0);
       runtime.floorTimer = 1.1;
     }
@@ -3213,8 +3289,15 @@
     const len = Math.hypot(x, y) || 1;
     const scissors = scissorsFixedRuntime(state);
     if (scissors && (x || y)) scissors.facingAngle = Math.atan2(y, x);
-    state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
-    state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
+    if (scissors && scissors.dashMotionTime > 0) {
+      const motionStep = Math.min(dt, scissors.dashMotionTime);
+      state.player.x = clamp(state.player.x + (scissors.dashMotionVx || 0) * motionStep, 26, worldWidth(state) - 26);
+      state.player.y = clamp(state.player.y + (scissors.dashMotionVy || 0) * motionStep, 26, worldHeight(state) - 26);
+      scissors.dashMotionTime = Math.max(0, scissors.dashMotionTime - motionStep);
+    } else {
+      state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
+      state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
+    }
     updateCamera(state);
     state.player.invuln = Math.max(0, state.player.invuln - dt);
   }
@@ -3675,6 +3758,11 @@
       if (z.type === "polygon" && z.points && z.points.length >= 3) {
         for (const enemy of state.enemies) {
           if (enemy.dead || !pointInPolygon(enemy.x, enemy.y, z.points)) continue;
+          if (z.thermosFixedSharedHits) {
+            const lastHitAt = z.thermosFixedSharedHits[enemy.id];
+            if (lastHitAt != null && state.totalTime - lastHitAt < (z.tickEvery || 0.28) * 0.6) continue;
+            z.thermosFixedSharedHits[enemy.id] = state.totalTime;
+          }
           damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", z.noKnockback ? null : { x: z.x, y: z.y });
           if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
           if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
@@ -3712,6 +3800,11 @@
             fixedRuntime.dropMaterialsEarned += p.amount;
             fixedRuntime.materialsSinceLastShop += p.amount;
           }
+        }
+        if (p.type === "heal") {
+          const before = state.hp;
+          state.hp = Math.min(state.maxHp, state.hp + (p.amount || 0));
+          if (state.hp > before) addTextEvent(state, state.player.x, state.player.y - 30, "+" + Math.round(state.hp - before), "#8fffb2", 0.46);
         }
       }
     }
@@ -3833,17 +3926,28 @@
     }
     const scissors = scissorsFixedRuntime(state);
     if (scissors) {
-      const angle = scissors.roundAngle || scissors.facingAngle || 0;
-      drawSprite(ctx, "scissors_v23", 27, -2, 52, 52, 0.96, angle);
+      const angle = scissors.weaponVisualTime > 0 ? scissors.weaponVisualAngle : scissors.facingAngle || 0;
+      const orbit = 31;
+      const pulse = scissors.weaponVisualTime > 0 ? 1.12 : 1;
+      drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
       const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
-      drawSprite(ctx, "thermos_charge_art", 0, 35, 66, 12, 0.35 + charge * 0.65, 0);
+      drawCombatProgress(ctx, 0, 39, 82, 11, charge);
+      const moving = state.input.left || state.input.right || state.input.up || state.input.down;
+      const directionFrame = clamp(Math.floor(charge * 4), 0, 3);
+      const directionDistance = 66 + charge * 24;
+      drawSpriteFrame(ctx, "scissors_dash_direction_v27", directionFrame,
+        Math.cos(scissors.facingAngle || 0) * directionDistance,
+        Math.sin(scissors.facingAngle || 0) * directionDistance,
+        88 + charge * 42, 52 + charge * 14,
+        moving ? 0.72 + charge * 0.26 : 0.42 + charge * 0.2,
+        scissors.facingAngle || 0);
       if (scissors.shelterActive) {
         const radius = state.activeFormParams.scissorsShelterRadius || 108;
         const duration = state.activeFormParams.scissorsShelterDuration || 3.2;
         const remaining = Math.max(0, scissors.shelterTime || 0);
         const elapsed = duration - remaining;
-        const shelterFrame = elapsed < 0.28 ? 0 : remaining < 0.36 ? 3 : 1;
-        drawSpriteFrame(ctx, "scissors_shelter_v24", shelterFrame, 0, 0, radius * 2.08, radius * 2.08, 0.86, 0);
+        const shelterFrame = elapsed < 0.24 ? 0 : remaining < 0.42 ? 3 : Math.floor(elapsed * 7) % 2 ? 1 : 2;
+        drawSpriteFrame(ctx, "scissors_shelter_v27", shelterFrame, 0, 0, radius * 2.18, radius * 2.18, 0.76, elapsed * 0.08);
       }
     }
     const shield = state.activeFormParams && state.activeFormParams.shield || 0;
@@ -3886,7 +3990,7 @@
         const rootWidth = bodySize + 18;
         drawSprite(ctx, "status_root_art", 0, bodySize * 0.34, rootWidth, rootWidth * 0.441, 0.86, 0);
       }
-      drawCombatProgress(ctx, 0, -bodySize / 2 - 9, e.boss ? 88 : 54, e.boss ? 14 : 9, e.hp / e.maxHp);
+      drawCombatProgress(ctx, 0, -bodySize / 2 - 12, e.boss ? 104 : 70, e.boss ? 17 : 12, e.hp / e.maxHp);
       ctx.restore();
     }
   }
@@ -4176,6 +4280,7 @@
 
     for (const pickup of state.pickups) {
       if (pickup.type === "material") drawAtlasCell(ctx, "office_atlas", 1, 1, pickup.x, pickup.y, 28, 28, 1, 0);
+      else if (pickup.type === "heal") drawAtlasCell(ctx, "office_atlas", 3, 1, pickup.x, pickup.y, 32, 32, 1, 0);
       else drawAtlasCell(ctx, "office_atlas", 2, 1, pickup.x, pickup.y, 26, 26, 1, 0);
     }
 
@@ -4465,6 +4570,12 @@
         scissorsTest.shelterTime = Math.max(0.4, (state.activeFormParams.scissorsShelterDuration || 3.2) - 0.5);
       }
       addCircleEvent(state, state.player.x + (state.activeFormParams.scissorsShelterRadius || 108), state.player.y, 18, "#9ff7ff", 0.22, "shield", false, "scissors_test_shelter_block");
+    } else if (kind === "correction_fixed_boss") {
+      const boss = makeEnemy(state, "lead", 560, 360, { boss: true });
+      Object.assign(boss, { id: "correction-fixed-boss", name: "错误审查 Boss", speed: 0, damage: 0, correctionErrorStacks: 2, correctionErrorTime: 5 });
+      state.enemies.push(boss);
+      addLabEnemy("correction-fixed-add-a", 610, 310);
+      addLabEnemy("correction-fixed-add-b", 625, 410);
     } else if (kind === "scale") {
       addLabEnemy("scale-normal-a", 560, 330);
       addLabEnemy("scale-normal-b", 630, 405);
@@ -4580,6 +4691,9 @@
     } else if (kind === "scissors_fixed_shelter") {
       // The persistent field is read from the same fixed-test runtime state;
       // the boundary impact above uses the real shelter-block event source.
+    } else if (kind === "correction_fixed_boss") {
+      fireCorrectionFluidFixedTest(state);
+      updateZones(state, 0.02);
     } else if (kind && kind.indexOf("thermos_") === 0) {
       fireThermos(state);
     } else if (kind && kind.indexOf("sticky_") === 0) {
@@ -4702,6 +4816,7 @@
       updateZones,
       updateThermosFixedPendingFocus,
       updateScissorsFixedActions,
+      updateInput,
       fireScissorsFixedTest,
       fireSupportSkill
     }

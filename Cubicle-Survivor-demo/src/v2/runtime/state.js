@@ -717,10 +717,13 @@
             const previousLoop = state.loop;
             const previousDebug = state.flags.debug;
             const previousDemoV2Phase = state.demoV2 && state.demoV2.phase || "";
+            const previousCoordinatorPhase = state.demoV2 && state.demoV2.coordinatorPhase || "";
             Object.assign(state, makeInitialState());
             state.loop = previousLoop;
             state.flags.debug = previousDebug;
-            state.demoV2.phase = previousDemoV2Phase;
+            // Restarting a four-weapon suite returns to its coordinator, not
+            // the last selected child test. The chooser must expose all four.
+            state.demoV2.phase = previousCoordinatorPhase || previousDemoV2Phase;
           }
           break;
         default:

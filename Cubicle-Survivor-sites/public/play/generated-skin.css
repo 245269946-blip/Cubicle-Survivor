@@ -662,6 +662,72 @@ button:disabled,
   overflow: visible !important;
 }
 
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-panel {
+  background-image: url("assets/generated-ui-v2/menu-shell-office-5col.png") !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid {
+  inset: 23.3% 7.4% 19.3% 7.4% !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid::after {
+  content: "扩展接口\A武器 / 道具预留";
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18%;
+  color: rgba(101, 244, 255, 0.55);
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 800;
+  line-height: 1.55;
+  text-align: center;
+  white-space: pre-line;
+  text-shadow: 1px 0 rgba(255, 63, 189, 0.4);
+}
+
+/* The unified roster is a quick relationship choice, not a design-document
+   reader. Keep one combat sentence and leave the detailed signatures inside
+   each isolated fixed test. */
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card {
+  padding: 7% 8% 6% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .runtime-atlas-icon {
+  width: clamp(62px, 5vw, 78px) !important;
+  height: clamp(62px, 5vw, 78px) !important;
+  flex-basis: clamp(62px, 5vw, 78px) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card strong {
+  font-size: clamp(17px, 1.35vw, 22px) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card em {
+  min-height: 2.5em !important;
+  margin-bottom: 2% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .weapon-vfx-preview {
+  flex-basis: 58px !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 0 3% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card p {
+  margin-bottom: 0 !important;
+  font-size: clamp(11px, 0.78vw, 13px) !important;
+  line-height: 1.4 !important;
+  -webkit-line-clamp: 3 !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card small,
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-card .v2-signature-tags.compact {
+  display: none !important;
+}
+
 #weaponSelectPanel .weapon-card {
   box-sizing: border-box !important;
   display: flex !important;
@@ -3241,33 +3307,53 @@ button:disabled,
   line-height: 0 !important;
 }
 
-/* The warmup notice is temporary, but it must still leave the player and the
-   aiming field unobstructed. Keep it as a shallow task slip below the header. */
-.v2-game[data-page-mode="combat"] > .warmup-overlay {
+/* Temporary transition card: richer than the old task slip, still shallow
+   enough to keep the player and the center aiming field visible. */
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card {
   top: 82px !important;
   bottom: auto !important;
   left: 50% !important;
   display: grid !important;
-  width: min(430px, calc(100% - 500px)) !important;
-  min-width: 330px !important;
+  width: min(620px, calc(100% - 420px)) !important;
+  max-width: 620px !important;
+  min-width: 520px !important;
   min-height: 0 !important;
-  grid-template-columns: auto minmax(0, 1fr) auto !important;
-  grid-template-rows: 18px 4px !important;
+  grid-template-columns: 46px minmax(0, 1fr) minmax(160px, 0.48fr) 42px !important;
+  grid-template-rows: auto 5px !important;
   align-items: center !important;
-  gap: 4px 10px !important;
-  padding: 7px 11px !important;
+  gap: 6px 10px !important;
+  padding: 8px 11px !important;
   border-left: 5px solid #b48b4f !important;
   transform: translateX(-50%) !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupTitle {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  color: #eee4d2 !important;
-  font-size: 12px !important;
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card[data-transition-kind="collection"] {
+  border-left-color: #d7bc78 !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupHint {
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupEmoji {
+  display: grid !important;
+  width: 42px !important;
+  height: 42px !important;
+  color: #d7bc78 !important;
+  font-size: 9px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-copy {
+  gap: 1px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-eyebrow {
+  color: #817b70 !important;
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupTitle {
+  color: #eee4d2 !important;
+  font-size: 13px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupHint {
   min-width: 0 !important;
   overflow: hidden !important;
   color: #aaa295 !important;
@@ -3275,16 +3361,39 @@ button:disabled,
   text-overflow: ellipsis !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay #warmupTimer {
-  color: #c9a96f !important;
-  font-size: 13px !important;
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-tags {
+  margin-top: 2px !important;
 }
 
-.v2-game[data-page-mode="combat"] > .warmup-overlay .warmup-bar {
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-tags span {
+  padding: 1px 5px !important;
+  border-color: rgba(180, 139, 79, 0.38) !important;
+  background: rgba(180, 139, 79, 0.1) !important;
+  color: #d8c8aa !important;
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side {
+  gap: 3px !important;
+  padding-left: 9px !important;
+  border-left-color: rgba(190, 166, 119, 0.25) !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side span,
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side b {
+  font-size: 8px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card #warmupTimer {
+  color: #c9a96f !important;
+  font-size: 14px !important;
+}
+
+.v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .warmup-bar {
   grid-column: 1 / -1 !important;
   grid-row: 2 !important;
   width: 100% !important;
-  height: 4px !important;
+  height: 5px !important;
   margin: 0 !important;
 }
 
@@ -3302,6 +3411,17 @@ body[data-debug-quiet="1"] .debug-panel {
 }
 
 @media (max-width: 920px) {
+  .v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card {
+    width: calc(100% - 24px) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    grid-template-columns: 42px minmax(0, 1fr) 48px !important;
+  }
+
+  .v2-game[data-page-mode="combat"] > .warmup-overlay.transition-card .transition-side {
+    display: none !important;
+  }
+
   .v2-game[data-page-mode="combat"] > .objective-hud {
     width: 360px !important;
   }
@@ -3321,4 +3441,182 @@ body[data-debug-quiet="1"] .debug-panel {
   .v2-game[data-page-mode="combat"] > .combat-status {
     width: 360px !important;
   }
+}
+
+/* Demo V2.7 playable-suite cleanup. Expansion capacity stays in data/code;
+   only currently playable content is rendered. */
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid {
+  inset: 23.3% 7.4% 19.3% 7.4% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 1.5% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #weaponSelectPanel .weapon-select-grid::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* The fixed suite has four experience choices. Use an unsegmented shell and
+   draw the four real cards in CSS so artwork and hit targets cannot disagree. */
+.v2-game[data-fixed-suite="four-weapon"][data-page-mode="level_up"] #upgradePanel .upgrade-panel {
+  background-image: url("assets/generated-ui-v2/menu-shell-office-5col.png") !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #upgradePanel #upgradeChoices.marker-experience-grid {
+  inset: 35% 7.4% 22% 7.4% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 1.2% !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #upgradePanel #upgradeChoices.marker-experience-grid .learning-card {
+  min-height: 0 !important;
+  padding: 18px 18px 16px !important;
+  border: 1px solid rgba(103, 227, 232, 0.28) !important;
+  background: rgba(10, 20, 27, 0.94) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #upgradePanel #upgradeChoices.marker-experience-grid .marker-growth-icon {
+  width: 58px !important;
+  height: 58px !important;
+  flex: 0 0 58px !important;
+}
+
+/* Component shop receives the same authored shell and fixed safe regions.
+   All copy wraps instead of disappearing behind ellipses. */
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-panel {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: min(1180px, calc(100vw - 48px), calc(187.13vh - 52.40px)) !important;
+  aspect-ratio: 1716 / 917 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: #080d12 !important;
+  background-image: url("assets/generated-ui-v2/menu-shell-office-5col.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.54) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .panel-title-row {
+  position: absolute !important;
+  inset: 6.5% 8.5% auto 10.5% !important;
+  z-index: 3 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  height: 12.5% !important;
+  overflow: visible !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .panel-title-row h2 {
+  margin: 2px 0 !important;
+  font-size: clamp(20px, 1.85vw, 30px) !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .panel-title-row .panel-note {
+  max-width: 880px !important;
+  margin: 2px 0 0 !important;
+  overflow: visible !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel #componentShopFlow {
+  position: absolute !important;
+  inset: 20.5% 10.5% auto 10.5% !important;
+  z-index: 3 !important;
+  height: 6.5% !important;
+  margin: 0 !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-slots {
+  position: absolute !important;
+  inset: 28.5% 8.2% auto 8.2% !important;
+  z-index: 3 !important;
+  height: 13% !important;
+  margin: 0 !important;
+  gap: 10px !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-slot {
+  min-width: 0 !important;
+  padding: 7px 10px !important;
+  overflow: hidden !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-slot .marker-growth-icon {
+  width: 44px !important;
+  height: 44px !important;
+  flex-basis: 44px !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel #componentOffers {
+  position: absolute !important;
+  inset: 44% 7.2% 16.5% 7.2% !important;
+  z-index: 3 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 1.05% !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 12px !important;
+  gap: 5px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(103, 227, 232, 0.26) !important;
+  background: rgba(10, 20, 27, 0.96) !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-heading,
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card > span,
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-actions {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-heading .marker-growth-icon {
+  width: 46px !important;
+  height: 46px !important;
+  flex-basis: 46px !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-heading-copy > strong,
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card .compare-line,
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card .card-desc {
+  display: block !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card .compare-line,
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .marker-component-card .card-desc {
+  font-size: 10px !important;
+  line-height: 1.28 !important;
+}
+
+.v2-game[data-fixed-suite="four-weapon"] #componentShopPanel .shop-actions {
+  position: absolute !important;
+  inset: auto 9% 6.5% 9% !important;
+  z-index: 3 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  margin: 0 !important;
 }

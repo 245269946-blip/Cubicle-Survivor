@@ -201,7 +201,7 @@
     wrap.dataset.pageMode = state.mode;
     wrap.dataset.stagePhase = theme.phase.id;
     const fixedConfig = fixedTestConfig(state);
-    wrap.dataset.fixedSuite = fixedConfig && fixedConfig.coordinator ? "four-weapon" : "";
+    wrap.dataset.fixedSuite = fixedConfig && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)) ? "four-weapon" : "";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
   }
 
@@ -303,16 +303,18 @@
     const phaseB = !supportMode && state.demoV2 && state.demoV2.phase === "phase-b";
     const fixedConfig = !supportMode && fixedTestConfig(state);
     const markerFixed = !!fixedConfig;
+    const suitePlayable = !!(markerFixed && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)));
+    const publicVersion = suitePlayable ? (state.demoV2 && state.demoV2.suiteVersion || fixedConfig.version) : fixedConfig && fixedConfig.version;
     const framework = fixedConfig && fixedConfig.uiFramework;
     let items = V2.getViewModel(supportMode ? "support_weapon_select" : "weapon_select");
     if (framework && framework.weaponSelection) {
       items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
     }
-    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName + "固定测试" + (fixedConfig.visualVersion ? " · 视觉 " + fixedConfig.visualVersion : "") : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
+    setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : suitePlayable ? publicVersion + " · 可玩版本" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
     const coordinator = !!(fixedConfig && fixedConfig.coordinator);
-    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : coordinator ? "选择一种异化关系" : markerFixed ? "本轮只测试" + fixedConfig.weaponName : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
-    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : coordinator ? "四把武器共用同一关卡与成长骨架，但各自只验证一种不可替代的关系：路径、空间、自身位置或敌人状态。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
-    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : coordinator ? "选择一把武器进入 5 阶段 17 关固定测试" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关测试 · 纯战斗约 14 分 50 秒" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : coordinator ? "选择一种异化关系" : markerFixed ? "选择" + fixedConfig.weaponName + "开始本局" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
+    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
+    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
     setHtml("weaponSelectFlow", markerFixed
       ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
       : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
@@ -321,7 +323,7 @@
       const showFramework = !!(framework && framework.weaponSelection);
       rosterMeta.classList.toggle("hidden", !showFramework);
       if (showFramework) {
-        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' ' + items.length + '/' + framework.weaponSelection.cardCapacity + '</strong><span>' + (coordinator ? '本轮固定四武器；后续武器与道具继续从预留入口接入。' : '本轮固定' + escapeHtml(fixedConfig.weaponName) + '；后续武器与道具继续从预留入口接入。') + '</span>';
+        rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' · ' + items.length + ' 把</strong><span>' + (coordinator ? '每把武器拥有独立攻击关系与双路线成长。' : '当前武器：' + escapeHtml(fixedConfig.weaponName) + '。') + '</span>';
       }
     }
     setHtml("weaponSelectGrid", items.map(function (w) {
@@ -407,8 +409,8 @@
     const choices = el("moduleChoices");
     if (choices) choices.classList.toggle("marker-module-grid", !!markerFixed);
     setText("moduleContext", "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
-    setText("modulePanelFooter", markerFixed ? "Boss 奖励确定后直接进入下一阶段战斗；商店不会与模块连续出现。" : "三秒内能读懂，选完立即回到战斗。");
-    setHtml("moduleFlow", decisionFlowHtml(["Boss战斗", "10秒回收", "模块选择", "下一阶段"], 2));
+    setText("modulePanelFooter", markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
+    setHtml("moduleFlow", decisionFlowHtml(["关卡完成", "10秒回收", "模块选择", "下一关"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
         (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
@@ -495,7 +497,7 @@
     const vm = V2.getViewModel("component_stat_select");
     const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
     setText("componentStatTitle", vm.partName + "提升为" + vm.quality.name + " · 选择一次属性");
-    setText("componentStatNote", "本次强化只作用于" + vm.partName + "的基础参数；品质不会解锁模块等级。");
+    setText("componentStatNote", "本次强化只作用于当前部位的基础参数；品质不会解锁模块等级。");
     setHtml("componentStatChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-marker-stat="' + escapeHtml(choice.id) + '">' +
         fixedComponentIconHtml(fixedConfig, choice.id, choice.name) +
@@ -585,7 +587,7 @@
   function renderResult() {
     const vm = V2.getViewModel("result");
     setText("resultTitle", vm.title);
-    setHtml("deathRecap", themeBrief(vm.theme, "本局主形态", "复盘先看这把武器最后实际成了什么打法。") +
+    setHtml("deathRecap", themeBrief(vm.theme, "本局主形态", "先看这把武器最后实际形成了什么打法。") +
       (vm.markerFixed
         ? '<p>完成 ' + vm.markerFixed.completedEncounters + '/17 关 · 商店 ' + vm.markerFixed.shopsVisited + '/6 · 击破 ' + vm.kills + ' · 峰值目标 ' + vm.markerFixed.peakEnemies + '</p>' +
           '<p>' + escapeHtml(vm.markerFixed.moduleLabels[0]) + ' Lv.' + vm.markerFixed.modules.copy + ' / ' + escapeHtml(vm.markerFixed.moduleLabels[1]) + ' Lv.' + vm.markerFixed.modules.archive + '</p>' +

@@ -106,6 +106,15 @@
       secondaryForm: null,
       supportWeaponId: null,
       supportSkill: null,
+      demoV2: {
+        phase: "",
+        elapsed: 0,
+        waveId: "",
+        waveIndex: -1,
+        waveTimer: 0,
+        wavesSeen: [],
+        peakEnemies: 0
+      },
       activeForm: null,
       activeFormParams: {},
       stageIndex: 0,
@@ -175,6 +184,8 @@
         xpCollected: 0,
         materialsCollected: 0,
         enemyTypesSpawned: {},
+        demoV2WaveCounts: {},
+        peakEnemies: 0,
         enemyShots: 0,
         weaponEvents: [],
         audioEvents: []
@@ -270,6 +281,161 @@
     resetCombatEntities(state);
   }
 
+  function applyDemoV2PhaseAWeapon(state) {
+    const config = V2.demoV2 && V2.demoV2.phaseA;
+    if (!config || !state.selectedWeaponId) return;
+    Object.assign(state.activeFormParams, deepClone(config.weaponOverrides[state.selectedWeaponId] || {}));
+    if (state.selectedWeaponId === "marker") {
+      state.activeForm.displayName = "阶段 A 马克笔";
+      state.activeForm.short = "长线贯穿 · 命中点基础分叉";
+      state.activeForm.combatVerb = "画出长线贯穿队列；真实命中点会长出一条基础分支。";
+    } else if (state.selectedWeaponId === "thermos") {
+      state.activeForm.displayName = "阶段 A 保温杯";
+      state.activeForm.short = "近距扇面蒸汽 · 减速灼烧 · 沸点释放";
+      state.activeForm.combatVerb = "靠近敌群喷出宽幅蒸汽，持续减速灼烧；到达沸点后扩大覆盖并进入空窗。";
+    } else if (state.selectedWeaponId === "sticky_note") {
+      state.activeForm.displayName = "阶段 A 即时贴";
+      state.activeForm.short = "落点装订 · 敌人经过触发";
+      state.activeForm.combatVerb = "沿敌人接近方向放置节点；装订后由经过的敌人触发。";
+    }
+  }
+
+  function startDemoV2PhaseA(state) {
+    const config = V2.demoV2 && V2.demoV2.phaseA;
+    if (!config) {
+      startStage(state, 0);
+      return;
+    }
+    state.stageIndex = 0;
+    state.stage = deepClone(config.stage);
+    state.phaseMeta = {
+      key: "demo_v2_phase_a",
+      label: "Demo V2 阶段 A",
+      weaponStage: "基础武器 × 敌群",
+      weaponStageShort: "暴力测试",
+      playerGoal: "不靠成长系统，确认三把武器能否在正确敌群中成立。",
+      rewardTiming: "60 秒后直接复盘",
+      status: "playable"
+    };
+    state.stageTime = config.duration;
+    state.warmupTime = 1.2;
+    state.stageKills = 0;
+    state.stageBossSpawned = false;
+    state.stageBossDefeated = false;
+    state.mode = "combat";
+    state.demoV2 = {
+      phase: "phase-a",
+      elapsed: 0,
+      waveId: "",
+      waveIndex: -1,
+      waveTimer: 0,
+      wavesSeen: [],
+      peakEnemies: 0
+    };
+    applyDemoV2PhaseAWeapon(state);
+    resetCombatEntities(state);
+  }
+
+  function startDemoV2PhaseB(state) {
+    const config = V2.demoV2 && V2.demoV2.phaseB;
+    if (!config) {
+      startStage(state, 0);
+      return;
+    }
+    state.stageIndex = 0;
+    state.stage = deepClone(config.stage);
+    state.phaseMeta = {
+      key: "demo_v2_phase_b",
+      label: "Demo V2 阶段 B",
+      weaponStage: "代表工牌 × 办公模块",
+      weaponStageShort: "身份膨胀",
+      playerGoal: "先读懂基础武器，再验证一个身份和三个轻模块能否让它明显失控。",
+      rewardTiming: "30 秒定型；55/100/145 秒选择模块",
+      status: "playable"
+    };
+    state.stageTime = config.duration;
+    state.warmupTime = 1.2;
+    state.stageKills = 0;
+    state.stageBossSpawned = false;
+    state.stageBossDefeated = false;
+    state.mode = "combat";
+    state.demoV2 = {
+      phase: "phase-b",
+      elapsed: 0,
+      waveId: "",
+      waveIndex: -1,
+      waveTimer: 0,
+      wavesSeen: [],
+      peakEnemies: 0,
+      identityApplied: false,
+      identityAt: 0,
+      modules: {},
+      moduleOrder: [],
+      moduleChoices: [],
+      choiceIndex: 0,
+      lastModule: "",
+      lastCombo: []
+    };
+    applyDemoV2PhaseAWeapon(state);
+    resetCombatEntities(state);
+  }
+
+  function fixedTestConfig(state) {
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
+  }
+
+  function fixedTestRuntime(state, config) {
+    const activeConfig = config || fixedTestConfig(state);
+    return activeConfig && state.demoV2 ? state.demoV2[activeConfig.runtimeKey] : null;
+  }
+
+  function startDemoV2FixedTest(state, phase) {
+    const config = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(phase) : null;
+    if (!config) {
+      startStage(state, 0);
+      return;
+    }
+    state.stageIndex = 0;
+    state.stage = deepClone(config.stage);
+    state.phaseMeta = {
+      key: "demo_v2_" + config.id.replace(/-/g, "_"),
+      label: (config.version || "Demo V2.1") + " " + config.weaponName + "固定测试",
+      weaponStage: "经验保底 × 双路线模块 × 组件属性",
+      weaponStageShort: config.weaponStageShort || (config.weaponId === "thermos" ? "近距双路线" : "三线验证"),
+      playerGoal: config.subtitle || "验证稳定成长、模块机制轴与材料组件轴能否各司其职。",
+      rewardTiming: "5 阶段 17 关；Boss 后模块与关中商店始终由战斗隔开",
+      status: "playable"
+    };
+    state.stageTime = config.encounters[0].duration;
+    state.warmupTime = 0.75;
+    state.stageKills = 0;
+    state.stageBossSpawned = false;
+    state.stageBossDefeated = false;
+    state.mode = "combat";
+    state.maxHp = config.baseMaxHp || (config.weaponId === "thermos" ? 92 : 120);
+    state.hp = state.maxHp;
+    state.xp = 0;
+    state.xpNeed = 90;
+    state.demoV2 = {
+      phase: config.id,
+      elapsed: 0,
+      waveId: "",
+      waveIndex: -1,
+      waveTimer: 0,
+      wavesSeen: [],
+      peakEnemies: 0,
+      moduleChoices: []
+    };
+    state.demoV2[config.runtimeKey] = config.makeRuntime();
+    config.rebuildParams(state);
+    config.startEncounter(state, 0);
+  }
+
+  function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
+  function startDemoV2ThermosFixed(state) { startDemoV2FixedTest(state, "thermos-fixed"); }
+  function startDemoV2ScissorsFixed(state) { startDemoV2FixedTest(state, "scissors-fixed"); }
+  function startDemoV2CorrectionFluidFixed(state) { startDemoV2FixedTest(state, "correction-fluid-fixed"); }
+
   function openArmory(state, reason) {
     state.mode = "armory";
     state.lastRewardReason = reason || "阶段完成";
@@ -280,12 +446,22 @@
   function selectWeapon(state, weaponId) {
     const previousDebug = state.flags.debug;
     const previousLoop = state.loop;
+    const previousDemoV2Phase = state.demoV2 && state.demoV2.phase || "";
     const fresh = makeInitialState();
     Object.keys(fresh).forEach(function (key) { state[key] = fresh[key]; });
     state.runId += 1;
     state.flags.debug = previousDebug;
     state.loop = previousLoop;
-    state.selectedWeaponId = (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
+    state.demoV2.phase = previousDemoV2Phase;
+    const requestedFixedConfig = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(previousDemoV2Phase) : null;
+    const selectedPhase = requestedFixedConfig && requestedFixedConfig.coordinator
+      ? requestedFixedConfig.childPhaseByWeapon[weaponId]
+      : previousDemoV2Phase;
+    const selectedFixedConfig = selectedPhase && V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(selectedPhase) : requestedFixedConfig;
+    if (selectedFixedConfig) state.demoV2.phase = selectedFixedConfig.id;
+    state.selectedWeaponId = selectedFixedConfig
+      ? selectedFixedConfig.weaponId
+      : (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
     state.maxHp = 124;
     state.hp = state.maxHp;
     applyActiveForm(state);
@@ -293,7 +469,18 @@
       CS.buildState.reset();
       CS.buildState.weapons = [state.selectedWeaponId];
     }
-    startStage(state, 0);
+    if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
+    else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
+    else if (selectedFixedConfig) {
+      startDemoV2FixedTest(state, selectedFixedConfig.id);
+      if (requestedFixedConfig && requestedFixedConfig.coordinator) {
+        state.demoV2.suiteVersion = requestedFixedConfig.version;
+        state.demoV2.suiteLabel = requestedFixedConfig.title;
+        state.demoV2.cyberNeonSuite = true;
+        state.demoV2.coordinatorPhase = requestedFixedConfig.id;
+      }
+    }
+    else startStage(state, 0);
   }
 
   function selectBadge(state, dept) {
@@ -340,6 +527,19 @@
   }
 
   function completeStage(state) {
+    const fixedConfig = fixedTestConfig(state);
+    if (fixedConfig) {
+      fixedConfig.completeEncounter(state);
+      return;
+    }
+    if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b")) {
+      state.flags.won = true;
+      state.lastRewardReason = state.stage.demoV2Phase === "phase-b"
+        ? "Demo V2 阶段 B 完成：复盘身份是否清晰、模块是否立刻可见、组合是否能被说出来。"
+        : "Demo V2 阶段 A 完成：复盘武器母题、四类波次和目标密度。";
+      state.mode = "result";
+      return;
+    }
     state.materials += state.stage.material || 0;
     state.stats.materialsCollected += state.stage.material || 0;
     state.hp = Math.min(state.maxHp, state.hp + Math.round(state.maxHp * 0.12));
@@ -386,8 +586,14 @@
   }
 
   function gainXp(state, amount) {
+    const fixedConfig = fixedTestConfig(state);
+    if (fixedConfig) {
+      fixedConfig.gainExperience(state, amount);
+      return;
+    }
     state.xp += amount;
     state.stats.xpCollected += amount;
+    if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b")) return;
     if (state.xp >= state.xpNeed && state.mode === "combat") {
       state.xp -= state.xpNeed;
       state.level += 1;
@@ -418,6 +624,7 @@
       switch (action.type) {
         case "INIT":
           state.flags.debug = !!action.debug;
+          state.demoV2.phase = action.demoV2Phase || "";
           state.mode = "menu";
           break;
         case "OPEN_WEAPON_SELECT":
@@ -443,7 +650,33 @@
           completeStage(state);
           break;
         case "SELECT_UPGRADE":
-          applyUpgrade(state, action.upgradeId);
+          if (fixedTestConfig(state)) {
+            fixedTestConfig(state).chooseExperienceStat(state, action.upgradeId);
+          } else {
+            applyUpgrade(state, action.upgradeId);
+          }
+          break;
+        case "SELECT_DEMO_V2_MODULE":
+          if (fixedTestConfig(state)) {
+            fixedTestConfig(state).applyModule(state, action.moduleId);
+          } else if (V2.demoV2 && V2.demoV2.phaseB) {
+            V2.demoV2.phaseB.applyModule(state, action.moduleId);
+          }
+          break;
+        case "BUY_MARKER_COMPONENT":
+          if (fixedTestConfig(state)) fixedTestConfig(state).buyComponent(state, action.offerId);
+          break;
+        case "SELECT_MARKER_COMPONENT_STAT":
+          if (fixedTestConfig(state)) fixedTestConfig(state).chooseComponentStat(state, action.statId);
+          break;
+        case "REFRESH_MARKER_COMPONENTS":
+          if (fixedTestConfig(state)) fixedTestConfig(state).refreshShop(state);
+          break;
+        case "TOGGLE_MARKER_COMPONENT_LOCK":
+          if (fixedTestConfig(state)) fixedTestConfig(state).toggleOfferLock(state, action.offerId);
+          break;
+        case "CONTINUE_MARKER_TEST":
+          if (fixedTestConfig(state)) fixedTestConfig(state).closeShop(state);
           break;
         case "SKIP_UPGRADE":
           state.mode = state.previousMode || "combat";
@@ -483,9 +716,14 @@
           {
             const previousLoop = state.loop;
             const previousDebug = state.flags.debug;
+            const previousDemoV2Phase = state.demoV2 && state.demoV2.phase || "";
+            const previousCoordinatorPhase = state.demoV2 && state.demoV2.coordinatorPhase || "";
             Object.assign(state, makeInitialState());
             state.loop = previousLoop;
             state.flags.debug = previousDebug;
+            // Restarting a four-weapon suite returns to its coordinator, not
+            // the last selected child test. The chooser must expose all four.
+            state.demoV2.phase = previousCoordinatorPhase || previousDemoV2Phase;
           }
           break;
         default:
@@ -523,6 +761,11 @@
     completeStage,
     gainXp,
     startStage,
+    startDemoV2PhaseA,
+    startDemoV2MarkerFixed,
+    startDemoV2ThermosFixed,
+    startDemoV2ScissorsFixed,
+    startDemoV2CorrectionFluidFixed,
     applyActiveForm
   });
 })();

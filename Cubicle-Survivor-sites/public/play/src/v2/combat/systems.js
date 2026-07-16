@@ -23,16 +23,37 @@
     marker_branch_art: "assets/generated-vfx/sprites/marker-branch-office-v2.png",
     marker_impact_art: "assets/generated-vfx/sprites/marker-impact-office-v2.png",
     marker_grid_art: "assets/generated-vfx/sprites/marker-grid-field-office-v2.png",
+    marker_ink_art: "assets/generated-vfx/sprites/marker-ink-trail-office-v2.svg",
     marker_wave_art: "assets/generated-vfx/sprites/marker-wave-office-v2.png",
     thermos_steam_art: "assets/generated-vfx/sprites/thermos-steam-line-office-v2.png",
     thermos_charge_art: "assets/generated-vfx/sprites/thermos-charge-gauge-office-v2.png",
     thermos_release_art: "assets/generated-vfx/sprites/thermos-release-office-v2.png",
     thermos_wave_art: "assets/generated-vfx/sprites/thermos-wave-office-v2.png",
+    thermos_body_v24: "assets/generated-vfx/sprites/thermos-body-v24.png",
+    thermos_fan_v24: "assets/generated-vfx/sprites/thermos-fan-v24-sheet.png",
+    thermos_condensation_v24: "assets/generated-vfx/sprites/thermos-condensation-v24-sheet.png",
+    thermos_focus_v24: "assets/generated-vfx/sprites/thermos-focus-v24-sheet.png",
+    thermos_heatwave_v24: "assets/generated-vfx/sprites/thermos-heatwave-v24-sheet.png",
     sticky_trap_art: "assets/v2-weapon-vfx/sprites/sticky_note_v2.png",
     sticky_seek_art: "assets/generated-vfx/sprites/sticky-seek-office-v2.png",
     sticky_burst_art: "assets/generated-vfx/sprites/sticky-burst-office-v2.png",
     sticky_control_art: "assets/generated-vfx/sprites/sticky-control-office-v2.png",
     sticky_link_line_art: "assets/generated-vfx/sprites/sticky-link-line-office-v2.png",
+    scissors_v23: "assets/generated-vfx/sprites/scissors-v23.png",
+    scissors_dash_v24: "assets/generated-vfx/sprites/scissors-dash-v24-sheet.png",
+    scissors_slash_v24: "assets/generated-vfx/sprites/scissors-slash-v24-sheet.png",
+    scissors_thrust_v24: "assets/generated-vfx/sprites/scissors-thrust-v24-sheet.png",
+    scissors_shelter_v24: "assets/generated-vfx/sprites/scissors-shelter-v24-sheet.png",
+    scissors_strike_v27: "assets/generated-vfx/sprites/scissors-strike-v27-sheet.png",
+    scissors_shelter_v27: "assets/generated-vfx/sprites/scissors-shelter-v27-sheet.png",
+    scissors_dash_direction_v27: "assets/generated-vfx/sprites/scissors-dash-direction-v27-sheet.png",
+    correction_fluid_body_v25: "assets/generated-vfx/sprites/correction-fluid-body-v25.png",
+    correction_fluid_spray_v25: "assets/generated-vfx/sprites/correction-fluid-spray-v25-sheet.png",
+    correction_fluid_error_v25: "assets/generated-vfx/sprites/correction-fluid-error-v25-sheet.png",
+    correction_fluid_area_v25: "assets/generated-vfx/sprites/correction-fluid-area-v25-sheet.png",
+    correction_fluid_crash_v25: "assets/generated-vfx/sprites/correction-fluid-crash-v25-sheet.png",
+    correction_fluid_glitch_v25: "assets/generated-vfx/sprites/correction-fluid-glitch-v25-sheet.png",
+    correction_fluid_final_v25: "assets/generated-vfx/sprites/correction-fluid-final-v25-sheet.png",
     status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
     status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
     status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
@@ -303,6 +324,135 @@
     return true;
   }
 
+  function drawSpriteFrame(ctx, id, frame, x, y, width, height, alpha, rotation) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const index = clamp(Math.floor(frame || 0), 0, 3);
+    const sourceWidth = Math.floor(img.naturalWidth / 2);
+    const sourceHeight = Math.floor(img.naturalHeight / 2);
+    const sourceX = index % 2 * sourceWidth;
+    const sourceY = Math.floor(index / 2) * sourceHeight;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function v24Frame(progress) {
+    return clamp(Math.floor(clamp(progress || 0, 0, 0.999) * 4), 0, 3);
+  }
+
+  function drawSuiteNeonLine(ctx, state, item, alpha, progress) {
+    const source = item.source || "";
+    if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x1 == null || item.x2 == null) return;
+    const size = clamp((item.width || 8) * 3.2, 28, /correction/.test(source) ? 72 : 52);
+    drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x2, item.y2, size, size, Math.min(/correction/.test(source) ? 0.58 : 0.22, (alpha || 0.5) * 0.5), 0);
+  }
+
+  function drawSuiteNeonArea(ctx, state, item, alpha, progress, radius) {
+    const source = item.source || "";
+    if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x == null) return;
+    const r = Math.max(16, radius || item.radius || 40);
+    const scale = /correction/.test(source) ? 1.72 : 1.36;
+    drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(/correction/.test(source) ? 0.46 : 0.16, (alpha || 0.5) * 0.45), 0);
+  }
+
+  function drawV24LinearEvent(ctx, event, alpha, progress) {
+    const source = event.source || "";
+    const meta = event.meta || {};
+    const dx = event.x2 - event.x1;
+    const dy = event.y2 - event.y1;
+    const length = Math.hypot(dx, dy) || 1;
+    const angle = Math.atan2(dy, dx);
+    if (source === "correction_test_spray") {
+      drawSpriteFrame(ctx, "correction_fluid_spray_v25", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(52, (event.width || 18) * 3.2), Math.min(1, alpha + 0.14), angle);
+      return true;
+    }
+    if (source === "thermos_test_base") {
+      if (Math.abs(meta.fanOffset || 0) > 0.001) return true;
+      const fanWidth = meta.fanWidth || Math.max(150, (event.width || 10) * 18);
+      drawSpriteFrame(ctx, "thermos_fan_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.18, fanWidth * 1.08, Math.min(0.96, alpha + 0.12), angle);
+      return true;
+    }
+    if (source === "thermos_test_focus") {
+      drawSpriteFrame(ctx, "thermos_focus_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(64, (event.width || 10) * 7.2), Math.min(1, alpha + 0.14), angle);
+      return true;
+    }
+    if (source === "scissors_test_dash") {
+      drawSpriteFrame(ctx, "scissors_dash_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.18, Math.max(70, (event.width || 18) * 4.4), Math.min(0.9, alpha + 0.06), angle);
+      return true;
+    }
+    if (source === "scissors_test_thrust" || source === "scissors_test_sever") {
+      const frame = source === "scissors_test_sever" ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
+      const height = source === "scissors_test_sever" ? Math.max(92, (event.width || 52) * 2.2) : Math.max(58, (event.width || 26) * 2.35);
+      drawSpriteFrame(ctx, "scissors_thrust_v24", frame, event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.28, height * 1.12, Math.min(1, alpha + 0.16), angle);
+      if (source === "scissors_test_sever") {
+        drawSpriteFrame(ctx, "scissors_slash_v24", 3, event.x2, event.y2, Math.max(132, height * 1.55), Math.max(132, height * 1.55), Math.min(0.92, alpha + 0.08), angle);
+      }
+      return true;
+    }
+    if (source === "scissors_test_base" || source === "scissors_test_open" || source === "scissors_test_finale") {
+      if (meta.edge && meta.edge !== "left") return true;
+      const lockedAngle = meta.lockedAngle == null ? angle : meta.lockedAngle;
+      const range = meta.fanRange || length;
+      const halfAngle = meta.fanHalfAngle || 0.45;
+      const heavy = source === "scissors_test_finale";
+      const frame = heavy ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
+      const width = range * (heavy ? 1.42 : 1.3);
+      const height = Math.max(94, Math.sin(halfAngle) * range * (heavy ? 2.5 : 2.24));
+      // The held red scissors remains the only weapon body. This sheet is a
+      // blade arc rooted at the player, so the attack no longer looks like a
+      // second unrelated pair of scissors flying in front of the character.
+      drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.52, event.y1 + Math.sin(lockedAngle) * range * 0.52, width, Math.max(width * 0.84, height), Math.min(1, alpha + 0.14), lockedAngle);
+      return true;
+    }
+    return false;
+  }
+
+  function drawV24AreaEvent(ctx, item, alpha, progress, radius) {
+    const source = item.source || "";
+    if (source === "correction_test_error_area" || source === "correction_test_area_merge") {
+      const frame = source === "correction_test_area_merge" ? 3 : clamp((item.mergeCount || 1) - 1, 0, 3);
+      drawSpriteFrame(ctx, "correction_fluid_area_v25", frame, item.x, item.y, radius * 2.35, radius * 2.05, Math.min(0.86, alpha + 0.08), (item.areaRotation || 0));
+      if (source === "correction_test_area_merge" || item.mergedArea) {
+        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, radius * 1.72, radius * 1.72, Math.min(0.66, alpha), 0);
+      }
+      return true;
+    }
+    if (source === "correction_test_system_crash") {
+      drawSpriteFrame(ctx, "correction_fluid_crash_v25", v24Frame(progress), item.x, item.y, radius * 2.22, radius * 2.22, Math.min(1, alpha + 0.12), 0);
+      return true;
+    }
+    if (source === "correction_test_final" || source === "correction_test_final_blast") {
+      drawSpriteFrame(ctx, "correction_fluid_final_v25", v24Frame(progress), item.x, item.y, radius * 2.25, radius * 2.25, Math.min(1, alpha + 0.14), 0);
+      return true;
+    }
+    if (source === "correction_test_error_apply" || source === "correction_test_error_overload") {
+      const frame = source === "correction_test_error_overload" ? 3 : clamp((item.errorStacks || 1) - 1, 0, 2);
+      drawSpriteFrame(ctx, "correction_fluid_glitch_v25", frame, item.x, item.y, radius * 2.05, radius * 2.05, Math.min(0.94, alpha + 0.12), 0);
+      return true;
+    }
+    if (source === "thermos_test_condensation" || source === "thermos_test_fullscreen_condensation") {
+      if (item.primitive === "circle_event") return true;
+      drawSpriteFrame(ctx, "thermos_condensation_v24", v24Frame(progress), item.x, item.y, radius * 2.18, radius * 2.18, Math.min(0.78, alpha + 0.08), 0);
+      return true;
+    }
+    if (source === "thermos_test_kill_heatwave" || source === "thermos_test_fullscreen_ignition") {
+      drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, Math.max(66, radius * 2.08), Math.max(66, radius * 2.08), Math.min(0.96, alpha + 0.12), 0);
+      return true;
+    }
+    if (source === "scissors_test_shelter") return true;
+    if (source === "scissors_test_shelter_block") {
+      drawSpriteFrame(ctx, "scissors_shelter_v27", 2, item.x, item.y, 64, 64, Math.min(1, alpha + 0.16), 0);
+      return true;
+    }
+    return false;
+  }
+
   function beamSpriteFor(kind) {
     return "";
   }
@@ -514,6 +664,12 @@
 
   function damageEnemy(state, enemy, amount, source, knockbackFrom) {
     if (!enemy || enemy.dead) return;
+    const markerTest = fixedTestRuntime(state);
+    const markerParams = state.activeFormParams || {};
+    if (markerTest && markerParams.markerFixedCritChance > 0 && Math.random() < markerParams.markerFixedCritChance) {
+      amount *= 2;
+      addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, "暴击", "#ffd86b", 0.42);
+    }
     if (enemy.armor) {
       amount *= 1 - Math.min(0.6, enemy.armor);
       addCircleEvent(state, enemy.x, enemy.y, enemy.r + 10, enemy.accent || "#d9e6ff", 0.16, "shield");
@@ -523,6 +679,12 @@
     }
     enemy.hp -= amount;
     state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
+    if (markerTest && markerParams.markerFixedLifeStealChance > 0 && markerTest.lifeStealCooldown <= 0
+      && state.hp < state.maxHp && Math.random() < markerParams.markerFixedLifeStealChance) {
+      state.hp = Math.min(state.maxHp, state.hp + 1);
+      markerTest.lifeStealCooldown = 0.1;
+      addTextEvent(state, state.player.x, state.player.y - 28, "+1", "#8fffb2", 0.36);
+    }
     traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp, vfxPhase: eventPhase(source) });
     if (knockbackFrom) {
       const dx = enemy.x - knockbackFrom.x;
@@ -534,6 +696,7 @@
     }
     if (enemy.hp <= 0) {
       enemy.dead = true;
+      handleCorrectionEnemyDeath(state, enemy, source);
       if (enemy.boss) state.stageBossDefeated = true;
       state.kills += 1;
       state.stageKills += 1;
@@ -574,17 +737,55 @@
           visual: "thermos_tea_echo"
         });
       }
+      if (state.activeFormParams && state.activeFormParams.demoV2ForwardHeatwave > 0 &&
+          String(source || "").indexOf("thermos") === 0 && source !== "thermos_module_heatwave") {
+        const heatwaveCount = state.activeFormParams.demoV2ForwardHeatwave;
+        for (let pulseIndex = 0; pulseIndex < heatwaveCount; pulseIndex++) {
+          addThermosWavefront(state, {
+            source: "thermos_module_heatwave",
+            x: enemy.x,
+            y: enemy.y,
+            radius: 62 + heatwaveCount * 12 + pulseIndex * 28,
+            damage: 5 + heatwaveCount * 2.2,
+            delay: pulseIndex * 0.12,
+            duration: 0.4,
+            thickness: 22,
+            color: "#c8f7ff",
+            slow: 0.18,
+            visual: "thermos_tea_echo",
+            pulseIndex
+          });
+        }
+      }
       if (enemy.splitType && !enemy.fragment && state.enemies.length < 90) {
         spawnChildEnemy(state, enemy, enemy.splitType, -1);
         spawnChildEnemy(state, enemy, enemy.splitType, 1);
       }
-      const sourceMatchesResource = formResourceSourceMatches(state, source);
-      const xpBonus = sourceMatchesResource ? (state.activeFormParams.xpBonus || 0) : 0;
-      const materialBonus = sourceMatchesResource ? (state.activeFormParams.materialBonus || 0) : 0;
-      const xpAmount = Math.round((enemy.xp || 4) * (1 + xpBonus));
-      state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
-      if (Math.random() < 0.28 + materialBonus) {
-        state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: 1, radius: 6, color: "#ffd700" });
+      if (fixedTestConfig(state)) {
+        const xpAmount = Math.max(1, Math.round((enemy.xp || 4) * (enemy.markerFixedElite ? 1.8 : 1)));
+        state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
+        const luck = (state.activeFormParams && state.activeFormParams.markerFixedLuck) || 0;
+        const materialDropChance = 0.018 * (1 + luck / 100);
+        const materialAmount = enemy.markerFixedBoss
+          ? Math.max(1, enemy.markerFixedBossMaterial || 1)
+          : enemy.markerFixedElite ? 2 : Math.random() < materialDropChance ? 1 : 0;
+        if (materialAmount > 0) {
+          state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: materialAmount, radius: enemy.markerFixedBoss ? 9 : 6, color: "#ffd700", markerFixedDrop: true });
+        }
+        const healDropChance = enemy.boss || enemy.markerFixedBoss ? 1 : enemy.markerFixedElite ? 0.16 : 0.045;
+        if (Math.random() < healDropChance) {
+          const healAmount = Math.max(6, Math.round(state.maxHp * (enemy.boss || enemy.markerFixedBoss ? 0.24 : 0.14)));
+          state.pickups.push({ type: "heal", x: enemy.x - 8, y: enemy.y + 5, amount: healAmount, radius: 8, color: "#ff6c82", fixedHealDrop: true });
+        }
+      } else if (!(state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b"))) {
+        const sourceMatchesResource = formResourceSourceMatches(state, source);
+        const xpBonus = sourceMatchesResource ? (state.activeFormParams.xpBonus || 0) : 0;
+        const materialBonus = sourceMatchesResource ? (state.activeFormParams.materialBonus || 0) : 0;
+        const xpAmount = Math.round((enemy.xp || 4) * (1 + xpBonus));
+        state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
+        if (Math.random() < 0.28 + materialBonus) {
+          state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: 1, radius: 6, color: "#ffd700" });
+        }
       }
       addParticle(state, enemy.x, enemy.y, enemy.boss ? "#ff6b4a" : "#63f7ff", enemy.boss ? 18 : 6);
     }
@@ -609,7 +810,7 @@
     hits.sort(function (a, b) { return a.t - b.t; });
     const limited = hits.slice(0, Math.max(1, pierce || 1));
     limited.forEach(function (hit) {
-      damageEnemy(state, hit.enemy, damage, source, { x: x1, y: y1 });
+      damageEnemy(state, hit.enemy, damage, source, options && options.noKnockback ? null : { x: x1, y: y1 });
     });
     return limited;
   }
@@ -801,9 +1002,144 @@
       debuff: data.debuff,
       teaRadius: data.teaRadius,
       teaDamage: data.teaDamage,
+      noKnockback: !!data.noKnockback,
       visual: data.visual || "thermos_wavefront",
       pulseIndex: data.pulseIndex || 0
     });
+  }
+
+  function addThermosSteamFan(state, target, options) {
+    const data = options || {};
+    const dx = target.x - state.player.x;
+    const dy = target.y - state.player.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const baseUx = dx / len;
+    const baseUy = dy / len;
+    const angleOffset = data.angleOffset || 0;
+    const ux = baseUx * Math.cos(angleOffset) - baseUy * Math.sin(angleOffset);
+    const uy = baseUx * Math.sin(angleOffset) + baseUy * Math.cos(angleOffset);
+    const nx = -uy;
+    const ny = ux;
+    const range = data.range || 240;
+    const halfWidth = (data.width || 200) / 2;
+    const originDistance = 14;
+    const originHalfWidth = Math.min(28, halfWidth * 0.28);
+    const originX = state.player.x + ux * originDistance;
+    const originY = state.player.y + uy * originDistance;
+    const farX = state.player.x + ux * range;
+    const farY = state.player.y + uy * range;
+    const points = [
+      { x: originX + nx * originHalfWidth, y: originY + ny * originHalfWidth },
+      { x: farX + nx * halfWidth, y: farY + ny * halfWidth },
+      { x: farX - nx * halfWidth, y: farY - ny * halfWidth },
+      { x: originX - nx * originHalfWidth, y: originY - ny * originHalfWidth }
+    ];
+    const source = data.source || "thermos_warmup";
+    const color = data.color || "#86f7ff";
+    const rayOffsets = [-1, -0.5, 0, 0.5, 1];
+    rayOffsets.forEach(function (offset) {
+      const rayScale = 0.9 - Math.abs(offset) * 0.08;
+      addBeamEvent(
+        state,
+        originX,
+        originY,
+        state.player.x + ux * range * rayScale + nx * halfWidth * offset,
+        state.player.y + uy * range * rayScale + ny * halfWidth * offset,
+        color,
+        data.rayWidth || 7,
+        data.eventLife || 0.2,
+        "steam",
+        false,
+        source,
+        { steamFan: true, fanOffset: offset, fanWidth: halfWidth * 2, fanRange: range }
+      );
+    });
+    addDamageZone(state, {
+      type: "polygon",
+      source,
+      points,
+      x: (originX + farX) / 2,
+      y: (originY + farY) / 2,
+      radius: Math.max(halfWidth, range * 0.5),
+      damage: data.damage,
+      life: data.duration,
+      maxLife: data.duration,
+      tickEvery: data.tickEvery,
+      color,
+      slow: data.slow,
+      visual: data.visual || "thermos_steam_fan"
+    });
+  }
+
+  function addThermosSteamFans(state, target, options) {
+    const count = Math.max(1, state.activeFormParams.demoV2FanCount || 1);
+    const spread = count > 1 ? Math.min(0.58, 0.2 + count * 0.08) : 0;
+    for (let index = 0; index < count; index++) {
+      const t = count === 1 ? 0 : index / (count - 1) - 0.5;
+      addThermosSteamFan(state, target, Object.assign({}, options, {
+        angleOffset: t * spread,
+        damage: options.damage / Math.max(1, 0.75 + count * 0.25)
+      }));
+    }
+  }
+
+  function addThermosModuleBranches(state, target, isRelease) {
+    const p = state.activeFormParams || {};
+    if (!target) return;
+    if (p.demoV2ThermosArchive > 0) {
+      const archiveRadius = 42 + p.demoV2ThermosArchive * 16;
+      const archiveLife = 1.1 + p.demoV2ThermosArchive * 0.75;
+      addCircleEvent(state, target.x, target.y, archiveRadius, "#d7f8ff", 0.38, "steam_pulse", false, "thermos_module_archive", {
+        level: p.demoV2ThermosArchive,
+        duration: archiveLife
+      });
+      addDamageZone(state, {
+        type: "circle", source: "thermos_module_archive", x: target.x, y: target.y,
+        radius: archiveRadius, damage: 2.5 + p.demoV2ThermosArchive * 2.2,
+        life: archiveLife, maxLife: archiveLife, tickEvery: 0.34,
+        color: "#d7f8ff", slow: 0.32, visual: "thermos_station_field"
+      });
+    }
+    if (p.demoV2ThermosExpedite > 0 && p.demoV2ThermosExpediteEvery > 0 && state.stats.shots % p.demoV2ThermosExpediteEvery === 0) {
+      const angle = (state.stats.shots / p.demoV2ThermosExpediteEvery) % 2 ? 0.18 : -0.18;
+      addThermosSteamFan(state, target, {
+        source: "thermos_module_expedite",
+        angleOffset: angle,
+        range: Math.max(160, (isRelease ? p.releaseRange : p.steamRange) * 0.88),
+        width: Math.max(120, (isRelease ? p.releaseWidth : p.steamWidth) * (0.58 + p.demoV2ThermosExpedite * 0.06)),
+        damage: (isRelease ? p.releaseTickDamage : p.steamTickDamage) * (0.48 + p.demoV2ThermosExpedite * 0.08),
+        duration: 0.72 + p.demoV2ThermosExpedite * 0.18,
+        tickEvery: isRelease ? p.releaseTickEvery : p.steamTickEvery,
+        slow: isRelease ? p.releaseSlow : p.steamSlow,
+        rayWidth: isRelease ? 9 : 6,
+        eventLife: 0.28,
+        color: "#a8ffff",
+        visual: "thermos_steam_fan"
+      });
+    }
+    if (!isRelease) return;
+    if (p.demoV2ThermosMerge > 0) {
+      for (let pulseIndex = 0; pulseIndex < p.demoV2ThermosMerge; pulseIndex++) {
+        addThermosWavefront(state, {
+          source: "thermos_module_merge", x: target.x, y: target.y,
+          radius: 64 + pulseIndex * 34 + p.demoV2ThermosMerge * 10,
+          damage: 7 + p.demoV2ThermosMerge * 3,
+          delay: pulseIndex * 0.13, duration: 0.46, thickness: 28,
+          color: "#d8ffff", slow: 0.24, visual: "thermos_wavefront", pulseIndex
+        });
+      }
+    }
+    if (p.demoV2ThermosOverdraft > 0) {
+      for (let pulseIndex = 0; pulseIndex < p.demoV2ThermosOverdraft; pulseIndex++) {
+        addThermosWavefront(state, {
+          source: "thermos_module_overdraft", x: state.player.x, y: state.player.y,
+          radius: 96 + pulseIndex * 42,
+          damage: 8 + p.demoV2ThermosOverdraft * 4,
+          delay: pulseIndex * 0.15, duration: 0.5, thickness: 30,
+          color: "#ffd2a1", slow: 0.28, visual: "thermos_wavefront", pulseIndex
+        });
+      }
+    }
   }
 
   function triggerThermosShieldBreak(state) {
@@ -880,8 +1216,607 @@
     }
   }
 
+  function addMarkerArchiveLine(state, p, x1, y1, x2, y2, width, copyIndex) {
+    if (!(p.demoV2TrailDuration > 0)) return;
+    const duration = p.demoV2TrailDuration;
+    const trailWidth = p.demoV2TrailWidth || Math.max(16, width * 1.7);
+    addBeamEvent(state, x1, y1, x2, y2, "#d7ffff", Math.max(5, trailWidth * 0.42), 0.42, "grid", false, "marker_module_archive", {
+      archived: true,
+      copyIndex: copyIndex || 0,
+      duration
+    });
+    addDamageZone(state, {
+      type: "line", source: "marker_module_archive", x1, y1, x2, y2,
+      width: trailWidth, damage: p.demoV2TrailDamage || 10,
+      life: duration, maxLife: duration, tickEvery: 0.26,
+      color: "#d7ffff", slow: 0.16, root: 0.06, visual: "marker_grid_line"
+    });
+  }
+
+  function addMarkerModuleLine(state, p, source, angle, damageScale, lineIndex) {
+    const range = p.range || 720;
+    const x1 = state.player.x;
+    const y1 = state.player.y;
+    const x2 = x1 + Math.cos(angle) * range;
+    const y2 = y1 + Math.sin(angle) * range;
+    const width = Math.max(5, (p.width || 8) * 0.82);
+    const hits = lineHitEnemies(state, x1, y1, x2, y2, width, (p.damage || 20) * damageScale, p.pierce || 4, source);
+    addBeamEvent(state, x1, y1, x2, y2, source === "marker_module_overdraft" ? "#ffcf8c" : "#a8ffff", width, 0.24, "beam", false, source, {
+      lineIndex: lineIndex || 0,
+      hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+      actualHitCount: hits.length
+    });
+    return hits;
+  }
+
+  function fixedTestConfig(state) {
+    return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
+  }
+
+  function fixedTestRuntime(state) {
+    const config = fixedTestConfig(state);
+    return config && state.demoV2 ? state.demoV2[config.runtimeKey] : null;
+  }
+
+  function markerFixedRuntime(state) {
+    return state.demoV2 && state.demoV2.phase === "marker-fixed" ? state.demoV2.marker : null;
+  }
+
+  function correctionFluidRuntime(state) {
+    return state.demoV2 && state.demoV2.phase === "correction-fluid-fixed" ? state.demoV2.correctionFluid : null;
+  }
+
+  function correctionElapsed(state) {
+    const config = fixedTestConfig(state);
+    return config && config.totalElapsed ? config.totalElapsed(state) : state.totalTime || 0;
+  }
+
+  function applyCorrectionError(state, enemy, amount, source) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy || enemy.dead) return 0;
+    const before = enemy.correctionErrorStacks || 0;
+    const after = Math.min(3, before + Math.max(1, amount || 1));
+    enemy.correctionErrorStacks = after;
+    enemy.correctionErrorTime = p.correctionErrorDuration || 4.8;
+    if (after > before) {
+      test.totalErrorsApplied += after - before;
+      if (after === 3 && before < 3) test.totalOverloads += 1;
+      const overload = after >= 3;
+      addCircleEvent(state, enemy.x, enemy.y, enemy.r + (overload ? 25 : 16), overload ? "#ff3f7d" : "#67f7ff", overload ? 0.38 : 0.24, "mark", false, overload ? "correction_test_error_overload" : "correction_test_error_apply", {
+        errorStacks: after,
+        triggerSource: source || "correction_test_spray"
+      });
+    }
+    return after;
+  }
+
+  function correctionDamageEnemy(state, enemy, amount, source) {
+    if (!enemy || enemy.dead) return;
+    const p = state.activeFormParams || {};
+    const stacks = enemy.correctionErrorStacks || 0;
+    const scale = stacks >= 2 ? (p.correctionVulnerability || 1.28) : 1;
+    damageEnemy(state, enemy, amount * scale, source || "correction_test_spray");
+  }
+
+  function createCorrectionArea(state, x, y, options) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || (p.correctionSpreadLevel || 0) < 1) return null;
+    const baseRadius = (p.correctionAreaRadius || 72) * ((options && options.small) ? 0.68 : 1);
+    const duration = (p.correctionAreaDuration || 3.5) * ((options && options.small) ? 0.55 : 1);
+    if (p.correctionAreaMerge && !(options && options.small)) {
+      const nearby = state.damageZones.find(function (zone) {
+        return zone.correctionArea && zone.life > 0 && Math.hypot(zone.x - x, zone.y - y) <= zone.radius + baseRadius * 0.72;
+      });
+      if (nearby) {
+        const oldRadius = nearby.radius;
+        nearby.x = (nearby.x + x) * 0.5;
+        nearby.y = (nearby.y + y) * 0.5;
+        nearby.radius = Math.min((p.correctionAreaRadius || 72) * 1.55, Math.sqrt(oldRadius * oldRadius + baseRadius * baseRadius) * 1.02);
+        nearby.life = Math.max(nearby.life, duration);
+        nearby.maxLife = Math.max(nearby.maxLife || 0, nearby.life);
+        nearby.source = "correction_test_area_merge";
+        nearby.mergedArea = true;
+        nearby.mergeCount = Math.min(4, (nearby.mergeCount || 1) + 1);
+        nearby.errorApplied = {};
+        test.totalAreaMerges += 1;
+        test.largestErrorArea = Math.max(test.largestErrorArea || 0, nearby.radius);
+        addCircleEvent(state, nearby.x, nearby.y, nearby.radius, "#ff42c7", 0.48, "field", false, "correction_test_area_merge", { mergeCount: nearby.mergeCount });
+        return nearby;
+      }
+    }
+    const zone = {
+      type: "circle",
+      source: "correction_test_error_area",
+      x, y,
+      radius: baseRadius,
+      damage: (p.correctionAreaDamage || 1.2) * ((options && options.small) ? 0.55 : 1),
+      life: duration,
+      maxLife: duration,
+      tickEvery: p.correctionAreaTick || 0.7,
+      color: "#eafcff",
+      noKnockback: true,
+      visual: "correction_error_field",
+      correctionArea: true,
+      correctionAreaId: test.nextAreaId++,
+      errorApplied: {},
+      mergedArea: false,
+      mergeCount: 1,
+      areaRotation: (test.nextAreaId % 5 - 2) * 0.08,
+      smallCorrectionArea: !!(options && options.small)
+    };
+    addDamageZone(state, zone);
+    test.totalAreasCreated += 1;
+    test.largestErrorArea = Math.max(test.largestErrorArea || 0, baseRadius);
+    return zone;
+  }
+
+  function triggerCorrectionFinalBlast(state, enemy) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy) return;
+    const radius = p.correctionFinalBlastRadius || 72;
+    addCircleEvent(state, enemy.x, enemy.y, radius, "#67f7ff", 0.42, "blast", false, "correction_test_final_blast", { finalKill: true });
+    state.enemies.slice().forEach(function (other) {
+      if (other.dead || other === enemy || Math.hypot(other.x - enemy.x, other.y - enemy.y) > radius + other.r) return;
+      applyCorrectionError(state, other, 1, "correction_test_final_blast");
+      correctionDamageEnemy(state, other, p.correctionFinalBlastDamage || 7, "correction_test_final_blast");
+    });
+  }
+
+  function handleCorrectionEnemyDeath(state, enemy, source) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test || !enemy) return;
+    const stacks = enemy.correctionErrorStacks || 0;
+    if (source !== "correction_test_system_crash" && stacks >= 3 && (p.correctionSpreadLevel || 0) >= 1) createCorrectionArea(state, enemy.x, enemy.y);
+    if (source === "correction_test_final") {
+      test.totalFinalKills += 1;
+      triggerCorrectionFinalBlast(state, enemy);
+    }
+  }
+
+  function triggerCorrectionSystemCrash(state, test, p, elapsed) {
+    if (!p.correctionCrashEnabled || elapsed < (test.crashReadyAt || 0)) return false;
+    const areas = state.damageZones.filter(function (zone) { return zone.correctionArea && zone.life > 0; });
+    if (areas.length < (p.correctionCrashAreaThreshold || 3)) return false;
+    const affected = new Set();
+    areas.forEach(function (area) {
+      addCircleEvent(state, area.x, area.y, area.radius * 1.08, "#ff3f7d", 0.62, "blast", false, "correction_test_system_crash", { areaId: area.correctionAreaId, mergeCount: area.mergeCount || 1 });
+      state.enemies.forEach(function (enemy) {
+        if (!enemy.dead && Math.hypot(enemy.x - area.x, enemy.y - area.y) <= area.radius + enemy.r) affected.add(enemy);
+      });
+      area.life = 0;
+    });
+    affected.forEach(function (enemy) {
+      const stacks = enemy.correctionErrorStacks || 0;
+      correctionDamageEnemy(state, enemy, (p.correctionCrashDamage || 20) * (1 + stacks * 0.34), "correction_test_system_crash");
+    });
+    test.crashReadyAt = elapsed + (p.correctionCrashCooldown || 5.4);
+    test.totalSystemCrashes += 1;
+    return true;
+  }
+
+  function triggerFinalCorrection(state, test, p, elapsed) {
+    if (!p.correctionFinalEnabled || elapsed < (test.finalReadyAt || 0)) return false;
+    const candidates = state.enemies.filter(function (enemy) { return !enemy.dead && (enemy.correctionErrorStacks || 0) > 0; });
+    if (!candidates.length) return false;
+    candidates.sort(function (a, b) {
+      return (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || b.maxHp - a.maxHp || a.hp - b.hp;
+    });
+    const target = candidates[0];
+    const stacks = target.correctionErrorStacks || 0;
+    target.correctionErrorStacks = 0;
+    target.correctionErrorTime = 0;
+    const damage = (p.correctionFinalDamage || 16) + target.maxHp * (p.correctionFinalPercentPerStack || 0.025) * stacks;
+    addCircleEvent(state, target.x, target.y, target.r + 46, "#79f7ff", 0.6, "detonate", false, "correction_test_final", { errorStacks: stacks, targetId: target.id });
+    correctionDamageEnemy(state, target, damage, "correction_test_final");
+    test.finalReadyAt = elapsed + (p.correctionFinalCooldown || 3.8);
+    test.totalFinalCorrections += 1;
+    return true;
+  }
+
+  function fireCorrectionFluidFixedTest(state) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    if (!test) return;
+    const elapsed = correctionElapsed(state);
+    triggerCorrectionSystemCrash(state, test, p, elapsed);
+    const candidates = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= (p.range || 360) + enemy.r;
+    });
+    const distanceToPlayer = function (enemy) { return Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y); };
+    candidates.sort(function (a, b) { return distanceToPlayer(a) - distanceToPlayer(b); });
+    const targets = [];
+    if (candidates.length) targets.push(candidates.shift());
+    candidates.sort(function (a, b) {
+      const distanceBand = Math.floor(distanceToPlayer(a) / 90) - Math.floor(distanceToPlayer(b) / 90);
+      return distanceBand || a.hp - b.hp || (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || distanceToPlayer(a) - distanceToPlayer(b);
+    });
+    targets.push.apply(targets, candidates.slice(0, Math.max(0, (p.correctionTargetCount || 1) - 1)));
+    targets.forEach(function (target, index) {
+      const angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+      const x1 = state.player.x + Math.cos(angle) * 20;
+      const y1 = state.player.y + Math.sin(angle) * 20;
+      applyCorrectionError(state, target, 1, "correction_test_spray");
+      correctionDamageEnemy(state, target, (p.damage || 7) * (index ? 0.86 : 1), "correction_test_spray");
+      // A spread build cannot rely on killing the Boss to create its core
+      // battlefield object. An overloaded Boss periodically leaks one real
+      // error area, keeping the route alive without turning it into poison DPS.
+      if (target.boss && (target.correctionErrorStacks || 0) >= 3 && (p.correctionSpreadLevel || 0) >= 1
+        && elapsed >= (test.bossAreaLeakReadyAt || 0)) {
+        createCorrectionArea(state, target.x, target.y, { bossLeak: true });
+        test.bossAreaLeakReadyAt = elapsed + 3.2;
+        addTextEvent(state, target.x, target.y - target.r - 18, "错误泄漏", "#ff72d8", 0.52);
+      }
+      addBeamEvent(state, x1, y1, target.x, target.y, index % 2 ? "#ff5bd5" : "#dfffff", p.width || 24, 0.27, "steam", false, "correction_test_spray", { targetId: target.id, targetIndex: index, errorStacks: target.correctionErrorStacks || 0 });
+    });
+    if (targets.length) state.stats.shots += 1;
+    triggerFinalCorrection(state, test, p, elapsed);
+  }
+
+  function markerFixedLine(state, p, angle, offset, source, damageScale, baseIndex, laneIndex) {
+    const range = p.range || 720;
+    const nx = -Math.sin(angle);
+    const ny = Math.cos(angle);
+    const x1 = state.player.x + nx * offset;
+    const y1 = state.player.y + ny * offset;
+    const x2 = x1 + Math.cos(angle) * range;
+    const y2 = y1 + Math.sin(angle) * range;
+    const width = Math.max(5, p.width || 8);
+    const hits = lineHitEnemies(
+      state, x1, y1, x2, y2, width,
+      (p.damage || 18) * damageScale,
+      p.pierce || 4,
+      source,
+      { noKnockback: true }
+    );
+    addBeamEvent(state, x1, y1, x2, y2, source === "marker_test_copy" ? "#79efff" : "#d8ffff", width, 0.2, "beam", false, source, {
+      baseIndex, laneIndex,
+      hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+      actualHitCount: hits.length,
+      pierceLimit: p.pierce || 4
+    });
+    return { x1, y1, x2, y2, angle, width };
+  }
+
+  function addMarkerFixedArchive(state, p, line, baseIndex) {
+    const trailCount = p.markerFixedArchiveTrails || 0;
+    if (!trailCount) return;
+    const spacing = Math.max(28, (p.width || 8) * 3.4);
+    const offsets = trailCount === 1 ? [0] : trailCount === 2 ? [-spacing * 0.55, spacing * 0.55] : [-spacing, 0, spacing];
+    const nx = -Math.sin(line.angle);
+    const ny = Math.cos(line.angle);
+    offsets.forEach(function (offset, trailIndex) {
+      const x1 = line.x1 + nx * offset;
+      const y1 = line.y1 + ny * offset;
+      const x2 = line.x2 + nx * offset;
+      const y2 = line.y2 + ny * offset;
+      const duration = p.markerFixedTrailDuration || 2;
+      addDamageZone(state, {
+        type: "line", source: "marker_test_archive", x1, y1, x2, y2,
+        width: Math.max(32, line.width * 3.6),
+        damage: (p.markerFixedTrailDamage || 5) * ([1, 0.75, 0.58, 0.44, 0.38][p.markerFixedArchiveLevel || 0] || 0.38),
+        life: duration, maxLife: duration, tickEvery: 0.44,
+        color: "#77b9d8", slow: 0.24, visual: "marker_grid_line",
+        inkTrail: true, inkSeed: baseIndex * 7 + trailIndex * 13, noKnockback: true
+      });
+    });
+  }
+
+  function triggerMarkerFixedFullscreenCopy(state, p, test, elapsed) {
+    if (!p.markerFixedFullscreenCopy || elapsed < (test.fullscreenCopyReadyAt || 0)) return;
+    if (Math.random() >= (p.markerFixedFullscreenChance || 0.15)) return;
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const lines = [
+      [camera.x - 24, camera.y + camera.height * 0.22, camera.x + camera.width + 24, camera.y + camera.height * 0.22],
+      [camera.x - 24, camera.y + camera.height * 0.5, camera.x + camera.width + 24, camera.y + camera.height * 0.5],
+      [camera.x - 24, camera.y + camera.height * 0.78, camera.x + camera.width + 24, camera.y + camera.height * 0.78],
+      [camera.x + camera.width * 0.08, camera.y - 24, camera.x + camera.width * 0.92, camera.y + camera.height + 24],
+      [camera.x + camera.width * 0.92, camera.y - 24, camera.x + camera.width * 0.08, camera.y + camera.height + 24]
+    ];
+    lines.forEach(function (line, lineIndex) {
+      const hits = lineHitEnemies(state, line[0], line[1], line[2], line[3], Math.max(8, (p.width || 8) * 1.25), (p.damage || 18) * 0.46, p.pierce || 4, "marker_test_fullscreen_copy", { noKnockback: true });
+      addBeamEvent(state, line[0], line[1], line[2], line[3], "#e9ffff", Math.max(8, (p.width || 8) * 1.25), 0.42, "beam", false, "marker_test_fullscreen_copy", {
+        lineIndex,
+        hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+        actualHitCount: hits.length
+      });
+    });
+    test.fullscreenCopyReadyAt = elapsed + (p.markerFixedFullscreenCooldown || 4.5);
+    test.fullscreenCopyTriggers += 1;
+  }
+
+  function triggerMarkerFixedFullscreenArchive(state, p, test, elapsed) {
+    if (!p.markerFixedFullscreenArchive || elapsed < (test.fullscreenArchiveReadyAt || 0)) return;
+    if (Math.random() >= (p.markerFixedFullscreenChance || 0.15)) return;
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const duration = Math.max(1.25, (p.markerFixedTrailDuration || 2) * 0.72);
+    const bands = 5;
+    const rangeScale = clamp((p.range || 720) / 720, 1, 1.6);
+    for (let index = 0; index < bands; index++) {
+      const y = camera.y + camera.height * (index + 0.5) / bands;
+      addBeamEvent(state, camera.x - 24, y, camera.x + camera.width + 24, y, "#6eaee7", camera.height / bands * 0.68, Math.min(0.75, duration), "grid", false, "marker_test_fullscreen_archive", { bandIndex: index, duration });
+      addDamageZone(state, {
+        type: "line", source: "marker_test_fullscreen_archive",
+        x1: camera.x - 24, y1: y, x2: camera.x + camera.width + 24, y2: y,
+        width: camera.height / bands * 0.56 * rangeScale,
+        damage: (p.markerFixedTrailDamage || 5) * 0.48,
+        life: duration, maxLife: duration, tickEvery: 0.42,
+        color: "#6eaee7", slow: 0.26, visual: "marker_grid_line", inkTrail: true, inkSeed: index * 11, noKnockback: true
+      });
+    }
+    test.fullscreenArchiveReadyAt = elapsed + (p.markerFixedFullscreenCooldown || 4.5);
+    test.fullscreenArchiveTriggers += 1;
+  }
+
+  function fireMarkerFixedTest(state, delayedRound) {
+    const p = state.activeFormParams || {};
+    const test = markerFixedRuntime(state);
+    if (!test) return;
+    const range = p.range || 720;
+    // A Boss is the mandatory objective of its encounter. When it is already
+    // inside the line's real acquisition range, aim the piercing attack at it;
+    // the line can still cut through adds on the same path. This prevents a
+    // nearby stream of disposable enemies from making the objective invisible.
+    const target = state.enemies.find(function (enemy) {
+      return !enemy.dead && enemy.boss
+        && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range + enemy.r;
+    }) || nearestEnemy(state, range);
+    if (!target) return;
+    const baseAngle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+    const baseAmount = Math.max(1, p.amount || 1);
+    const angleStep = 0.075;
+    const copySpacing = Math.max(22, (p.width || 8) * 3.4);
+    const copyLevel = p.markerFixedCopyLevel || 0;
+    const baseScale = p.markerFixedBaseLineScale || (copyLevel >= 4 ? 0.78 : copyLevel >= 3 ? 0.86 : 1);
+    const copyScale = p.markerFixedCopyLineScale || (copyLevel >= 4 ? 0.44 : copyLevel >= 3 ? 0.5 : 0.58);
+    const roundScale = delayedRound ? (p.markerFixedSecondRoundScale || 0.62) : 1;
+    for (let baseIndex = 0; baseIndex < baseAmount; baseIndex++) {
+      const angle = baseAngle + (baseIndex - (baseAmount - 1) / 2) * angleStep;
+      const baseLine = markerFixedLine(state, p, angle, 0, delayedRound ? "marker_test_second_round" : "marker_test_base", baseScale * roundScale, baseIndex, 0);
+      addMarkerFixedArchive(state, p, baseLine, baseIndex);
+      const parallel = p.markerFixedParallelLines || 0;
+      if (parallel === 1) markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
+      if (parallel >= 2) {
+        markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
+        markerFixedLine(state, p, angle, -copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 2);
+      }
+    }
+    if (delayedRound) return;
+    state.stats.shots += 1;
+    const elapsed = V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.totalElapsed
+      ? V2.demoV2.markerFixed.totalElapsed(state)
+      : Math.max(0, 720 - state.stageTime);
+    triggerMarkerFixedFullscreenCopy(state, p, test, elapsed);
+    triggerMarkerFixedFullscreenArchive(state, p, test, elapsed);
+    if (p.markerFixedSecondRound) test.pendingRounds.push({ due: elapsed + 0.22 });
+  }
+
+  function updateMarkerFixedPendingRounds(state) {
+    const test = markerFixedRuntime(state);
+    if (!test || !test.pendingRounds.length) return;
+    const elapsed = V2.demoV2 && V2.demoV2.markerFixed && V2.demoV2.markerFixed.totalElapsed
+      ? V2.demoV2.markerFixed.totalElapsed(state)
+      : Math.max(0, 720 - state.stageTime);
+    const ready = test.pendingRounds.filter(function (round) { return round.due <= elapsed; });
+    test.pendingRounds = test.pendingRounds.filter(function (round) { return round.due > elapsed; });
+    ready.forEach(function () { fireMarkerFixedTest(state, true); });
+  }
+
+  function scissorsFixedRuntime(state) {
+    return state.demoV2 && state.demoV2.phase === "scissors-fixed" ? state.demoV2.scissors : null;
+  }
+
+  function angleDistance(a, b) {
+    return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  }
+
+  function recordScissorsTargets(test, hits) {
+    if (!test) return;
+    (hits || []).forEach(function (hit) {
+      const enemy = hit.enemy || hit;
+      if (enemy && test.roundTargetIds.indexOf(enemy.id) < 0) test.roundTargetIds.push(enemy.id);
+    });
+  }
+
+  function scissorsLine(state, p, angle, range, width, damage, source) {
+    const x1 = state.player.x + Math.cos(angle) * 16;
+    const y1 = state.player.y + Math.sin(angle) * 16;
+    const x2 = state.player.x + Math.cos(angle) * range;
+    const y2 = state.player.y + Math.sin(angle) * range;
+    const hits = lineHitEnemies(state, x1, y1, x2, y2, width, damage, 99, source, { noKnockback: true });
+    addBeamEvent(state, x1, y1, x2, y2, source === "scissors_test_sever" ? "#ff6d62" : "#e9f3f5", width, source === "scissors_test_sever" ? 0.42 : 0.3, "beam", false, source, {
+      lockedAngle: angle,
+      hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+      actualHitCount: hits.length
+    });
+    recordScissorsTargets(scissorsFixedRuntime(state), hits);
+    return hits;
+  }
+
+  function scissorsFan(state, p, angle, range, halfAngle, damage, source, cutIndex) {
+    const test = scissorsFixedRuntime(state);
+    const hits = [];
+    state.enemies.forEach(function (enemy) {
+      if (enemy.dead) return;
+      const dx = enemy.x - state.player.x;
+      const dy = enemy.y - state.player.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > range + enemy.r) return;
+      if (angleDistance(Math.atan2(dy, dx), angle) > halfAngle) return;
+      damageEnemy(state, enemy, damage, source);
+      hits.push({ enemy });
+      if (source === "scissors_test_open") {
+        test.openHitsByEnemy[enemy.id] = (test.openHitsByEnemy[enemy.id] || 0) + 1;
+        test.totalOpenHits += 1;
+      }
+    });
+    const left = angle - halfAngle;
+    const right = angle + halfAngle;
+    const cutDuration = source === "scissors_test_finale" ? 0.42 : 0.3;
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(left) * range, state.player.y + Math.sin(left) * range, "#ffb255", 7, cutDuration, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "left", actualHitCount: hits.length });
+    addBeamEvent(state, state.player.x, state.player.y, state.player.x + Math.cos(right) * range, state.player.y + Math.sin(right) * range, "#fff0bd", 7, cutDuration, "beam", false, source, { cutIndex, lockedAngle: angle, fanRange: range, fanHalfAngle: halfAngle, edge: "right", actualHitCount: hits.length });
+    recordScissorsTargets(test, hits);
+    return hits;
+  }
+
+  function executeScissorsAction(state, action) {
+    const p = state.activeFormParams || {};
+    const test = scissorsFixedRuntime(state);
+    if (!test) return;
+    test.weaponVisualAngle = action.angle;
+    test.weaponVisualTime = action.kind === "finale" || action.kind === "sever" ? 0.42 : 0.3;
+    if (action.kind === "base") {
+      scissorsFan(state, p, action.angle, 138, 0.44, p.damage || 28, "scissors_test_base", 0);
+      return;
+    }
+    if (action.kind === "thrust") {
+      const hits = scissorsLine(state, p, action.angle, p.scissorsThrustRange || 150, p.scissorsThrustWidth || 26, p.scissorsThrustDamage || p.damage, "scissors_test_thrust");
+      test.totalClosedHits += hits.length;
+      return;
+    }
+    if (action.kind === "sever") {
+      const hits = scissorsLine(state, p, action.angle, p.scissorsSeverRange || 215, p.scissorsSeverWidth || 52, p.scissorsSeverDamage || p.damage * 1.8, "scissors_test_sever");
+      hits.forEach(function (hit) {
+        const enemy = hit.enemy;
+        const slowScale = enemy.boss ? 0.22 : enemy.markerFixedElite ? 0.55 : 1;
+        enemy.scissorsSlowTime = Math.max(enemy.scissorsSlowTime || 0, (p.scissorsSeverSlowDuration || 1.75) * slowScale);
+        enemy.scissorsSlow = (p.scissorsSeverSlow || 0.35) * slowScale;
+      });
+      test.totalSevers += 1;
+      return;
+    }
+    if (action.kind === "open") {
+      const swing = action.index % 2 === 0 ? -0.045 : 0.045;
+      scissorsFan(state, p, action.angle + swing, p.scissorsFanRange || 112, p.scissorsFanHalfAngle || 0.55, p.scissorsFanDamage || p.damage * 0.5, "scissors_test_open", action.index);
+      return;
+    }
+    if (action.kind === "finale") {
+      const hits = scissorsFan(state, p, action.angle, (p.scissorsFanRange || 112) * 1.08, (p.scissorsFanHalfAngle || 0.55) * 1.12, p.scissorsFinaleDamage || p.damage * 1.35, "scissors_test_finale", 99);
+      hits.forEach(function (hit) {
+        const enemy = hit.enemy;
+        if (!enemy || enemy.dead) return;
+        const priorHits = Math.min(6, test.openHitsByEnemy[enemy.id] || 0);
+        const normalThreshold = Math.min(0.17, (p.scissorsExecuteBase || 0.05) + priorHits * (p.scissorsExecutePerHit || 0.02));
+        const threshold = enemy.boss ? 0.05 : enemy.markerFixedElite ? Math.min(0.11, normalThreshold) : normalThreshold;
+        if (enemy.boss && normalThreshold > threshold) {
+          damageEnemy(state, enemy, (p.scissorsFinaleDamage || p.damage) * (normalThreshold - threshold) * 2.5, "scissors_test_finale_boss_bonus");
+        }
+        if (!enemy.dead && enemy.hp / enemy.maxHp <= threshold) {
+          const crit = p.markerFixedCritChance;
+          const cap = enemy.bossHitCap;
+          p.markerFixedCritChance = 0;
+          enemy.bossHitCap = 0;
+          damageEnemy(state, enemy, enemy.hp + 1, "scissors_test_execution");
+          enemy.bossHitCap = cap;
+          p.markerFixedCritChance = crit;
+          test.totalExecutions += 1;
+          addTextEvent(state, enemy.x, enemy.y - 22, "裁决", "#ff6767", 0.55);
+        }
+      });
+      test.totalFinales += 1;
+    }
+  }
+
+  function finishScissorsRound(state) {
+    const test = scissorsFixedRuntime(state);
+    const config = fixedTestConfig(state);
+    if (!test || !test.activeRound) return;
+    test.activeRound = false;
+    if (config && config.onRoundComplete) config.onRoundComplete(state, test.roundTargetIds.length);
+  }
+
+  function updateScissorsFixedActions(state, dt) {
+    const test = scissorsFixedRuntime(state);
+    if (!test || !test.pendingActions.length) return;
+    test.pendingActions.forEach(function (action) { action.due -= dt; });
+    const ready = test.pendingActions.filter(function (action) { return action.due <= 0; });
+    test.pendingActions = test.pendingActions.filter(function (action) { return action.due > 0; });
+    ready.sort(function (a, b) { return a.order - b.order; }).forEach(function (action) { executeScissorsAction(state, action); });
+    if (!test.pendingActions.length) finishScissorsRound(state);
+  }
+
+  function triggerScissorsDash(state, test, p, target, angle) {
+    if (!test.dashReady) return angle;
+    let dx = 0;
+    let dy = 0;
+    if (state.input.left) dx -= 1;
+    if (state.input.right) dx += 1;
+    if (state.input.up) dy -= 1;
+    if (state.input.down) dy += 1;
+    // Light Step is a movement tool, not an auto-aim teleport. If the player
+    // is standing still the charge is preserved and the regular attack fires.
+    if (!dx && !dy) return angle;
+    const len = Math.hypot(dx, dy) || 1;
+    const dashAngle = Math.atan2(dy, dx);
+    const x1 = state.player.x;
+    const y1 = state.player.y;
+    const distance = p.scissorsDashDistance || 82;
+    const duration = p.scissorsDashDuration || 0.18;
+    test.dashMotionTime = duration;
+    test.dashMotionDuration = duration;
+    test.dashMotionVx = dx / len * distance / duration;
+    test.dashMotionVy = dy / len * distance / duration;
+    test.dashActionDelay = duration;
+    state.player.invuln = Math.max(state.player.invuln || 0, p.scissorsDashWindow || 0.24);
+    test.dashWindow = p.scissorsDashWindow || 0.24;
+    test.dashCharge = 0;
+    test.dashReady = false;
+    test.dashAvoidedIds = {};
+    test.totalDashes += 1;
+    addBeamEvent(state, x1, y1, x1 + dx / len * distance, y1 + dy / len * distance, "#8ff6ee", 18, duration + 0.1, "beam", false, "scissors_test_dash", { dashAngle, noDamage: true });
+    return dashAngle;
+  }
+
+  function fireScissorsFixedTest(state) {
+    const p = state.activeFormParams || {};
+    const test = scissorsFixedRuntime(state);
+    if (!test || test.activeRound) return;
+    const engageRange = Math.max(330, p.scissorsSeverRange || 305);
+    const target = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= engageRange + enemy.r;
+    }).sort(function (a, b) {
+      // Scissors still has to enter melee range, but once a Boss is reachable
+      // it owns the attack direction. Wide cuts keep add-clear intact while
+      // the required objective receives deliberate pressure.
+      if (!!a.boss !== !!b.boss) return a.boss ? -1 : 1;
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0];
+    if (!target) return;
+    let angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+    test.dashActionDelay = 0;
+    angle = triggerScissorsDash(state, test, p, target, angle);
+    test.facingAngle = angle;
+    test.roundAngle = angle;
+    test.roundSerial += 1;
+    test.roundTargetIds = [];
+    test.openHitsByEnemy = {};
+    test.activeRound = true;
+    const scale = p.scissorsActionScale || 1;
+    const actions = [];
+    let order = 0;
+    const push = function (kind, due, index) { actions.push({ kind, due: (test.dashActionDelay || 0) + due * scale, index: index || 0, angle, order: order++ }); };
+    const thrusts = p.scissorsThrustCount || 0;
+    const cuts = p.scissorsCutCount || 0;
+    if (!thrusts && !cuts) push("base", 0.06, 0);
+    for (let i = 0; i < thrusts; i++) push("thrust", 0.06 + i * 0.11, i);
+    const thrustEnd = thrusts ? 0.06 + (thrusts - 1) * 0.11 : 0;
+    if (p.scissorsSever) push("sever", thrustEnd + 0.14, 0);
+    const openStart = thrusts ? thrustEnd + 0.16 : 0.06;
+    for (let i = 0; i < cuts; i++) push("open", openStart + i * 0.085, i);
+    if (p.scissorsFinale) push("finale", openStart + Math.max(0, cuts - 1) * 0.085 + 0.14, 0);
+    test.pendingActions = actions;
+    state.stats.shots += 1;
+  }
+
   function fireMarker(state) {
     const p = state.activeFormParams;
+    if (p && p.markerFixedTest) {
+      fireMarkerFixedTest(state, false);
+      return;
+    }
     const form = state.activeForm || {};
     const target = nearestEnemy(state, p.range || 720);
     if (!target) return;
@@ -904,9 +1839,93 @@
       actualHitCount: hits.length,
       pierceLimit: p.pierce || 4
     });
-    state.stats.shots += 1;
+    addMarkerArchiveLine(state, p, x1, y1, markerVisualEnd.x, markerVisualEnd.y, width, 0);
 
-    if (form.mechanicType === "line_split") {
+    const parallelLines = Math.max(0, p.demoV2ParallelLines || 0);
+    if (parallelLines > 0) {
+      const nx = -dy / len;
+      const ny = dx / len;
+      const spacing = p.demoV2ParallelSpacing || 34;
+      for (let copyIndex = 0; copyIndex < parallelLines; copyIndex++) {
+        const band = Math.floor(copyIndex / 2) + 1;
+        const side = copyIndex % 2 ? -1 : 1;
+        const offset = spacing * band * side;
+        const copyX1 = x1 + nx * offset;
+        const copyY1 = y1 + ny * offset;
+        const copyX2 = x2 + nx * offset;
+        const copyY2 = y2 + ny * offset;
+        const copyHits = lineHitEnemies(
+          state, copyX1, copyY1, copyX2, copyY2,
+          Math.max(6, width * 0.9),
+          (p.damage || 20) * (p.demoV2ParallelDamageScale || 0.86),
+          p.pierce || 4,
+          "marker_module_copy"
+        );
+        addBeamEvent(state, copyX1, copyY1, copyX2, copyY2, "#7feeff", Math.max(5, width * 0.86), 0.22, "beam", false, "marker_module_copy", {
+          copyIndex: copyIndex + 1,
+          hitEnemyIds: copyHits.map(function (hit) { return hit.enemy.id; }),
+          actualHitCount: copyHits.length,
+          pierceLimit: p.pierce || 4
+        });
+        if (p.secondarySplit && copyHits.length) {
+          const copyOriginHit = copyHits[copyHits.length - 1];
+          const copyOrigin = { x: copyOriginHit.x, y: copyOriginHit.y, id: copyOriginHit.enemy.id };
+          const excludedCopyTargets = new Set(hits.map(function (hit) { return hit.enemy; }));
+          copyHits.forEach(function (hit) { excludedCopyTargets.add(hit.enemy); });
+          const copyRelayTarget = nearestBranchTarget(state, copyOrigin, excludedCopyTargets, new Set(), p.secondarySplitRange || 205);
+          if (copyRelayTarget) {
+            const copyRelayEnd = lineEndpointThroughTarget(copyOrigin, copyRelayTarget, p.secondarySplitRange || 205);
+            const copyRelayHits = lineHitEnemies(
+              state, copyOrigin.x, copyOrigin.y, copyRelayEnd.x, copyRelayEnd.y,
+              Math.max(3.5, width * 0.46),
+              (p.damage || 20) * (p.secondarySplitDamage || 0.34),
+              Math.max(1, p.secondarySplitPierce || 1),
+              "marker_module_forward",
+              { excludeEnemies: excludedCopyTargets }
+            );
+            addBeamEvent(state, copyOrigin.x, copyOrigin.y, copyRelayEnd.x, copyRelayEnd.y, "#fff2a8", Math.max(3.5, width * 0.46), 0.24, "beam", false, "marker_module_forward", {
+              generation: "copy-relay",
+              copyIndex: copyIndex + 1,
+              originEnemyId: copyOrigin.id,
+              targetEnemyId: copyRelayTarget.id,
+              hitEnemyIds: copyRelayHits.map(function (hit) { return hit.enemy.id; }),
+              actualHitCount: copyRelayHits.length
+            });
+          }
+        }
+        addMarkerArchiveLine(state, p, copyX1, copyY1, copyX2, copyY2, width, copyIndex + 1);
+      }
+    }
+    state.stats.shots += 1;
+    const shotAngle = Math.atan2(dy, dx);
+    if (p.demoV2MarkerExpedite > 0 && p.demoV2MarkerExpediteEvery > 0 && state.stats.shots % p.demoV2MarkerExpediteEvery === 0) {
+      const expediteScale = 0.42 + p.demoV2MarkerExpedite * 0.12;
+      addMarkerModuleLine(state, p, "marker_module_expedite", shotAngle, expediteScale, 0);
+    }
+    if (p.demoV2MarkerMerge > 0 && hits.length >= 2) {
+      const mergeOrigin = hits[hits.length - 1];
+      const mergeRadius = 42 + p.demoV2MarkerMerge * 18;
+      addCircleEvent(state, mergeOrigin.x, mergeOrigin.y, mergeRadius, "#d8ffff", 0.32, "blast", false, "marker_module_merge", {
+        mergedHits: hits.length,
+        level: p.demoV2MarkerMerge
+      });
+      addDamageZone(state, {
+        type: "circle", source: "marker_module_merge", x: mergeOrigin.x, y: mergeOrigin.y,
+        radius: mergeRadius, damage: 7 + p.demoV2MarkerMerge * 5,
+        life: 0.16, maxLife: 0.16, hitOnce: true,
+        color: "#d8ffff", slow: 0.12, visual: "marker_p0_blast"
+      });
+    }
+    if (p.demoV2MarkerOverdraft > 0 && p.demoV2OverdraftEvery > 0 && state.stats.shots % p.demoV2OverdraftEvery === 0) {
+      const overdraftLines = Math.max(2, p.demoV2MarkerOverdraftLines || 2);
+      const spread = Math.min(1.05, 0.42 + overdraftLines * 0.12);
+      for (let lineIndex = 0; lineIndex < overdraftLines; lineIndex++) {
+        const t = overdraftLines === 1 ? 0 : lineIndex / (overdraftLines - 1) - 0.5;
+        addMarkerModuleLine(state, p, "marker_module_overdraft", shotAngle + t * spread, 0.42 + p.demoV2MarkerOverdraft * 0.07, lineIndex);
+      }
+    }
+
+    if (form.mechanicType === "line_split" || p.demoV2BaseBranch) {
       const branchCount = Math.max(1, p.splitCount || 2);
       const branchRange = Math.max(120, p.splitRange || 230);
       const branchPierce = Math.max(1, p.splitPierce || 2);
@@ -951,22 +1970,27 @@
             const secondOriginHit = branchHits[branchHits.length - 1];
             const secondOrigin = { x: secondOriginHit.x, y: secondOriginHit.y, id: secondOriginHit.enemy.id };
             const secondaryRange = Math.max(90, p.secondarySplitRange || branchRange * 0.62);
-            const secondaryTarget = nearestBranchTarget(state, secondOrigin, mainHitEnemies, claimedBranchEnemies, secondaryRange);
-            if (secondaryTarget) {
+            const secondaryCount = Math.max(1, p.secondarySplitCount || 1);
+            for (let secondaryIndex = 0; secondaryIndex < secondaryCount; secondaryIndex++) {
+              const secondaryTarget = nearestBranchTarget(state, secondOrigin, mainHitEnemies, claimedBranchEnemies, secondaryRange);
+              if (!secondaryTarget) break;
               const secondaryEnd = lineEndpointThroughTarget(secondOrigin, secondaryTarget, secondaryRange);
               const secondaryExclusions = new Set(mainHitEnemies);
               claimedBranchEnemies.forEach(function (enemy) { secondaryExclusions.add(enemy); });
               secondaryExclusions.delete(secondaryTarget);
               secondaryExclusions.add(secondOriginHit.enemy);
-              const secondHits = lineHitEnemies(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, 3, (p.damage || 20) * 0.22, 1, "marker_secondary_split", { excludeEnemies: secondaryExclusions });
+              const secondaryWidth = Math.max(3.5, width * 0.46);
+              const secondaryPierce = Math.max(1, p.secondarySplitPierce || 1);
+              const secondHits = lineHitEnemies(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, secondaryWidth, (p.damage || 20) * (p.secondarySplitDamage || 0.34), secondaryPierce, "marker_module_forward", { excludeEnemies: secondaryExclusions });
               secondHits.forEach(function (secondHit) { claimedBranchEnemies.add(secondHit.enemy); });
-              addBeamEvent(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, "#d8ffff", 2.5, 0.16, "beam", false, "marker_secondary_split", {
+              addBeamEvent(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, "#fff2a8", secondaryWidth, 0.24, "beam", false, "marker_module_forward", {
                 generation: 2,
+                secondaryIndex,
                 originEnemyId: secondOrigin.id,
                 targetEnemyId: secondaryTarget.id,
                 hitEnemyIds: secondHits.map(function (secondHit) { return secondHit.enemy.id; }),
                 actualHitCount: secondHits.length,
-                pierceLimit: 1
+                pierceLimit: secondaryPierce
               });
             }
           }
@@ -1216,11 +2240,239 @@
     }
   }
 
+  function thermosFixedDirection(state, range) {
+    const nearby = state.enemies.filter(function (enemy) {
+      return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range * 1.2;
+    });
+    if (!nearby.length) return null;
+    // The fan normally values a dense group, but a Boss inside its working
+    // distance must not become an accidental blind spot behind its own adds.
+    // Aiming at the Boss still lets the wide fan catch that surrounding pack.
+    const nearbyBoss = nearby.filter(function (enemy) { return enemy.boss; }).sort(function (a, b) {
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0];
+    if (nearbyBoss) return Math.atan2(nearbyBoss.y - state.player.y, nearbyBoss.x - state.player.x);
+    let best = nearby[0];
+    let bestScore = -Infinity;
+    nearby.forEach(function (candidate) {
+      let neighbours = 0;
+      nearby.forEach(function (other) {
+        if (Math.hypot(other.x - candidate.x, other.y - candidate.y) <= 105) neighbours += 1;
+      });
+      const distance = Math.hypot(candidate.x - state.player.x, candidate.y - state.player.y);
+      const score = neighbours * 1000 - distance;
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    });
+    return Math.atan2(best.y - state.player.y, best.x - state.player.x);
+  }
+
+  function thermosFixedAngleDistance(a, b) {
+    return Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  }
+
+  function thermosFixedTargetInFan(state, angle, range, halfAngle) {
+    return state.enemies.filter(function (enemy) {
+      if (enemy.dead) return false;
+      const dx = enemy.x - state.player.x;
+      const dy = enemy.y - state.player.y;
+      const distance = Math.hypot(dx, dy);
+      return distance <= range + enemy.r && thermosFixedAngleDistance(Math.atan2(dy, dx), angle) <= halfAngle;
+    }).sort(function (a, b) {
+      if (a.hp !== b.hp) return a.hp - b.hp;
+      return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+    })[0] || null;
+  }
+
+  function thermosFixedFanPoints(state, angle, range, width) {
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+    const nx = -uy;
+    const ny = ux;
+    const originDistance = 15;
+    const originHalfWidth = Math.min(30, width * 0.14);
+    const halfWidth = width / 2;
+    const originX = state.player.x + ux * originDistance;
+    const originY = state.player.y + uy * originDistance;
+    const farX = state.player.x + ux * range;
+    const farY = state.player.y + uy * range;
+    return {
+      originX, originY, farX, farY, ux, uy, nx, ny, angle, range, width,
+      points: [
+        { x: originX + nx * originHalfWidth, y: originY + ny * originHalfWidth },
+        { x: farX + nx * halfWidth, y: farY + ny * halfWidth },
+        { x: farX - nx * halfWidth, y: farY - ny * halfWidth },
+        { x: originX - nx * originHalfWidth, y: originY - ny * originHalfWidth }
+      ]
+    };
+  }
+
+  function drawThermosFixedFan(state, fan, width, source, groupIndex) {
+    [-0.92, -0.46, 0, 0.46, 0.92].forEach(function (offset) {
+      addBeamEvent(
+        state,
+        fan.originX,
+        fan.originY,
+        fan.farX + fan.nx * width * 0.5 * offset,
+        fan.farY + fan.ny * width * 0.5 * offset,
+        source === "thermos_test_focus" ? "#ffe0a1" : "#b8f6ff",
+        source === "thermos_test_focus" ? 8 : 10,
+        source === "thermos_test_focus" ? 0.2 : 0.26,
+        "steam",
+        false,
+        source,
+        { thermosFixedFan: true, groupIndex, fanOffset: offset, fanAngle: fan.angle, fanRange: fan.range, fanWidth: width }
+      );
+    });
+  }
+
+  function addThermosFixedCondensation(state, p, angle, groupIndex) {
+    const count = p.thermosFixedCondensationZones || 0;
+    if (!count) return;
+    for (let zoneIndex = 0; zoneIndex < count; zoneIndex++) {
+      const distance = (p.range || 225) * (zoneIndex + 1) / (count + 0.35);
+      const radius = Math.max(38, (p.width || 205) * (0.2 + zoneIndex * 0.012));
+      const x = state.player.x + Math.cos(angle) * distance;
+      const y = state.player.y + Math.sin(angle) * distance;
+      const duration = p.thermosFixedCondensationDuration || 1.65;
+      addCircleEvent(state, x, y, radius, "#b9e8ef", Math.min(0.72, duration), "steam_pulse", false, "thermos_test_condensation", { groupIndex, zoneIndex, duration });
+      addDamageZone(state, {
+        type: "circle", source: "thermos_test_condensation", x, y, radius,
+        damage: p.thermosFixedCondensationDamage || 1.6,
+        life: duration, maxLife: duration, tickEvery: 0.38,
+        color: "#b9e8ef", visual: "thermos_station_field", noKnockback: true,
+        condensationZone: true, groupIndex, zoneIndex
+      });
+    }
+  }
+
+  function addThermosFixedHeatwave(state, p, x, y, test) {
+    const radius = Math.max(68, (p.range || 225) * 0.38);
+    addThermosWavefront(state, {
+      source: "thermos_test_kill_heatwave", x, y, radius,
+      damage: p.thermosFixedHeatwaveDamage || 7,
+      duration: 0.44, thickness: 30, color: "#ffd7a0", visual: "thermos_wavefront",
+      noKnockback: true
+    });
+    test.stageHeatwaveTriggers += 1;
+    test.totalHeatwaveTriggers += 1;
+  }
+
+  function performThermosFixedFocus(state, pending) {
+    const p = state.activeFormParams || {};
+    const test = fixedTestRuntime(state);
+    if (!test) return;
+    const target = thermosFixedTargetInFan(state, pending.angle, p.range || 225, 0.5);
+    if (!target) return;
+    const wasAlive = !target.dead;
+    addBeamEvent(state, state.player.x, state.player.y, target.x, target.y, "#ffe0a1", 10, 0.22, "steam", false, "thermos_test_focus", { targetEnemyId: target.id, focusIndex: pending.focusIndex });
+    damageEnemy(state, target, p.thermosFixedFocusDamage || (p.damage || 14) * 1.55, "thermos_test_focus", null);
+    if (wasAlive && target.dead) {
+      test.stageFocusKills += 1;
+      test.totalFocusKills += 1;
+      addThermosFixedHeatwave(state, p, target.x, target.y, test);
+    }
+  }
+
+  function triggerThermosFixedFullscreenCondensation(state, p, test, elapsed) {
+    if (!p.thermosFixedFullscreenCondensation || elapsed < (test.fullscreenCondensationReadyAt || 0)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const x = camera.x + camera.width / 2;
+    const y = camera.y + camera.height / 2;
+    const radius = Math.hypot(camera.width, camera.height) * 0.58;
+    const duration = Math.max(1.1, (p.thermosFixedCondensationDuration || 1.65) * 0.72);
+    addCircleEvent(state, x, y, radius, "#b9e8ef", 0.82, "steam_pulse", false, "thermos_test_fullscreen_condensation", { fullscreen: true, duration });
+    addDamageZone(state, { type: "circle", source: "thermos_test_fullscreen_condensation", x, y, radius, damage: (p.thermosFixedCondensationDamage || 1.6) * 0.76, life: duration, maxLife: duration, tickEvery: 0.38, color: "#b9e8ef", visual: "thermos_station_field", noKnockback: true, fullscreen: true });
+    test.fullscreenCondensationReadyAt = elapsed + (p.thermosFixedFullscreenCooldown || 4.8);
+    test.fullscreenCondensationTriggers += 1;
+  }
+
+  function triggerThermosFixedFullscreenIgnition(state, p, test, elapsed) {
+    if (!p.thermosFixedFullscreenIgnition || elapsed < (test.fullscreenIgnitionReadyAt || 0)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    const targets = state.enemies.filter(function (enemy) { return !enemy.dead; }).sort(function (a, b) {
+      const priorityA = a.boss ? 3 : a.markerFixedElite || a.behavior === "tank" || a.behavior === "shield" ? 2 : 1;
+      const priorityB = b.boss ? 3 : b.markerFixedElite || b.behavior === "tank" || b.behavior === "shield" ? 2 : 1;
+      return priorityB - priorityA || a.hp - b.hp;
+    }).slice(0, 6);
+    targets.forEach(function (target, index) {
+      const wasAlive = !target.dead;
+      addCircleEvent(state, target.x, target.y, target.r + 24, "#ffbe73", 0.3 + index * 0.03, "steam_pulse", false, "thermos_test_fullscreen_ignition", { targetEnemyId: target.id, ignitionIndex: index });
+      damageEnemy(state, target, (p.thermosFixedFocusDamage || (p.damage || 14) * 1.55) * 0.9, "thermos_test_fullscreen_ignition", null);
+      if (wasAlive && target.dead) {
+        test.stageFocusKills += 1;
+        test.totalFocusKills += 1;
+        addThermosFixedHeatwave(state, p, target.x, target.y, test);
+      }
+    });
+    test.fullscreenIgnitionReadyAt = elapsed + (p.thermosFixedFullscreenCooldown || 4.8);
+    test.fullscreenIgnitionTriggers += 1;
+  }
+
+  function fireThermosFixedTest(state) {
+    const p = state.activeFormParams || {};
+    const test = fixedTestRuntime(state);
+    const mainAngle = thermosFixedDirection(state, p.range || 225);
+    if (!test || mainAngle == null) return;
+    test.facingAngle = mainAngle;
+    state.stats.shots += 1;
+    const count = Math.max(1, p.amount || 1);
+    const spread = count > 1 ? Math.min(0.68, 0.18 + count * 0.1) : 0;
+    const hitThisRound = new Set();
+    const sharedSteamHits = {};
+    for (let groupIndex = 0; groupIndex < count; groupIndex++) {
+      const t = count === 1 ? 0 : groupIndex / (count - 1) - 0.5;
+      const angle = mainAngle + t * spread;
+      const fan = thermosFixedFanPoints(state, angle, p.range || 225, p.width || 205);
+      drawThermosFixedFan(state, fan, p.width || 205, "thermos_test_base", groupIndex);
+      const steamDuration = p.thermosFixedBaseSteamDuration || 0.68;
+      addDamageZone(state, {
+        type: "polygon", source: "thermos_test_base", points: fan.points,
+        x: (fan.originX + fan.farX) / 2, y: (fan.originY + fan.farY) / 2,
+        radius: Math.max((p.width || 205) / 2, (p.range || 225) * 0.5),
+        damage: p.thermosFixedBaseSteamDamage || 1.4,
+        life: steamDuration, maxLife: steamDuration, tickEvery: 0.28,
+        color: "#aeefff", slow: p.thermosFixedBaseSteamSlow || 0.3,
+        visual: "thermos_steam_fan", noKnockback: true,
+        thermosFixedSharedHits: sharedSteamHits, groupIndex
+      });
+      state.enemies.forEach(function (enemy) {
+        if (enemy.dead || hitThisRound.has(enemy) || !pointInPolygon(enemy.x, enemy.y, fan.points)) return;
+        hitThisRound.add(enemy);
+        const resistance = enemy.boss ? 0.22 : enemy.behavior === "tank" || enemy.behavior === "shield" ? 0.45 : 1;
+        damageEnemy(state, enemy, p.damage || 14, "thermos_test_base", { x: state.player.x, y: state.player.y, power: (p.thermosFixedKnockback || 15) * resistance });
+      });
+      addThermosFixedCondensation(state, p, angle, groupIndex);
+    }
+    const now = (V2.demoV2 && V2.demoV2.thermosFixed && V2.demoV2.thermosFixed.totalElapsed) ? V2.demoV2.thermosFixed.totalElapsed(state) : state.totalTime;
+    for (let focusIndex = 0; focusIndex < (p.thermosFixedFocusHits || 0); focusIndex++) {
+      test.pendingFocusHits.push({ due: now + 0.08 + focusIndex * 0.13, angle: mainAngle, focusIndex });
+    }
+    triggerThermosFixedFullscreenCondensation(state, p, test, now);
+    triggerThermosFixedFullscreenIgnition(state, p, test, now);
+  }
+
+  function updateThermosFixedPendingFocus(state) {
+    const test = fixedTestRuntime(state);
+    if (!test || !test.pendingFocusHits || !test.pendingFocusHits.length) return;
+    const now = V2.demoV2.thermosFixed.totalElapsed(state);
+    const ready = test.pendingFocusHits.filter(function (pending) { return pending.due <= now; });
+    test.pendingFocusHits = test.pendingFocusHits.filter(function (pending) { return pending.due > now; });
+    ready.forEach(function (pending) { performThermosFixedFocus(state, pending); });
+  }
+
   function fireThermos(state) {
     const p = state.activeFormParams;
     const form = state.activeForm || {};
+    if (p.thermosFixedTest) {
+      fireThermosFixedTest(state);
+      return;
+    }
     if ((p.releaseLockout || 0) > 0) return;
-    const target = nearestEnemy(state, p.releaseRange || p.steamRange || 280);
+    const target = nearestEnemy(state, p.demoV2SteamFan ? (p.steamRange || 240) : (p.releaseRange || p.steamRange || 280));
     if (!target && form.mechanicType !== "deployable_safe_station") return;
     state.stats.shots += 1;
     applyThermosSecondary(state, target);
@@ -1234,6 +2486,23 @@
       if (p.heat >= heatMax) {
         p.heat = 0;
         p.releaseLockout = p.releaseLockoutDuration || 0.65;
+        if (p.demoV2SteamFan) {
+          addCircleEvent(state, state.player.x, state.player.y, 72, "#bdf5ff", 0.24, "steam_pulse", false, "thermos_charge", { heatMax });
+          addThermosSteamFans(state, target, {
+            source: "thermos_release",
+            range: p.releaseRange || 310,
+            width: p.releaseWidth || 310,
+            damage: p.releaseTickDamage || 12,
+            duration: p.releaseDuration || 1.4,
+            tickEvery: p.releaseTickEvery || 0.25,
+            slow: p.releaseSlow || 0.8,
+            rayWidth: 11,
+            eventLife: 0.32,
+            color: "#bdf5ff",
+            visual: "thermos_release_fan"
+          });
+          return;
+        }
         const x2 = state.player.x + dx / len * (p.releaseRange || 430);
         const y2 = state.player.y + dy / len * (p.releaseRange || 430);
         const width = p.releaseWidth || 16;
@@ -1241,6 +2510,22 @@
         addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.28, "steam", false, "thermos_release", { lockout: p.releaseLockout });
         lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, p.releaseDamage || 58, 6, "thermos_intern_release");
       } else {
+        if (p.demoV2SteamFan) {
+          addThermosSteamFans(state, target, {
+            source: "thermos_warmup",
+            range: p.steamRange || 240,
+            width: p.steamWidth || 200,
+            damage: p.steamTickDamage || 4.2,
+            duration: p.steamDuration || 1.05,
+            tickEvery: p.steamTickEvery || 0.28,
+            slow: p.steamSlow || 0.65,
+            rayWidth: 7,
+            eventLife: 0.2,
+            color: "#86f7ff",
+            visual: "thermos_steam_fan"
+          });
+          return;
+        }
         const x2 = state.player.x + dx / len * (p.steamRange || p.range || 300);
         const y2 = state.player.y + dy / len * (p.steamRange || p.range || 300);
         addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 8, 0.14, "steam", false, "thermos_warmup", { heat: p.heat, heatMax });
@@ -1306,6 +2591,17 @@
         const releaseScale = p.overheatBank ? 1 + Math.max(0, heatMax - 100) / 200 : 1;
         p.heat = 0;
         p.releaseLockout = p.releaseLockoutDuration || (p.risk ? 1.55 : 1.05);
+        if (p.demoV2SteamFan) {
+          addCircleEvent(state, state.player.x, state.player.y, 72, "#bdf5ff", 0.24, "steam_pulse", false, "thermos_charge", { heatMax, releaseScale });
+          addThermosSteamFans(state, target, {
+            source: "thermos_release", range: p.releaseRange || 315, width: p.releaseWidth || 320,
+            damage: (p.releaseTickDamage || 12.5) * releaseScale, duration: p.releaseDuration || 1.35,
+            tickEvery: p.releaseTickEvery || 0.24, slow: p.releaseSlow || 0.8,
+            rayWidth: 11, eventLife: 0.32, color: "#bdf5ff", visual: "thermos_release_fan"
+          });
+          addThermosModuleBranches(state, target, true);
+          return;
+        }
         const x2 = state.player.x + dx / len * (p.releaseRange || 420);
         const y2 = state.player.y + dy / len * (p.releaseRange || 420);
         const width = p.releaseWidth || 20;
@@ -1319,6 +2615,17 @@
         }
       } else {
         const chargeRatio = Math.max(0.15, Math.min(1, p.heat / heatMax));
+        if (p.demoV2SteamFan) {
+          addCircleEvent(state, state.player.x, state.player.y, 38 + chargeRatio * 34, "#86f7ff", 0.18, "steam_pulse", false, "thermos_charge", { heat: p.heat, heatMax, chargeRatio });
+          addThermosSteamFans(state, target, {
+            source: "thermos_warmup", range: p.steamRange || 235, width: p.steamWidth || 210,
+            damage: p.steamTickDamage || 4.5, duration: p.steamDuration || 0.95,
+            tickEvery: p.steamTickEvery || 0.27, slow: p.steamSlow || 0.66,
+            rayWidth: 7, eventLife: 0.2, color: "#86f7ff", visual: "thermos_steam_fan"
+          });
+          addThermosModuleBranches(state, target, false);
+          return;
+        }
         const x2 = state.player.x + dx / len * (p.steamRange || 220);
         const y2 = state.player.y + dy / len * (p.steamRange || 220);
         const width = 7 + chargeRatio * 5;
@@ -1537,7 +2844,7 @@
       stickyTrap: true,
       trapId,
       armed: false,
-      armDelay: mechanic === "seeking_trap_summon" ? 0.18 : 0.3,
+      armDelay: p.armDelay == null ? (mechanic === "seeking_trap_summon" ? 0.18 : 0.3) : p.armDelay,
       groundSticky: mechanic === "ground_trap",
       seekingSticky: mechanic === "seeking_trap_summon",
       manualSticky: mechanic === "manual_trap_detonate",
@@ -1560,7 +2867,26 @@
       addCircleEvent(state, target.x, target.y, target.r + 12, "#e8db92", 0.2, "mark", false, "sticky_notice_pin", { trapId, targetEnemyId: target.id });
     }
     state.stats.shots += 1;
+    if (p.demoV2StickyExpedite > 0 && p.demoV2StickyExpediteEvery > 0 && state.stats.shots % p.demoV2StickyExpediteEvery === 0 && target) {
+      const expediteRadius = 32 + p.demoV2StickyExpedite * 9;
+      addCircleEvent(state, target.x, target.y, expediteRadius, "#fff0a8", 0.3, "sticky_attach", false, "sticky_module_expedite", {
+        level: p.demoV2StickyExpedite,
+        targetEnemyId: target.id
+      });
+      addDamageZone(state, {
+        type: "circle", source: "sticky_module_expedite", x: target.x, y: target.y,
+        radius: expediteRadius, damage: 5 + p.demoV2StickyExpedite * 3,
+        life: 0.16, maxLife: 0.16, hitOnce: true,
+        color: "#fff0a8", slow: 0.18, root: 0.12 + p.demoV2StickyExpedite * 0.05,
+        visual: "sticky_trigger_blast"
+      });
+    }
     applyStickySecondary(state, x, y, target);
+    if (p.demoV2StickyCopies > 0 && !p.demoV2StickyCopyGuard) {
+      p.demoV2StickyCopyGuard = true;
+      for (let copyIndex = 0; copyIndex < p.demoV2StickyCopies; copyIndex++) fireSticky(state);
+      p.demoV2StickyCopyGuard = false;
+    }
   }
 
   function fireGeneric(state) {
@@ -1663,6 +2989,8 @@
     if (id === "marker") fireMarker(state);
     else if (id === "thermos") fireThermos(state);
     else if (id === "sticky_note") fireSticky(state);
+    else if (id === "scissors") fireScissorsFixedTest(state);
+    else if (id === "correction_fluid") fireCorrectionFluidFixedTest(state);
     else fireGeneric(state);
   }
 
@@ -1687,9 +3015,10 @@
     const boss = !!(options && options.boss);
     const fragment = !!(options && options.fragment);
     const def = boss ? (BOSS_DEFS[stage.bossType] || BOSS_DEFS.lead) : (ENEMY_DEFS[typeId] || ENEMY_DEFS.todo);
+    const normalEnemyHp = stage.normalEnemyHp == null ? stage.enemyHp : stage.normalEnemyHp;
     const hp = boss
       ? stage.enemyHp
-      : Math.max(6, stage.enemyHp * (def.hp || 1) + Math.random() * stage.id * 3);
+      : Math.max(6, normalEnemyHp * (def.hp || 1) + Math.random() * stage.id * 3);
     const speed = boss
       ? stage.enemySpeed * (def.speed || 1)
       : stage.enemySpeed * (def.speed || 1) + Math.random() * 8;
@@ -1704,7 +3033,7 @@
       hp: fragment ? hp * 0.34 : hp,
       maxHp: fragment ? hp * 0.34 : hp,
       speed: fragment ? speed * 1.18 : speed,
-      damage: boss ? 18 + stage.id * 0.45 : def.damage || 7,
+      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1),
       xp: boss ? 50 : Math.max(3, Math.round((def.xp || 5) * (fragment ? 0.45 : 1))),
       boss,
       fragment,
@@ -1730,12 +3059,31 @@
     };
   }
 
+  function markerFixedQuotaAllowsSpawn(state) {
+    const config = fixedTestConfig(state);
+    if (!config) return true;
+    const encounter = config && config.currentEncounter ? config.currentEncounter(state) : null;
+    const test = fixedTestRuntime(state);
+    return !!(encounter && test && test.encounterSpawned < encounter.spawnTotal);
+  }
+
+  function recordMarkerFixedQuotaSpawn(state, enemy) {
+    if (!fixedTestConfig(state) || !enemy || enemy.boss) return;
+    const test = fixedTestRuntime(state);
+    if (!test) return;
+    test.encounterSpawned += 1;
+    enemy.markerFixedEncounterEnemy = true;
+  }
+
   function spawnChildEnemy(state, parent, typeId, side) {
+    if (!markerFixedQuotaAllowsSpawn(state)) return null;
     const angle = Math.atan2(parent.y - state.player.y, parent.x - state.player.x) + side * 0.85;
     const child = makeEnemy(state, typeId || "todo", clamp(parent.x + Math.cos(angle) * 18, 35, worldWidth(state) - 35), clamp(parent.y + Math.sin(angle) * 18, 35, worldHeight(state) - 35), { fragment: true });
     child.speed *= 1.15;
     state.enemies.push(child);
+    recordMarkerFixedQuotaSpawn(state, child);
     recordEnemySpawn(state, child.typeId + "_fragment");
+    return child;
   }
 
   function spawnEnemy(state) {
@@ -1756,6 +3104,180 @@
     recordEnemySpawn(state, enemy.typeId);
   }
 
+  function addDemoV2Enemy(state, typeId, x, y) {
+    const phase = state.stage && state.stage.demoV2Phase;
+    const fixedConfig = fixedTestConfig(state);
+    const config = fixedConfig || (V2.demoV2 && (phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA));
+    const markerEncounter = fixedConfig && config && config.currentEncounter ? config.currentEncounter(state) : null;
+    const enemyCap = markerEncounter ? markerEncounter.cap : config && config.enemyCap;
+    if (enemyCap && state.enemies.length >= enemyCap) return null;
+    if (fixedConfig && !markerFixedQuotaAllowsSpawn(state)) return null;
+    const margin = 44;
+    const enemy = makeEnemy(
+      state,
+      typeId,
+      clamp(x, -margin, worldWidth(state) + margin),
+      clamp(y, -margin, worldHeight(state) + margin),
+      { boss: false }
+    );
+    if (fixedConfig) {
+      const test = fixedTestRuntime(state);
+      if (typeId === "meeting" || typeId === "approval" || typeId === "client") {
+        test.eliteCandidateSerial += 1;
+        if (test.eliteCandidateSerial % 5 === 0) {
+          enemy.markerFixedElite = true;
+          enemy.name = "精英 · " + enemy.name;
+          enemy.hp *= 1.85;
+          enemy.maxHp = enemy.hp;
+          enemy.r *= 1.16;
+          enemy.xp = Math.round(enemy.xp * 2.4);
+          enemy.accent = "#ffe28a";
+        }
+      }
+    }
+    state.enemies.push(enemy);
+    recordMarkerFixedQuotaSpawn(state, enemy);
+    recordEnemySpawn(state, enemy.typeId);
+    return enemy;
+  }
+
+  function spawnMarkerFixedBoss(state, config) {
+    if (!state.stage || !state.stage.boss || state.stageBossSpawned) return null;
+    const encounter = config && config.currentEncounter ? config.currentEncounter(state) : null;
+    updateCamera(state);
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const x = clamp(camera.x + camera.width * 0.78, 80, worldWidth(state) - 80);
+    const y = clamp(camera.y + camera.height * 0.32, 80, worldHeight(state) - 80);
+    const boss = makeEnemy(state, state.stage.bossType || "lead", x, y, { boss: true });
+    boss.markerFixedBoss = true;
+    boss.markerFixedBossMaterial = encounter && encounter.bossMaterial || 1;
+    boss.xp = Math.max(50, Math.round((encounter && encounter.phase || 1) * 24));
+    state.stageBossSpawned = true;
+    state.enemies.push(boss);
+    recordEnemySpawn(state, boss.typeId);
+    addTextEvent(state, boss.x, boss.y - boss.r - 16, boss.name, boss.accent || "#ffe28a", 1.1);
+    return boss;
+  }
+
+  function demoV2EdgePoint(state, side, offset, depth) {
+    updateCamera(state);
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const margin = 46 + (depth || 0);
+    if (side === 0) return { x: camera.x - margin, y: state.player.y + offset };
+    if (side === 1) return { x: camera.x + camera.width + margin, y: state.player.y + offset };
+    if (side === 2) return { x: state.player.x + offset, y: camera.y - margin };
+    return { x: state.player.x + offset, y: camera.y + camera.height + margin };
+  }
+
+  function spawnDemoV2QueueWave(state, wave, serial) {
+    const side = serial % 4;
+    for (let i = 0; i < wave.batchSize; i++) {
+      const point = demoV2EdgePoint(state, side, (i % 2 ? 1 : -1) * Math.floor(i / 2) * 7, i * 34);
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i % 3 === 1 ? "email" : "todo"), point.x, point.y);
+    }
+  }
+
+  function demoV2WaveEnemyType(wave, index, serial, fallback) {
+    const roster = wave && wave.enemyRoster;
+    if (!Array.isArray(roster) || !roster.length) return fallback || "todo";
+    return roster[(index + serial) % roster.length] || fallback || "todo";
+  }
+
+  function spawnDemoV2ClusterWave(state, wave, serial) {
+    const side = (serial + 1) % 4;
+    const center = demoV2EdgePoint(state, side, ((serial % 3) - 1) * 90, 8);
+    for (let i = 0; i < wave.batchSize; i++) {
+      const angle = Math.PI * 2 * i / wave.batchSize;
+      const radius = 18 + (i % 3) * 12;
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i === wave.batchSize - 1 ? "meeting" : "todo"), center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
+    }
+  }
+
+  function spawnDemoV2PursuitWave(state, wave, serial) {
+    for (let i = 0; i < wave.batchSize; i++) {
+      const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.37;
+      const radius = 430 + (i % 2) * 48;
+      const typeId = demoV2WaveEnemyType(wave, i, serial, i % 4 === 0 ? "deadline" : i % 3 === 0 ? "email" : "todo");
+      addDemoV2Enemy(state, typeId, state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
+    }
+  }
+
+  function spawnDemoV2ReviewWave(state, wave, serial) {
+    const types = ["todo", "todo", "email", "meeting", "ping", "deadline", "scope", "approval", "client"];
+    for (let i = 0; i < wave.batchSize; i++) {
+      const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.29;
+      const radius = 410 + (i % 3) * 42;
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, types[(i + serial) % types.length]), state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
+    }
+  }
+
+  function spawnDemoV2Wave(state, wave) {
+    const runtime = state.demoV2 || (state.demoV2 = {});
+    const serial = runtime.waveSerial || 0;
+    const pattern = wave.pattern || wave.id;
+    if (pattern === "queue") spawnDemoV2QueueWave(state, wave, serial);
+    else if (pattern === "cluster") spawnDemoV2ClusterWave(state, wave, serial);
+    else if (pattern === "pursuit") spawnDemoV2PursuitWave(state, wave, serial);
+    else spawnDemoV2ReviewWave(state, wave, serial);
+    runtime.waveSerial = serial + 1;
+    if (!state.stats.demoV2WaveCounts) state.stats.demoV2WaveCounts = {};
+    state.stats.demoV2WaveCounts[wave.id] = (state.stats.demoV2WaveCounts[wave.id] || 0) + 1;
+  }
+
+  function updateDemoV2Director(state, dt) {
+    const phase = state.stage && state.stage.demoV2Phase;
+    const fixedConfig = fixedTestConfig(state);
+    const config = fixedConfig || (V2.demoV2 && (phase === "phase-b" ? V2.demoV2.phaseB : V2.demoV2.phaseA));
+    if (!config) return;
+    const runtime = state.demoV2 || (state.demoV2 = {});
+    runtime.elapsed = fixedConfig && config.totalElapsed
+      ? config.totalElapsed(state)
+      : Math.max(0, config.duration - state.stageTime);
+    const fixedRuntime = fixedTestRuntime(state);
+    const markerWaveIndex = fixedConfig && fixedRuntime ? fixedRuntime.currentEncounterIndex : -1;
+    const waveIndex = markerWaveIndex >= 0 ? markerWaveIndex : Math.max(0, config.waves.findIndex(function (wave) {
+      return runtime.elapsed >= wave.start && runtime.elapsed < wave.end;
+    }));
+    const wave = config.waves[waveIndex] || config.waves[config.waves.length - 1];
+
+    if (runtime.waveIndex !== waveIndex) {
+      runtime.waveIndex = waveIndex;
+      runtime.waveId = wave.id;
+      runtime.waveTimer = 0;
+      runtime.floorTimer = 0;
+      if (runtime.wavesSeen.indexOf(wave.id) < 0) runtime.wavesSeen.push(wave.id);
+      state.stage.name = (fixedConfig ? fixedConfig.weaponName + " · " : phase === "phase-b" ? "阶段 B · " : "阶段 A · ") + wave.label;
+      state.stage.threatHint = wave.hint;
+      addTextEvent(state, state.player.x, state.player.y - 72, wave.label, "#bdf5ff", 0.85);
+    }
+
+    const markerEncounter = fixedConfig && config.currentEncounter ? config.currentEncounter(state) : null;
+    const markerTest = fixedRuntime;
+    const quotaRemaining = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
+    const enemyCap = markerEncounter ? markerEncounter.cap : config.enemyCap;
+    const enemyFloor = markerEncounter ? markerEncounter.floor : config.enemyFloor;
+    if (fixedConfig && markerEncounter && markerEncounter.boss) spawnMarkerFixedBoss(state, config);
+
+    runtime.waveTimer = (runtime.waveTimer || 0) - dt;
+    if (runtime.waveTimer <= 0 && state.enemies.length < enemyCap && quotaRemaining > 0) {
+      const quotaWave = markerEncounter ? Object.assign({}, wave, { batchSize: Math.min(wave.batchSize, quotaRemaining) }) : wave;
+      spawnDemoV2Wave(state, quotaWave);
+      runtime.waveTimer = wave.cadence;
+    }
+
+    runtime.floorTimer = (runtime.floorTimer || 0) - dt;
+    const encounterLocalElapsed = markerEncounter ? Math.max(0, markerEncounter.duration - state.stageTime) : runtime.elapsed;
+    const remainingAfterWave = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
+    if (encounterLocalElapsed >= 2 && state.enemies.length < enemyFloor && runtime.floorTimer <= 0 && remainingAfterWave > 0) {
+      const fillWave = { id: "cluster", batchSize: Math.min(6, enemyFloor - state.enemies.length, remainingAfterWave), enemyRoster: wave.enemyRoster };
+      spawnDemoV2ClusterWave(state, fillWave, runtime.waveSerial || 0);
+      runtime.floorTimer = 1.1;
+    }
+
+    runtime.peakEnemies = Math.max(runtime.peakEnemies || 0, state.enemies.length);
+    state.stats.peakEnemies = Math.max(state.stats.peakEnemies || 0, state.enemies.length);
+  }
+
   function updateInput(state, dt) {
     const input = state.input;
     let x = 0;
@@ -1765,8 +3287,17 @@
     if (input.up) y -= 1;
     if (input.down) y += 1;
     const len = Math.hypot(x, y) || 1;
-    state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
-    state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
+    const scissors = scissorsFixedRuntime(state);
+    if (scissors && (x || y)) scissors.facingAngle = Math.atan2(y, x);
+    if (scissors && scissors.dashMotionTime > 0) {
+      const motionStep = Math.min(dt, scissors.dashMotionTime);
+      state.player.x = clamp(state.player.x + (scissors.dashMotionVx || 0) * motionStep, 26, worldWidth(state) - 26);
+      state.player.y = clamp(state.player.y + (scissors.dashMotionVy || 0) * motionStep, 26, worldHeight(state) - 26);
+      scissors.dashMotionTime = Math.max(0, scissors.dashMotionTime - motionStep);
+    } else {
+      state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
+      state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
+    }
     updateCamera(state);
     state.player.invuln = Math.max(0, state.player.invuln - dt);
   }
@@ -1774,6 +3305,12 @@
   function damagePlayer(state, amount, color) {
     let incoming = amount;
     const params = state.activeFormParams || {};
+    if (params.markerFixedDodgeChance > 0 && Math.random() < params.markerFixedDodgeChance) {
+      state.player.invuln = 0.18;
+      addTextEvent(state, state.player.x, state.player.y - 30, "闪避", "#9fe7ff", 0.42);
+      return;
+    }
+    if (params.markerFixedArmor > 0) incoming *= 15 / (15 + params.markerFixedArmor);
     const shieldBefore = params.shield || 0;
     if ((params.shield || 0) > 0) {
       const absorb = Math.min(params.shield, incoming);
@@ -1792,6 +3329,11 @@
     state.stats.damageTaken += incoming;
     state.player.invuln = 0.55;
     addParticle(state, state.player.x, state.player.y, color || "#ff6b4a", 8);
+    const config = fixedTestConfig(state);
+    if (config && config.onPlayerDamaged && config.onPlayerDamaged(state)) {
+      addCircleEvent(state, state.player.x, state.player.y, params.scissorsShelterRadius || 108, "#7deaff", 0.48, "shield", false, "scissors_test_shelter");
+      addTextEvent(state, state.player.x, state.player.y - 36, "临时安全区", "#b8f7ff", 0.65);
+    }
     if (state.hp <= 0) V2.dispatch({ type: "END_RUN" });
   }
 
@@ -1807,7 +3349,9 @@
       radius: enemy.boss ? 7 : 5,
       life: enemy.boss ? 3.6 : 2.8,
       source: "enemy_" + (enemy.typeId || "shot"),
-        color: enemy.accent || "#ff8aff"
+        color: enemy.accent || "#ff8aff",
+        originX: enemy.x,
+        originY: enemy.y
       }));
     state.stats.enemyShots = (state.stats.enemyShots || 0) + 1;
     addCircleEvent(state, enemy.x, enemy.y, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
@@ -1836,7 +3380,11 @@
   }
 
   function updateEnemies(state, dt) {
-    const cap = state.stage.id >= 4 ? 95 : 75;
+    const demoPhase = state.stage && state.stage.demoV2Phase;
+    const fixedConfig = fixedTestConfig(state);
+    const demoConfig = fixedConfig || (V2.demoV2 && (demoPhase === "phase-b" ? V2.demoV2.phaseB : demoPhase === "phase-a" ? V2.demoV2.phaseA : null));
+    const markerEncounter = fixedConfig && demoConfig && demoConfig.currentEncounter ? demoConfig.currentEncounter(state) : null;
+    const cap = markerEncounter ? markerEncounter.cap : demoConfig ? demoConfig.enemyCap : state.stage.id >= 4 ? 95 : 75;
     for (const enemy of state.enemies) {
       if (enemy.dead) continue;
       enemy.age = (enemy.age || 0) + dt;
@@ -1848,6 +3396,13 @@
         }
       }
       enemy.rooted = Math.max(0, (enemy.rooted || 0) - dt);
+      if (enemy.correctionErrorStacks) {
+        enemy.correctionErrorTime = Math.max(0, (enemy.correctionErrorTime || 0) - dt);
+        if (enemy.correctionErrorTime <= 0) {
+          enemy.correctionErrorStacks = 0;
+          traceWeaponEvent(state, "state", { source: "correction_test_error_expire", enemyId: enemy.id, vfxPhase: eventPhase("correction_test_error_expire") });
+        }
+      }
       const dx = state.player.x - enemy.x;
       const dy = state.player.y - enemy.y;
       const len = Math.hypot(dx, dy) || 1;
@@ -1855,6 +3410,9 @@
       let mx = dx / len;
       let my = dy / len;
       let moveSpeed = enemy.speed;
+      if ((enemy.correctionErrorStacks || 0) >= 1) moveSpeed *= state.activeFormParams.correctionSlowMultiplier || 0.82;
+      enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
+      if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
       if (enemy.chargeTime > 0) {
         enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
         mx = enemy.chargeVx || mx;
@@ -1884,8 +3442,16 @@
         enemy.y = clamp(enemy.y + my / mLen * moveSpeed * dt, -44, worldHeight(state) + 44);
       }
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
-      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r && state.player.invuln <= 0) {
-        damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r) {
+        if (state.player.invuln <= 0) {
+          damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+        } else {
+          const scissors = scissorsFixedRuntime(state);
+          if (scissors && scissors.dashWindow > 0 && !scissors.dashAvoidedIds[enemy.id]) {
+            scissors.dashAvoidedIds[enemy.id] = true;
+            scissors.totalDashDodges += 1;
+          }
+        }
       }
     }
     state.enemies = state.enemies.filter(function (enemy) { return !enemy.dead; }).slice(-cap);
@@ -1897,9 +3463,23 @@
         p.x += (p.vx || 0) * dt;
         p.y += (p.vy || 0) * dt;
         p.life -= dt;
-        if (Math.hypot(p.x - state.player.x, p.y - state.player.y) < p.radius + state.player.radius && state.player.invuln <= 0) {
-          damagePlayer(state, p.damage || 6, p.color || "#ff6b4a");
+        const config = fixedTestConfig(state);
+        if (config && config.blocksHostileProjectile && config.blocksHostileProjectile(state, p)) {
+          addCircleEvent(state, p.x, p.y, 18, "#9ff7ff", 0.22, "shield", false, "scissors_test_shelter_block");
           p.life = 0;
+        } else if (Math.hypot(p.x - state.player.x, p.y - state.player.y) < p.radius + state.player.radius) {
+          if (state.player.invuln <= 0) {
+            damagePlayer(state, p.damage || 6, p.color || "#ff6b4a");
+            p.life = 0;
+          } else {
+            const scissors = scissorsFixedRuntime(state);
+            const dodgeKey = p.source + ":" + Math.round((p.originX || 0) * 10) + ":" + Math.round((p.originY || 0) * 10);
+            if (scissors && scissors.dashWindow > 0 && !scissors.dashAvoidedIds[dodgeKey]) {
+              scissors.dashAvoidedIds[dodgeKey] = true;
+              scissors.totalDashDodges += 1;
+              p.life = 0;
+            }
+          }
         }
         if (p.x < -80 || p.x > worldWidth(state) + 80 || p.y < -80 || p.y > worldHeight(state) + 80) p.life = 0;
         continue;
@@ -1924,10 +3504,68 @@
     state.projectiles = state.projectiles.filter(function (p) { return p.life > 0; });
   }
 
+  function spawnStickyArchiveEchoes(state, zone) {
+    const p = state.activeFormParams || {};
+    if (zone && p.demoV2StickyArchive > 0) {
+      const echoCount = p.demoV2StickyArchive;
+      for (let echoIndex = 0; echoIndex < echoCount; echoIndex++) {
+        const angle = -Math.PI / 2 + echoIndex * Math.PI * 2 / echoCount;
+        const distance = 34 + p.demoV2StickyArchive * 12;
+        const x = clamp(zone.x + Math.cos(angle) * distance, 55, worldWidth(state) - 55);
+        const y = clamp(zone.y + Math.sin(angle) * distance, 55, worldHeight(state) - 55);
+        const life = 1.4 + p.demoV2StickyArchive * 0.65;
+        const trapId = "sticky_archive_" + Date.now() + "_" + echoIndex + "_" + Math.random().toString(16).slice(2);
+        addCircleEvent(state, x, y, Math.max(22, (p.trapRadius || 30) * 0.82), "#d7f8ff", 0.4, "trap", false, "sticky_module_archive", {
+          trapId,
+          echoIndex,
+          level: p.demoV2StickyArchive
+        });
+        addDamageZone(state, {
+          type: "circle", source: "sticky_module_archive", x, y,
+          radius: Math.max(22, (p.trapRadius || 30) * 0.82), damage: 0,
+          life, maxLife: life, tickEvery: 999,
+          color: "#d7f8ff", slow: p.slow || 0.3, stickyTrap: true,
+          trapId, armed: true, armDelay: 0, noticeNode: true, linked: false,
+          archiveEcho: true, zoneDamage: p.zoneDamage || 0, visual: "notice_node"
+        });
+      }
+    }
+    const correction = correctionFluidRuntime(state);
+    if (correction) {
+      const target = nearestEnemy(state, state.activeFormParams.range || 360);
+      const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : 0;
+      drawSprite(ctx, "correction_fluid_body_v25", 28, -3, 50, 50, 0.98, angle * 0.16);
+      if ((correction.activeErrorAreas || 0) >= (state.activeFormParams.correctionCrashAreaThreshold || 3) && state.activeFormParams.correctionCrashEnabled) {
+        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 2, 0, 34, 70, 70, 0.72, 0);
+      }
+    }
+  }
+
+  function spawnStickyExpiryBranches(state, zone) {
+    const p = state.activeFormParams || {};
+    if (!zone || zone.demoV2ExpiryHandled || zone.triggered || !zone.noticeNode) return;
+    zone.demoV2ExpiryHandled = true;
+    if (!zone.archiveEcho && !zone.archiveSaved) spawnStickyArchiveEchoes(state, zone);
+    if (p.demoV2StickyOverdraft > 0 && !zone.archiveEcho) {
+      const radius = 48 + p.demoV2StickyOverdraft * 20;
+      addCircleEvent(state, zone.x, zone.y, radius, "#ffc48d", 0.38, "blast", false, "sticky_module_overdraft", {
+        level: p.demoV2StickyOverdraft,
+        trapId: zone.trapId
+      });
+      addDamageZone(state, {
+        type: "circle", source: "sticky_module_overdraft", x: zone.x, y: zone.y,
+        radius, damage: 8 + p.demoV2StickyOverdraft * 5,
+        life: 0.16, maxLife: 0.16, hitOnce: true,
+        color: "#ffc48d", slow: 0.22, root: 0.1, visual: "sticky_trigger_blast"
+      });
+    }
+  }
+
   function updateZones(state, dt) {
     for (const z of state.damageZones) {
       z.life -= dt;
       z.age = (z.age || 0) + dt;
+      if (z.life <= 0) spawnStickyExpiryBranches(state, z);
       if (z.stickyTrap && !z.armed && z.age >= (z.armDelay || 0)) {
         z.armed = true;
         traceWeaponEvent(state, "state", { source: "sticky_arm", trapId: z.trapId, mechanic: z.source, vfxPhase: eventPhase("sticky_arm") });
@@ -2053,7 +3691,7 @@
           if (z.debuff === "tea") {
             enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
           }
-          damageEnemy(state, enemy, z.damage, z.source || "ring_zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+          damageEnemy(state, enemy, z.damage, z.source || "ring_zone", z.noKnockback ? null : { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
           if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
         }
         continue;
@@ -2065,10 +3703,19 @@
         for (const enemy of state.enemies) {
           if (!enemy.dead && Math.hypot(enemy.x - z.x, enemy.y - z.y) <= z.radius + enemy.r) {
             if (z.hitOnce && z.hits[enemy.id]) continue;
+            if (z.correctionArea) {
+              const mayRepeatError = (state.activeFormParams.correctionSpreadLevel || 0) >= 3;
+              if (mayRepeatError || !z.errorApplied[enemy.id]) {
+                applyCorrectionError(state, enemy, 1, z.source || "correction_test_error_area");
+                z.errorApplied[enemy.id] = true;
+              }
+              correctionDamageEnemy(state, enemy, z.damage, z.source || "correction_test_error_area");
+              continue;
+            }
             if (z.debuff === "tea") {
               enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
             }
-            damageEnemy(state, enemy, z.damage, z.source || "zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+            damageEnemy(state, enemy, z.damage, z.source || "zone", z.noKnockback ? null : { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
             if (z.hitOnce) z.hits[enemy.id] = true;
             if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
             if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
@@ -2100,27 +3747,47 @@
         }
       }
       if (z.type === "line") {
-        lineHitEnemies(state, z.x1, z.y1, z.x2, z.y2, z.width || 8, z.damage, 99, z.source || "line_zone");
+        const lineZoneHits = lineHitEnemies(state, z.x1, z.y1, z.x2, z.y2, z.width || 8, z.damage, 99, z.source || "line_zone", { noKnockback: !!z.noKnockback });
+        if (z.slow || z.root) {
+          lineZoneHits.forEach(function (hit) {
+            if (z.slow) hit.enemy.speed *= 1 - z.slow * 0.08;
+            if (z.root) hit.enemy.rooted = Math.max(hit.enemy.rooted || 0, z.root);
+          });
+        }
       }
       if (z.type === "polygon" && z.points && z.points.length >= 3) {
         for (const enemy of state.enemies) {
           if (enemy.dead || !pointInPolygon(enemy.x, enemy.y, z.points)) continue;
-          damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", { x: z.x, y: z.y });
+          if (z.thermosFixedSharedHits) {
+            const lastHitAt = z.thermosFixedSharedHits[enemy.id];
+            if (lastHitAt != null && state.totalTime - lastHitAt < (z.tickEvery || 0.28) * 0.6) continue;
+            z.thermosFixedSharedHits[enemy.id] = state.totalTime;
+          }
+          damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", z.noKnockback ? null : { x: z.x, y: z.y });
           if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
           if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
         }
       }
     }
     state.damageZones = state.damageZones.filter(function (z) { return z.life > 0; });
+    const correction = correctionFluidRuntime(state);
+    if (correction) {
+      const areas = state.damageZones.filter(function (zone) { return zone.correctionArea && zone.life > 0; });
+      correction.activeErrorAreas = areas.length;
+      correction.largestErrorArea = areas.reduce(function (max, zone) { return Math.max(max, zone.radius || 0); }, 0);
+    }
   }
 
   function updatePickups(state, dt) {
     pickupMagnetTimer += dt;
+    const markerTest = fixedTestRuntime(state);
+    const magnetRadius = markerTest && markerTest.collecting ? 520 : 150;
+    const magnetSpeed = markerTest && markerTest.collecting ? 8.5 : 5;
     for (const p of state.pickups) {
       const d = Math.hypot(state.player.x - p.x, state.player.y - p.y);
-      if (d < 150) {
-        p.x += (state.player.x - p.x) * dt * 5;
-        p.y += (state.player.y - p.y) * dt * 5;
+      if (d < magnetRadius) {
+        p.x += (state.player.x - p.x) * dt * magnetSpeed;
+        p.y += (state.player.y - p.y) * dt * magnetSpeed;
       }
       if (d < state.player.radius + p.radius + 6) {
         p.dead = true;
@@ -2128,6 +3795,16 @@
         if (p.type === "material") {
           state.materials += p.amount;
           state.stats.materialsCollected += p.amount;
+          const fixedRuntime = fixedTestRuntime(state);
+          if (p.markerFixedDrop && fixedRuntime) {
+            fixedRuntime.dropMaterialsEarned += p.amount;
+            fixedRuntime.materialsSinceLastShop += p.amount;
+          }
+        }
+        if (p.type === "heal") {
+          const before = state.hp;
+          state.hp = Math.min(state.maxHp, state.hp + (p.amount || 0));
+          if (state.hp > before) addTextEvent(state, state.player.x, state.player.y - 30, "+" + Math.round(state.hp - before), "#8fffb2", 0.46);
         }
       }
     }
@@ -2158,6 +3835,14 @@
     if (state.warmupTime > 0) {
       state.warmupTime = Math.max(0, state.warmupTime - dt);
       updateInput(state, dt);
+      const markerTest = fixedTestRuntime(state);
+      if (markerTest && markerTest.collecting) {
+        updatePickups(state, dt);
+        updateEffects(state, dt);
+        const config = fixedTestConfig(state);
+        if (config) config.tick(state, dt);
+        if (state.warmupTime <= 0 && config) config.finishCollection(state);
+      }
       return;
     }
     state.stageTime = Math.max(0, state.stageTime - dt);
@@ -2165,13 +3850,22 @@
     if (state.activeFormParams) {
       state.activeFormParams.releaseLockout = Math.max(0, (state.activeFormParams.releaseLockout || 0) - dt);
     }
-    spawnTimer -= dt;
-    if (spawnTimer <= 0 && state.enemies.length < (state.stage.boss ? 5 : 80)) {
-      spawnEnemy(state);
-      spawnTimer = state.stage.boss && state.stageBossSpawned ? (state.stage.bossAddEvery || 4.2) : state.stage.spawnEvery;
-      if (state.stage.id >= 3 && !state.stage.boss && Math.random() < 0.25) spawnEnemy(state);
+    if (state.stage && (state.stage.demoV2Phase === "phase-a" || state.stage.demoV2Phase === "phase-b" || fixedTestConfig(state))) {
+      updateDemoV2Director(state, dt);
+      if (state.stage.demoV2Phase === "phase-b" && V2.demoV2 && V2.demoV2.phaseB) V2.demoV2.phaseB.tick(state);
+      if (fixedTestConfig(state)) fixedTestConfig(state).tick(state, dt);
+    } else {
+      spawnTimer -= dt;
+      if (spawnTimer <= 0 && state.enemies.length < (state.stage.boss ? 5 : 80)) {
+        spawnEnemy(state);
+        spawnTimer = state.stage.boss && state.stageBossSpawned ? (state.stage.bossAddEvery || 4.2) : state.stage.spawnEvery;
+        if (state.stage.id >= 3 && !state.stage.boss && Math.random() < 0.25) spawnEnemy(state);
+      }
     }
     attackTimer -= dt;
+    if (state.stage && state.stage.demoV2Phase === "marker-fixed") updateMarkerFixedPendingRounds(state);
+    if (state.stage && state.stage.demoV2Phase === "thermos-fixed") updateThermosFixedPendingFocus(state);
+    if (state.stage && state.stage.demoV2Phase === "scissors-fixed") updateScissorsFixedActions(state, dt);
     if (attackTimer <= 0) {
       fireWeapon(state);
       let nextAttackDelay = state.activeFormParams.cooldown || 1.4;
@@ -2182,6 +3876,9 @@
         if (!insideStation) nextAttackDelay *= 1.25;
       }
       attackTimer = Math.max(0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
+      if (state.activeFormParams.demoV2OverdraftEvery > 0 && state.stats.shots > 0 && state.stats.shots % state.activeFormParams.demoV2OverdraftEvery === 0) {
+        attackTimer += state.activeFormParams.demoV2OverdraftPause || 0;
+      }
     }
     updateSupportSkill(state, dt);
     updateProjectiles(state, dt);
@@ -2189,9 +3886,19 @@
     updateEnemies(state, dt);
     updatePickups(state, dt);
     updateEffects(state, dt);
+    const markerFixed = !!fixedTestConfig(state);
+    const markerTest = markerFixed ? fixedTestRuntime(state) : null;
+    const fixedConfig = fixedTestConfig(state);
+    const markerEncounter = markerFixed && fixedConfig && fixedConfig.currentEncounter
+      ? fixedConfig.currentEncounter(state) : null;
+    const markerAddsAlive = markerFixed ? state.enemies.filter(function (enemy) { return !enemy.dead && !enemy.boss; }).length : 0;
+    const markerQuotaCleared = markerEncounter && markerTest && markerTest.encounterSpawned >= markerEncounter.spawnTotal && markerAddsAlive <= 0;
+    const markerCleared = markerFixed && markerEncounter
+      ? (markerEncounter.boss ? state.stageBossDefeated && (state.stageTime <= 0 || markerQuotaCleared) : (state.stageTime <= 0 || markerQuotaCleared))
+      : false;
     const targetCleared = state.stage.boss ? state.stageBossDefeated : state.stageKills >= state.stage.targetKills;
     const timerCleared = state.stageTime <= 0 && !state.stage.boss;
-    if (timerCleared || targetCleared) {
+    if (state.mode === "combat" && (markerFixed ? markerCleared : (timerCleared || targetCleared))) {
       V2.dispatch({ type: "COMPLETE_STAGE" });
     }
   }
@@ -2213,6 +3920,36 @@
     ctx.translate(p.x, p.y);
     ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
     drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    const thermos = state.demoV2 && state.demoV2.phase === "thermos-fixed" ? fixedTestRuntime(state) : null;
+    if (thermos) {
+      drawSprite(ctx, "thermos_body_v24", 28, -3, 50, 50, 0.96, 0);
+    }
+    const scissors = scissorsFixedRuntime(state);
+    if (scissors) {
+      const angle = scissors.weaponVisualTime > 0 ? scissors.weaponVisualAngle : scissors.facingAngle || 0;
+      const orbit = 31;
+      const pulse = scissors.weaponVisualTime > 0 ? 1.12 : 1;
+      drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
+      const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
+      drawCombatProgress(ctx, 0, 39, 82, 11, charge);
+      const moving = state.input.left || state.input.right || state.input.up || state.input.down;
+      const directionFrame = clamp(Math.floor(charge * 4), 0, 3);
+      const directionDistance = 66 + charge * 24;
+      drawSpriteFrame(ctx, "scissors_dash_direction_v27", directionFrame,
+        Math.cos(scissors.facingAngle || 0) * directionDistance,
+        Math.sin(scissors.facingAngle || 0) * directionDistance,
+        88 + charge * 42, 52 + charge * 14,
+        moving ? 0.72 + charge * 0.26 : 0.42 + charge * 0.2,
+        scissors.facingAngle || 0);
+      if (scissors.shelterActive) {
+        const radius = state.activeFormParams.scissorsShelterRadius || 108;
+        const duration = state.activeFormParams.scissorsShelterDuration || 3.2;
+        const remaining = Math.max(0, scissors.shelterTime || 0);
+        const elapsed = duration - remaining;
+        const shelterFrame = elapsed < 0.24 ? 0 : remaining < 0.42 ? 3 : Math.floor(elapsed * 7) % 2 ? 1 : 2;
+        drawSpriteFrame(ctx, "scissors_shelter_v27", shelterFrame, 0, 0, radius * 2.18, radius * 2.18, 0.76, elapsed * 0.08);
+      }
+    }
     const shield = state.activeFormParams && state.activeFormParams.shield || 0;
     if (shield > 0) {
       const shieldMax = state.activeFormParams.markerShieldMax || state.activeFormParams.thermosShieldMax || state.activeFormParams.releaseShieldMax || state.activeFormParams.secondaryWarmShieldMax || Math.max(18, shield);
@@ -2235,15 +3972,25 @@
       if (e.armor) {
         drawSprite(ctx, "status_shield_art", 0, 0, bodySize + 24, bodySize + 24, 0.68, 0);
       }
+      if (e.markerFixedElite) {
+        drawSprite(ctx, "status_mark_art", 0, -4, bodySize + 28, bodySize + 28, 0.82, 0);
+      }
       if (e.p0Marked) {
         const markRatio = clamp((e.p0MarkTime || 0) / Math.max(0.01, e.p0MarkMax || 1), 0, 1);
         drawSprite(ctx, "status_mark_art", 0, -2, bodySize + 18, bodySize + 18, 0.55 + markRatio * 0.4, 0);
+      }
+      if (e.correctionErrorStacks) {
+        const errorFrame = clamp((e.correctionErrorStacks || 1) - 1, 0, 3);
+        drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2, bodySize + 24, bodySize + 24, 0.9, 0);
+        if (e.correctionErrorStacks >= 3) {
+          drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 3, 0, -2, bodySize + 38, bodySize + 38, 0.76 + Math.sin((e.age || 0) * 9) * 0.08, 0);
+        }
       }
       if (e.rooted > 0) {
         const rootWidth = bodySize + 18;
         drawSprite(ctx, "status_root_art", 0, bodySize * 0.34, rootWidth, rootWidth * 0.441, 0.86, 0);
       }
-      drawCombatProgress(ctx, 0, -bodySize / 2 - 9, e.boss ? 88 : 54, e.boss ? 14 : 9, e.hp / e.maxHp);
+      drawCombatProgress(ctx, 0, -bodySize / 2 - 12, e.boss ? 104 : 70, e.boss ? 17 : 12, e.hp / e.maxHp);
       ctx.restore();
     }
   }
@@ -2358,6 +4105,10 @@
     }
     const cx = points.reduce(function (sum, point) { return sum + point.x; }, 0) / points.length;
     const cy = points.reduce(function (sum, point) { return sum + point.y; }, 0) / points.length;
+    if (p.demoV2StickyArchive > 0 && nodes.every(function (node) { return !node.archiveEcho; })) {
+      nodes.forEach(function (node) { node.archiveSaved = true; });
+      spawnStickyArchiveEchoes(state, { x: cx, y: cy, trapId: "sticky_board_archive" });
+    }
     addCircleEvent(state, cx, cy, 42, "#e8db92", 0.42, "trap", false, "sticky_notice_zone", { polygonArea: twiceArea / 2 });
     addDamageZone(state, {
       type: "polygon",
@@ -2375,12 +4126,50 @@
       root: p.noticeRoot || 0.75,
       visual: "notice_polygon"
     });
+    if (p.demoV2StickyMerge > 0) {
+      for (let pulseIndex = 0; pulseIndex < p.demoV2StickyMerge; pulseIndex++) {
+        const pulseRadius = 44 + p.demoV2StickyMerge * 10 + pulseIndex * 22;
+        const delay = pulseIndex * 0.13;
+        addCircleEvent(state, cx, cy, pulseRadius, "#fff7c4", 0.36 + delay, "blast", false, "sticky_module_merge", {
+          pulseIndex,
+          level: p.demoV2StickyMerge,
+          delay
+        });
+        addDamageZone(state, {
+          type: "circle", source: "sticky_module_merge", x: cx, y: cy,
+          radius: pulseRadius, damage: 6 + p.demoV2StickyMerge * 3,
+          delay, life: 0.16 + delay, maxLife: 0.16 + delay, hitOnce: true,
+          color: "#fff7c4", slow: 0.2, root: 0.12, visual: "sticky_trigger_blast"
+        });
+      }
+    }
+    if (p.demoV2StickyForward > 0) {
+      const relayAngle = Math.atan2(cy - state.player.y, cx - state.player.x);
+      const relayCount = p.demoV2StickyForward;
+      for (let relayIndex = 0; relayIndex < relayCount; relayIndex++) {
+        const relayOffset = relayCount === 1 ? 0 : (relayIndex / (relayCount - 1) - 0.5) * 0.72;
+        const angle = relayAngle + relayOffset;
+        const relayDistance = Math.min(142, 84 + relayIndex * 22);
+        const relayX = clamp(cx + Math.cos(angle) * relayDistance, 55, worldWidth(state) - 55);
+        const relayY = clamp(cy + Math.sin(angle) * relayDistance, 55, worldHeight(state) - 55);
+        const relayId = "sticky_relay_" + Date.now() + "_" + relayIndex + "_" + Math.random().toString(16).slice(2);
+        addCircleEvent(state, relayX, relayY, p.trapRadius || 30, "#fff0a8", 0.45, "trap", false, "sticky_notice_relay", { trapId: relayId, relayIndex });
+        addDamageZone(state, {
+          type: "circle", source: "sticky_notice_relay", x: relayX, y: relayY,
+          radius: p.trapRadius || 30, damage: 0, life: Math.max(2.4, duration * 0.75), maxLife: Math.max(2.4, duration * 0.75),
+          tickEvery: 999, color: "#fff0a8", slow: p.slow || 0.3, stickyTrap: true,
+          trapId: relayId, armed: true, armDelay: 0, noticeNode: true, linked: false,
+          zoneDamage: p.zoneDamage || 0, visual: "notice_node"
+        });
+      }
+    }
     return true;
   }
 
   function drawGeneratedEffects(ctx, state) {
     for (const z of state.damageZones) {
       if (z.delay && (z.age || 0) < z.delay) continue;
+      if (z.source === "thermos_test_kill_heatwave") continue;
       const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
       const progress = eventProgress(z);
       const profile = z.visualProfile || eventVisual(z.source || z.visual || z.type);
@@ -2390,6 +4179,18 @@
         continue;
       }
       if (z.type === "line") {
+        drawSuiteNeonLine(ctx, state, z, alpha, progress);
+        if (z.inkTrail) {
+          const dx = z.x2 - z.x1;
+          const dy = z.y2 - z.y1;
+          const length = Math.hypot(dx, dy) || 1;
+          const width = z.width || 24;
+          drawSprite(ctx, "marker_ink_art",
+            z.x1 + dx / 2, z.y1 + dy / 2,
+            Math.max(96, length + 44), Math.max(48, width * 1.65),
+            Math.min(0.72, alpha * 0.62 + 0.1), Math.atan2(dy, dx));
+          continue;
+        }
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), z.x1, z.y1, z.x2, z.y2, z.width || 8, Math.min(0.94, alpha + 0.12));
         continue;
       }
@@ -2399,6 +4200,8 @@
       if (z.type === "polygon" && profile.family === "sticky_note") continue;
       const radius = Math.max(24, z.radius || 44);
       const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
+      drawSuiteNeonArea(ctx, state, z, alpha, progress, mechanicRadius);
+      if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, z.source, z.type, z.visual, z.x, z.y, mechanicRadius, Math.min(0.9, alpha + 0.1), progress)) continue;
       const size = Math.min(520, radius * (z.type === "polygon" ? 2.2 : 1.55 + progress * 0.8));
@@ -2429,6 +4232,8 @@
         continue;
       }
       if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
+        drawSuiteNeonLine(ctx, state, event, alpha, progress);
+        if (drawV24LinearEvent(ctx, event, alpha, progress)) continue;
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
         const impactSize = profile.family === "thermos"
           ? Math.min(92, Math.max(48, (event.width || 6) * 4.5))
@@ -2439,6 +4244,8 @@
         continue;
       }
       const radius = Math.max(26, event.radius || 44);
+      drawSuiteNeonArea(ctx, state, event, alpha, progress, radius);
+      if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, event.source, event.kind, event.visual, event.x, event.y, radius, Math.min(0.94, alpha + 0.1), progress)) continue;
       const size = Math.min(440, radius * (1.25 + progress * 1.2));
@@ -2447,6 +4254,17 @@
         const bodySize = event.kind === "station" ? 68 : event.kind === "trap" || event.kind === "sticky_attach" ? 46 : Math.max(44, radius * 0.9);
         drawSprite(ctx, event.sprite, event.x, event.y, bodySize, bodySize, Math.min(0.98, alpha + 0.16), 0);
       }
+    }
+
+    // A death heatwave is the reward for a successful focus kill. Keep the
+    // single real ring event above the originating steam fan so the conversion
+    // stays legible; condensation and other persistent fields remain below it.
+    for (const z of state.damageZones) {
+      if (z.source !== "thermos_test_kill_heatwave" || (z.delay && (z.age || 0) < z.delay)) continue;
+      const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
+      const progress = eventProgress(z);
+      const radius = Math.max(8, ringCurrentRadius(z));
+      drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius);
     }
 
     for (const projectile of state.projectiles) {
@@ -2462,6 +4280,7 @@
 
     for (const pickup of state.pickups) {
       if (pickup.type === "material") drawAtlasCell(ctx, "office_atlas", 1, 1, pickup.x, pickup.y, 28, 28, 1, 0);
+      else if (pickup.type === "heal") drawAtlasCell(ctx, "office_atlas", 3, 1, pickup.x, pickup.y, 32, 32, 1, 0);
       else drawAtlasCell(ctx, "office_atlas", 2, 1, pickup.x, pickup.y, 26, 26, 1, 0);
     }
 
@@ -2712,6 +4531,12 @@
       addLabEnemy("station-a", 520, 360);
       addLabEnemy("station-b", 500, 420);
       state.activeFormParams.heat = 90;
+    } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      const focus = addLabEnemy("thermos-fixed-focus", 525, 360);
+      if (kind === "thermos_fixed_heatwave") focus.hp = 20;
+      addLabEnemy("thermos-fixed-upper", 560, 315);
+      addLabEnemy("thermos-fixed-lower", 585, 405);
+      addLabEnemy("thermos-fixed-edge", 620, 350);
     } else if (kind === "sticky_seek") {
       addLabEnemy("seek-a", 570, 350);
       addLabEnemy("seek-b", 650, 420);
@@ -2732,6 +4557,25 @@
       addLabEnemy("notice-center", 600, 360).hp = 600;
       state.enemies[0].maxHp = 600;
       addLabEnemy("notice-inside", 600, 380);
+    } else if (kind === "scissors_fixed" || kind === "scissors_fixed_dash") {
+      addLabEnemy("scissors-fixed-center", 510, 360);
+      addLabEnemy("scissors-fixed-upper", 535, 320);
+      addLabEnemy("scissors-fixed-lower", 540, 405);
+      const scissorsTest = scissorsFixedRuntime(state);
+      if (kind === "scissors_fixed_dash" && scissorsTest) scissorsTest.dashReady = true;
+    } else if (kind === "scissors_fixed_shelter") {
+      const scissorsTest = scissorsFixedRuntime(state);
+      if (scissorsTest) {
+        scissorsTest.shelterActive = true;
+        scissorsTest.shelterTime = Math.max(0.4, (state.activeFormParams.scissorsShelterDuration || 3.2) - 0.5);
+      }
+      addCircleEvent(state, state.player.x + (state.activeFormParams.scissorsShelterRadius || 108), state.player.y, 18, "#9ff7ff", 0.22, "shield", false, "scissors_test_shelter_block");
+    } else if (kind === "correction_fixed_boss") {
+      const boss = makeEnemy(state, "lead", 560, 360, { boss: true });
+      Object.assign(boss, { id: "correction-fixed-boss", name: "错误审查 Boss", speed: 0, damage: 0, correctionErrorStacks: 2, correctionErrorTime: 5 });
+      state.enemies.push(boss);
+      addLabEnemy("correction-fixed-add-a", 610, 310);
+      addLabEnemy("correction-fixed-add-b", 625, 410);
     } else if (kind === "scale") {
       addLabEnemy("scale-normal-a", 560, 330);
       addLabEnemy("scale-normal-b", 630, 405);
@@ -2802,6 +4646,12 @@
         fireThermos(state);
         updateZones(state, 0.18);
       }
+    } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      if (kind === "thermos_fixed_heatwave") state.activeFormParams.thermosFixedFullscreenChance = 0;
+      fireThermos(state);
+      if (kind === "thermos_fixed_heatwave" && (state.activeFormParams.thermosFixedFocusHits || 0) > 0) {
+        performThermosFixedFocus(state, { angle: 0, focusIndex: 0 });
+      }
     } else if (kind === "sticky_seek") {
       fireSticky(state);
       updateZones(state, 0.2);
@@ -2835,6 +4685,15 @@
       fireSticky(state);
       fireSticky(state);
       updateZones(state, 0.34);
+    } else if (kind === "scissors_fixed" || kind === "scissors_fixed_dash") {
+      fireScissorsFixedTest(state);
+      for (let actionStep = 0; actionStep < 12; actionStep++) updateScissorsFixedActions(state, 0.18);
+    } else if (kind === "scissors_fixed_shelter") {
+      // The persistent field is read from the same fixed-test runtime state;
+      // the boundary impact above uses the real shelter-block event source.
+    } else if (kind === "correction_fixed_boss") {
+      fireCorrectionFluidFixedTest(state);
+      updateZones(state, 0.02);
     } else if (kind && kind.indexOf("thermos_") === 0) {
       fireThermos(state);
     } else if (kind && kind.indexOf("sticky_") === 0) {
@@ -2918,6 +4777,12 @@
       }
       event.debugHold = true;
     });
+    if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
+      state.damageZones.forEach(function (zone) {
+        zone.age = Math.max(zone.age || 0, (zone.duration || zone.maxLife || 0.5) * 0.55);
+        zone.life = Math.max(0.08, (zone.maxLife || zone.duration || 0.5) * 0.45);
+      });
+    }
     if (kind === "wave") {
       state.damageZones.filter(function (zone) { return zone.type === "ring"; }).forEach(function (zone, index) {
         zone.duration = 3.2;
@@ -2949,6 +4814,10 @@
       resourceSourceMatches: formResourceSourceMatches,
       damageEnemy,
       updateZones,
+      updateThermosFixedPendingFocus,
+      updateScissorsFixedActions,
+      updateInput,
+      fireScissorsFixedTest,
       fireSupportSkill
     }
   };

@@ -219,26 +219,33 @@
         if (startButton) startButton.textContent = "进入修正液错误系统测试";
       }
       if (demoV2Phase === "four-weapon-fixed") {
-        document.title = "工位幸存者 Demo V2.6 · 四武器霓虹整合测试";
+        document.title = "工位幸存者 Demo V2.7 · 四武器可玩版";
         const shell = document.querySelector(".game-wrap");
         const stamp = document.querySelector(".title-stamp");
         const subtitle = document.querySelector(".title-hero .subtitle");
         const guideCards = document.querySelectorAll(".quick-guide .guide-card");
         const startButton = document.getElementById("startButton");
-        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.6 四武器霓虹整合测试");
-        if (stamp) stamp.textContent = "Demo V2.6 · 疯狂办公室霓虹整合版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.7 四武器可玩版");
+        if (stamp) stamp.textContent = "Demo V2.7 · 四武器可玩版";
         if (subtitle) subtitle.textContent = "暗色办公室只是底板：四种办公工具在持续压力中异化成路径、空间、位移和错误状态超能力。";
         if (guideCards.length >= 4) {
           guideCards[0].querySelector("strong").textContent = "四种战斗关系";
           guideCards[0].querySelector("span:last-child").textContent = "马克笔改路径，保温杯改空间，剪刀改自身位置，修正液改敌人状态。";
-          guideCards[1].querySelector("strong").textContent = "同一固定框架";
-          guideCards[1].querySelector("span:last-child").textContent = "每把武器都使用 5 阶段 17 关、4 次模块和 6 次组件商店。";
-          guideCards[2].querySelector("strong").textContent = "霓虹不是统一换皮";
+          guideCards[1].querySelector("strong").textContent = "同一成长框架";
+          guideCards[1].querySelector("span:last-child").textContent = "每把武器都使用 5 阶段 17 关、5 次模块选择和 6 次组件商店。";
+          guideCards[2].querySelector("strong").textContent = "武器保持独立母题";
           guideCards[2].querySelector("span:last-child").textContent = "每把武器保留材质母题，只在攻击、状态和终局节点出现赛博高光。";
-          guideCards[3].querySelector("strong").textContent = "修正液最强故障感";
+          guideCards[3].querySelector("strong").textContent = "错误系统故障感";
           guideCards[3].querySelector("span:last-child").textContent = "白色修正介质承载可读性，青/品红错误码承载污染、过载与纠错爆发。";
         }
         if (startButton) startButton.textContent = "选择一把异化办公武器";
+      }
+      if (demoV2Phase === "four-weapon-fixed") {
+        document.title = "工位幸存者 Demo V2.9 · 四武器一致性修正版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        if (stamp) stamp.textContent = "Demo V2.9 · 四武器一致性修正版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.9 四武器一致性修正版");
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

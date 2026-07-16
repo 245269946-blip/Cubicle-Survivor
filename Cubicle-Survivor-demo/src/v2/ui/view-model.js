@@ -78,52 +78,52 @@
       return {
         id: "demo-v2-marker-fixed",
         key: "demo-v2-marker-fixed",
-        label: (suiteVersion || "Demo V2.1") + " 马克笔固定测试",
+        label: (suiteVersion || "Demo V2.1") + " 马克笔",
         weaponStage: "模块机制 × 组件属性",
-        weaponStageShort: "三线验证",
-        playerGoal: "验证经验稳定成长、模块机制变化与材料组件取舍能否同时成立。",
-        rewardTiming: "八个战斗阶段；指定阶段先选模块，再进入四格组件商店。",
-        status: "prototype",
-        note: "只有马克笔；无工牌、卡牌、协同和其他武器"
+        weaponStageShort: "路径异化",
+        playerGoal: "用复写增加即时切割，或用留档把经过的路径变成持续战场。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "远程路径武器；复写强化即时切割，留档强化持续铺场。"
       };
     }
     if (stage.demoV2Phase === "thermos-fixed") {
       return {
         id: "demo-v2-thermos-fixed",
         key: "demo-v2-thermos-fixed",
-        label: (suiteVersion || "Demo V2.2") + " 保温杯固定测试",
+        label: (suiteVersion || "Demo V2.2") + " 保温杯",
         weaponStage: "冷凝铺场 × 聚焦击杀热浪",
         weaponStageShort: "近距双路线",
-        playerGoal: "验证短距扇面是否要求站位，以及群体铺场与单体击杀能否形成两条清晰路线。",
-        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
-        status: "prototype",
-        note: "只有保温杯；无工牌、卡牌、协同和其他武器"
+        playerGoal: "贴近敌群调整短距扇面，用冷凝控制空间，或把聚焦击杀转成热浪。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "近距空间武器；冷凝负责控场，聚焦击杀负责热浪转化。"
       };
     }
     if (stage.demoV2Phase === "scissors-fixed") {
       return {
         id: "demo-v2-scissors-fixed",
         key: "demo-v2-scissors-fixed",
-        label: (suiteVersion || "Demo V2.3") + " 剪刀固定测试",
+        label: (suiteVersion || "Demo V2.3") + " 剪刀",
         weaponStage: "轻步进场 × 双段近战时间线",
         weaponStageShort: "贴身双路线",
-        playerGoal: "验证纯近战风险、自动闪身进场，以及合刃/张刃两段动作能否形成清晰取舍。",
-        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
-        status: "prototype",
-        note: "只有剪刀；固定携带低血安全区；无随机道具池"
+        playerGoal: "以轻步调整进场角度，再用合刃/张刃完成近战动作轮。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "纯近战位移武器；轻步调整进场角度，低血安全区阻挡外部射弹。"
       };
     }
     if (stage.demoV2Phase === "correction-fluid-fixed") {
       return {
         id: "demo-v2-correction-fluid-fixed",
         key: "demo-v2-correction-fluid-fixed",
-        label: (suiteVersion || "Demo V2.5") + " 修正液固定测试",
+        label: (suiteVersion || "Demo V2.5") + " 修正液",
         weaponStage: "错误状态 × 污染/纠错双路线",
         weaponStageShort: "错误双路线",
-        playerGoal: "验证改变敌人状态能否形成独立于路径、空间和自身位移的第四种武器关系。",
-        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
-        status: "prototype",
-        note: "只有修正液；不接入其他武器、工牌、卡牌、协同或随机道具池"
+        playerGoal: "先制造三层错误，再让过载目标污染战场，或集中纠错关键目标。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "中距状态武器；制造错误后选择污染扩散或集中纠错。"
       };
     }
     const phase = V2.getPhaseMeta ? V2.getPhaseMeta(stage.phaseKey) : {};
@@ -529,7 +529,7 @@
         eyebrow: "第 " + encounter.id + "/" + config.encounterCount + " 关完成 · 10 秒收集窗口",
         title: "资源回收进行中",
         hint: "自由移动拾取经验与材料；倒计时结束会自动吸取遗漏资源。",
-        tags: ["经验靠近拾取", "材料靠近拾取", "结束自动吸取"],
+        tags: ["经验靠近拾取", "材料靠近拾取", "结束自动吸取", "回收结束恢复少量生命"],
         rule: "战斗已暂停生成，不会出现新敌人",
         next: "下一步：" + (markerTest.pendingExperiencePoints > 0 || (state.pickups || []).some(function (pickup) { return pickup.type === "xp"; }) ? "经验结算 → " + scheduledRoute : nextRoute),
         duration: config.collectionDuration
@@ -649,7 +649,7 @@
       return {
         theme: pageTheme(state),
         identity: fixedConfig.weaponName + "模块路线",
-        totalRounds: 4,
+        totalRounds: fixedConfig.moduleEncounters ? fixedConfig.moduleEncounters.length : 5,
         round: (test.moduleChoiceIndex || 0) + 1,
         owned: (fixedConfig.moduleLabels || (fixedConfig.weaponId === "scissors" ? ["合刃", "张刃"] : fixedConfig.weaponId === "thermos" ? ["冷凝", "击杀热浪"] : ["复写", "留档"])).map(function (label, index) {
           return label + " Lv." + (index === 0 ? test.modules.copy : test.modules.archive);
@@ -693,7 +693,7 @@
     const test = fixedTestRuntime(state, config);
     return {
       weaponName: config.weaponName,
-      version: config.version,
+      version: (state.demoV2 && state.demoV2.suiteVersion) || config.version,
       materials: state.materials,
       refreshCost: test.refreshCost,
       shopRound: test.shopIndex,
@@ -736,12 +736,12 @@
       marker_module_overdraft: "马克笔模块 · 透支划线",
       secondary_split: "马克笔 · 二次分裂",
       marker_fullscreen: "马克笔 · 全屏贯穿",
-      marker_test_base: "马克笔测试 · 基础激光",
-      marker_test_copy: "马克笔测试 · 平行复写",
-      marker_test_second_round: "马克笔测试 · 第二轮复写",
-      marker_test_archive: "马克笔测试 · 路径墨迹",
-      marker_test_fullscreen_copy: "马克笔测试 · 全屏复写",
-      marker_test_fullscreen_archive: "马克笔测试 · 全屏留档",
+      marker_test_base: "马克笔 · 基础激光",
+      marker_test_copy: "马克笔 · 平行复写",
+      marker_test_second_round: "马克笔 · 第二轮复写",
+      marker_test_archive: "马克笔 · 路径墨迹",
+      marker_test_fullscreen_copy: "马克笔 · 全屏复写",
+      marker_test_fullscreen_archive: "马克笔 · 全屏留档",
       thermos_intern_release: "保温杯 · 沸点释放",
       thermos_release: "保温杯 · 蓄热释放",
       thermos_drone_steam: "保温杯 · 蒸汽无人机",
@@ -750,25 +750,25 @@
       thermos_module_merge: "保温杯模块 · 高压汇流",
       thermos_module_overdraft: "保温杯模块 · 反向过压",
       thermos_module_heatwave: "保温杯模块 · 转发热浪",
-      thermos_test_base: "保温杯测试 · 近距蒸汽扇面",
-      thermos_test_condensation: "保温杯测试 · 分段冷凝",
-      thermos_test_focus: "保温杯测试 · 聚焦喷汽",
-      thermos_test_kill_heatwave: "保温杯测试 · 击杀热浪",
-      thermos_test_fullscreen_condensation: "保温杯测试 · 全屏冷凝",
-      thermos_test_fullscreen_ignition: "保温杯测试 · 全场点杀",
-      scissors_test_base: "剪刀测试 · 基础剪击",
-      scissors_test_thrust: "剪刀测试 · 合刃突刺",
-      scissors_test_sever: "剪刀测试 · 贯穿裁断",
-      scissors_test_open: "剪刀测试 · 张刃连剪",
-      scissors_test_finale: "剪刀测试 · 合剪终结",
-      scissors_test_finale_boss_bonus: "剪刀测试 · Boss 终剪转化",
-      scissors_test_execution: "剪刀测试 · 裁决处决",
-      correction_test_spray: "修正液测试 · 错误喷射",
-      correction_test_error_area: "修正液测试 · 错误区域",
-      correction_test_area_merge: "修正液测试 · 污染融合",
-      correction_test_system_crash: "修正液测试 · 系统崩溃",
-      correction_test_final: "修正液测试 · 最终纠错",
-      correction_test_final_blast: "修正液测试 · 纠错爆炸",
+      thermos_test_base: "保温杯 · 近距蒸汽扇面",
+      thermos_test_condensation: "保温杯 · 分段冷凝",
+      thermos_test_focus: "保温杯 · 聚焦喷汽",
+      thermos_test_kill_heatwave: "保温杯 · 击杀热浪",
+      thermos_test_fullscreen_condensation: "保温杯 · 全屏冷凝",
+      thermos_test_fullscreen_ignition: "保温杯 · 全场点杀",
+      scissors_test_base: "剪刀 · 基础剪击",
+      scissors_test_thrust: "剪刀 · 合刃突刺",
+      scissors_test_sever: "剪刀 · 贯穿裁断",
+      scissors_test_open: "剪刀 · 张刃连剪",
+      scissors_test_finale: "剪刀 · 合剪终结",
+      scissors_test_finale_boss_bonus: "剪刀 · Boss 终剪转化",
+      scissors_test_execution: "剪刀 · 裁决处决",
+      correction_test_spray: "修正液 · 错误喷射",
+      correction_test_error_area: "修正液 · 错误区域",
+      correction_test_area_merge: "修正液 · 污染融合",
+      correction_test_system_crash: "修正液 · 系统崩溃",
+      correction_test_final: "修正液 · 最终纠错",
+      correction_test_final_blast: "修正液 · 纠错爆炸",
       sticky_attach: "即时贴 · 附着伤害",
       sticky_spread: "即时贴 · 传播伤害",
       sticky_notice_pin: "即时贴 · 公告钉扎",
@@ -812,7 +812,7 @@
     const isScissors = markerFixed && fixedConfig.weaponId === "scissors";
     const isCorrection = markerFixed && fixedConfig.weaponId === "correction_fluid";
     return {
-      title: markerFixed ? fixedConfig.weaponName + (state.flags.won ? " 5 阶段 17 关测试完成" : " 固定测试中止") : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
+      title: markerFixed ? fixedConfig.weaponName + (state.flags.won ? " · 5 阶段 17 关完成" : " · 本局结束") : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
       theme: pageTheme(state),
       build: buildSummary(state),
       kills: state.kills,
@@ -859,12 +859,12 @@
       damage,
       note: markerFixed
         ? (isCorrection
-          ? "只复盘三件事：三层错误是否一眼可懂；错误扩散与致命纠错是否形成群体/关键目标两种节奏；白色修正介质与赛博故障霓虹是否既有主题又不遮挡战斗。"
+          ? "本局轨迹：三层错误制造过载；错误扩散负责群体污染，致命纠错负责集中处理关键目标。"
           : isScissors
-          ? "只复盘三件事：贴身风险是否真实；轻步是否帮助进场而非代替走位；合刃、张刃与混合路线是否形成不同动作节奏和组件判断。"
+          ? "本局轨迹：轻步调整进场角度；合刃负责窄线突刺，张刃负责短宽连剪与终结。"
           : isThermos
-          ? "只复盘三件事：近距扇面是否真的要求靠近和转向；冷凝与击杀热浪是否形成不同购买判断；混合路线是否以适应性而非数值碾压成立。"
-          : "只复盘三件事：复写与留档是否形成不同攻击结构；混合加点是否值得；模块 Lv3 后组件刷新是否仍有期待。")
+          ? "本局轨迹：近距扇面负责贴身覆盖；冷凝控制空间，聚焦击杀把单体优势转成热浪。"
+          : "本局轨迹：复写增加即时激光结构，留档把攻击路径变成持续墨迹；组件强化两者依赖的基础属性。")
         : phaseB
         ? "代表工牌：" + (state.badgeDept ? V2.compat.deptName(state.badgeDept) : "未定型") + "；模块：" + (moduleNames.join(" → ") || "无") + "。现在只回答：每次选择是否立刻改变画面，以及能否说清为什么前一个模块让后一个更有用。"
         : phaseA
