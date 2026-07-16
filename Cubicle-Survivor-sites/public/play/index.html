@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工位幸存者 Demo V1</title>
+    <link rel="icon" href="data:," />
+    <link rel="preload" as="image" href="assets/office-rogue-atlas.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/office-department-slot-icons-v2.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/menu-shell-office-3col.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/menu-shell-office-5col.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/menu-shell-office-workbench-3col.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/modal-shell-office-casefile.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/card-frame-office-vertical.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/combat-health-track-office.png" />
+    <link rel="preload" as="image" href="assets/generated-ui-v2/combat-health-fill-office.png" />
+    <link rel="preload" as="image" href="assets/generated-vfx/sprites/sticky-control-office-v2.png" />
+    <link rel="preload" as="image" href="assets/generated-vfx/sprites/sticky-link-line-office-v2.png" />
+    <link rel="preload" as="image" href="assets/generated-vfx/sprites/status-root-office-v2.png" />
+    <link rel="preload" as="image" href="assets/generated-vfx/sprites/status-shield-office-v2.png" />
+    <link rel="preload" as="image" href="assets/generated-vfx/sprites/status-mark-office-v2.png" />
+    <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_drone_v2.png" />
+    <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
+    <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
+    <link rel="stylesheet" href="styles.css?v=28" />
+    <link rel="stylesheet" href="generated-skin.css?v=41" />
+  </head>
+  <body>
+    <script>
+      window._errors = [];
+      window.onerror = function (msg, url, line, col, err) {
+        window._errors.push({
+          msg: String(msg),
+          url: String(url || ""),
+          line: line,
+          col: col,
+          stack: err && err.stack ? String(err.stack) : ""
+        });
+        return false;
+      };
+      window.addEventListener("unhandledrejection", function (event) {
+        var reason = event.reason || "";
+        window._errors.push({
+          msg: "Promise: " + String(reason && reason.message ? reason.message : reason),
+          stack: reason && reason.stack ? String(reason.stack) : ""
+        });
+      });
+    </script>
+
+    <main class="shell">
+      <section class="game-wrap v2-game" aria-label="工位幸存者 Demo V1">
+        <canvas id="game" width="1280" height="720"></canvas>
+        <div id="debugPanel" class="debug-panel hidden" aria-label="Debug 状态"></div>
+
+        <div class="objective-hud" aria-live="polite">
+          <span id="objectiveStageMeta" class="stage-meta">第 1 关</span>
+          <strong id="objectiveStageName">热身工位</strong>
+          <div class="objective-row">
+            <span>倒计时 <b id="objectiveTime">00:00</b></span>
+            <span>剩余 <b id="objectiveRemaining">0</b></span>
+            <span>击破 <b id="objectiveKills">0</b></span>
+          </div>
+          <div id="objectiveAlert" class="objective-alert">先熟悉移动和主武器节奏。</div>
+        </div>
+
+        <button id="pauseButton" class="pause-button" type="button">暂停</button>
+        <div class="hud top-left v2-compact-hud">
+          <div class="stat">
+            <span>等级</span>
+            <strong id="levelText">1</strong>
+          </div>
+          <div class="stat">
+            <span>材料</span>
+            <strong id="materialText">0</strong>
+          </div>
+          <div class="stat">
+            <span>形态</span>
+            <strong id="formText">未定</strong>
+          </div>
+        </div>
+        <div class="hud top-right">
+          <div class="stat hp-stat wide-stat">
+            <span>血量</span>
+            <strong id="hpText">100 / 100</strong>
+            <div class="hp-meter" aria-hidden="true"><div id="hpFill"></div></div>
+          </div>
+        </div>
+        <div class="xp-bar" aria-hidden="true"><div id="xpFill"></div></div>
+        <button id="buildToggle" class="build-toggle" type="button" aria-label="打开 Build 面板">构筑 B</button>
+        <div id="buildPanel" class="build-panel collapsed" aria-label="当前 Build 状态">
+          <div class="build-panel-head">
+            <span>主武器形态</span>
+            <strong id="buildSummary">未开始</strong>
+          </div>
+          <div id="routeMap" class="route-map"></div>
+          <div id="buildList" class="build-list"></div>
+        </div>
+        <div id="combatStatus" class="combat-status hidden" aria-live="polite">
+          <strong id="combatStatusLabel">机制状态</strong>
+          <b id="combatStatusValue">准备中</b>
+          <span id="combatStatusHint">观察当前主武器的触发节奏。</span>
+        </div>
+
+        <div id="warmupOverlay" class="warmup-overlay hidden">
+          <span id="warmupEmoji">ID</span>
+          <strong id="warmupTitle">热身中</strong>
+          <div class="warmup-bar"><div id="warmupFill"></div></div>
+          <span id="warmupTimer">3s</span>
+          <span id="warmupHint">WASD 移动，武器自动攻击。</span>
+        </div>
+
+        <div id="stageBanner" class="stage-banner hidden">
+          <span id="stageBannerMeta">第 1 关</span>
+          <strong id="stageBannerTitle">热身工位</strong>
+          <p id="stageBannerText">用走位把敌人拉成适合武器发挥的形状。</p>
+        </div>
+
+        <div id="startPanel" class="overlay">
+          <div class="panel intro-panel v2-panel">
+            <div class="title-hero">
+              <span class="title-stamp">Demo V1</span>
+              <h1><span class="title-glitch">工位</span>幸存者</h1>
+              <p class="subtitle">先选办公工具，再把它养成荒诞但好用的职场武器。</p>
+              <div class="title-bar" aria-hidden="true"></div>
+            </div>
+            <div class="quick-guide">
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">1</span>
+                <strong>武器母题</strong>
+                <span>决定基础攻击方式，例如直线贯穿、蓄热释放、贴纸布阵。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">2</span>
+                <strong>工牌形态</strong>
+                <span>同一把武器会因为部门不同，变成完全不同的战斗形态。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">3</span>
+                <strong>经验与材料</strong>
+                <span>经验给通用成长选择，材料在工坊强化当前主武器。</span>
+              </div>
+              <div class="guide-card">
+                <span class="guide-icon" aria-hidden="true">4</span>
+                <strong>卡槽强化</strong>
+                <span>每个槽都服务当前形态，重点看替换和追加前后的差异。</span>
+              </div>
+            </div>
+            <div class="start-actions">
+              <button id="startButton" class="primary-button">开始游戏</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="weaponSelectPanel" class="overlay hidden">
+          <div class="panel weapon-select-panel v2-panel">
+            <p id="weaponSelectEyebrow" class="eyebrow">选择初始武器</p>
+            <h2 id="weaponSelectTitle">先决定你怎么清场</h2>
+            <p id="weaponSelectNote" class="panel-note">武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。</p>
+            <div id="weaponSelectGrid" class="weapon-select-grid"></div>
+            <p id="weaponSelectFooter" class="weapon-select-footer">点击卡片确定武器 · 下一步选择工牌形态</p>
+          </div>
+        </div>
+
+        <div id="badgePanel" class="overlay hidden">
+          <div class="panel badge-panel v2-panel">
+            <p id="badgePanelEyebrow" class="eyebrow">选择工牌形态</p>
+            <h2 id="badgePanelTitle">这把武器要走哪种路线？</h2>
+            <div class="badge-grid" id="badgeGrid"></div>
+            <p id="badgePanelFooter" class="badge-panel-footer">点击卡片选择部门形态 · 同一武器会获得不同战斗动词</p>
+          </div>
+        </div>
+
+        <div id="upgradePanel" class="overlay hidden">
+          <div class="panel upgrade-panel v2-panel">
+            <p class="eyebrow">经验结算</p>
+            <h2>选择本次成长</h2>
+            <div id="upgradeContext" class="v2-context-line"></div>
+            <div id="upgradeChoices" class="choices"></div>
+            <div class="upgrade-actions">
+              <button id="skipUpgradeButton" class="primary-button tertiary-button" type="button">暂不选择</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="slotPanel" class="overlay hidden">
+          <div class="panel upgrade-panel v2-panel slot-panel">
+            <p class="eyebrow">卡槽强化</p>
+            <h2>把效果放进一个明确分工</h2>
+            <p id="slotPanelNote" class="panel-note">每个槽位对应一种稳定职责，开放项可以立即装入。</p>
+            <div id="slotChoices" class="slot-grid"></div>
+            <div id="slotBuildSummary" class="slot-build-summary"></div>
+          </div>
+        </div>
+
+        <div id="weaponPanel" class="overlay hidden">
+          <div class="panel upgrade-panel shop-panel v2-panel">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">材料工坊</p>
+                <h2>强化当前主武器</h2>
+                <p id="armoryReasonText" class="panel-note">材料只用于补强当前 Build，不跳阶段、不乱开系统。</p>
+              </div>
+              <div class="material-pill shop-material-pill">材料 <strong id="armoryMaterialText">0</strong></div>
+            </div>
+            <div id="armoryBuildStrip" class="armory-build-strip"></div>
+            <div id="weaponChoices" class="choices shop-choices"></div>
+            <div class="shop-actions">
+              <button id="refreshButton" class="primary-button tertiary-button">刷新 <span id="refreshCostText">3</span></button>
+              <button id="continueButton" class="primary-button secondary-button">进入下一关</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="resultPanel" class="overlay hidden">
+          <div class="panel result-panel v2-panel">
+            <p id="resultEyebrow" class="eyebrow">结算</p>
+            <h2 id="resultTitle">本轮结束</h2>
+            <div id="deathRecap" class="death-recap"></div>
+            <div class="result-actions">
+              <button id="restartButton" class="primary-button">再来一局</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="pausePanel" class="overlay hidden">
+          <div class="panel result-panel pause-panel v2-panel">
+            <p class="eyebrow">游戏暂停</p>
+            <h2>暂停</h2>
+            <div id="pauseStats" class="pause-sheet"></div>
+            <div class="pause-actions">
+              <button id="resumeButton" class="primary-button secondary-button">继续</button>
+              <button id="soundButton" class="primary-button tertiary-button" type="button" aria-pressed="false">声音：开</button>
+              <button id="restartFromPause" class="primary-button danger-button" type="button">放弃本轮</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <script src="src/data/departments.js?v=6"></script>
+    <script src="src/data/attributes.js"></script>
+    <script src="src/data/tags.js"></script>
+    <script src="src/data/cards.js"></script>
+    <script src="src/data/weapons.js?v=7"></script>
+    <script src="src/data/synergies.js"></script>
+    <script src="src/data/milestones.js"></script>
+    <script src="src/data/stages.js"></script>
+    <script src="src/data/balance.js"></script>
+    <script src="src/core/build-state.js"></script>
+    <script src="src/v2/data/weapon-forms.js?v=7"></script>
+    <script src="src/v2/data/form-signatures.js?v=4"></script>
+    <script src="src/v2/audio/audio.js?v=2"></script>
+    <script src="src/v2/compat/legacy.js?v=3"></script>
+    <script src="src/v2/runtime/state.js?v=8"></script>
+    <script src="src/v2/progression/progression.js?v=8"></script>
+  <script src="src/v2/combat/systems.js?v=56"></script>
+    <script src="src/v2/ui/view-model.js?v=8"></script>
+    <script src="src/v2/ui/render.js?v=18"></script>
+    <script src="main.js?v=62"></script>
+  </body>
+</html>

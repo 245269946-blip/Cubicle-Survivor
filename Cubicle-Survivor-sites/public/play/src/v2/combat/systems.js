@@ -1,0 +1,2955 @@
+// ================================================================
+// src/v2/combat/systems.js
+// Canvas combat runtime. UI does not mutate combat state directly.
+// ================================================================
+(function () {
+  const CS = window.CS || (window.CS = {});
+  const V2 = CS.V2 || (CS.V2 = {});
+
+  const W = 1280;
+  const H = 720;
+  const STEP = 1 / 60;
+  let canvas = null;
+  let ctx = null;
+  let attackTimer = 0;
+  let spawnTimer = 0;
+  let pickupMagnetTimer = 0;
+  const RUNTIME_SPRITES = {
+    office_atlas: "assets/office-rogue-atlas.png",
+    office_arena_night: "assets/generated-backgrounds/office-arena-night.png",
+    combat_health_track_office: "assets/generated-ui-v2/combat-health-track-office.png",
+    combat_health_fill_office: "assets/generated-ui-v2/combat-health-fill-office.png",
+    marker_beam_art: "assets/generated-vfx/sprites/marker-line-office-v2.png",
+    marker_branch_art: "assets/generated-vfx/sprites/marker-branch-office-v2.png",
+    marker_impact_art: "assets/generated-vfx/sprites/marker-impact-office-v2.png",
+    marker_grid_art: "assets/generated-vfx/sprites/marker-grid-field-office-v2.png",
+    marker_wave_art: "assets/generated-vfx/sprites/marker-wave-office-v2.png",
+    thermos_steam_art: "assets/generated-vfx/sprites/thermos-steam-line-office-v2.png",
+    thermos_charge_art: "assets/generated-vfx/sprites/thermos-charge-gauge-office-v2.png",
+    thermos_release_art: "assets/generated-vfx/sprites/thermos-release-office-v2.png",
+    thermos_wave_art: "assets/generated-vfx/sprites/thermos-wave-office-v2.png",
+    sticky_trap_art: "assets/v2-weapon-vfx/sprites/sticky_note_v2.png",
+    sticky_seek_art: "assets/generated-vfx/sprites/sticky-seek-office-v2.png",
+    sticky_burst_art: "assets/generated-vfx/sprites/sticky-burst-office-v2.png",
+    sticky_control_art: "assets/generated-vfx/sprites/sticky-control-office-v2.png",
+    sticky_link_line_art: "assets/generated-vfx/sprites/sticky-link-line-office-v2.png",
+    status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
+    status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
+    status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
+    enemy_projectile_art: "assets/generated-vfx/sprites/enemy-projectile-office-v2.png",
+    thermos_drone_v2: "assets/v2-weapon-vfx/sprites/thermos_drone_v2.png",
+    thermos_station_v2: "assets/v2-weapon-vfx/sprites/thermos_station_v2.png",
+    sticky_note_v2: "assets/v2-weapon-vfx/sprites/sticky_note_v2.png"
+  };
+  const FORM_RESOURCE_SOURCES = {
+    line_split: ["marker_split", "marker_secondary_split", "marker_fullscreen"],
+    mark_detonate: ["marker_p0_blast"],
+    shield_counter_line: ["marker_counter"],
+    line_to_wave: ["marker_wave", "marker_wave_return"],
+    line_grid_field: ["marker_grid_line", "marker_grid_field"],
+    patrol_summon_steam: ["thermos_drone_steam"],
+    charge_release_beam: ["thermos_release"],
+    shield_break_pulse: ["thermos_shield_break"],
+    periodic_wave_spread: ["thermos_tea_echo"],
+    deployable_safe_station: ["thermos_station"],
+    seeking_trap_summon: ["sticky_seeking_hit", "sticky_seeking_bounce"],
+    manual_trap_detonate: ["sticky_sync_blast"],
+    route_buff_trap: ["sticky_route"],
+    sticky_debuff_spread: ["sticky_spread"],
+    trap_link_control_zone: ["sticky_link_line", "sticky_notice_zone"]
+  };
+  const runtimeImages = {};
+  const ENEMY_ATLAS_CELLS = {
+    todo: [2, 0],
+    email: [1, 0],
+    meeting: [3, 0],
+    ping: [1, 3],
+    deadline: [0, 1],
+    scope: [3, 2],
+    approval: [1, 1],
+    client: [2, 1],
+    lead: [3, 0],
+    director: [1, 1],
+    delivery: [0, 1],
+    ceo: [2, 0]
+  };
+  const ENEMY_DEFS = {
+    todo: { name: "待办便签", behavior: "chase", hp: 1, speed: 1, damage: 7, radius: 13, xp: 5, color: "#c82345", accent: "#ff6b8a" },
+    email: { name: "未读邮件", behavior: "zigzag", hp: 0.72, speed: 1.28, damage: 6, radius: 11, xp: 5, color: "#cf3fcf", accent: "#ff8aff" },
+    meeting: { name: "临时会议", behavior: "tank", hp: 1.45, speed: 0.74, damage: 9, radius: 17, xp: 7, color: "#a83250", accent: "#ffc26b" },
+    ping: { name: "群消息轰炸", behavior: "shooter", hp: 0.82, speed: 0.78, damage: 6, radius: 12, xp: 6, color: "#a943d6", accent: "#d78cff", shootEvery: 2.35, projectileSpeed: 240 },
+    deadline: { name: "截止日期", behavior: "charger", hp: 1.04, speed: 1.08, damage: 11, radius: 13, xp: 7, color: "#e44b3f", accent: "#ffd36a", chargeEvery: 2.6, chargeSpeed: 265 },
+    scope: { name: "需求变更", behavior: "splitter", hp: 1.18, speed: 0.84, damage: 8, radius: 15, xp: 7, color: "#3d9bd6", accent: "#91e6ff", splitType: "todo" },
+    approval: { name: "审批流", behavior: "shield", hp: 1.38, speed: 0.7, damage: 10, radius: 16, xp: 8, color: "#6d6f8f", accent: "#d9e6ff", armor: 0.28 },
+    client: { name: "客户追问", behavior: "shooter", hp: 1.02, speed: 0.92, damage: 9, radius: 14, xp: 8, color: "#d65a8d", accent: "#ffb0d0", shootEvery: 2.05, projectileSpeed: 275 }
+  };
+  const BOSS_DEFS = {
+    lead: { name: "实习导师", behavior: "boss", color: "#ff8a3d", accent: "#ffd36a", shootEvery: 2.8 },
+    director: { name: "部门总监", behavior: "boss_shield", color: "#ff6b4a", accent: "#d9e6ff", armor: 0.26, shootEvery: 2.7 },
+    delivery: { name: "独立交付", behavior: "boss_charger", color: "#ff763d", accent: "#ffe28a", chargeEvery: 3.1, chargeSpeed: 255 },
+    client: { name: "大客户追问", behavior: "boss_shooter", color: "#e05a98", accent: "#ffc2df", shootEvery: 1.75, projectileSpeed: 285 },
+    ceo: { name: "老板最终确认", behavior: "boss_final", color: "#ff5d3d", accent: "#ffe28a", armor: 0.18, shootEvery: 1.8, chargeEvery: 4.2, chargeSpeed: 250 }
+  };
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function worldWidth(state) {
+    return state.world && state.world.width ? state.world.width : W;
+  }
+
+  function worldHeight(state) {
+    return state.world && state.world.height ? state.world.height : H;
+  }
+
+  function updateCamera(state) {
+    if (!state.camera) state.camera = { x: 0, y: 0, width: W, height: H };
+    state.camera.width = W;
+    state.camera.height = H;
+    state.camera.x = clamp(state.player.x - W / 2, 0, Math.max(0, worldWidth(state) - W));
+    state.camera.y = clamp(state.player.y - H / 2, 0, Math.max(0, worldHeight(state) - H));
+  }
+
+  function dist(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function nearestEnemy(state, range) {
+    if (state.stage && state.stage.boss) {
+      const boss = state.enemies.find(function (enemy) {
+        return enemy.boss && !enemy.dead && (!range || dist(state.player, enemy) <= range);
+      });
+      if (boss) return boss;
+    }
+    let best = null;
+    let bestD = Infinity;
+    for (const enemy of state.enemies) {
+      const d = dist(state.player, enemy);
+      if (d < bestD && (!range || d <= range)) {
+        best = enemy;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  function addParticle(state, x, y, color, count) {
+    const budget = state.stage.id >= 4 ? 90 : 140;
+    if (state.particles.length > budget) return;
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 40 + Math.random() * 180;
+      state.particles.push({
+        x, y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        life: 0.28 + Math.random() * 0.38,
+        maxLife: 0.66,
+        color,
+        size: 2 + Math.random() * 4
+      });
+    }
+  }
+
+  function loadVfxImages() {
+    Object.keys(RUNTIME_SPRITES).forEach(function (id) {
+      if (runtimeImages[id]) return;
+      const img = new Image();
+      img.onload = function () {
+        const state = V2.getState();
+        if (state && state.loop && !state.loop.running) draw();
+      };
+      img.src = RUNTIME_SPRITES[id];
+      runtimeImages[id] = img;
+    });
+  }
+
+  function isSpriteReady(id) {
+    const img = runtimeImages[id];
+    return !!(img && img.complete && img.naturalWidth > 0);
+  }
+
+  function drawSprite(ctx, id, x, y, width, height, alpha, rotation) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.drawImage(img, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function drawLineSprite(ctx, id, x1, y1, x2, y2, width, alpha) {
+    if (!isSpriteReady(id)) return false;
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const height = Math.max(34, (width || 6) * 9);
+    return drawSprite(ctx, id, x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2, Math.max(90, len), height, alpha, angle);
+  }
+
+  function generatedEffectSprite(profile, source, kind, visual) {
+    const key = [source || "", kind || "", visual || "", profile && profile.family || "", profile && profile.topology || ""].join(" ");
+    if (/shield/.test(key)) return "status_shield_art";
+    if (/root/.test(key)) return "status_root_art";
+    if (/target_mark|control_mark|p0_mark|priority_pin|marked/.test(key)) return "status_mark_art";
+    if (/sticky|trap|note|notice|route/.test(key)) {
+      if (/notice_node|notice_trap|placed_trap/.test(key)) return "sticky_trap_art";
+      if (/link|polygon|field|notice/.test(key)) return "sticky_control_art";
+      if (/seek|trail/.test(key)) return "sticky_seek_art";
+      if (/blast|spread|detonate|impact/.test(key)) return "sticky_burst_art";
+      return "sticky_trap_art";
+    }
+    if (/thermos|steam|tea|heat|boil|station/.test(key)) {
+      if (/wave|ring|echo/.test(key)) return "thermos_wave_art";
+      if (/charge|heat/.test(key)) return "thermos_charge_art";
+      if (/release|blast|boil|detonate/.test(key)) return "thermos_release_art";
+      return "thermos_steam_art";
+    }
+    if (/wave|ring/.test(key)) return "marker_wave_art";
+    if (/grid|residual/.test(key)) return "marker_grid_art";
+    if (/branch|split|secondary/.test(key)) return "marker_branch_art";
+    if (/impact|blast|detonate|hit/.test(key)) return "marker_impact_art";
+    return "marker_beam_art";
+  }
+
+  function drawGeneratedLine(ctx, sprite, x1, y1, x2, y2, width, alpha) {
+    const length = Math.hypot(x2 - x1, y2 - y1);
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const isStickyString = sprite === "sticky_link_line_art";
+    const spriteWidth = isStickyString ? Math.max(28, length + 6) : Math.max(72, length + 24);
+    const spriteHeight = isStickyString ? Math.max(10, (width || 6) * 1.8) : Math.max(44, (width || 6) * 8);
+    return drawSprite(ctx, sprite, x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2, spriteWidth, spriteHeight, alpha, angle);
+  }
+
+  function generatedLineSprite(profile, fallback) {
+    if (profile && profile.family === "marker") return "marker_beam_art";
+    if (profile && profile.family === "thermos") return "thermos_steam_art";
+    if (profile && profile.family === "sticky_note") return "sticky_link_line_art";
+    return fallback;
+  }
+
+  function drawGeneratedStatusSprite(ctx, sprite, x, y, radius, alpha) {
+    if (sprite === "status_shield_art") {
+      const size = clamp((radius || 44) * 1.08, 82, 112);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.76, alpha), 0);
+      return true;
+    }
+    if (sprite === "status_mark_art") {
+      const size = clamp((radius || 40) * 0.92, 58, 84);
+      drawSprite(ctx, sprite, x, y - 2, size, size, Math.min(0.82, alpha), 0);
+      return true;
+    }
+    if (sprite === "status_root_art") {
+      const width = clamp((radius || 40) * 1.04, 60, 94);
+      drawSprite(ctx, sprite, x, y + width * 0.18, width, width * 0.441, Math.min(0.82, alpha), 0);
+      return true;
+    }
+    return false;
+  }
+
+  function drawGeneratedMechanicSprite(ctx, sprite, source, kind, visual, x, y, radius, alpha, progress) {
+    if (sprite === "marker_branch_art") {
+      const size = clamp((radius || 36) * 4.6, 180, 240);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.84, alpha), 0);
+      return true;
+    }
+    if (sprite === "marker_wave_art") {
+      const size = clamp((radius || 24) * 2.66, 56, 520);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.74, alpha), (progress || 0) * 0.04);
+      return true;
+    }
+    if (sprite === "thermos_wave_art") {
+      const size = clamp((radius || 28) * 2.4, 72, 500);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.66, alpha), (progress || 0) * 0.03);
+      return true;
+    }
+    if (sprite === "marker_grid_art") {
+      const size = clamp((radius || 48) * 2.35, 220, 260);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.9, alpha), 0);
+      return true;
+    }
+    if (sprite === "sticky_trap_art" || sprite === "sticky_note_v2") {
+      const size = clamp((radius || 26) * 1.15, 34, 48);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.92, alpha), 0);
+      return true;
+    }
+    if (sprite === "sticky_burst_art") {
+      const size = clamp((radius || 38) * 2.15, 72, 220);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.78, alpha), (progress || 0) * 0.06);
+      return true;
+    }
+    if (sprite === "sticky_seek_art") {
+      const width = clamp((radius || 24) * 2.05, 42, 58);
+      drawSprite(ctx, sprite, x, y, width, width * 0.487, Math.min(0.92, alpha), 0);
+      return true;
+    }
+    if (sprite === "thermos_charge_art") {
+      const size = clamp((radius || 48) * 1.06, 84, 112);
+      drawSprite(ctx, sprite, x, y, size, size, Math.min(0.76, alpha), 0);
+      return true;
+    }
+    if (sprite !== "thermos_release_art") return false;
+    const key = [source || "", kind || "", visual || ""].join(" ");
+    const compact = /secondary|mini|impact|hit/.test(key);
+    const size = compact
+      ? clamp((radius || 40) * 1.02, 54, 82)
+      : clamp((radius || 48) * 1.18, 72, 120);
+    drawSprite(ctx, sprite, x, y, size, size, Math.min(0.84, alpha), (progress || 0) * 0.04);
+    return true;
+  }
+
+  function beamSpriteFor(kind) {
+    return "";
+  }
+
+  function circleSpriteFor(kind) {
+    if (kind === "trap" || kind === "sticky_attach" || kind === "sticky_spread" || kind === "support_trap") return "sticky_note_v2";
+    if (kind === "station") return "thermos_station_v2";
+    if (kind === "steam_drone") return "thermos_drone_v2";
+    return "";
+  }
+
+  function zoneSpriteFor(visual) {
+    if (visual === "sticky_note" || visual === "route_note" || visual === "seeking_note" || visual === "notice_node" || visual === "support_trap") return "sticky_note_v2";
+    if (visual === "notice_board" || visual === "notice_polygon" || visual === "sticky_link_line" || visual === "link_line") return "";
+    if (visual === "sticky_trigger_blast" || visual === "sticky_sync_blast" || visual === "secondary_sticky_blast") return "";
+    if (visual === "thermos_drone_module") return "thermos_drone_v2";
+    if (visual === "safe_station" || visual === "thermos_station_field") return "thermos_station_v2";
+    return "";
+  }
+
+  function formResourceSourceMatches(state, source) {
+    const type = state.activeForm && state.activeForm.mechanicType;
+    const sources = FORM_RESOURCE_SOURCES[type] || [];
+    return sources.indexOf(source) >= 0;
+  }
+
+  function eventPhase(source) {
+    return V2.getWeaponEventPhase ? V2.getWeaponEventPhase(source || "") : "impact";
+  }
+
+  function eventVisual(source) {
+    return V2.getWeaponVisualEvent ? V2.getWeaponVisualEvent(source || "") : {
+      family: "marker",
+      phase: eventPhase(source),
+      topology: "impact_burst",
+      cue: "impact",
+      role: "primary",
+      priority: 3,
+      intensity: 1,
+      timeline: ["impact", "fade"],
+      palette: { core: "#9ffcff", accent: "#d8ffff", warning: "#ffb067" }
+    };
+  }
+
+  function eventSignature(source) {
+    const forms = V2.weaponFormSignatures || {};
+    const keys = Object.keys(forms);
+    for (let i = 0; i < keys.length; i++) {
+      const sig = forms[keys[i]];
+      if (sig.sources && sig.sources.indexOf(source) >= 0) return sig;
+    }
+    return null;
+  }
+
+  function eventProgress(item) {
+    return 1 - clamp(item.life / item.maxLife, 0, 1);
+  }
+
+  function ringCurrentRadius(item) {
+    const activeAge = Math.max(0, (item.age || 0) - (item.delay || 0));
+    const progress = clamp(activeAge / Math.max(0.01, item.duration || item.maxLife || 0.4), 0, 1);
+    const travel = item.reverse ? 1 - progress : progress;
+    return (item.startRadius || 0) + ((item.radius || 0) - (item.startRadius || 0)) * travel;
+  }
+
+  const CombatPrimitives = {
+    beam(data) {
+      return Object.assign({
+        primitive: "beam",
+        kind: "beam",
+        source: "beam",
+        color: "#63f7ff",
+        width: 5,
+        life: 0.18,
+        maxLife: data && data.life ? data.life : 0.18
+      }, data || {}, { maxLife: data && data.life ? data.life : 0.18 });
+    },
+    circleEvent(data) {
+      return Object.assign({
+        primitive: "circle_event",
+        kind: "circle",
+        source: "circle",
+        color: "#63f7ff",
+        radius: 48,
+        life: 0.28,
+        maxLife: data && data.life ? data.life : 0.28
+      }, data || {}, { maxLife: data && data.life ? data.life : 0.28 });
+    },
+    zone(data) {
+      return Object.assign({
+        primitive: "zone",
+        source: "zone",
+        type: "circle",
+        life: 0.35,
+        maxLife: data && data.life ? data.life : 0.35,
+        damage: 10,
+        tick: 0,
+        tickEvery: 0.12,
+        color: "#63f7ff",
+        hits: {}
+      }, data || {}, { maxLife: data && data.life ? data.life : 0.35 });
+    },
+    projectile(data) {
+      return Object.assign({
+        primitive: "projectile",
+        source: "projectile",
+        speed: 360,
+        damage: 10,
+        radius: 5,
+        life: 2,
+        color: "#62f7ff"
+      }, data || {});
+    }
+  };
+
+  function traceWeaponEvent(state, type, data) {
+    if (!state.stats.weaponEvents) state.stats.weaponEvents = [];
+    const payload = Object.assign({
+      type,
+      stageId: state.stage && state.stage.id,
+      formId: state.activeForm && state.activeForm.formId
+    }, data || {});
+    const visual = eventVisual(payload.source || type);
+    payload.vfxPhase = payload.vfxPhase || visual.phase;
+    payload.visualFamily = visual.family;
+    payload.visualTopology = visual.topology;
+    payload.visualCue = visual.cue;
+    payload.visualRole = visual.role;
+    payload.visualTimeline = visual.timeline.slice();
+    state.stats.weaponEvents.push(payload);
+    if (V2.audio && V2.audio.handleWeaponEvent) V2.audio.handleWeaponEvent(payload, state);
+    if (state.stats.weaponEvents.length > 240) {
+      state.stats.weaponEvents.splice(0, state.stats.weaponEvents.length - 240);
+    }
+  }
+
+  function addBeamEvent(state, x1, y1, x2, y2, color, width, life, kind, sprite, source, meta) {
+    const eventSource = source || kind || "beam";
+    const visualProfile = eventVisual(eventSource);
+    const delay = meta && meta.delay ? meta.delay : 0;
+    const event = CombatPrimitives.beam({
+      kind: kind || "beam",
+      source: eventSource,
+      x1, y1, x2, y2,
+      color,
+      width,
+      life: life + delay,
+      duration: life,
+      delay,
+      age: 0,
+      sprite: sprite === false ? "" : (sprite || beamSpriteFor(kind || "beam")),
+      vfxPhase: eventPhase(eventSource),
+      visualProfile,
+      signature: eventSignature(eventSource),
+      meta: meta || null
+    });
+    state.formEvents.push(event);
+    traceWeaponEvent(state, "beam", Object.assign({ source: event.source, x1, y1, x2, y2, width, sprite: event.sprite, vfxPhase: event.vfxPhase }, meta || {}));
+  }
+
+  function addCircleEvent(state, x, y, radius, color, life, kind, sprite, source, meta) {
+    const eventSource = source || kind || "circle";
+    const visualProfile = eventVisual(eventSource);
+    const delay = meta && meta.delay ? meta.delay : 0;
+    const event = CombatPrimitives.circleEvent({
+      kind: kind || "circle",
+      source: eventSource,
+      x, y,
+      radius,
+      color,
+      life: life + delay,
+      duration: life,
+      delay,
+      age: 0,
+      sprite: sprite === false ? "" : (sprite || circleSpriteFor(kind || "circle")),
+      vfxPhase: eventPhase(eventSource),
+      visualProfile,
+      signature: eventSignature(eventSource),
+      meta: meta || null
+    });
+    state.formEvents.push(event);
+    traceWeaponEvent(state, "circle", Object.assign({ source: event.source, x, y, radius, sprite: event.sprite, vfxPhase: event.vfxPhase }, meta || {}));
+  }
+
+  function addTextEvent(state, x, y, text, color, life) {
+    state.formEvents.push({ kind: "text", x, y, text, color: color || "#d8ffff", life: life || 0.6, maxLife: life || 0.6 });
+  }
+
+  function addDamageZone(state, zone) {
+    const z = CombatPrimitives.zone(zone);
+    z.vfxPhase = z.vfxPhase || eventPhase(z.source || z.visual || z.type);
+    z.visualProfile = z.visualProfile || eventVisual(z.source || z.visual || z.type);
+    z.signature = z.signature || eventSignature(z.source || z.visual || z.type);
+    state.damageZones.push(z);
+    traceWeaponEvent(state, "zone", {
+      source: z.source || z.visual || z.type,
+      x: z.x,
+      y: z.y,
+      x1: z.x1,
+      y1: z.y1,
+      x2: z.x2,
+      y2: z.y2,
+      radius: z.radius,
+      width: z.width,
+      visual: z.visual,
+      vfxPhase: z.vfxPhase
+    });
+  }
+
+  function damageEnemy(state, enemy, amount, source, knockbackFrom) {
+    if (!enemy || enemy.dead) return;
+    if (enemy.armor) {
+      amount *= 1 - Math.min(0.6, enemy.armor);
+      addCircleEvent(state, enemy.x, enemy.y, enemy.r + 10, enemy.accent || "#d9e6ff", 0.16, "shield");
+    }
+    if (enemy.boss && enemy.bossHitCap) {
+      amount = Math.min(amount, enemy.maxHp * enemy.bossHitCap);
+    }
+    enemy.hp -= amount;
+    state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
+    traceWeaponEvent(state, "hit", { source, enemyId: enemy.id, amount, x: enemy.x, y: enemy.y, hpAfter: enemy.hp, vfxPhase: eventPhase(source) });
+    if (knockbackFrom) {
+      const dx = enemy.x - knockbackFrom.x;
+      const dy = enemy.y - knockbackFrom.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const knockbackPower = knockbackFrom.power == null ? 12 : knockbackFrom.power;
+      enemy.x += dx / len * knockbackPower;
+      enemy.y += dy / len * knockbackPower;
+    }
+    if (enemy.hp <= 0) {
+      enemy.dead = true;
+      if (enemy.boss) state.stageBossDefeated = true;
+      state.kills += 1;
+      state.stageKills += 1;
+      if (enemy.stickyDebuff) {
+        const spread = enemy.stickyDebuff;
+        addCircleEvent(state, enemy.x, enemy.y, spread.radius || 120, "#8df7ff", 0.38, "sticky_spread");
+        let spreadCount = 0;
+        const spreadLimit = spread.limit == null ? 2 : spread.limit;
+        for (const other of state.enemies) {
+          if (other.dead || other === enemy) continue;
+          if (Math.hypot(other.x - enemy.x, other.y - enemy.y) > (spread.radius || 120) + other.r) continue;
+          if (spreadCount >= spreadLimit) break;
+          if (spread.depth > 0) {
+            other.stickyDebuff = {
+              radius: spread.radius,
+              damage: Math.max(3, (spread.damage || amount * 0.55) * 0.78),
+              limit: Math.max(0, spreadLimit - 1),
+              depth: spread.depth - 1,
+              slow: spread.slow || 0
+            };
+          }
+          damageEnemy(state, other, spread.damage || amount * 0.55, "sticky_spread", enemy);
+          if (spread.slow) other.speed *= Math.max(0.45, 1 - spread.slow);
+          spreadCount += 1;
+        }
+      }
+      if (enemy.teaScent) {
+        const radius = enemy.teaScent.radius || 96;
+        addThermosWavefront(state, {
+          source: "thermos_tea_echo",
+          x: enemy.x,
+          y: enemy.y,
+          radius,
+          damage: enemy.teaScent.damage || 6,
+          duration: 0.42,
+          thickness: 24,
+          color: "#aaf4ff",
+          visual: "thermos_tea_echo"
+        });
+      }
+      if (enemy.splitType && !enemy.fragment && state.enemies.length < 90) {
+        spawnChildEnemy(state, enemy, enemy.splitType, -1);
+        spawnChildEnemy(state, enemy, enemy.splitType, 1);
+      }
+      const sourceMatchesResource = formResourceSourceMatches(state, source);
+      const xpBonus = sourceMatchesResource ? (state.activeFormParams.xpBonus || 0) : 0;
+      const materialBonus = sourceMatchesResource ? (state.activeFormParams.materialBonus || 0) : 0;
+      const xpAmount = Math.round((enemy.xp || 4) * (1 + xpBonus));
+      state.pickups.push({ type: "xp", x: enemy.x, y: enemy.y, amount: xpAmount, radius: 7, color: "#4a9eff" });
+      if (Math.random() < 0.28 + materialBonus) {
+        state.pickups.push({ type: "material", x: enemy.x + 8, y: enemy.y - 4, amount: 1, radius: 6, color: "#ffd700" });
+      }
+      addParticle(state, enemy.x, enemy.y, enemy.boss ? "#ff6b4a" : "#63f7ff", enemy.boss ? 18 : 6);
+    }
+  }
+
+  function lineHitEnemies(state, x1, y1, x2, y2, width, damage, pierce, source, options) {
+    const hits = [];
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len2 = dx * dx + dy * dy || 1;
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      if (options && options.excludeEnemies && options.excludeEnemies.has(enemy)) continue;
+      const t = clamp(((enemy.x - x1) * dx + (enemy.y - y1) * dy) / len2, 0, 1);
+      const px = x1 + dx * t;
+      const py = y1 + dy * t;
+      const d = Math.hypot(enemy.x - px, enemy.y - py);
+      if (d <= width + enemy.r) {
+        hits.push({ enemy, t, x: enemy.x, y: enemy.y });
+      }
+    }
+    hits.sort(function (a, b) { return a.t - b.t; });
+    const limited = hits.slice(0, Math.max(1, pierce || 1));
+    limited.forEach(function (hit) {
+      damageEnemy(state, hit.enemy, damage, source, { x: x1, y: y1 });
+    });
+    return limited;
+  }
+
+  function nearestBranchTarget(state, origin, excludedEnemies, claimedEnemies, range) {
+    let best = null;
+    let bestDistance = Infinity;
+    for (const enemy of state.enemies) {
+      if (enemy.dead || enemy === origin) continue;
+      if (excludedEnemies && excludedEnemies.has(enemy)) continue;
+      if (claimedEnemies && claimedEnemies.has(enemy)) continue;
+      const distance = Math.hypot(enemy.x - origin.x, enemy.y - origin.y);
+      if (distance > range || distance >= bestDistance) continue;
+      best = enemy;
+      bestDistance = distance;
+    }
+    return best;
+  }
+
+  function nearestEnemyFromPoint(state, point, range) {
+    let best = null;
+    let bestDistance = Infinity;
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      const distance = Math.hypot(enemy.x - point.x, enemy.y - point.y);
+      if (distance < bestDistance && (!range || distance <= range)) {
+        best = enemy;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  function lineEndpointThroughTarget(origin, target, range) {
+    const dx = target.x - origin.x;
+    const dy = target.y - origin.y;
+    const len = Math.hypot(dx, dy) || 1;
+    return {
+      x: origin.x + dx / len * range,
+      y: origin.y + dy / len * range
+    };
+  }
+
+  function segmentIntersection(a, b) {
+    const adx = a.x2 - a.x1;
+    const ady = a.y2 - a.y1;
+    const bdx = b.x2 - b.x1;
+    const bdy = b.y2 - b.y1;
+    const denominator = adx * bdy - ady * bdx;
+    if (Math.abs(denominator) < 0.0001) return null;
+    const ox = b.x1 - a.x1;
+    const oy = b.y1 - a.y1;
+    const ta = (ox * bdy - oy * bdx) / denominator;
+    const tb = (ox * ady - oy * adx) / denominator;
+    if (ta < 0.08 || ta > 0.92 || tb < 0.08 || tb > 0.92) return null;
+    return { x: a.x1 + adx * ta, y: a.y1 + ady * ta };
+  }
+
+  function triggerMarkerCounter(state) {
+    const p = state.activeFormParams || {};
+    const primaryCounter = !!(state.activeForm && state.activeForm.mechanicType === "shield_counter_line");
+    if (!primaryCounter && !p.crossShield) return;
+    const maxLines = Math.max(1, primaryCounter ? (p.counterLines || 4) : (p.secondaryCounterLines || 3));
+    const counterSource = primaryCounter ? "marker_counter" : "secondary_counter";
+    const breakSource = primaryCounter ? "marker_shield_break" : "secondary_shield_break";
+    const targets = state.enemies
+      .filter(function (enemy) { return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= 380; })
+      .sort(function (a, b) {
+        return Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y);
+      })
+      .slice(0, maxLines);
+    addCircleEvent(state, state.player.x, state.player.y, 66, "#72ffe5", 0.28, "shield", false, breakSource, {
+      targetCount: targets.length
+    });
+    targets.forEach(function (target, index) {
+      const endpoint = lineEndpointThroughTarget(state.player, target, Math.min(280, Math.max(90, Math.hypot(target.x - state.player.x, target.y - state.player.y) + 28)));
+      const counterDamage = primaryCounter ? (p.counterDamage || 28) : Math.max(7, (p.damage || 20) * 0.35);
+      const counterHits = lineHitEnemies(state, state.player.x, state.player.y, endpoint.x, endpoint.y, 5, counterDamage, 2, counterSource);
+      addBeamEvent(state, state.player.x, state.player.y, endpoint.x, endpoint.y, "#72ffe5", 4, 0.22, "counter", false, counterSource, {
+        counterIndex: index,
+        targetEnemyId: target.id,
+        hitEnemyIds: counterHits.map(function (hit) { return hit.enemy.id; })
+      });
+    });
+    traceWeaponEvent(state, "state", {
+      source: breakSource,
+      shieldAfter: p.shield || 0,
+      counterCount: targets.length,
+      vfxPhase: eventPhase(breakSource)
+    });
+  }
+
+  function addMarkerGridField(state, point, p) {
+    const duplicate = state.damageZones.some(function (zone) {
+      return zone.source === "marker_grid_field" && Math.hypot(zone.x - point.x, zone.y - point.y) < 46;
+    });
+    if (duplicate) return false;
+    const radius = p.gridRadius || 72;
+    const duration = p.gridFieldDuration || Math.min(3.4, p.trailDuration || 2.8);
+    addCircleEvent(state, point.x, point.y, radius, "#e8d99a", 0.34, "grid", false, "marker_grid_field", {
+      intersectionX: point.x,
+      intersectionY: point.y
+    });
+    addDamageZone(state, {
+      type: "circle",
+      source: "marker_grid_field",
+      x: point.x,
+      y: point.y,
+      radius,
+      damage: Math.max(5, p.gridDamage || 11),
+      life: duration,
+      maxLife: duration,
+      tickEvery: 0.34,
+      color: "#e8d99a",
+      slow: Math.max(0.32, p.gridSlow || 0),
+      root: p.gridRoot || 0.16,
+      visual: "marker_grid_field"
+    });
+    return true;
+  }
+
+  function drawAtlasCell(ctx, id, column, row, x, y, width, height, alpha, rotation) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const cellWidth = img.naturalWidth / 4;
+    const cellHeight = img.naturalHeight / 4;
+    const inset = 3;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.drawImage(
+      img,
+      column * cellWidth + inset,
+      row * cellHeight + inset,
+      cellWidth - inset * 2,
+      cellHeight - inset * 2,
+      -width / 2,
+      -height / 2,
+      width,
+      height
+    );
+    ctx.restore();
+    return true;
+  }
+
+  function drawCombatProgress(ctx, x, y, width, height, ratio) {
+    if (!isSpriteReady("combat_health_track_office") || !isSpriteReady("combat_health_fill_office")) return false;
+    const amount = clamp(ratio, 0, 1);
+    drawSprite(ctx, "combat_health_track_office", x, y, width, height, 1, 0);
+    if (amount <= 0) return true;
+    const img = runtimeImages.combat_health_fill_office;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      img.naturalWidth * amount,
+      img.naturalHeight,
+      x - width / 2,
+      y - height / 2,
+      width * amount,
+      height
+    );
+    ctx.restore();
+    return true;
+  }
+
+  function addThermosWavefront(state, data) {
+    const delay = data.delay || 0;
+    const duration = Math.max(0.3, data.duration || 0.52);
+    addDamageZone(state, {
+      type: "ring",
+      source: data.source,
+      x: data.x,
+      y: data.y,
+      startRadius: data.startRadius || 10,
+      radius: data.radius,
+      thickness: data.thickness || 30,
+      duration,
+      delay,
+      life: duration + delay,
+      maxLife: duration + delay,
+      damage: data.damage,
+      color: data.color || "#9ddfff",
+      slow: data.slow || 0,
+      debuff: data.debuff,
+      teaRadius: data.teaRadius,
+      teaDamage: data.teaDamage,
+      visual: data.visual || "thermos_wavefront",
+      pulseIndex: data.pulseIndex || 0
+    });
+  }
+
+  function triggerThermosShieldBreak(state) {
+    const p = state.activeFormParams || {};
+    const primary = !!(state.activeForm && state.activeForm.mechanicType === "shield_break_pulse");
+    if (!primary && !p.crossWarmShield) return;
+    const pulseCount = Math.max(1, primary ? (p.pulseCount || 1) : 1);
+    const baseRadius = primary ? (p.pulseRadius || 120) : 78;
+    const baseDamage = primary ? (p.pulseDamage || 34) : Math.max(6, (p.damage || 12) * 0.36);
+    const source = primary ? "thermos_shield_break" : "secondary_thermos_shield_break";
+    for (let index = 0; index < pulseCount; index++) {
+      addThermosWavefront(state, {
+        source,
+        x: state.player.x,
+        y: state.player.y,
+        radius: baseRadius + index * 38,
+        damage: baseDamage * (index ? 0.72 : 1),
+        delay: index * 0.14,
+        duration: 0.48,
+        thickness: 30,
+        color: "#8fffe7",
+        slow: p.slow || 0.2,
+        visual: "thermos_shield_wave",
+        pulseIndex: index
+      });
+    }
+    addCircleEvent(state, state.player.x, state.player.y, 62, "#8fffe7", 0.28, "shield", false, source, { pulseCount });
+    addTextEvent(state, state.player.x, state.player.y - 48, "暖流护盾破裂", "#8fffe7", 0.65);
+  }
+
+  function applyMarkerSecondary(state, hits, x1, y1, x2, y2) {
+    const p = state.activeFormParams || {};
+    if (!p.secondaryDept || !hits.length) return;
+    const first = hits[0].enemy;
+    if (p.crossSplit) {
+      const mainHitEnemies = new Set(hits.map(function (hit) { return hit.enemy; }));
+      const claimed = new Set();
+      const originHit = hits[0];
+      const origin = { x: originHit.x, y: originHit.y, id: originHit.enemy.id };
+      for (let index = 0; index < 2; index++) {
+        const target = nearestBranchTarget(state, origin, mainHitEnemies, claimed, 170);
+        if (!target) break;
+        const endpoint = lineEndpointThroughTarget(origin, target, 170);
+        const exclusions = new Set(mainHitEnemies);
+        claimed.forEach(function (enemy) { exclusions.add(enemy); });
+        const branchHits = lineHitEnemies(state, origin.x, origin.y, endpoint.x, endpoint.y, 4, (p.damage || 20) * 0.28, 2, "secondary_split", { excludeEnemies: exclusions });
+        branchHits.forEach(function (hit) { claimed.add(hit.enemy); });
+        addBeamEvent(state, origin.x, origin.y, endpoint.x, endpoint.y, "#b7fbff", 3.5, 0.16, "beam", false, "secondary_split", {
+          targetEnemyId: target.id,
+          hitEnemyIds: branchHits.map(function (hit) { return hit.enemy.id; })
+        });
+      }
+    }
+    if (p.crossExplode) {
+      const radius = Math.max(42, (p.explosionRadius || 58) * 0.62);
+      addCircleEvent(state, hits[0].x, hits[0].y, radius, "#aee8ff", 0.3, "blast", false, "secondary_marker_blast");
+      addDamageZone(state, { type: "circle", source: "secondary_marker_blast", x: hits[0].x, y: hits[0].y, radius, damage: (p.damage || 20) * 0.45, life: 0.16, maxLife: 0.16, hitOnce: true, color: "#aee8ff", visual: "marker_p0_blast" });
+    }
+    if (p.crossShield) {
+      p.secondaryShieldMax = p.secondaryShieldMax || 24;
+      p.shield = Math.min(p.secondaryShieldMax, (p.shield || 0) + hits.length * 1.2);
+      addCircleEvent(state, state.player.x, state.player.y, 44 + p.shield / p.secondaryShieldMax * 14, "#84ffe7", 0.18, "shield", false, "secondary_shield_charge", {
+        shield: p.shield,
+        shieldMax: p.secondaryShieldMax
+      });
+    }
+    if (p.crossWave) {
+      const radius = Math.max(58, (p.waveRadius || 96) * 0.68);
+      const origin = hits[hits.length - 1];
+      addDamageZone(state, { type: "ring", source: "secondary_marker_wave", x: origin.x, y: origin.y, startRadius: 8, radius, thickness: 22, duration: 0.38, life: 0.38, maxLife: 0.38, damage: (p.damage || 20) * 0.28, color: "#9cc8ff", visual: "marker_wavefront" });
+    }
+    if (p.crossGrid) {
+      addDamageZone(state, { type: "line", source: "secondary_marker_grid", x1, y1, x2, y2, width: 6, damage: Math.max(5, (p.gridDamage || p.damage || 20) * 0.32), life: 1.2, maxLife: 1.2, color: "#d9e8a8", slow: 0.12, visual: "marker_grid_line" });
+    }
+  }
+
+  function fireMarker(state) {
+    const p = state.activeFormParams;
+    const form = state.activeForm || {};
+    const target = nearestEnemy(state, p.range || 720);
+    if (!target) return;
+    const dx = target.x - state.player.x;
+    const dy = target.y - state.player.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const x1 = state.player.x;
+    const y1 = state.player.y;
+    const x2 = x1 + dx / len * (p.range || 720);
+    const y2 = y1 + dy / len * (p.range || 720);
+    const color = form.badgeDept === "product" ? "#82dfff" : form.badgeDept === "marketing" ? "#76b7ff" : form.badgeDept === "ops" ? "#62ffd6" : form.badgeDept === "general" ? "#bfe6ff" : "#5efcff";
+    const width = Math.max(5, p.width || 8);
+    const hits = lineHitEnemies(state, x1, y1, x2, y2, width, p.damage || 20, p.pierce || 4, form.formId || "marker");
+    const mainHitIds = hits.map(function (hit) { return hit.enemy.id; });
+    const markerVisualEnd = form.mechanicType === "line_to_wave" && hits.length
+      ? { x: hits[hits.length - 1].x, y: hits[hits.length - 1].y }
+      : { x: x2, y: y2 };
+    addBeamEvent(state, x1, y1, markerVisualEnd.x, markerVisualEnd.y, color, width, 0.18, "beam", false, "marker_main", {
+      hitEnemyIds: mainHitIds,
+      actualHitCount: hits.length,
+      pierceLimit: p.pierce || 4
+    });
+    state.stats.shots += 1;
+
+    if (form.mechanicType === "line_split") {
+      const branchCount = Math.max(1, p.splitCount || 2);
+      const branchRange = Math.max(120, p.splitRange || 230);
+      const branchPierce = Math.max(1, p.splitPierce || 2);
+      const mainHitEnemies = new Set(hits.map(function (hit) { return hit.enemy; }));
+      const claimedBranchEnemies = new Set();
+      hits.forEach(function (hit, mainHitIndex) {
+        const branchOrigin = { x: hit.x, y: hit.y, id: hit.enemy.id };
+        let createdBranches = 0;
+        for (let branchIndex = 0; branchIndex < branchCount; branchIndex++) {
+          const branchTarget = nearestBranchTarget(state, branchOrigin, mainHitEnemies, claimedBranchEnemies, branchRange);
+          if (!branchTarget) break;
+          const branchEnd = lineEndpointThroughTarget(branchOrigin, branchTarget, branchRange);
+          const branchExclusions = new Set(mainHitEnemies);
+          branchExclusions.add(hit.enemy);
+          claimedBranchEnemies.forEach(function (enemy) { branchExclusions.add(enemy); });
+          const branchHits = lineHitEnemies(
+            state,
+            branchOrigin.x,
+            branchOrigin.y,
+            branchEnd.x,
+            branchEnd.y,
+            Math.max(4, width * 0.58),
+            (p.damage || 20) * (p.splitDamage || 0.42),
+            branchPierce,
+            "marker_split",
+            { excludeEnemies: branchExclusions }
+          );
+          branchHits.forEach(function (branchHit) { claimedBranchEnemies.add(branchHit.enemy); });
+          addBeamEvent(state, branchOrigin.x, branchOrigin.y, branchEnd.x, branchEnd.y, "#9ffcff", Math.max(3, width * 0.58), 0.2, "beam", false, "marker_split", {
+            generation: 1,
+            mainHitIndex,
+            branchIndex,
+            originEnemyId: hit.enemy.id,
+            targetEnemyId: branchTarget.id,
+            hitEnemyIds: branchHits.map(function (branchHit) { return branchHit.enemy.id; }),
+            actualHitCount: branchHits.length,
+            pierceLimit: branchPierce
+          });
+          createdBranches += 1;
+
+          if (p.secondarySplit && branchHits.length) {
+            const secondOriginHit = branchHits[branchHits.length - 1];
+            const secondOrigin = { x: secondOriginHit.x, y: secondOriginHit.y, id: secondOriginHit.enemy.id };
+            const secondaryRange = Math.max(90, p.secondarySplitRange || branchRange * 0.62);
+            const secondaryTarget = nearestBranchTarget(state, secondOrigin, mainHitEnemies, claimedBranchEnemies, secondaryRange);
+            if (secondaryTarget) {
+              const secondaryEnd = lineEndpointThroughTarget(secondOrigin, secondaryTarget, secondaryRange);
+              const secondaryExclusions = new Set(mainHitEnemies);
+              claimedBranchEnemies.forEach(function (enemy) { secondaryExclusions.add(enemy); });
+              secondaryExclusions.delete(secondaryTarget);
+              secondaryExclusions.add(secondOriginHit.enemy);
+              const secondHits = lineHitEnemies(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, 3, (p.damage || 20) * 0.22, 1, "marker_secondary_split", { excludeEnemies: secondaryExclusions });
+              secondHits.forEach(function (secondHit) { claimedBranchEnemies.add(secondHit.enemy); });
+              addBeamEvent(state, secondOrigin.x, secondOrigin.y, secondaryEnd.x, secondaryEnd.y, "#d8ffff", 2.5, 0.16, "beam", false, "marker_secondary_split", {
+                generation: 2,
+                originEnemyId: secondOrigin.id,
+                targetEnemyId: secondaryTarget.id,
+                hitEnemyIds: secondHits.map(function (secondHit) { return secondHit.enemy.id; }),
+                actualHitCount: secondHits.length,
+                pierceLimit: 1
+              });
+            }
+          }
+        }
+        if (createdBranches) {
+          addCircleEvent(state, branchOrigin.x, branchOrigin.y, 22 + createdBranches * 5, "#9ffcff", 0.16, "split", false, "marker_split_origin", {
+            originEnemyId: hit.enemy.id,
+            createdBranches
+          });
+        }
+        if (hit.enemy.boss && createdBranches < branchCount) {
+          const converged = Math.min(2, branchCount - createdBranches);
+          for (let convergeIndex = 0; convergeIndex < converged; convergeIndex++) {
+            const angle = Math.PI * 2 * (convergeIndex / Math.max(1, converged)) - Math.PI / 2;
+            const foldRadius = 34 + convergeIndex * 5;
+            const foldX = hit.x + Math.cos(angle) * foldRadius;
+            const foldY = hit.y + Math.sin(angle) * foldRadius;
+            addBeamEvent(state, foldX, foldY, hit.x, hit.y, "#d8ffff", Math.max(2.5, width * 0.42), 0.14, "beam", false, "marker_split", {
+              generation: "converge",
+              originEnemyId: hit.enemy.id,
+              targetEnemyId: hit.enemy.id,
+              actualHitCount: 1,
+              converged: true
+            });
+            damageEnemy(state, hit.enemy, (p.damage || 20) * (p.splitDamage || 0.42) * (p.bossConvergeScale || 0.18), "marker_split");
+          }
+          addCircleEvent(state, hit.x, hit.y, 24 + converged * 4, "#d8ffff", 0.18, "split", false, "marker_split_origin", {
+            originEnemyId: hit.enemy.id,
+            convergedBranches: converged
+          });
+        }
+      });
+      if (p.shieldPerHit && hits.length) state.activeFormParams.shield = (state.activeFormParams.shield || 0) + hits.length * p.shieldPerHit;
+      const fullscreenEvery = p.promotionFullscreenEvery || 0;
+      const fullscreenDue = fullscreenEvery > 0 && state.stats.shots % fullscreenEvery === 0;
+      if (fullscreenDue || (p.promotionFullscreenChance && Math.random() < p.promotionFullscreenChance)) {
+        const camera = state.camera || { x: 0, width: W };
+        addBeamEvent(state, camera.x, state.player.y, camera.x + camera.width, state.player.y, "#c7f8ff", 7, 0.22, "beam", false, "marker_fullscreen");
+        lineHitEnemies(state, camera.x, state.player.y, camera.x + camera.width, state.player.y, 7, (p.damage || 20) * 0.7, 99, "marker_fullscreen");
+      }
+    }
+
+    if (form.mechanicType === "mark_detonate") {
+      hits.forEach(function (hit) {
+        if (hit.enemy.p0Marked && hit.enemy.p0MarkTime > 0) {
+          const radius = (p.explosionRadius || 58) * (p.area || 1);
+          const blastX = hit.x;
+          const blastY = hit.y;
+          addCircleEvent(state, blastX, blastY, radius, "#9edfff", 0.35, "blast", false, "marker_p0_blast", {
+            targetEnemyId: hit.enemy.id,
+            markTimeRemaining: hit.enemy.p0MarkTime
+          });
+          addDamageZone(state, { type: "circle", source: "marker_p0_blast", x: blastX, y: blastY, radius, damage: p.explosionDamage || 34, life: 0.16, maxLife: 0.16, hitOnce: true, color: "#9edfff", visual: "marker_p0_blast" });
+          if (p.shieldOnDetonate) state.hp = Math.min(state.maxHp, state.hp + Math.round(p.shieldOnDetonate * 0.35));
+          if (p.pauseAfterBlast) attackTimer += 0.22;
+          hit.enemy.p0Marked = false;
+          hit.enemy.p0MarkTime = 0;
+          if (p.splashRefreshMark) {
+            state.enemies.forEach(function (enemy) {
+              if (!enemy.dead && enemy.p0Marked && Math.hypot(enemy.x - blastX, enemy.y - blastY) <= radius + enemy.r) {
+                enemy.p0MarkTime = enemy.p0MarkMax || p.markWindow || 3.2;
+              }
+            });
+          }
+          if (p.p0Chain) {
+            const chainTarget = state.enemies
+              .filter(function (enemy) { return !enemy.dead && !enemy.p0Marked && enemy !== hit.enemy && Math.hypot(enemy.x - blastX, enemy.y - blastY) <= radius * 1.5; })
+              .sort(function (a, b) { return Math.hypot(a.x - blastX, a.y - blastY) - Math.hypot(b.x - blastX, b.y - blastY); })[0];
+            if (chainTarget) {
+              chainTarget.p0Marked = true;
+              chainTarget.p0MarkMax = p.markWindow || 3.2;
+              chainTarget.p0MarkTime = chainTarget.p0MarkMax;
+              addCircleEvent(state, chainTarget.x, chainTarget.y, 28, "#ffd88a", 0.3, "mark", false, "marker_p0_chain", {
+                targetEnemyId: chainTarget.id,
+                markWindow: chainTarget.p0MarkMax
+              });
+            }
+          }
+        } else if (hit.enemy.boss || hit.enemy.maxHp >= (p.priorityHp || 28)) {
+          hit.enemy.p0Marked = true;
+          hit.enemy.p0MarkMax = p.markWindow || 3.2;
+          hit.enemy.p0MarkTime = hit.enemy.p0MarkMax;
+          addCircleEvent(state, hit.x, hit.y, 28, "#ffd88a", 0.28, "mark", false, "marker_p0_mark", {
+            targetEnemyId: hit.enemy.id,
+            markWindow: hit.enemy.p0MarkMax
+          });
+        }
+      });
+    }
+
+    if (form.mechanicType === "line_to_wave") {
+      const radius = (p.waveRadius || 96) * (p.area || 1);
+      const waves = Math.max(1, p.waveCount || 1);
+      const waveDuration = Math.max(0.28, p.waveDuration || 0.48);
+      const waveThickness = Math.max(18, p.waveThickness || 28);
+      const waveOrigin = hits.length ? hits[hits.length - 1] : target;
+      for (let wi = 0; wi < waves; wi++) {
+        const delay = wi * 0.16;
+        addDamageZone(state, {
+          type: "ring",
+          source: "marker_wave",
+          x: waveOrigin.x,
+          y: waveOrigin.y,
+          startRadius: 10,
+          radius,
+          thickness: waveThickness,
+          duration: waveDuration,
+          delay,
+          life: waveDuration + delay,
+          maxLife: waveDuration + delay,
+          damage: (p.waveDamage || 15) * (1 - wi * 0.1),
+          color: wi % 2 ? "#b6dcff" : "#91c9ff",
+          knockback: p.waveKnockback ? 30 : 12,
+          visual: "marker_wavefront",
+          pulseIndex: wi
+        });
+      }
+      if (p.waveReturn) {
+        const returnDelay = waves * 0.16 + waveDuration;
+        addDamageZone(state, {
+          type: "ring",
+          source: "marker_wave_return",
+          x: waveOrigin.x,
+          y: waveOrigin.y,
+          startRadius: 10,
+          radius,
+          thickness: waveThickness,
+          duration: waveDuration,
+          delay: returnDelay,
+          reverse: true,
+          life: waveDuration + returnDelay,
+          maxLife: waveDuration + returnDelay,
+          damage: (p.waveDamage || 15) * 0.75,
+          color: "#d5e7ff",
+          knockback: p.waveKnockback ? 34 : 16,
+          visual: "marker_wavefront_return"
+        });
+      }
+    }
+
+    if (form.mechanicType === "shield_counter_line") {
+      const shieldMax = Math.max(8, p.markerShieldMax || 18);
+      state.activeFormParams.shield = Math.min(shieldMax, (state.activeFormParams.shield || 0) + hits.length * (p.shieldPerHit || 1.4));
+      state.activeFormParams.markerShieldMax = shieldMax;
+      addCircleEvent(state, state.player.x, state.player.y, 48 + state.activeFormParams.shield / shieldMax * 18, "#72ffe5", 0.2, "shield", false, "marker_shield_charge", {
+        shield: state.activeFormParams.shield,
+        shieldMax
+      });
+    }
+
+    if (form.mechanicType === "line_grid_field") {
+      const previousLines = state.damageZones.filter(function (zone) {
+        return zone.source === "marker_grid_line" && zone.life > 0;
+      });
+      const primaryGridLine = {
+        type: "line",
+        x1, y1, x2, y2,
+        width: 10,
+        damage: p.gridDamage || 11,
+        life: p.trailDuration || 2.8,
+        maxLife: p.trailDuration || 2.8,
+        color: "#cfe8ff",
+        slow: p.gridSlow || 0,
+        source: "marker_grid_line",
+        visual: "marker_grid_line"
+      };
+      addDamageZone(state, primaryGridLine);
+      previousLines.forEach(function (line) {
+        const point = segmentIntersection(primaryGridLine, line);
+        if (point) addMarkerGridField(state, point, p);
+      });
+      if (p.gridEcho) {
+        const midX = x1 + (x2 - x1) * 0.58;
+        const midY = y1 + (y2 - y1) * 0.58;
+        const beamLength = Math.hypot(x2 - x1, y2 - y1) || 1;
+        const nx = -(y2 - y1) / beamLength;
+        const ny = (x2 - x1) / beamLength;
+        const half = Math.min(180, Math.max(105, beamLength * 0.24));
+        const echoLine = {
+          type: "line",
+          source: "marker_grid_line",
+          x1: midX - nx * half,
+          y1: midY - ny * half,
+          x2: midX + nx * half,
+          y2: midY + ny * half,
+          width: 8,
+          damage: p.gridDamage || 11,
+          life: p.trailDuration || 2.8,
+          maxLife: p.trailDuration || 2.8,
+          color: "#e8d99a",
+          slow: p.gridSlow || 0,
+          visual: "marker_grid_line"
+        };
+        addBeamEvent(state, echoLine.x1, echoLine.y1, echoLine.x2, echoLine.y2, "#e8d99a", 3, 0.24, "grid", false, "marker_grid_line", {
+          gridEcho: true
+        });
+        addDamageZone(state, echoLine);
+        addMarkerGridField(state, { x: midX, y: midY }, p);
+      }
+    }
+    applyMarkerSecondary(state, hits, x1, y1, x2, y2);
+  }
+
+  function applyThermosSecondary(state, target) {
+    const p = state.activeFormParams || {};
+    if (!p.secondaryDept) return;
+    if (p.crossSteamDrone) {
+      addDamageZone(state, {
+        type: "circle",
+        x: state.player.x,
+        y: state.player.y,
+        radius: 13,
+        damage: 0,
+        life: 2.2,
+        maxLife: 2.2,
+        tickEvery: 999,
+        color: "#a8fbff",
+        visual: "thermos_drone_module",
+        source: "thermos_drone",
+        droneModule: true,
+        moduleId: "secondary-thermos-module-" + state.stats.shots,
+        droneDamage: Math.max(5, (p.damage || 12) * 0.45),
+        dronePierce: 1,
+        droneShootEvery: 0.8,
+        steamRange: 190,
+        orbitPlayer: true,
+        orbitAngle: Math.random() * Math.PI * 2,
+        orbitRadius: 62,
+        orbitSpeed: 2.4
+      });
+    }
+    if (p.crossMiniBoil && target) {
+      const radius = 54;
+      addCircleEvent(state, target.x, target.y, radius, "#bdf5ff", 0.28, "steam_pulse", false, "secondary_thermos_boil");
+      addDamageZone(state, { type: "circle", source: "secondary_thermos_boil", x: target.x, y: target.y, radius, damage: Math.max(8, (p.releaseDamage || p.damage || 16) * 0.22), life: 0.16, maxLife: 0.16, hitOnce: true, color: "#bdf5ff", visual: "thermos_mini_boil" });
+    }
+    if (p.crossWarmShield) {
+      p.secondaryWarmShieldMax = p.secondaryWarmShieldMax || 20;
+      p.shield = Math.min(p.secondaryWarmShieldMax, (p.shield || 0) + 5);
+      addCircleEvent(state, state.player.x, state.player.y, 48 + p.shield / p.secondaryWarmShieldMax * 12, "#8fffe7", 0.24, "shield", false, "secondary_thermos_shield_charge", { shield: p.shield, shieldMax: p.secondaryWarmShieldMax });
+    }
+    if (p.crossTeaWave) {
+      addThermosWavefront(state, { source: "secondary_thermos_tea_wave", x: state.player.x, y: state.player.y, radius: 76, damage: Math.max(5, (p.damage || 12) * 0.32), duration: 0.38, thickness: 22, color: "#9ddfff", visual: "thermos_wavefront" });
+    }
+    if (p.crossSafeStation) {
+      addDamageZone(state, { type: "circle", source: "secondary_thermos_station", x: state.player.x, y: state.player.y, radius: 72, damage: Math.max(4, (p.damage || 10) * 0.25), life: 1.4, maxLife: 1.4, tickEvery: 0.36, color: "#cfefff", visual: "thermos_station_field", slow: 0.18, heal: 0.6 });
+    }
+  }
+
+  function fireThermos(state) {
+    const p = state.activeFormParams;
+    const form = state.activeForm || {};
+    if ((p.releaseLockout || 0) > 0) return;
+    const target = nearestEnemy(state, p.releaseRange || p.steamRange || 280);
+    if (!target && form.mechanicType !== "deployable_safe_station") return;
+    state.stats.shots += 1;
+    applyThermosSecondary(state, target);
+
+    if (form.mechanicType === "heat_meter_steam") {
+      const heatMax = p.heatMax || 100;
+      p.heat = Math.min(heatMax, (p.heat || 0) + (p.heatRate || 16));
+      const dx = target.x - state.player.x;
+      const dy = target.y - state.player.y;
+      const len = Math.hypot(dx, dy) || 1;
+      if (p.heat >= heatMax) {
+        p.heat = 0;
+        p.releaseLockout = p.releaseLockoutDuration || 0.65;
+        const x2 = state.player.x + dx / len * (p.releaseRange || 430);
+        const y2 = state.player.y + dy / len * (p.releaseRange || 430);
+        const width = p.releaseWidth || 16;
+        addCircleEvent(state, state.player.x, state.player.y, 62, "#bdf5ff", 0.22, "steam_pulse", false, "thermos_charge", { heatMax });
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.28, "steam", false, "thermos_release", { lockout: p.releaseLockout });
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, p.releaseDamage || 58, 6, "thermos_intern_release");
+      } else {
+        const x2 = state.player.x + dx / len * (p.steamRange || p.range || 300);
+        const y2 = state.player.y + dy / len * (p.steamRange || p.range || 300);
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 8, 0.14, "steam", false, "thermos_warmup", { heat: p.heat, heatMax });
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 10, Math.max(6, (p.damage || 18) * 0.55), 2, "thermos_intern_steam");
+      }
+      return;
+    }
+
+    if (form.mechanicType === "patrol_summon_steam") {
+      p.heat = Math.min(100, (p.heat || 0) + (p.heatRate || 18));
+      if (p.heat >= 100) {
+        p.heat = 0;
+        const count = Math.max(1, p.summonCount || 1);
+        for (let i = 0; i < count; i++) {
+          addDamageZone(state, {
+            type: "circle",
+            x: state.player.x,
+            y: state.player.y,
+            radius: 15,
+            damage: 0,
+            life: p.summonDuration || 5,
+            maxLife: p.summonDuration || 5,
+            tickEvery: 999,
+            color: "#9ff8ff",
+            visual: "thermos_drone_module",
+            source: "thermos_drone",
+            droneModule: true,
+            moduleId: "thermos-module-" + i + "-" + state.stats.shots,
+            droneDamage: p.damage || 12,
+            dronePierce: p.dronePierce || 2,
+            droneShootEvery: p.droneShootEvery || 0.72,
+            droneTimer: i * 0.18,
+            steamRange: p.steamRange || 220,
+            steamRadius: p.steamRadius || 42,
+            orbitPlayer: true,
+            orbitAngle: Math.PI * 2 * (i / count),
+            orbitRadius: 78 + i * 18,
+            orbitSpeed: (p.orbitSpeed || 2.2) * (i % 2 ? -1 : 1),
+            slow: p.slow || 0
+          });
+        }
+        addCircleEvent(state, state.player.x, state.player.y, 68, "#9ff8ff", 0.28, "steam_drone", false, "thermos_drone_summon", { moduleCount: count });
+        addTextEvent(state, state.player.x, state.player.y - 42, "自动恒温模块上线", "#bdf5ff", 0.7);
+      } else if (target) {
+        const dx = target.x - state.player.x;
+        const dy = target.y - state.player.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const x2 = state.player.x + dx / len * (p.steamRange || 220);
+        const y2 = state.player.y + dy / len * (p.steamRange || 220);
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", 9, 0.16, "steam", false, "thermos_warmup", { heat: p.heat, heatMax: 100 });
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 11, Math.max(4, (p.damage || 12) * 0.55), 3, "thermos_steam");
+      }
+      return;
+    }
+
+    if (form.mechanicType === "charge_release_beam") {
+      const heatMax = p.heatMax || 100;
+      p.heat = Math.min(heatMax, (p.heat || 0) + (p.heatRate || 24));
+      const dx = target.x - state.player.x;
+      const dy = target.y - state.player.y;
+      const len = Math.hypot(dx, dy) || 1;
+      if (p.heat >= heatMax) {
+        const releaseScale = p.overheatBank ? 1 + Math.max(0, heatMax - 100) / 200 : 1;
+        p.heat = 0;
+        p.releaseLockout = p.releaseLockoutDuration || (p.risk ? 1.55 : 1.05);
+        const x2 = state.player.x + dx / len * (p.releaseRange || 420);
+        const y2 = state.player.y + dy / len * (p.releaseRange || 420);
+        const width = p.releaseWidth || 20;
+        addCircleEvent(state, state.player.x, state.player.y, 72, "#bdf5ff", 0.22, "steam_pulse", false, "thermos_charge", { heatMax, releaseScale });
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#bdf5ff", width, 0.32, "steam", false, "thermos_release", { heatMax, releaseScale, lockout: p.releaseLockout });
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 2, (p.releaseDamage || 68) * releaseScale, 6, "thermos_release");
+        if (p.shieldAfterRelease) {
+          p.releaseShieldMax = Math.max(p.releaseShieldMax || 0, p.shieldAfterRelease);
+          p.shield = Math.min(p.releaseShieldMax, (p.shield || 0) + p.shieldAfterRelease);
+          addCircleEvent(state, state.player.x, state.player.y, 58, "#8fffe7", 0.28, "shield", false, "thermos_release_shield", { shield: p.shield, shieldMax: p.releaseShieldMax });
+        }
+      } else {
+        const chargeRatio = Math.max(0.15, Math.min(1, p.heat / heatMax));
+        const x2 = state.player.x + dx / len * (p.steamRange || 220);
+        const y2 = state.player.y + dy / len * (p.steamRange || 220);
+        const width = 7 + chargeRatio * 5;
+        addCircleEvent(state, state.player.x, state.player.y, 38 + chargeRatio * 34, "#86f7ff", 0.18, "steam_pulse", false, "thermos_charge", { heat: p.heat, heatMax, chargeRatio });
+        addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#86f7ff", width, 0.16, "steam", false, "thermos_warmup", { heat: p.heat, heatMax, chargeRatio });
+        lineHitEnemies(state, state.player.x, state.player.y, x2, y2, width + 1, Math.max(5, (p.damage || 14) * 0.48), 3, "thermos_warmup");
+      }
+      return;
+    }
+
+    if (form.mechanicType === "shield_break_pulse") {
+      const dx = target.x - state.player.x;
+      const dy = target.y - state.player.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const x2 = state.player.x + dx / len * (p.steamRange || 220);
+      const y2 = state.player.y + dy / len * (p.steamRange || 220);
+      const steamHits = lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 10, Math.max(4, (p.damage || 11) * 0.5), 3, "thermos_shield_steam");
+      addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#8fffe7", 8, 0.16, "steam", false, "thermos_shield_steam", { hitEnemyIds: steamHits.map(function (hit) { return hit.enemy.id; }) });
+      const shieldMax = p.shieldThreshold || 30;
+      p.thermosShieldMax = shieldMax;
+      p.shield = Math.min(shieldMax, (p.shield || 0) + Math.max(1, steamHits.length) * (p.shieldGain || 8));
+      addCircleEvent(state, state.player.x, state.player.y, 48 + p.shield / shieldMax * 22, "#8fffe7", 0.28, "shield", false, "thermos_shield_charge", { shield: p.shield, shieldMax });
+      return;
+    }
+
+    if (form.mechanicType === "periodic_wave_spread") {
+      const waves = Math.max(1, p.waveCount || 1);
+      for (let i = 0; i < waves; i++) {
+        addThermosWavefront(state, { source: "thermos_tea_wave", x: state.player.x, y: state.player.y, radius: p.waveRadius || 125, damage: (p.spreadDamage || p.damage || 8) * (1 - i * 0.1), delay: i * 0.16, duration: 0.52, thickness: 30, color: i % 2 ? "#c5f5ff" : "#9ddfff", slow: p.slow || 0, debuff: "tea", teaRadius: p.teaRadius || 96, teaDamage: p.teaDamage || 6, visual: "thermos_wavefront", pulseIndex: i });
+      }
+      return;
+    }
+
+    if (form.mechanicType === "deployable_safe_station") {
+      p.heat = Math.min(100, (p.heat || 0) + (p.heatRate || 20));
+      if (p.heat < 100) {
+        addCircleEvent(state, state.player.x, state.player.y, 34 + p.heat * 0.2, "#bfeeff", 0.2, "steam_pulse", false, "thermos_station_charge", { heat: p.heat, heatMax: 100 });
+        if (target) {
+          const endpoint = lineEndpointThroughTarget(state.player, target, Math.min(210, Math.hypot(target.x - state.player.x, target.y - state.player.y) + 20));
+          addBeamEvent(state, state.player.x, state.player.y, endpoint.x, endpoint.y, "#bfeeff", 7, 0.14, "steam", false, "thermos_warmup", { heat: p.heat, heatMax: 100 });
+          lineHitEnemies(state, state.player.x, state.player.y, endpoint.x, endpoint.y, 8, Math.max(3, (p.damage || 8) * 0.45), 2, "thermos_station_warmup");
+        }
+        return;
+      }
+      p.heat = 0;
+      const stationLimit = p.stationLimit || 1;
+      const existing = state.damageZones.filter(function (z) { return z.source === "thermos_station" && z.life > 0; });
+      while (existing.length >= stationLimit) {
+        const old = existing.shift();
+        old.life = 0;
+      }
+      const sx = clamp(state.player.x, 70, worldWidth(state) - 70);
+      const sy = clamp(state.player.y, 70, worldHeight(state) - 70);
+      addCircleEvent(state, sx, sy, p.stationRadius || 130, "#bfeeff", 0.45, "station", false, "thermos_station", { stationIndex: existing.length });
+      addDamageZone(state, {
+        type: "circle",
+        source: "thermos_station",
+        x: sx,
+        y: sy,
+        radius: p.stationRadius || 130,
+        damage: p.stationPulseDamage || p.damage || 8,
+        life: p.stationDuration || 7,
+        maxLife: p.stationDuration || 7,
+        tickEvery: 0.36,
+        color: "#bfeeff",
+        visual: "thermos_station_field",
+        slow: p.slow || 0.35,
+        heal: p.heal || 1
+      });
+      return;
+    }
+  }
+
+  function applyStickySecondary(state, x, y, target) {
+    const p = state.activeFormParams || {};
+    if (!p.secondaryDept) return;
+    if (p.crossSeekingNote && target) {
+      addDamageZone(state, {
+        type: "circle", source: "secondary_sticky_seeking", x: state.player.x, y: state.player.y, radius: 20,
+        damage: 0, triggerDamage: Math.max(5, (p.damage || 10) * 0.55), triggerRadius: 42,
+        life: 2.1, maxLife: 2.1, tickEvery: 999, color: "#9ffcff", stickyTrap: true,
+        seekingSticky: true, armed: true, armDelay: 0, seekSpeed: 150, bounceRemaining: 0,
+        trapId: "secondary_seek_" + Date.now(), visual: "seeking_note"
+      });
+    }
+    if (p.crossManualBlast) {
+      addCircleEvent(state, x, y, Math.max(42, (p.explosionRadius || 70) * 0.55), "#a9f1ff", 0.26, "blast", false, "secondary_sticky_blast");
+      addDamageZone(state, { type: "circle", source: "secondary_sticky_blast", x, y, radius: Math.max(42, (p.explosionRadius || 70) * 0.55), damage: Math.max(6, (p.damage || 10) * 0.7), life: 0.16, maxLife: 0.16, hitOnce: true, color: "#a9f1ff", visual: "secondary_sticky_blast" });
+    }
+    if (p.crossRouteShield) {
+      addDamageZone(state, {
+        type: "circle", source: "secondary_sticky_route", x: state.player.x, y: state.player.y, radius: 32,
+        damage: Math.max(2, (p.damage || 8) * 0.3), life: 1.8, maxLife: 1.8, tickEvery: 0.5,
+        color: "#8fffe7", slow: 0.18, stickyTrap: true, routeSticky: true, armed: true,
+        routeClaimed: false, shieldGain: 4, routeHeal: 0, trapId: "secondary_route_" + Date.now(), visual: "route_note"
+      });
+    }
+    if (p.crossStickySpread && target) {
+      target.stickyDebuff = { radius: Math.max(80, (p.spreadRadius || 120) * 0.7), damage: Math.max(5, (p.damage || 9) * 0.6), limit: 1, depth: 1, slow: Math.max(0, (p.slow || 0) * 0.6) };
+      addCircleEvent(state, target.x, target.y, 24, "#8df7ff", 0.24, "sticky_attach", false, "secondary_sticky_spread", { targetEnemyId: target.id });
+    }
+    if (p.crossBoardLink) {
+      const radius = 58;
+      const points = [0, 1, 2].map(function (index) {
+        const angle = -Math.PI / 2 + index * Math.PI * 2 / 3;
+        return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius };
+      });
+      for (let index = 0; index < points.length; index++) {
+        const a = points[index];
+        const b = points[(index + 1) % points.length];
+        addBeamEvent(state, a.x, a.y, b.x, b.y, "#e8db92", 2, 0.45, "grid", false, "secondary_sticky_link", { polygonEdge: index });
+      }
+      addDamageZone(state, { type: "polygon", source: "secondary_sticky_notice", points, x, y, radius, damage: Math.max(5, (p.zoneDamage || p.damage || 9) * 0.55), life: 1.1, maxLife: 1.1, tickEvery: 0.32, color: "#e8db92", slow: 0.18, root: 0.08, visual: "notice_polygon" });
+    }
+  }
+
+  function fireSticky(state) {
+    const p = state.activeFormParams;
+    const form = state.activeForm || {};
+    const mechanic = form.mechanicType || "ground_trap";
+    const target = nearestEnemy(state, mechanic === "trap_link_control_zone" ? 900 : 520);
+    const targetAngle = target ? Math.atan2(target.y - state.player.y, target.x - state.player.x) : Math.random() * Math.PI * 2;
+    const trapId = "sticky_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+    let x = clamp(state.player.x + Math.cos(targetAngle) * 76, 55, worldWidth(state) - 55);
+    let y = clamp(state.player.y + Math.sin(targetAngle) * 76, 55, worldHeight(state) - 55);
+
+    if (mechanic === "sticky_debuff_spread") {
+      if (!target) return;
+      state.stats.shots += 1;
+      target.stickyDebuff = {
+        radius: p.spreadRadius || 120,
+        damage: p.spreadDamage || p.damage || 9,
+        limit: p.spreadLimit || 3,
+        depth: p.spreadDepth == null ? 2 : p.spreadDepth,
+        slow: p.slow || 0
+      };
+      if (p.slow) target.speed *= Math.max(0.45, 1 - p.slow);
+      damageEnemy(state, target, p.damage || 9, "sticky_attach", state.player);
+      addCircleEvent(state, target.x, target.y, 30, "#8df7ff", 0.34, "sticky_attach", false, "sticky_spread_attach", { targetEnemyId: target.id });
+      addTextEvent(state, target.x, target.y - 26, "贴上", "#8df7ff", 0.45);
+      applyStickySecondary(state, target.x, target.y, target);
+      return;
+    }
+
+    if (mechanic === "manual_trap_detonate" && state.input && state.input.trigger) {
+      state.input.trigger = false;
+      if (detonateManualStickyTraps(state) > 0) {
+        state.stats.shots += 1;
+        return;
+      }
+    }
+
+    if (mechanic === "route_buff_trap") {
+      const input = state.input || {};
+      const ix = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      const iy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+      const routeAngle = Math.hypot(ix, iy) > 0 ? Math.atan2(iy, ix) : targetAngle;
+      x = clamp(state.player.x - Math.cos(routeAngle) * 44, 55, worldWidth(state) - 55);
+      y = clamp(state.player.y - Math.sin(routeAngle) * 44, 55, worldHeight(state) - 55);
+    }
+
+    if (mechanic === "trap_link_control_zone") {
+      const placement = p.noticePlacementIndex || 0;
+      if (placement === 0 || p.noticeAnchorX == null || p.noticeAnchorY == null) {
+        p.noticeAnchorX = target ? target.x : state.player.x + Math.cos(targetAngle) * 110;
+        p.noticeAnchorY = target ? target.y : state.player.y + Math.sin(targetAngle) * 110;
+        p.noticeAnchorAngle = targetAngle;
+      }
+      const nodeRadius = Math.min(66, (p.linkRadius || 170) * 0.38);
+      if (placement === 2 && target) {
+        p.noticeAnchorX = target.x;
+        p.noticeAnchorY = target.y;
+        p.noticeAnchorAngle = targetAngle;
+        const pendingNodes = state.damageZones.filter(function (zone) {
+          return zone.noticeNode && !zone.linked && zone.life > 0;
+        }).slice(-2);
+        pendingNodes.forEach(function (node, index) {
+          const snapAngle = p.noticeAnchorAngle + index * Math.PI * 2 / 3;
+          node.x = clamp(p.noticeAnchorX + Math.cos(snapAngle) * nodeRadius, 55, worldWidth(state) - 55);
+          node.y = clamp(p.noticeAnchorY + Math.sin(snapAngle) * nodeRadius, 55, worldHeight(state) - 55);
+          addBeamEvent(state, node.x, node.y, target.x, target.y, "#e8db92", 2, 0.18, "grid", false, "sticky_notice_align", { trapId: node.trapId });
+        });
+      }
+      const nodeAngle = (p.noticeAnchorAngle || 0) + placement * Math.PI * 2 / 3;
+      x = clamp(p.noticeAnchorX + Math.cos(nodeAngle) * nodeRadius, 55, worldWidth(state) - 55);
+      y = clamp(p.noticeAnchorY + Math.sin(nodeAngle) * nodeRadius, 55, worldHeight(state) - 55);
+      p.noticePlacementIndex = (placement + 1) % 3;
+      if (p.noticePlacementIndex === 0) {
+        p.noticeAnchorX = null;
+        p.noticeAnchorY = null;
+      }
+    }
+
+    const trapRadius = p.trapRadius || (mechanic === "trap_link_control_zone" ? 30 : mechanic === "route_buff_trap" ? 38 : 26);
+    const stickySource = mechanic === "trap_link_control_zone" ? "sticky_notice_trap"
+      : mechanic === "route_buff_trap" ? "sticky_route"
+        : mechanic === "seeking_trap_summon" ? "sticky_seeking"
+          : mechanic === "manual_trap_detonate" ? "sticky_manual_trap"
+            : "sticky_base";
+    const visualKind = mechanic === "route_buff_trap" ? "route_note"
+      : mechanic === "seeking_trap_summon" ? "seeking_note"
+        : mechanic === "trap_link_control_zone" ? "notice_node"
+          : "sticky_note";
+    addCircleEvent(state, x, y, trapRadius, mechanic === "trap_link_control_zone" ? "#e8db92" : "#86f7ff", 0.45, "trap", false, stickySource, { trapId, mechanic });
+    addDamageZone(state, {
+      type: "circle",
+      x,
+      y,
+      radius: trapRadius,
+      damage: mechanic === "route_buff_trap" ? (p.damage || 8) : 0,
+      life: p.trapDuration || 5,
+      maxLife: p.trapDuration || 5,
+      tickEvery: mechanic === "route_buff_trap" ? 0.5 : 999,
+      color: mechanic === "trap_link_control_zone" ? "#e8db92" : "#86f7ff",
+      slow: p.slow || 0.25,
+      stickyTrap: true,
+      trapId,
+      armed: false,
+      armDelay: mechanic === "seeking_trap_summon" ? 0.18 : 0.3,
+      groundSticky: mechanic === "ground_trap",
+      seekingSticky: mechanic === "seeking_trap_summon",
+      manualSticky: mechanic === "manual_trap_detonate",
+      routeSticky: mechanic === "route_buff_trap",
+      noticeNode: mechanic === "trap_link_control_zone",
+      triggerDamage: mechanic === "ground_trap" ? (p.damage || 10) * 2.25 : (p.damage || 10),
+      triggerRadius: p.triggerRadius || Math.max(48, trapRadius * 1.8),
+      routeHeal: p.routeHeal || 0,
+      shieldGain: p.shieldGain || 3,
+      seekSpeed: p.seekSpeed || 120,
+      zoneDamage: p.zoneDamage || 0,
+      source: stickySource,
+      visual: visualKind,
+      bounceRemaining: p.seekBounce ? 1 : 0
+    });
+    if (mechanic === "trap_link_control_zone" && target) {
+      const pinDamage = Math.max(8, (p.zoneDamage || p.damage || 9) * 1.1);
+      damageEnemy(state, target, pinDamage, "sticky_notice_pin", { x, y });
+      target.rooted = Math.max(target.rooted || 0, 1);
+      addCircleEvent(state, target.x, target.y, target.r + 12, "#e8db92", 0.2, "mark", false, "sticky_notice_pin", { trapId, targetEnemyId: target.id });
+    }
+    state.stats.shots += 1;
+    applyStickySecondary(state, x, y, target);
+  }
+
+  function fireGeneric(state) {
+    const p = state.activeFormParams;
+    const target = nearestEnemy(state, p.range || 340);
+    if (!target) return;
+      state.projectiles.push(CombatPrimitives.projectile({
+        x: state.player.x,
+        y: state.player.y,
+        targetId: target.id,
+        vx: 0,
+      vy: 0,
+      speed: 420,
+      damage: p.damage || 12,
+      radius: 6,
+      life: 2,
+      source: state.selectedWeaponId || "weapon",
+        color: "#62f7ff"
+      }));
+    state.stats.shots += 1;
+  }
+
+  function fireSupportSkill(state) {
+    const skill = state.supportSkill;
+    if (!skill || !skill.type) return;
+    const target = nearestEnemy(state, 760);
+    if (skill.type === "support_marker_line" && target) {
+      const dx = target.x - state.player.x;
+      const dy = target.y - state.player.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const x2 = state.player.x + dx / len * 520;
+      const y2 = state.player.y + dy / len * 520;
+      addBeamEvent(state, state.player.x, state.player.y, x2, y2, "#c7f8ff", 4, 0.18, "support", "marker_beam", "support_marker");
+      lineHitEnemies(state, state.player.x, state.player.y, x2, y2, 5, Math.max(10, (state.activeFormParams.damage || 12) * 0.42), 5, "support_marker");
+      return;
+    }
+    if (skill.type === "support_thermos_pulse") {
+      const radius = 128;
+      addThermosWavefront(state, {
+        source: "support_thermos_wave",
+        x: state.player.x,
+        y: state.player.y,
+        radius,
+        damage: Math.max(9, (state.activeFormParams.damage || 12) * 0.5),
+        duration: 0.52,
+        thickness: 28,
+        color: "#aaf4ff",
+        slow: 0.18,
+        visual: "thermos_wavefront"
+      });
+      return;
+    }
+    if (skill.type === "support_sticky_trap") {
+      const angle = target ? Math.atan2(target.y - state.player.y, target.x - state.player.x) : Math.random() * Math.PI * 2;
+      const x = clamp(state.player.x + Math.cos(angle) * 96, 60, worldWidth(state) - 60);
+      const y = clamp(state.player.y + Math.sin(angle) * 96, 60, worldHeight(state) - 60);
+      const trapId = "support_sticky_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+      addCircleEvent(state, x, y, 28, "#8df7ff", 0.32, "support_trap", false, "support_sticky_trap", { trapId });
+      addDamageZone(state, {
+        type: "circle",
+        source: "support_sticky_trap",
+        x,
+        y,
+        radius: 28,
+        damage: 0,
+        life: 4.2,
+        maxLife: 4.2,
+        tickEvery: 999,
+        color: "#8df7ff",
+        visual: "sticky_note",
+        stickyTrap: true,
+        groundSticky: true,
+        armed: false,
+        armDelay: 0.32,
+        trapId,
+        triggerSource: "support_sticky_trigger",
+        triggerDamage: Math.max(8, (state.activeFormParams.damage || 12) * 0.55),
+        triggerRadius: 64,
+        slow: 0.25
+      });
+      return;
+    }
+    if (target) {
+      state.projectiles.push(CombatPrimitives.projectile({ x: state.player.x, y: state.player.y, targetId: target.id, speed: 380, damage: Math.max(8, (state.activeFormParams.damage || 12) * 0.35), radius: 5, life: 2, source: "support_weapon", color: "#bdf5ff" }));
+    }
+  }
+
+  function updateSupportSkill(state, dt) {
+    const skill = state.supportSkill;
+    if (!skill || state.mode !== "combat") return;
+    skill.timer = Math.max(0, (skill.timer || 0) - dt);
+    if (skill.timer > 0) return;
+    fireSupportSkill(state);
+    skill.timer = Math.max(1.2, skill.cooldown || 4);
+  }
+
+  function fireWeapon(state) {
+    if (!state.selectedWeaponId) return;
+    const id = state.selectedWeaponId;
+    if (id === "marker") fireMarker(state);
+    else if (id === "thermos") fireThermos(state);
+    else if (id === "sticky_note") fireSticky(state);
+    else fireGeneric(state);
+  }
+
+  function recordEnemySpawn(state, typeId) {
+    if (!state.stats.enemyTypesSpawned) state.stats.enemyTypesSpawned = {};
+    state.stats.enemyTypesSpawned[typeId] = (state.stats.enemyTypesSpawned[typeId] || 0) + 1;
+  }
+
+  function pickEnemyType(stage) {
+    const mix = stage.enemyMix && stage.enemyMix.length ? stage.enemyMix : [{ type: "todo", weight: 1 }];
+    const total = mix.reduce(function (sum, item) { return sum + Math.max(0, item.weight || 1); }, 0) || 1;
+    let roll = Math.random() * total;
+    for (const item of mix) {
+      roll -= Math.max(0, item.weight || 1);
+      if (roll <= 0) return item.type || "todo";
+    }
+    return mix[mix.length - 1].type || "todo";
+  }
+
+  function makeEnemy(state, typeId, x, y, options) {
+    const stage = state.stage;
+    const boss = !!(options && options.boss);
+    const fragment = !!(options && options.fragment);
+    const def = boss ? (BOSS_DEFS[stage.bossType] || BOSS_DEFS.lead) : (ENEMY_DEFS[typeId] || ENEMY_DEFS.todo);
+    const hp = boss
+      ? stage.enemyHp
+      : Math.max(6, stage.enemyHp * (def.hp || 1) + Math.random() * stage.id * 3);
+    const speed = boss
+      ? stage.enemySpeed * (def.speed || 1)
+      : stage.enemySpeed * (def.speed || 1) + Math.random() * 8;
+    return {
+      id: "e" + Date.now() + "_" + Math.random().toString(16).slice(2),
+      typeId: boss ? (stage.bossType || "boss") : typeId,
+      name: def.name,
+      behavior: def.behavior || "chase",
+      x,
+      y,
+      r: boss ? 30 : Math.max(9, (def.radius || 13) * (fragment ? 0.72 : 1)),
+      hp: fragment ? hp * 0.34 : hp,
+      maxHp: fragment ? hp * 0.34 : hp,
+      speed: fragment ? speed * 1.18 : speed,
+      damage: boss ? 18 + stage.id * 0.45 : def.damage || 7,
+      xp: boss ? 50 : Math.max(3, Math.round((def.xp || 5) * (fragment ? 0.45 : 1))),
+      boss,
+      fragment,
+      dead: false,
+      hitCooldown: 0,
+      p0Marked: false,
+      phase: Math.random() * Math.PI * 2,
+      age: 0,
+      color: def.color || "#c82345",
+      accent: def.accent || "#ff6b8a",
+      armor: def.armor || 0,
+      bossHitCap: boss ? (stage.bossHitCap || 0) : 0,
+      shootEvery: def.shootEvery || 0,
+      projectileSpeed: def.projectileSpeed || 245,
+      shootCooldown: (def.shootEvery || 2.4) * (0.55 + Math.random() * 0.55),
+      chargeEvery: def.chargeEvery || 0,
+      chargeSpeed: def.chargeSpeed || 240,
+      chargeCooldown: (def.chargeEvery || 2.8) * (0.5 + Math.random() * 0.6),
+      chargeTime: 0,
+      chargeVx: 0,
+      chargeVy: 0,
+      splitType: def.splitType || ""
+    };
+  }
+
+  function spawnChildEnemy(state, parent, typeId, side) {
+    const angle = Math.atan2(parent.y - state.player.y, parent.x - state.player.x) + side * 0.85;
+    const child = makeEnemy(state, typeId || "todo", clamp(parent.x + Math.cos(angle) * 18, 35, worldWidth(state) - 35), clamp(parent.y + Math.sin(angle) * 18, 35, worldHeight(state) - 35), { fragment: true });
+    child.speed *= 1.15;
+    state.enemies.push(child);
+    recordEnemySpawn(state, child.typeId + "_fragment");
+  }
+
+  function spawnEnemy(state) {
+    const stage = state.stage;
+    updateCamera(state);
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const side = Math.floor(Math.random() * 4);
+    const margin = 48;
+    let x = side === 0 ? camera.x - margin : side === 1 ? camera.x + camera.width + margin : camera.x + Math.random() * camera.width;
+    let y = side === 2 ? camera.y - margin : side === 3 ? camera.y + camera.height + margin : camera.y + Math.random() * camera.height;
+    x = clamp(x, -margin, worldWidth(state) + margin);
+    y = clamp(y, -margin, worldHeight(state) + margin);
+    const boss = !!stage.boss && !state.stageBossSpawned;
+    const typeId = boss ? (stage.bossType || "lead") : pickEnemyType(stage);
+    const enemy = makeEnemy(state, typeId, x, y, { boss });
+    if (boss) state.stageBossSpawned = true;
+    state.enemies.push(enemy);
+    recordEnemySpawn(state, enemy.typeId);
+  }
+
+  function updateInput(state, dt) {
+    const input = state.input;
+    let x = 0;
+    let y = 0;
+    if (input.left) x -= 1;
+    if (input.right) x += 1;
+    if (input.up) y -= 1;
+    if (input.down) y += 1;
+    const len = Math.hypot(x, y) || 1;
+    state.player.x = clamp(state.player.x + x / len * state.player.speed * dt, 26, worldWidth(state) - 26);
+    state.player.y = clamp(state.player.y + y / len * state.player.speed * dt, 26, worldHeight(state) - 26);
+    updateCamera(state);
+    state.player.invuln = Math.max(0, state.player.invuln - dt);
+  }
+
+  function damagePlayer(state, amount, color) {
+    let incoming = amount;
+    const params = state.activeFormParams || {};
+    const shieldBefore = params.shield || 0;
+    if ((params.shield || 0) > 0) {
+      const absorb = Math.min(params.shield, incoming);
+      params.shield -= absorb;
+      incoming -= absorb;
+      addCircleEvent(state, state.player.x, state.player.y, 54, "#8fffe7", 0.24, "shield");
+    }
+    if (shieldBefore > 0 && (params.shield || 0) <= 0 && ((state.activeForm && state.activeForm.mechanicType === "shield_counter_line") || params.crossShield)) {
+      triggerMarkerCounter(state);
+    }
+    if (shieldBefore > 0 && (params.shield || 0) <= 0 && ((state.activeForm && state.activeForm.mechanicType === "shield_break_pulse") || params.crossWarmShield)) {
+      triggerThermosShieldBreak(state);
+    }
+    if (incoming <= 0) return;
+    state.hp -= incoming;
+    state.stats.damageTaken += incoming;
+    state.player.invuln = 0.55;
+    addParticle(state, state.player.x, state.player.y, color || "#ff6b4a", 8);
+    if (state.hp <= 0) V2.dispatch({ type: "END_RUN" });
+  }
+
+  function fireEnemyShot(state, enemy, dx, dy, len) {
+    const speed = enemy.projectileSpeed || (enemy.boss ? 285 : 245);
+      state.projectiles.push(CombatPrimitives.projectile({
+        hostile: true,
+      x: enemy.x,
+      y: enemy.y,
+      vx: dx / len * speed,
+      vy: dy / len * speed,
+      damage: enemy.damage * (enemy.boss ? 0.72 : 0.64),
+      radius: enemy.boss ? 7 : 5,
+      life: enemy.boss ? 3.6 : 2.8,
+      source: "enemy_" + (enemy.typeId || "shot"),
+        color: enemy.accent || "#ff8aff"
+      }));
+    state.stats.enemyShots = (state.stats.enemyShots || 0) + 1;
+    addCircleEvent(state, enemy.x, enemy.y, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
+  }
+
+  function updateEnemyIntent(state, enemy, dt, dx, dy, len) {
+    const ranged = enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield" || enemy.behavior === "boss_final";
+    if (ranged) {
+      enemy.shootCooldown = Math.max(0, enemy.shootCooldown - dt);
+      if (enemy.shootCooldown <= 0 && len < (enemy.boss ? 760 : 620)) {
+        fireEnemyShot(state, enemy, dx, dy, len);
+        enemy.shootCooldown = Math.max(0.8, (enemy.shootEvery || 2.2) * (0.82 + Math.random() * 0.32));
+      }
+    }
+    const charger = enemy.behavior === "charger" || enemy.behavior === "boss_charger" || enemy.behavior === "boss_final";
+    if (charger && enemy.chargeTime <= 0) {
+      enemy.chargeCooldown = Math.max(0, enemy.chargeCooldown - dt);
+      if (enemy.chargeCooldown <= 0 && len < (enemy.boss ? 720 : 520)) {
+        enemy.chargeTime = enemy.boss ? 0.62 : 0.48;
+        enemy.chargeVx = dx / len;
+        enemy.chargeVy = dy / len;
+        enemy.chargeCooldown = Math.max(1.25, (enemy.chargeEvery || 2.7) * (0.82 + Math.random() * 0.42));
+        addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, enemy.boss ? "冲刺评审" : "DDL", enemy.accent || "#ffd36a", 0.42);
+      }
+    }
+  }
+
+  function updateEnemies(state, dt) {
+    const cap = state.stage.id >= 4 ? 95 : 75;
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      enemy.age = (enemy.age || 0) + dt;
+      if (enemy.p0Marked) {
+        enemy.p0MarkTime = Math.max(0, (enemy.p0MarkTime || 0) - dt);
+        if (enemy.p0MarkTime <= 0) {
+          enemy.p0Marked = false;
+          traceWeaponEvent(state, "state", { source: "marker_p0_expire", enemyId: enemy.id, vfxPhase: eventPhase("marker_p0_expire") });
+        }
+      }
+      enemy.rooted = Math.max(0, (enemy.rooted || 0) - dt);
+      const dx = state.player.x - enemy.x;
+      const dy = state.player.y - enemy.y;
+      const len = Math.hypot(dx, dy) || 1;
+      if (enemy.rooted <= 0) updateEnemyIntent(state, enemy, dt, dx, dy, len);
+      let mx = dx / len;
+      let my = dy / len;
+      let moveSpeed = enemy.speed;
+      if (enemy.chargeTime > 0) {
+        enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
+        mx = enemy.chargeVx || mx;
+        my = enemy.chargeVy || my;
+        moveSpeed = enemy.chargeSpeed || enemy.speed * 2.8;
+      } else if (enemy.behavior === "zigzag") {
+        const wobble = Math.sin(enemy.age * 4.2 + enemy.phase) * 0.58;
+        const px = -dy / len;
+        const py = dx / len;
+        mx = dx / len * 0.86 + px * wobble;
+        my = dy / len * 0.86 + py * wobble;
+      } else if (enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield") {
+        const desired = enemy.boss ? 310 : 250;
+        const strafe = Math.sin(enemy.age * 2.2 + enemy.phase) * 0.5;
+        const px = -dy / len;
+        const py = dx / len;
+        const distanceMove = len < desired ? -0.82 : len > desired + 110 ? 0.56 : 0.08;
+        mx = dx / len * distanceMove + px * strafe;
+        my = dy / len * distanceMove + py * strafe;
+        moveSpeed *= enemy.boss ? 0.92 : 0.82;
+      } else if (enemy.behavior === "tank" || enemy.behavior === "shield") {
+        moveSpeed *= 0.86;
+      }
+      const mLen = Math.hypot(mx, my) || 1;
+      if (enemy.rooted <= 0) {
+        enemy.x = clamp(enemy.x + mx / mLen * moveSpeed * dt, -44, worldWidth(state) + 44);
+        enemy.y = clamp(enemy.y + my / mLen * moveSpeed * dt, -44, worldHeight(state) + 44);
+      }
+      enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r && state.player.invuln <= 0) {
+        damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+      }
+    }
+    state.enemies = state.enemies.filter(function (enemy) { return !enemy.dead; }).slice(-cap);
+  }
+
+  function updateProjectiles(state, dt) {
+    for (const p of state.projectiles) {
+      if (p.hostile) {
+        p.x += (p.vx || 0) * dt;
+        p.y += (p.vy || 0) * dt;
+        p.life -= dt;
+        if (Math.hypot(p.x - state.player.x, p.y - state.player.y) < p.radius + state.player.radius && state.player.invuln <= 0) {
+          damagePlayer(state, p.damage || 6, p.color || "#ff6b4a");
+          p.life = 0;
+        }
+        if (p.x < -80 || p.x > worldWidth(state) + 80 || p.y < -80 || p.y > worldHeight(state) + 80) p.life = 0;
+        continue;
+      }
+      const target = state.enemies.find(function (enemy) { return enemy.id === p.targetId && !enemy.dead; }) || nearestEnemy(state, 999);
+      if (!target) {
+        p.life = 0;
+        continue;
+      }
+      const dx = target.x - p.x;
+      const dy = target.y - p.y;
+      const len = Math.hypot(dx, dy) || 1;
+      p.x += dx / len * p.speed * dt;
+      p.y += dy / len * p.speed * dt;
+      p.life -= dt;
+      if (Math.hypot(p.x - target.x, p.y - target.y) < p.radius + target.r) {
+        damageEnemy(state, target, p.damage, p.source, state.player);
+        addParticle(state, p.x, p.y, p.color, 4);
+        p.life = 0;
+      }
+    }
+    state.projectiles = state.projectiles.filter(function (p) { return p.life > 0; });
+  }
+
+  function updateZones(state, dt) {
+    for (const z of state.damageZones) {
+      z.life -= dt;
+      z.age = (z.age || 0) + dt;
+      if (z.stickyTrap && !z.armed && z.age >= (z.armDelay || 0)) {
+        z.armed = true;
+        traceWeaponEvent(state, "state", { source: "sticky_arm", trapId: z.trapId, mechanic: z.source, vfxPhase: eventPhase("sticky_arm") });
+        addCircleEvent(state, z.x, z.y, Math.max(20, z.radius + 8), z.color, 0.2, "mark", false, "sticky_arm", { trapId: z.trapId });
+      }
+      if (z.groundSticky) {
+        if (z.armed) {
+          const stepped = nearestEnemyFromPoint(state, z, z.triggerRadius || z.radius + 22);
+          if (stepped) triggerSingleStickyTrap(state, z, z.triggerSource || "sticky_base_trigger", z.triggerDamage || 10, z.triggerRadius || 52, z.slow || 0);
+        }
+        continue;
+      }
+      if (z.seekingSticky) {
+        if (!z.armed) continue;
+        const seekTarget = nearestEnemyFromPoint(state, z, 999);
+        if (seekTarget) {
+          const dx = seekTarget.x - z.x;
+          const dy = seekTarget.y - z.y;
+          const len = Math.hypot(dx, dy) || 1;
+          z.x += dx / len * (z.seekSpeed || 120) * dt;
+          z.y += dy / len * (z.seekSpeed || 120) * dt;
+          if (Math.hypot(seekTarget.x - z.x, seekTarget.y - z.y) <= seekTarget.r + z.radius) {
+            const impactX = z.x;
+            const impactY = z.y;
+            triggerSingleStickyTrap(state, z, "sticky_seeking_hit", z.triggerDamage || 10, z.triggerRadius || 48, z.slow || 0);
+            if (z.bounceRemaining > 0) {
+              const bouncedTarget = state.enemies.find(function (enemy) {
+                return !enemy.dead && enemy !== seekTarget && Math.hypot(enemy.x - impactX, enemy.y - impactY) <= 220;
+              });
+              if (bouncedTarget) {
+                addDamageZone(state, {
+                  type: "circle",
+                  source: "sticky_seeking_bounce",
+                  x: impactX,
+                  y: impactY,
+                  radius: Math.max(18, z.radius * 0.86),
+                  damage: 0,
+                  triggerDamage: Math.max(3, (z.triggerDamage || 10) * 0.72),
+                  triggerRadius: Math.max(38, (z.triggerRadius || 48) * 0.86),
+                  life: 2.2,
+                  maxLife: 2.2,
+                  tickEvery: 999,
+                  color: z.color,
+                  slow: z.slow,
+                  stickyTrap: true,
+                  seekingSticky: true,
+                  armed: true,
+                  armDelay: 0,
+                  trapId: z.trapId + "_bounce",
+                  seekSpeed: z.seekSpeed,
+                  bounceRemaining: z.bounceRemaining - 1,
+                  visual: "seeking_note"
+                });
+              }
+            }
+          }
+        }
+        continue;
+      }
+      if (z.manualSticky) continue;
+      if (z.noticeNode) {
+        if (z.armed && !z.linked) tryBuildNoticeZone(state, state.activeFormParams || {});
+        continue;
+      }
+      if (z.routeSticky) {
+        if (!z.armed) continue;
+        if (!z.routeClaimed && Math.hypot(state.player.x - z.x, state.player.y - z.y) <= z.radius + state.player.radius) {
+          z.routeClaimed = true;
+          const params = state.activeFormParams || {};
+          params.shield = Math.min(70, (params.shield || 0) + (z.shieldGain || 3));
+          if (z.routeHeal) state.hp = Math.min(state.maxHp, state.hp + z.routeHeal);
+          addCircleEvent(state, state.player.x, state.player.y, 54, "#8fffe7", 0.25, "shield", false, "sticky_route_claim", { trapId: z.trapId, shieldGain: z.shieldGain || 3 });
+        }
+      }
+      if (z.orbitPlayer) {
+        z.orbitAngle = (z.orbitAngle || 0) + (z.orbitSpeed || 2) * dt;
+        z.x = state.player.x + Math.cos(z.orbitAngle) * (z.orbitRadius || 80);
+        z.y = state.player.y + Math.sin(z.orbitAngle) * (z.orbitRadius || 80);
+      }
+      if (z.seek) {
+        const target = nearestEnemy(state, 999);
+        if (target) {
+          const dx = target.x - z.x;
+          const dy = target.y - z.y;
+          const len = Math.hypot(dx, dy) || 1;
+          z.x += dx / len * (z.seekSpeed || 120) * dt;
+          z.y += dy / len * (z.seekSpeed || 120) * dt;
+        }
+      }
+      if (z.droneModule) {
+        z.droneTimer = Math.max(0, (z.droneTimer || 0) - dt);
+        if (z.droneTimer <= 0) {
+          const droneTarget = nearestEnemyFromPoint(state, z, z.steamRange || 230);
+          if (droneTarget) {
+            const endpoint = lineEndpointThroughTarget(z, droneTarget, Math.min(z.steamRange || 230, Math.hypot(droneTarget.x - z.x, droneTarget.y - z.y) + 26));
+            const steamWidth = Math.max(8, (z.steamRadius || 42) * 0.24);
+            const droneHits = lineHitEnemies(state, z.x, z.y, endpoint.x, endpoint.y, steamWidth, z.droneDamage || 10, z.dronePierce || 2, "thermos_drone_steam");
+            addBeamEvent(state, z.x, z.y, endpoint.x, endpoint.y, "#9ff8ff", steamWidth - 1, 0.18, "steam", false, "thermos_drone_steam", {
+              moduleId: z.moduleId,
+              targetEnemyId: droneTarget.id,
+              hitEnemyIds: droneHits.map(function (hit) { return hit.enemy.id; })
+            });
+          }
+          z.droneTimer = z.droneShootEvery || 0.72;
+        }
+        continue;
+      }
+      if (z.heal && Math.hypot(state.player.x - z.x, state.player.y - z.y) <= z.radius) {
+        state.hp = Math.min(state.maxHp, state.hp + z.heal * dt);
+        if (z.playerShield) {
+          state.activeFormParams.shield = Math.min(60, (state.activeFormParams.shield || 0) + z.playerShield * dt);
+        }
+      }
+      if (z.delay && z.age < z.delay) continue;
+      if (z.type === "ring") {
+        const currentRadius = ringCurrentRadius(z);
+        const halfThickness = Math.max(6, (z.thickness || 24) / 2);
+        for (const enemy of state.enemies) {
+          if (enemy.dead || z.hits[enemy.id]) continue;
+          const distance = Math.hypot(enemy.x - z.x, enemy.y - z.y);
+          if (Math.abs(distance - currentRadius) > halfThickness + enemy.r) continue;
+          z.hits[enemy.id] = true;
+          if (z.debuff === "tea") {
+            enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
+          }
+          damageEnemy(state, enemy, z.damage, z.source || "ring_zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+          if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
+        }
+        continue;
+      }
+      z.tick -= dt;
+      if (z.tick > 0) continue;
+      z.tick = z.tickEvery;
+      if (z.type === "circle") {
+        for (const enemy of state.enemies) {
+          if (!enemy.dead && Math.hypot(enemy.x - z.x, enemy.y - z.y) <= z.radius + enemy.r) {
+            if (z.hitOnce && z.hits[enemy.id]) continue;
+            if (z.debuff === "tea") {
+              enemy.teaScent = { radius: z.teaRadius || 96, damage: z.teaDamage || 6 };
+            }
+            damageEnemy(state, enemy, z.damage, z.source || "zone", { x: z.x, y: z.y, power: z.knockback == null ? 12 : z.knockback });
+            if (z.hitOnce) z.hits[enemy.id] = true;
+            if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
+            if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
+            if (z.seekBounce && !z.bounced) {
+              z.bounced = true;
+              const next = state.enemies.find(function (candidate) {
+                return !candidate.dead && candidate !== enemy && Math.hypot(candidate.x - enemy.x, candidate.y - enemy.y) < 180;
+              });
+              if (next) {
+                addDamageZone(state, {
+                  type: "circle",
+                  x: enemy.x,
+                  y: enemy.y,
+                  radius: z.radius * 0.82,
+                  damage: z.damage * 0.72,
+                  life: 1.2,
+                  maxLife: 1.2,
+                  tickEvery: 0.28,
+                  color: z.color,
+                  slow: z.slow,
+                  stickyTrap: true,
+                  seek: true,
+                  seekSpeed: z.seekSpeed,
+                  visual: "seeking_note"
+                });
+              }
+            }
+          }
+        }
+      }
+      if (z.type === "line") {
+        lineHitEnemies(state, z.x1, z.y1, z.x2, z.y2, z.width || 8, z.damage, 99, z.source || "line_zone");
+      }
+      if (z.type === "polygon" && z.points && z.points.length >= 3) {
+        for (const enemy of state.enemies) {
+          if (enemy.dead || !pointInPolygon(enemy.x, enemy.y, z.points)) continue;
+          damageEnemy(state, enemy, z.damage, z.source || "polygon_zone", { x: z.x, y: z.y });
+          if (z.slow) enemy.speed *= 1 - z.slow * 0.08;
+          if (z.root) enemy.rooted = Math.max(enemy.rooted || 0, z.root);
+        }
+      }
+    }
+    state.damageZones = state.damageZones.filter(function (z) { return z.life > 0; });
+  }
+
+  function updatePickups(state, dt) {
+    pickupMagnetTimer += dt;
+    for (const p of state.pickups) {
+      const d = Math.hypot(state.player.x - p.x, state.player.y - p.y);
+      if (d < 150) {
+        p.x += (state.player.x - p.x) * dt * 5;
+        p.y += (state.player.y - p.y) * dt * 5;
+      }
+      if (d < state.player.radius + p.radius + 6) {
+        p.dead = true;
+        if (p.type === "xp") V2.dispatch({ type: "GAIN_XP", amount: p.amount });
+        if (p.type === "material") {
+          state.materials += p.amount;
+          state.stats.materialsCollected += p.amount;
+        }
+      }
+    }
+    state.pickups = state.pickups.filter(function (p) { return !p.dead; });
+  }
+
+  function updateEffects(state, dt) {
+    state.particles.forEach(function (p) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+      p.life -= dt;
+    });
+    state.particles = state.particles.filter(function (p) { return p.life > 0; });
+    state.formEvents.forEach(function (e) {
+      e.life -= dt;
+      e.age = (e.age || 0) + dt;
+    });
+    state.formEvents = state.formEvents.filter(function (e) { return e.life > 0; });
+  }
+
+  function update(dt) {
+    const state = V2.getState();
+    if (state.mode !== "combat") return;
+    state.loop.updateCount += 1;
+    state.totalTime += dt;
+    if (state.warmupTime > 0) {
+      state.warmupTime = Math.max(0, state.warmupTime - dt);
+      updateInput(state, dt);
+      return;
+    }
+    state.stageTime = Math.max(0, state.stageTime - dt);
+    updateInput(state, dt);
+    if (state.activeFormParams) {
+      state.activeFormParams.releaseLockout = Math.max(0, (state.activeFormParams.releaseLockout || 0) - dt);
+    }
+    spawnTimer -= dt;
+    if (spawnTimer <= 0 && state.enemies.length < (state.stage.boss ? 5 : 80)) {
+      spawnEnemy(state);
+      spawnTimer = state.stage.boss && state.stageBossSpawned ? (state.stage.bossAddEvery || 4.2) : state.stage.spawnEvery;
+      if (state.stage.id >= 3 && !state.stage.boss && Math.random() < 0.25) spawnEnemy(state);
+    }
+    attackTimer -= dt;
+    if (attackTimer <= 0) {
+      fireWeapon(state);
+      let nextAttackDelay = state.activeFormParams.cooldown || 1.4;
+      if (state.activeForm && state.activeForm.mechanicType === "deployable_safe_station" && state.activeFormParams.risk) {
+        const insideStation = state.damageZones.some(function (zone) {
+          return zone.source === "thermos_station" && zone.life > 0 && Math.hypot(state.player.x - zone.x, state.player.y - zone.y) <= zone.radius;
+        });
+        if (!insideStation) nextAttackDelay *= 1.25;
+      }
+      attackTimer = Math.max(0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
+    }
+    updateSupportSkill(state, dt);
+    updateProjectiles(state, dt);
+    updateZones(state, dt);
+    updateEnemies(state, dt);
+    updatePickups(state, dt);
+    updateEffects(state, dt);
+    const targetCleared = state.stage.boss ? state.stageBossDefeated : state.stageKills >= state.stage.targetKills;
+    const timerCleared = state.stageTime <= 0 && !state.stage.boss;
+    if (timerCleared || targetCleared) {
+      V2.dispatch({ type: "COMPLETE_STAGE" });
+    }
+  }
+
+  function drawBackground(ctx, state) {
+    const camera = state.camera || { x: 0, y: 0 };
+    ctx.clearRect(0, 0, W, H);
+    if (!isSpriteReady("office_arena_night")) return;
+    const img = runtimeImages.office_arena_night;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state));
+    ctx.restore();
+  }
+
+  function drawPlayer(ctx, state) {
+    const p = state.player;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
+    drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    const shield = state.activeFormParams && state.activeFormParams.shield || 0;
+    if (shield > 0) {
+      const shieldMax = state.activeFormParams.markerShieldMax || state.activeFormParams.thermosShieldMax || state.activeFormParams.releaseShieldMax || state.activeFormParams.secondaryWarmShieldMax || Math.max(18, shield);
+      const ratio = clamp(shield / shieldMax, 0, 1);
+      drawSprite(ctx, "status_shield_art", 0, -2, 84 + ratio * 12, 84 + ratio * 12, 0.72 + ratio * 0.22, 0);
+    }
+    ctx.restore();
+  }
+
+  function drawEnemies(ctx, state) {
+    for (const e of state.enemies) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      const cell = ENEMY_ATLAS_CELLS[e.typeId] || ENEMY_ATLAS_CELLS.todo;
+      const bodySize = e.boss ? 96 : Math.max(48, e.r * 3.6);
+      drawAtlasCell(ctx, "office_atlas", cell[0], cell[1], 0, 0, bodySize, bodySize, e.fragment ? 0.86 : 1, 0);
+      if (e.chargeTime > 0) {
+        drawSprite(ctx, "thermos_charge_art", 0, 0, bodySize + 26, bodySize + 26, 0.72, e.age * 0.9);
+      }
+      if (e.armor) {
+        drawSprite(ctx, "status_shield_art", 0, 0, bodySize + 24, bodySize + 24, 0.68, 0);
+      }
+      if (e.p0Marked) {
+        const markRatio = clamp((e.p0MarkTime || 0) / Math.max(0.01, e.p0MarkMax || 1), 0, 1);
+        drawSprite(ctx, "status_mark_art", 0, -2, bodySize + 18, bodySize + 18, 0.55 + markRatio * 0.4, 0);
+      }
+      if (e.rooted > 0) {
+        const rootWidth = bodySize + 18;
+        drawSprite(ctx, "status_root_art", 0, bodySize * 0.34, rootWidth, rootWidth * 0.441, 0.86, 0);
+      }
+      drawCombatProgress(ctx, 0, -bodySize / 2 - 9, e.boss ? 88 : 54, e.boss ? 14 : 9, e.hp / e.maxHp);
+      ctx.restore();
+    }
+  }
+
+  function pointInPolygon(x, y, points) {
+    let inside = false;
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+      const xi = points[i].x;
+      const yi = points[i].y;
+      const xj = points[j].x;
+      const yj = points[j].y;
+      const intersects = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / ((yj - yi) || 0.0001) + xi);
+      if (intersects) inside = !inside;
+    }
+    return inside;
+  }
+
+  function triggerSingleStickyTrap(state, trap, source, damage, radius, slow) {
+    if (!trap || trap.triggered || trap.life <= 0) return false;
+    trap.triggered = true;
+    trap.life = 0;
+    addCircleEvent(state, trap.x, trap.y, radius, "#86f7ff", 0.3, "blast", false, source, { trapId: trap.trapId });
+    addDamageZone(state, {
+      type: "circle",
+      source,
+      x: trap.x,
+      y: trap.y,
+      radius,
+      damage,
+      life: 0.16,
+      maxLife: 0.16,
+      hitOnce: true,
+      color: "#86f7ff",
+      slow: slow || 0,
+      visual: "sticky_trigger_blast"
+    });
+    return true;
+  }
+
+  function detonateManualStickyTraps(state) {
+    const p = state.activeFormParams || {};
+    const traps = state.damageZones.filter(function (zone) {
+      return zone.manualSticky && zone.armed && !zone.triggered && zone.life > 0;
+    });
+    if (!traps.length) return 0;
+    const center = traps.reduce(function (sum, trap) {
+      sum.x += trap.x;
+      sum.y += trap.y;
+      return sum;
+    }, { x: 0, y: 0 });
+    center.x /= traps.length;
+    center.y /= traps.length;
+    addCircleEvent(state, center.x, center.y, Math.min(72, 42 + traps.length * 8), "#e8db92", 0.24, "switch_pulse", false, "sticky_manual_trigger", {
+      trapCount: traps.length,
+      chained: !!p.chainDetonate
+    });
+    traps.forEach(function (trap, index) {
+      const delay = p.chainDetonate ? index * 0.14 : 0;
+      const radius = p.explosionRadius || 70;
+      trap.triggered = true;
+      trap.life = 0;
+      addCircleEvent(state, trap.x, trap.y, radius, "#a9f1ff", 0.34, "blast", false, "sticky_sync_blast", {
+        trapId: trap.trapId,
+        delay,
+        chainIndex: index
+      });
+      addDamageZone(state, {
+        type: "circle",
+        source: "sticky_sync_blast",
+        x: trap.x,
+        y: trap.y,
+        radius,
+        damage: (p.damage || 12) * 1.45,
+        delay,
+        life: 0.16 + delay,
+        maxLife: 0.16 + delay,
+        hitOnce: true,
+        color: index % 2 ? "#d6fbff" : "#a9f1ff",
+        knockback: p.blastKnockback ? 38 : 12,
+        visual: "sticky_sync_blast"
+      });
+    });
+    traceWeaponEvent(state, "state", { source: "sticky_manual_trigger", trapCount: traps.length, chained: !!p.chainDetonate, vfxPhase: eventPhase("sticky_manual_trigger") });
+    return traps.length;
+  }
+
+  function tryBuildNoticeZone(state, p) {
+    const nodes = state.damageZones.filter(function (zone) {
+      return zone.noticeNode && zone.armed && !zone.linked && zone.life > 0;
+    }).slice(-3);
+    if (nodes.length < 3) return false;
+    const linkRadius = p.linkRadius || 170;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y) > linkRadius) return false;
+      }
+    }
+    const points = nodes.map(function (node) { return { x: node.x, y: node.y }; });
+    const twiceArea = Math.abs(
+      points[0].x * (points[1].y - points[2].y) +
+      points[1].x * (points[2].y - points[0].y) +
+      points[2].x * (points[0].y - points[1].y)
+    );
+    if (twiceArea < 1200) return false;
+    nodes.forEach(function (node) { node.linked = true; });
+    const duration = Math.max(1.8, Math.min.apply(null, nodes.map(function (node) { return node.life; })));
+    for (let index = 0; index < points.length; index++) {
+      const a = points[index];
+      const b = points[(index + 1) % points.length];
+      addBeamEvent(state, a.x, a.y, b.x, b.y, "#e8db92", 3, Math.min(0.6, duration), "grid", false, "sticky_link_line", { polygonEdge: index });
+      addDamageZone(state, { type: "line", source: "sticky_link_line", x1: a.x, y1: a.y, x2: b.x, y2: b.y, width: 7, damage: Math.max(3, (p.zoneDamage || 9) * 0.45), life: duration, maxLife: duration, tickEvery: 0.42, color: "#e8db92", slow: p.slow || 0.25, visual: "sticky_link_line" });
+    }
+    const cx = points.reduce(function (sum, point) { return sum + point.x; }, 0) / points.length;
+    const cy = points.reduce(function (sum, point) { return sum + point.y; }, 0) / points.length;
+    addCircleEvent(state, cx, cy, 42, "#e8db92", 0.42, "trap", false, "sticky_notice_zone", { polygonArea: twiceArea / 2 });
+    addDamageZone(state, {
+      type: "polygon",
+      source: "sticky_notice_zone",
+      points,
+      x: cx,
+      y: cy,
+      radius: Math.max.apply(null, points.map(function (point) { return Math.hypot(point.x - cx, point.y - cy); })),
+      damage: p.zoneDamage || 9,
+      life: duration,
+      maxLife: duration,
+      tickEvery: 0.32,
+      color: "#e8db92",
+      slow: p.slow || 0.3,
+      root: p.noticeRoot || 0.75,
+      visual: "notice_polygon"
+    });
+    return true;
+  }
+
+  function drawGeneratedEffects(ctx, state) {
+    for (const z of state.damageZones) {
+      if (z.delay && (z.age || 0) < z.delay) continue;
+      const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
+      const progress = eventProgress(z);
+      const profile = z.visualProfile || eventVisual(z.source || z.visual || z.type);
+      const sprite = generatedEffectSprite(profile, z.source, z.type, z.visual);
+      if (z.visual === "notice_node") {
+        drawSprite(ctx, "sticky_note_v2", z.x, z.y, 32, 32, Math.min(0.96, alpha + 0.12), 0);
+        continue;
+      }
+      if (z.type === "line") {
+        drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), z.x1, z.y1, z.x2, z.y2, z.width || 8, Math.min(0.94, alpha + 0.12));
+        continue;
+      }
+      // Sticky control polygons are already represented by their real node-to-node
+      // string segments. A second filled polygon sprite would obscure occupants and
+      // visually disagree with irregular node placement.
+      if (z.type === "polygon" && profile.family === "sticky_note") continue;
+      const radius = Math.max(24, z.radius || 44);
+      const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
+      if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
+      if (drawGeneratedMechanicSprite(ctx, sprite, z.source, z.type, z.visual, z.x, z.y, mechanicRadius, Math.min(0.9, alpha + 0.1), progress)) continue;
+      const size = Math.min(520, radius * (z.type === "polygon" ? 2.2 : 1.55 + progress * 0.8));
+      drawSprite(ctx, sprite, z.x, z.y, size, size, Math.min(0.9, alpha + 0.1), (z.reverse ? -1 : 1) * progress * 0.12);
+      const bodySprite = zoneSpriteFor(z.visual || "");
+      if (bodySprite) {
+        const bodySize = /station/.test(z.visual || "") ? 68 : /drone/.test(z.visual || "") ? 52 : 46;
+        drawSprite(ctx, bodySprite, z.x, z.y, bodySize, bodySize, Math.min(0.98, alpha + 0.2), 0);
+      }
+    }
+
+    for (const event of state.formEvents) {
+      if (!event.debugHold && event.delay && (event.age || 0) < event.delay) continue;
+      const duration = event.duration || event.maxLife || 0.3;
+      const activeLife = Math.min(duration, event.life == null ? duration : event.life);
+      const alpha = event.debugHold ? 1 : clamp(activeLife / duration, 0, 1);
+      const progress = event.debugHold ? (event.debugProgress == null ? 0.7 : event.debugProgress) : 1 - alpha;
+      const profile = event.visualProfile || eventVisual(event.source || event.kind);
+      const sprite = generatedEffectSprite(profile, event.source, event.kind, event.visual);
+      if (event.kind === "text") {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = "bold 14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = event.color || "#ffffff";
+        ctx.fillText(event.text, event.x, event.y - progress * 18);
+        ctx.restore();
+        continue;
+      }
+      if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
+        drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
+        const impactSize = profile.family === "thermos"
+          ? Math.min(92, Math.max(48, (event.width || 6) * 4.5))
+          : profile.family === "marker"
+            ? clamp((event.width || 6) * 9, 58, 76)
+            : Math.min(96, Math.max(44, (event.width || 6) * 6));
+        drawSprite(ctx, profile.family === "thermos" ? "thermos_release_art" : profile.family === "sticky_note" ? "sticky_burst_art" : "marker_impact_art", event.x2, event.y2, impactSize, impactSize, alpha, progress * 0.14);
+        continue;
+      }
+      const radius = Math.max(26, event.radius || 44);
+      if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
+      if (drawGeneratedMechanicSprite(ctx, sprite, event.source, event.kind, event.visual, event.x, event.y, radius, Math.min(0.94, alpha + 0.1), progress)) continue;
+      const size = Math.min(440, radius * (1.25 + progress * 1.2));
+      drawSprite(ctx, sprite, event.x, event.y, size, size, Math.min(0.94, alpha + 0.1), progress * 0.16);
+      if (event.sprite) {
+        const bodySize = event.kind === "station" ? 68 : event.kind === "trap" || event.kind === "sticky_attach" ? 46 : Math.max(44, radius * 0.9);
+        drawSprite(ctx, event.sprite, event.x, event.y, bodySize, bodySize, Math.min(0.98, alpha + 0.16), 0);
+      }
+    }
+
+    for (const projectile of state.projectiles) {
+      const angle = Math.atan2(projectile.vy || 0, projectile.vx || 1);
+      const sprite = projectile.hostile
+        ? "enemy_projectile_art"
+        : /thermos|steam|tea/.test(projectile.source || "") ? "thermos_steam_art"
+          : /sticky|note/.test(projectile.source || "") ? "sticky_seek_art" : "marker_impact_art";
+      const width = projectile.hostile ? clamp(projectile.radius * 7, 42, 50) : Math.max(28, projectile.radius * 5);
+      const height = projectile.hostile ? width * 0.35 : sprite === "sticky_seek_art" ? width * 0.487 : width * 0.72;
+      drawSprite(ctx, sprite, projectile.x, projectile.y, width, height, 0.96, angle);
+    }
+
+    for (const pickup of state.pickups) {
+      if (pickup.type === "material") drawAtlasCell(ctx, "office_atlas", 1, 1, pickup.x, pickup.y, 28, 28, 1, 0);
+      else drawAtlasCell(ctx, "office_atlas", 2, 1, pickup.x, pickup.y, 26, 26, 1, 0);
+    }
+
+    for (const particle of state.particles) {
+      const alpha = clamp(particle.life / particle.maxLife, 0, 1);
+      const size = Math.max(10, particle.size * 4);
+      drawSprite(ctx, "marker_impact_art", particle.x, particle.y, size, size, alpha * 0.72, particle.life * 0.8);
+    }
+  }
+
+  function draw() {
+    if (!ctx) return;
+    const state = V2.getState();
+    updateCamera(state);
+    drawBackground(ctx, state);
+    ctx.save();
+    ctx.translate(-state.camera.x, -state.camera.y);
+    drawGeneratedEffects(ctx, state);
+    drawEnemies(ctx, state);
+    drawPlayer(ctx, state);
+    ctx.restore();
+  }
+
+  function frame(now) {
+    const state = V2.getState();
+    if (!state.loop.running) return;
+    if (!state.loop.lastFrameAt) state.loop.lastFrameAt = now;
+    let dt = Math.min(0.1, (now - state.loop.lastFrameAt) / 1000);
+    state.loop.lastFrameAt = now;
+    state.loop.avgFrameMs = state.loop.avgFrameMs * 0.92 + dt * 1000 * 0.08;
+    state.loop.accumulator += dt;
+    let guard = 0;
+    while (state.loop.accumulator >= STEP && guard < 5) {
+      try {
+        update(STEP);
+      } catch (err) {
+        V2.reportError(err);
+      }
+      state.loop.accumulator -= STEP;
+      guard += 1;
+    }
+    state.loop.frameCount += 1;
+    draw();
+    if (V2.ui && state.loop.frameCount % 6 === 0) V2.ui.render();
+    state.loop.raf = window.requestAnimationFrame(frame);
+  }
+
+  function fallbackTick() {
+    const state = V2.getState();
+    if (!state.loop.running) return;
+    const now = performance.now ? performance.now() : Date.now();
+    if (state.loop.lastFrameAt && now - state.loop.lastFrameAt < 80) return;
+    if (!state.loop.fallbackLastAt) state.loop.fallbackLastAt = now;
+    let dt = Math.min(0.08, (now - state.loop.fallbackLastAt) / 1000 || STEP);
+    state.loop.fallbackLastAt = now;
+    state.loop.avgFrameMs = state.loop.avgFrameMs * 0.9 + dt * 1000 * 0.1;
+    let guard = 0;
+    while (dt > 0 && guard < 5) {
+      const step = Math.min(STEP, dt);
+      try {
+        update(step);
+      } catch (err) {
+        V2.reportError(err);
+      }
+      dt -= step;
+      guard += 1;
+    }
+    draw();
+    if (V2.ui) V2.ui.render();
+  }
+
+  function bindInput() {
+    window.addEventListener("keydown", function (event) {
+      const state = V2.getState();
+      if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") state.input.up = true;
+      if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") state.input.down = true;
+      if (event.key === "a" || event.key === "A" || event.key === "ArrowLeft") state.input.left = true;
+      if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") state.input.right = true;
+      if (event.code === "Space" && !event.repeat) {
+        state.input.trigger = true;
+        event.preventDefault();
+      }
+      if (event.key === "b" || event.key === "B" || event.key === "Tab") {
+        const panel = document.getElementById("buildPanel");
+        if (panel) panel.classList.toggle("collapsed");
+        event.preventDefault();
+      }
+      if (event.key === "Escape") V2.dispatch({ type: state.mode === "paused" ? "RESUME" : "PAUSE" });
+    });
+    window.addEventListener("keyup", function (event) {
+      const state = V2.getState();
+      if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") state.input.up = false;
+      if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") state.input.down = false;
+      if (event.key === "a" || event.key === "A" || event.key === "ArrowLeft") state.input.left = false;
+      if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") state.input.right = false;
+    });
+  }
+
+  function mount(targetCanvas) {
+    canvas = targetCanvas;
+    if (!canvas) return;
+    ctx = canvas.getContext("2d");
+    loadVfxImages();
+    bindInput();
+  }
+
+  function startLoop(options) {
+    const state = V2.getState();
+    if (options && options.force) {
+      if (state.loop.raf) window.cancelAnimationFrame(state.loop.raf);
+      if (state.loop.interval) window.clearInterval(state.loop.interval);
+      state.loop.running = false;
+      state.loop.raf = 0;
+      state.loop.interval = 0;
+      attackTimer = 0;
+      spawnTimer = 0;
+      pickupMagnetTimer = 0;
+    }
+    if (state.loop.running) return;
+    state.loop.running = true;
+    state.loop.lastFrameAt = 0;
+    state.loop.fallbackLastAt = 0;
+    state.loop.raf = window.requestAnimationFrame(frame);
+    state.loop.interval = window.setInterval(fallbackTick, 33);
+  }
+
+  function stopLoop() {
+    const state = V2.getState();
+    state.loop.running = false;
+    if (state.loop.raf) window.cancelAnimationFrame(state.loop.raf);
+    if (state.loop.interval) window.clearInterval(state.loop.interval);
+    state.loop.raf = 0;
+    state.loop.interval = 0;
+  }
+
+  function runMechanicLab(kind) {
+    const state = V2.getState();
+    stopLoop();
+    state.mode = "combat";
+    state.warmupTime = 0;
+    state.stageTime = 999;
+    state.stage.targetKills = 999;
+    state.stage.spawnEvery = 999;
+    state.stageKills = 0;
+    state.player.x = 400;
+    state.player.y = 360;
+    state.enemies = [];
+    state.projectiles = [];
+    state.damageZones = [];
+    state.formEvents = [];
+    state.particles = [];
+    state.pickups = [];
+    state.stats.weaponEvents = [];
+    state.stats.audioEvents = [];
+    state.stats.damageDone = {};
+    attackTimer = 999;
+    spawnTimer = 999;
+
+    function addLabEnemy(id, x, y) {
+      const enemy = makeEnemy(state, "todo", x, y, {});
+      Object.assign(enemy, {
+        id,
+        name: "机制靶",
+        hp: 260,
+        maxHp: 260,
+        speed: 0,
+        damage: 0,
+        xp: 0,
+        shootEvery: 0,
+        chargeEvery: 0,
+        splitType: ""
+      });
+      state.enemies.push(enemy);
+      return enemy;
+    }
+
+    const labMechanics = {
+      split: "line_split",
+      p0: "mark_detonate",
+      counter: "shield_counter_line",
+      wave: "line_to_wave",
+      grid: "line_grid_field",
+      thermos_drone: "patrol_summon_steam",
+      thermos_release: "charge_release_beam",
+      thermos_shield: "shield_break_pulse",
+      thermos_tea: "periodic_wave_spread",
+      thermos_station: "deployable_safe_station",
+      sticky_seek: "seeking_trap_summon",
+      sticky_manual: "manual_trap_detonate",
+      sticky_route: "route_buff_trap",
+      sticky_spread: "sticky_debuff_spread",
+      sticky_notice: "trap_link_control_zone"
+    };
+    if (labMechanics[kind]) state.activeForm.mechanicType = labMechanics[kind];
+
+    if (kind === "split") {
+      addLabEnemy("main-a", 620, 360);
+      addLabEnemy("main-b", 820, 360);
+      addLabEnemy("branch-up-a", 700, 300);
+      addLabEnemy("branch-up-b", 780, 240);
+      addLabEnemy("branch-down-a", 700, 420);
+      addLabEnemy("branch-down-b", 780, 480);
+      if (state.activeFormParams.promotionFullscreenEvery) {
+        state.stats.shots = state.activeFormParams.promotionFullscreenEvery - 1;
+      }
+    } else if (kind === "wave") {
+      addLabEnemy("wave-origin", 620, 360);
+      addLabEnemy("wave-front-up", 620, 440);
+      addLabEnemy("wave-front-down", 620, 280);
+      addLabEnemy("wave-front-forward", 700, 360);
+    } else if (kind === "p0") {
+      addLabEnemy("p0-primary", 610, 360).maxHp = 520;
+      state.enemies[0].hp = 520;
+      addLabEnemy("p0-chain", 660, 405).maxHp = 360;
+      state.enemies[1].hp = 360;
+    } else if (kind === "counter") {
+      addLabEnemy("counter-a", 560, 330);
+      addLabEnemy("counter-b", 610, 390);
+      addLabEnemy("counter-c", 500, 450);
+      addLabEnemy("counter-d", 470, 285);
+      addLabEnemy("counter-e", 665, 300);
+      addLabEnemy("counter-f", 675, 440);
+      addLabEnemy("counter-g", 535, 500);
+    } else if (kind === "grid") {
+      addLabEnemy("grid-horizontal", 680, 360);
+    } else if (kind === "thermos_drone") {
+      // Keep at least one target inside the tech form's 220px acquisition
+      // range; heat and module deployment still obey the real targeting rule.
+      addLabEnemy("drone-target-a", 570, 330);
+      addLabEnemy("drone-target-b", 590, 410);
+      state.activeFormParams.heat = 90;
+      state.activeFormParams.heatRate = 20;
+      state.activeFormParams.summonCount = state.activeFormParams.summonCount || 1;
+    } else if (kind === "thermos_release") {
+      addLabEnemy("release-a", 590, 340);
+      addLabEnemy("release-b", 690, 330);
+      addLabEnemy("release-c", 780, 320);
+      state.activeFormParams.heat = Math.max(0, (state.activeFormParams.heatMax || 100) - (state.activeFormParams.heatRate || 24));
+      state.activeFormParams.releaseWidth = Math.max(22, state.activeFormParams.releaseWidth || 0);
+    } else if (kind === "thermos_shield") {
+      addLabEnemy("shield-a", 560, 350);
+      addLabEnemy("shield-b", 640, 345);
+    } else if (kind === "thermos_tea") {
+      addLabEnemy("tea-near", 475, 360);
+      addLabEnemy("tea-mid", 520, 405);
+      addLabEnemy("tea-edge", 545, 315);
+    } else if (kind === "thermos_station") {
+      addLabEnemy("station-a", 520, 360);
+      addLabEnemy("station-b", 500, 420);
+      state.activeFormParams.heat = 90;
+    } else if (kind === "sticky_seek") {
+      addLabEnemy("seek-a", 570, 350);
+      addLabEnemy("seek-b", 650, 420);
+    } else if (kind === "sticky_manual") {
+      addLabEnemy("manual-a", 600, 330);
+      addLabEnemy("manual-b", 620, 420);
+    } else if (kind === "sticky_route") {
+      addLabEnemy("route-a", 520, 320);
+      addLabEnemy("route-b", 560, 420);
+      state.input.right = true;
+    } else if (kind === "sticky_spread") {
+      addLabEnemy("spread-origin", 560, 360).hp = 7;
+      addLabEnemy("spread-a", 615, 330);
+      addLabEnemy("spread-b", 625, 390);
+      addLabEnemy("spread-c", 690, 360);
+      state.activeFormParams.spreadDepth = 2;
+    } else if (kind === "sticky_notice") {
+      addLabEnemy("notice-center", 600, 360).hp = 600;
+      state.enemies[0].maxHp = 600;
+      addLabEnemy("notice-inside", 600, 380);
+    } else if (kind === "scale") {
+      addLabEnemy("scale-normal-a", 560, 330);
+      addLabEnemy("scale-normal-b", 630, 405);
+      const boss = makeEnemy(state, "lead", 760, 350, { boss: true });
+      Object.assign(boss, { id: "scale-boss", name: "比例靶 Boss", speed: 0, damage: 0 });
+      state.enemies.push(boss);
+      state.pickups.push({ type: "xp", x: 540, y: 430, amount: 4, radius: 7 });
+      state.pickups.push({ type: "material", x: 580, y: 448, amount: 1, radius: 6 });
+    } else if (kind === "status_scale") {
+      const marked = addLabEnemy("status-marked", 570, 330);
+      Object.assign(marked, { p0Marked: true, p0MarkTime: 3, p0MarkMax: 3 });
+      const rooted = addLabEnemy("status-rooted", 665, 405);
+      rooted.rooted = 1;
+      const armoredBoss = makeEnemy(state, "lead", 770, 350, { boss: true });
+      Object.assign(armoredBoss, { id: "status-armored-boss", name: "Status Boss", speed: 0, damage: 0, armor: 1 });
+      state.enemies.push(armoredBoss);
+      state.activeFormParams.shield = Math.max(18, state.activeFormParams.shield || 0);
+      state.activeFormParams.markerShieldMax = Math.max(18, state.activeFormParams.markerShieldMax || 0);
+    } else if (kind === "enemy_projectile") {
+      // Static threat calibration: exact runtime projectile dimensions and
+      // rotations, without combat effects hiding the hostile silhouette.
+      state.player.x = 420;
+      state.player.y = 360;
+      state.projectiles = [
+        { x: 690, y: 300, vx: -250, vy: 0, radius: 6, life: 4, maxLife: 4, hostile: true, source: "qa_enemy_mail" },
+        { x: 760, y: 370, vx: -220, vy: -140, radius: 7, life: 4, maxLife: 4, hostile: true, source: "qa_enemy_mail" },
+        { x: 680, y: 445, vx: -210, vy: 150, radius: 6, life: 4, maxLife: 4, hostile: true, source: "qa_enemy_mail" }
+      ];
+    }
+
+    // Lab scripts call real weapon/damage/update functions, but arrange the
+    // inputs so each contract freezes at its most legible state.
+    if (kind === "scale" || kind === "status_scale" || kind === "enemy_projectile") {
+      // Static visual calibration scene: no weapon effect obscures silhouettes.
+    } else if (kind === "p0") {
+      fireMarker(state);
+      fireMarker(state);
+    } else if (kind === "counter") {
+      fireMarker(state);
+      damagePlayer(state, (state.activeFormParams.shield || 0) + 1, "#ff8a7a");
+    } else if (kind === "grid") {
+      fireMarker(state);
+      state.enemies[0].dead = true;
+      state.player.x = 560;
+      state.player.y = 210;
+      addLabEnemy("grid-vertical", 560, 550);
+      fireMarker(state);
+    } else if (kind === "thermos_drone") {
+      fireThermos(state);
+      // Advance the real zone updater far enough to separate the orbiting
+      // modules and let each module acquire/fire at a target before freezing.
+      for (let i = 0; i < 3; i++) updateZones(state, 0.18);
+    } else if (kind === "thermos_release") {
+      fireThermos(state);
+    } else if (kind === "thermos_shield") {
+      fireThermos(state);
+      damagePlayer(state, (state.activeFormParams.shield || 0) + 1, "#ff8a7a");
+      updateZones(state, 0.24);
+    } else if (kind === "thermos_tea") {
+      fireThermos(state);
+      updateZones(state, 0.28);
+    } else if (kind === "thermos_station") {
+      fireThermos(state);
+      updateZones(state, 0.18);
+      if ((state.activeFormParams.stationLimit || 1) > 1) {
+        state.player.x += 210;
+        state.activeFormParams.heat = 90;
+        fireThermos(state);
+        updateZones(state, 0.18);
+      }
+    } else if (kind === "sticky_seek") {
+      fireSticky(state);
+      updateZones(state, 0.2);
+      updateZones(state, 0.46);
+    } else if (kind === "sticky_manual") {
+      [330, 400, 470].forEach(function (x) {
+        state.player.x = x;
+        fireSticky(state);
+      });
+      updateZones(state, 0.34);
+      state.input.trigger = true;
+      fireSticky(state);
+      state.player.x = 400;
+    } else if (kind === "sticky_route") {
+      [470, 540, 610].forEach(function (x) {
+        state.player.x = x;
+        fireSticky(state);
+      });
+      updateZones(state, 0.34);
+      const route = state.damageZones.find(function (zone) { return zone.routeSticky; });
+      if (route) {
+        state.player.x = route.x;
+        state.player.y = route.y;
+        updateZones(state, 0.08);
+      }
+      state.input.right = false;
+    } else if (kind === "sticky_spread") {
+      fireSticky(state);
+    } else if (kind === "sticky_notice") {
+      fireSticky(state);
+      fireSticky(state);
+      fireSticky(state);
+      updateZones(state, 0.34);
+    } else if (kind && kind.indexOf("thermos_") === 0) {
+      fireThermos(state);
+    } else if (kind && kind.indexOf("sticky_") === 0) {
+      fireSticky(state);
+    } else {
+      fireMarker(state);
+    }
+    if (state.supportSkill && state.supportSkill.type) {
+      fireSupportSkill(state);
+      if (state.supportSkill.type === "support_thermos_pulse") updateZones(state, 0.28);
+      if (state.supportSkill.type === "support_sticky_trap") {
+        updateZones(state, 0.34);
+        updateZones(state, 0.02);
+      }
+    }
+    if (V2.audio && V2.audio.syncMusic) V2.audio.syncMusic(state);
+    if (document.body) {
+      document.body.dataset.mechanicLabKind = kind || "";
+      document.body.dataset.mechanicLabWeapon = state.selectedWeaponId || "";
+      document.body.dataset.mechanicLabType = state.activeForm && state.activeForm.mechanicType || "";
+      document.body.dataset.mechanicLabShots = String(state.stats.shots || 0);
+      document.body.dataset.mechanicLabZones = String(state.damageZones.length);
+      document.body.dataset.mechanicLabEvents = String(state.formEvents.length);
+      document.body.dataset.mechanicLabSources = Array.from(new Set(state.stats.weaponEvents.map(function (event) { return event.source; }))).sort().join(",");
+      document.body.dataset.mechanicLabVisuals = Array.from(new Set(state.stats.weaponEvents.map(function (event) {
+        return [event.source, event.visualFamily, event.visualTopology, event.visualRole, event.visualCue].join(":");
+      }))).sort().join(",");
+      document.body.dataset.mechanicLabAudio = Array.from(new Set((state.stats.audioEvents || []).map(function (event) {
+        return [event.source, event.voice, event.role, event.stage].join(":");
+      }))).sort().join(",");
+      document.body.dataset.mechanicLabAudioStatus = JSON.stringify(V2.audio && V2.audio.getStatus ? V2.audio.getStatus() : null);
+      document.body.dataset.mechanicLabParams = JSON.stringify({
+        splitCount: state.activeFormParams.splitCount,
+        secondarySplit: !!state.activeFormParams.secondarySplit,
+        fullscreenEvery: state.activeFormParams.promotionFullscreenEvery || 0,
+        explosionRadius: state.activeFormParams.explosionRadius,
+        counterLines: state.activeFormParams.counterLines,
+        waveCount: state.activeFormParams.waveCount,
+        waveReturn: !!state.activeFormParams.waveReturn,
+        gridEcho: !!state.activeFormParams.gridEcho,
+        gridDamage: state.activeFormParams.gridDamage,
+        trailDuration: state.activeFormParams.trailDuration,
+        summonCount: state.activeFormParams.summonCount,
+        summonDuration: state.activeFormParams.summonDuration,
+        orbitSpeed: state.activeFormParams.orbitSpeed,
+        releaseWidth: state.activeFormParams.releaseWidth,
+        releaseDamage: state.activeFormParams.releaseDamage,
+        heatMax: state.activeFormParams.heatMax,
+        pulseCount: state.activeFormParams.pulseCount,
+        pulseDamage: state.activeFormParams.pulseDamage,
+        shieldThreshold: state.activeFormParams.shieldThreshold,
+        teaRadius: state.activeFormParams.teaRadius,
+        teaDamage: state.activeFormParams.teaDamage,
+        stationLimit: state.activeFormParams.stationLimit,
+        stationDuration: state.activeFormParams.stationDuration,
+        seekBounce: !!state.activeFormParams.seekBounce,
+        seekSpeed: state.activeFormParams.seekSpeed,
+        chainDetonate: !!state.activeFormParams.chainDetonate,
+        trapDuration: state.activeFormParams.trapDuration,
+        shieldGain: state.activeFormParams.shieldGain,
+        spreadLimit: state.activeFormParams.spreadLimit,
+        spreadRadius: state.activeFormParams.spreadRadius,
+        linkRadius: state.activeFormParams.linkRadius,
+        zoneDamage: state.activeFormParams.zoneDamage
+      });
+    }
+    if (kind === "sticky_notice") {
+      // The lab freezes time. Remove expired placement flashes so the settled
+      // three-node topology is judged without transient rings stacking forever.
+      // Keep secondary and support events so visual hierarchy can still be audited.
+      state.formEvents = state.formEvents.filter(function (event) {
+        return event.source && (event.source.indexOf("secondary_") === 0 || event.source.indexOf("support_") === 0);
+      });
+    }
+    state.formEvents.forEach(function (event) {
+      event.life = Math.max(event.life, 3.5);
+      event.maxLife = event.life;
+      if (kind === "sticky_manual" && event.source === "sticky_sync_blast") {
+        const chainIndex = event.meta && event.meta.chainIndex || 0;
+        event.debugProgress = Math.max(0.22, 0.9 - chainIndex * 0.28);
+      }
+      event.debugHold = true;
+    });
+    if (kind === "wave") {
+      state.damageZones.filter(function (zone) { return zone.type === "ring"; }).forEach(function (zone, index) {
+        zone.duration = 3.2;
+        zone.delay = index * 0.28;
+        zone.age = 1.55;
+        zone.life = 2.2 + zone.delay;
+        zone.maxLife = 3.2 + zone.delay;
+      });
+    }
+    updateCamera(state);
+    draw();
+    return state.stats.weaponEvents;
+  }
+
+  V2.combat = {
+    mount,
+    startLoop,
+    stopLoop,
+    update,
+    draw,
+    fireWeapon,
+    damagePlayer,
+    spawnEnemy,
+    updateCamera,
+    runMechanicLab,
+    primitives: CombatPrimitives,
+    qa: {
+      resourceSources: FORM_RESOURCE_SOURCES,
+      resourceSourceMatches: formResourceSourceMatches,
+      damageEnemy,
+      updateZones,
+      fireSupportSkill
+    }
+  };
+})();

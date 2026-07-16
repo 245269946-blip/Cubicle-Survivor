@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 180">
+  <defs>
+    <filter id="ink-rough" x="-5%" y="-35%" width="110%" height="170%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.08" numOctaves="2" seed="17" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+    <filter id="ink-soft" x="-5%" y="-50%" width="110%" height="200%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+  <path d="M18 94 C92 58 154 111 236 78 S389 103 484 74 S657 104 742 77 S903 109 1007 81"
+        fill="none" stroke="#4d8298" stroke-width="76" stroke-linecap="round" opacity="0.18" filter="url(#ink-soft)"/>
+  <path d="M18 92 C92 58 154 111 236 78 S389 103 484 74 S657 104 742 77 S903 109 1007 81"
+        fill="none" stroke="#76abc0" stroke-width="62" stroke-linecap="round" opacity="0.38" filter="url(#ink-rough)"/>
+  <path d="M12 89 C86 70 159 102 239 82 S392 99 486 79 S655 97 744 82 S904 102 1013 85"
+        fill="none" stroke="#b6d6de" stroke-width="22" stroke-linecap="round" opacity="0.22" filter="url(#ink-rough)"/>
+  <g fill="#6c9fb1" opacity="0.36">
+    <ellipse cx="86" cy="135" rx="18" ry="10"/>
+    <ellipse cx="177" cy="43" rx="13" ry="8"/>
+    <ellipse cx="315" cy="128" rx="22" ry="9"/>
+    <ellipse cx="443" cy="39" rx="10" ry="6"/>
+    <ellipse cx="574" cy="133" rx="16" ry="8"/>
+    <ellipse cx="692" cy="42" rx="20" ry="9"/>
+    <ellipse cx="831" cy="137" rx="12" ry="7"/>
+    <ellipse cx="945" cy="45" rx="17" ry="8"/>
+  </g>
+  <g fill="#9fc9d4" opacity="0.3">
+    <circle cx="126" cy="151" r="5"/>
+    <circle cx="266" cy="33" r="7"/>
+    <circle cx="514" cy="148" r="6"/>
+    <circle cx="779" cy="29" r="5"/>
+    <circle cx="918" cy="151" r="7"/>
+  </g>
+</svg>
