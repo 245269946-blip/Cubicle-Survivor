@@ -131,14 +131,14 @@
         if (startButton) startButton.textContent = "进入 3 分钟测试";
       }
       if (demoV2Phase === "marker-fixed") {
-        document.title = "工位幸存者 Demo V2 · 马克笔固定测试";
+        document.title = "工位幸存者 Demo V2.1 · 马克笔固定测试";
         const shell = document.querySelector(".game-wrap");
         const stamp = document.querySelector(".title-stamp");
         const subtitle = document.querySelector(".title-hero .subtitle");
         const guideCards = document.querySelectorAll(".quick-guide .guide-card");
         const startButton = document.getElementById("startButton");
-        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2 马克笔固定测试");
-        if (stamp) stamp.textContent = "Demo V2 · 马克笔固定测试";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.1 马克笔固定测试");
+        if (stamp) stamp.textContent = "Demo V2.1 · 马克笔固定测试";
         if (subtitle) subtitle.textContent = "只验证马克笔：经验稳定成长，模块改变机制，材料组件制造取舍。";
         if (guideCards.length >= 4) {
           guideCards[0].querySelector("strong").textContent = "一把马克笔";

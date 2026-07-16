@@ -220,7 +220,7 @@
     test.lastEncounterStarted = encounter.id;
     state.stage.id = encounter.id;
     state.stage.phaseStep = encounter.step;
-    state.stage.phase = "Demo V2 马克笔固定测试 · 阶段 " + encounter.phase;
+    state.stage.phase = "Demo V2.1 马克笔固定测试 · 阶段 " + encounter.phase;
     state.stage.name = "第 " + encounter.id + "/" + ENCOUNTER_COUNT + " 关 · " + encounter.label;
     state.stage.duration = encounter.duration;
     state.stage.targetKills = encounter.spawnTotal + (encounter.boss ? 1 : 0);
@@ -569,7 +569,7 @@
     test.postCollectionRoute = "";
     if (encounter.id >= ENCOUNTER_COUNT) {
       state.flags.won = true;
-      state.lastRewardReason = "马克笔 Demo V2.0 完成：固定怪量、成长选择、组件制造与最终混合评审均已结束。";
+      state.lastRewardReason = "马克笔 Demo V2.1 完成：固定怪量、成长选择、组件制造与最终混合评审均已结束。";
       state.mode = "result";
       return;
     }
@@ -702,7 +702,7 @@
       id: 1,
       phaseKey: "weapon_intro",
       phaseStep: 1,
-      phase: "Demo V2 马克笔固定测试",
+      phase: "Demo V2.1 马克笔固定测试",
       name: "第 1/17 关 · 基础队列",
       duration: ENCOUNTERS[0].duration,
       targetKills: 99999,

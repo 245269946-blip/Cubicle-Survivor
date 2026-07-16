@@ -524,7 +524,9 @@ V2.dispatch({ type: "INIT", demoV2Phase: "marker-fixed" });
 V2.dispatch({ type: "START_RUN", weaponId: "thermos" });
 let markerFixedState = V2.getState();
 if (markerFixedState.selectedWeaponId !== "marker" || markerFixedState.stage.demoV2Phase !== "marker-fixed"
-  || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1 || markerFixedState.maxHp !== 120 || markerFixedState.hp !== 120) {
+  || markerFixedState.stageTime !== 40 || markerFixedState.stage.id !== 1 || markerFixedState.maxHp !== 120 || markerFixedState.hp !== 120
+  || markerFixedState.stage.phase.indexOf("Demo V2.1 马克笔固定测试") !== 0
+  || V2.getViewModel("hud").stageMeta.indexOf("Demo V2.1 · 阶段 1/5") !== 0) {
   console.error("Marker fixed test must force the marker and remain isolated", markerFixedState.selectedWeaponId, markerFixedState.stage);
   process.exit(1);
 }
@@ -776,7 +778,7 @@ if (!markerFixedState.damageZones.some((zone) => zone.source === "marker_test_fu
   console.error("Archive Lv4 must produce a temporary fullscreen ink zone");
   process.exit(1);
 }
-console.log("OK Demo V2.0 Marker: timer-or-clear normal stages, 120 HP, no line knockback, soft slowing ink bands, mutually exclusive component variants, Boss dual-condition completion, 17 encounters / 6 shops / 4 modules");
+console.log("OK Demo V2.1 Marker: timer-or-clear normal stages, 120 HP, no line knockback, soft slowing ink bands, mutually exclusive component variants, Boss dual-condition completion, 17 encounters / 6 shops / 4 modules");
 V2.dispatch({ type: "RESTART" });
 V2.dispatch({ type: "INIT" });
 const VISUAL_TIMELINE_STAGES = new Set(["anticipation", "release", "impact", "residual", "fade"]);

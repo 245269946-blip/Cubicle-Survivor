@@ -68,7 +68,7 @@
       return {
         id: "demo-v2-marker-fixed",
         key: "demo-v2-marker-fixed",
-        label: "Demo V2 马克笔固定测试",
+        label: "Demo V2.1 马克笔固定测试",
         weaponStage: "模块机制 × 组件属性",
         weaponStageShort: "三线验证",
         playerGoal: "验证经验稳定成长、模块机制变化与材料组件取舍能否同时成立。",
@@ -405,7 +405,7 @@
       }
     }
     return {
-      stageMeta: phaseA || phaseB || markerFixed ? "Demo V2 · " + (markerFixed ? "阶段 " + (state.demoV2.marker.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : phaseB ? "阶段 B" : "阶段 A") + (!markerFixed && waveLabel ? " · " + waveLabel : "") : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
+      stageMeta: phaseA || phaseB || markerFixed ? (markerFixed ? "Demo V2.1 · 阶段 " + (state.demoV2.marker.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
       phaseMeta: form.theme.phase.label + " · " + form.theme.phase.weaponStageShort,
       stageName: state.stage ? state.stage.name : "热身工位",
       stageNote: state.stage ? [state.stage.note, markerFixed && state.warmupTime > 0 && !(markerTest && markerTest.collecting) ? state.stage.enemyPreview : state.stage.threatHint].filter(Boolean).join(" · ") : "",
