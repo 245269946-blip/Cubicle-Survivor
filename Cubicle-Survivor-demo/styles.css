@@ -6291,7 +6291,7 @@ body .v2-game[data-stage-phase="demo-v2-phase-b"] > .v2-compact-hud > .stat:nth-
 
 .module-panel { max-width: 980px; }
 .module-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.module-card { min-height: 260px; align-content: start; }
+.module-card { position: relative; min-height: 260px; align-content: start; }
 .module-card small { color: #91a9bd; line-height: 1.5; }
 .module-combo {
   margin-top: auto;

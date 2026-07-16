@@ -71,6 +71,13 @@
       focus: ["蓄力", "沸点", "空窗"],
       sources: ["thermos_charge", "thermos_warmup", "thermos_release", "thermos_module_archive", "thermos_module_expedite", "thermos_module_merge", "thermos_module_overdraft", "thermos_module_heatwave"]
     },
+    thermos_fixed_fan: {
+      topology: "近距蒸汽扇面",
+      process: "基础喷汽只覆盖前方近距离扇面；冷凝沿扇面分段留场，聚焦喷汽锁定低血量目标并在击杀后产生一次不连锁热浪。",
+      visualCue: "青白蒸汽形成宽钝扇面，冷凝区柔和铺开；金色聚焦汽流和橙色死亡热浪形成清晰的第二路线。",
+      focus: ["近距转向", "前向扇面", "分段冷凝", "聚焦击杀", "死亡热浪"],
+      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition"]
+    },
     shield_break_pulse: {
       topology: "破盾热浪",
       process: "蒸汽命中充盾，敌方伤害把真实护盾打空后传播反击热浪",
@@ -197,6 +204,12 @@
     thermos_module_merge: "expand",
     thermos_module_overdraft: "expand",
     thermos_module_heatwave: "expand",
+    thermos_test_base: "release",
+    thermos_test_condensation: "linger",
+    thermos_test_focus: "cast",
+    thermos_test_kill_heatwave: "expand",
+    thermos_test_fullscreen_condensation: "ultimate",
+    thermos_test_fullscreen_ignition: "ultimate",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -326,6 +339,12 @@
     thermos_module_merge: ["traveling_ring", "pressure_merge"],
     thermos_module_overdraft: ["traveling_ring", "reverse_overpressure"],
     thermos_module_heatwave: ["aroma_ring", "kill_forward"],
+    thermos_test_base: ["steam_fan", "fixed_front_fan"],
+    thermos_test_condensation: ["deployable_field", "segmented_condensation"],
+    thermos_test_focus: ["steam_line", "low_health_focus"],
+    thermos_test_kill_heatwave: ["traveling_ring", "single_kill_heatwave"],
+    thermos_test_fullscreen_condensation: ["deployable_field", "fullscreen_condensation"],
+    thermos_test_fullscreen_ignition: ["target_barrage", "key_target_ignition"],
 
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],

@@ -692,7 +692,12 @@
 
   const markerFixed = {
     id: "marker-fixed",
-    title: "马克笔三线成长固定类型测试",
+    version: "Demo V2.1",
+    runtimeKey: "marker",
+    weaponId: "marker",
+    weaponName: "马克笔",
+    title: "马克笔双成长轴固定测试",
+    subtitle: "远程直线贯穿负责拉线；复写负责即时膨胀；留档负责持续铺场。",
     duration: DURATION,
     phaseCount: PHASE_COUNT,
     encounterCount: ENCOUNTER_COUNT,
