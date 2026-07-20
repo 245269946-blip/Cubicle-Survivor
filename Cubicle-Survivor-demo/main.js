@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -356,6 +356,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "四把武器、模块与组件沿用 V3.3，本轮只验证空间公平性与Boss战斗内容。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.4 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-5") {
+        document.title = "工位幸存者 Demo V3.5 · 持续压力与属性兑现版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.5 · 持续压力与属性兑现版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.5 持续压力与属性兑现版");
+        if (subtitle) subtitle.textContent = "怪群在整关持续压入，快速敌人、射手和冲刺单位更快形成接敌压力；Boss在专属招式之间仍会继续进攻。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "整关持续放量";
+          guideCards[0].querySelector("span:last-child").textContent = "固定配额按战斗进度逐步释放，不再开场十秒全部聚成一团。";
+          guideCards[1].querySelector("strong").textContent = "更快接敌与行为压力";
+          guideCards[1].querySelector("span:last-child").textContent = "近战靠近更快，远程弹体和冲刺频率同步提高，站桩会持续承受威胁。";
+          guideCards[2].querySelector("strong").textContent = "Boss连续进攻";
+          guideCards[2].querySelector("span:last-child").textContent = "Boss提高生命和专属招式频率，并在招式冷却期间恢复射击或冲刺。";
+          guideCards[3].querySelector("strong").textContent = "属性改变攻击形态";
+          guideCards[3].querySelector("span:last-child").textContent = "范围会更明显地扩大线宽、并行间距、扇面、近战覆盖和错误区域。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.5 高压实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

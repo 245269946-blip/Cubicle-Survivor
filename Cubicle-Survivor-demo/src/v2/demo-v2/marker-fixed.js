@@ -207,12 +207,13 @@
     if (!encounter || !state.demoV2 || !state.demoV2.combatDensityPass) return encounter;
     const boss = !!encounter.boss;
     const deep = !!state.demoV2.combatTrianglePass;
+    const sustained = !!state.demoV2.sustainedPressurePass;
     const densityScale = boss ? (deep ? 1.42 : 1.28) : (deep ? 1.88 : 1.62);
     const floorScale = boss ? (deep ? 1.32 : 1.22) : (deep ? 1.75 : 1.48);
     const capScale = boss ? (deep ? 1.34 : 1.24) : (deep ? 1.68 : 1.46);
     const batchScale = boss ? (deep ? 1.32 : 1.2) : (deep ? 1.62 : 1.42);
     const cadenceScale = boss ? (deep ? 0.68 : 0.78) : (deep ? 0.52 : 0.64);
-    return Object.assign({}, encounter, {
+    const density = Object.assign({}, encounter, {
       spawnTotal: Math.ceil(encounter.spawnTotal * densityScale),
       floor: Math.ceil(encounter.floor * floorScale),
       cap: Math.max(Math.ceil(encounter.cap * capScale), Math.ceil(encounter.floor * floorScale) + 14),
@@ -220,6 +221,22 @@
       cadence: Math.max(deep ? 0.58 : 0.72, encounter.cadence * cadenceScale),
       v31DensityPass: true,
       v32CombatTrianglePass: deep
+    });
+    if (!sustained) return density;
+    const phasePressure = 1 + Math.max(0, (encounter.phase || 1) - 1) * 0.025;
+    return Object.assign({}, density, {
+      // V3.5 does not solve difficulty with one opening pile. It carries a
+      // larger quota in smaller batches through most of the encounter.
+      spawnTotal: Math.ceil(density.spawnTotal * (boss ? 1.12 : 1.2)),
+      floor: Math.ceil(density.floor * (boss ? 1.14 : 1.24)),
+      cap: Math.max(Math.ceil(density.cap * (boss ? 1.12 : 1.17)), Math.ceil(density.floor * (boss ? 1.14 : 1.24)) + 16),
+      batchSize: Math.max(4, Math.ceil(density.batchSize * (boss ? 0.86 : 0.76))),
+      cadence: Math.max(boss ? 0.66 : 0.52, density.cadence * (boss ? 0.94 : 0.86)),
+      enemyHp: density.enemyHp * (boss ? 1.38 : 1.08),
+      normalEnemyHp: density.normalEnemyHp * (boss ? 1.1 : 1.08),
+      enemySpeed: density.enemySpeed * (boss ? 1.1 : 1.16) * phasePressure,
+      pressureSpawnWindowRatio: boss ? 0.84 : 0.88,
+      v35SustainedPressurePass: true
     });
   }
 
@@ -334,15 +351,18 @@
     const experience = test.experienceAllocations;
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
-    const damage = (deepTriangle ? 8.5 : highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage);
-    const rangeScale = Math.pow(1.1, tail.range);
+    const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
+    const damage = (deepTriangle ? 8.5 : highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, tip.damage);
+    const componentRangeScale = Math.pow(attributeImpact ? 1.16 : 1.1, tail.range);
+    const experienceRangeScale = Math.pow(1.05, experience.range || 0);
+    const rangeScale = componentRangeScale * experienceRangeScale;
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: (deepTriangle ? 0.46 : highFrequency ? 0.58 : 1.05) * Math.pow(0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
-      range: 720 * rangeScale * Math.pow(1.05, experience.range || 0),
-      pierce: 4 + tip.pierce,
+      cooldown: (deepTriangle ? 0.46 : highFrequency ? 0.58 : 1.05) * Math.pow(attributeImpact ? 0.84 : 0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
+      range: 720 * rangeScale,
+      pierce: 4 + tip.pierce * (attributeImpact ? 2 : 1),
       amount: 1 + body.amount,
-      width: 8 * Math.pow(1.12, tail.range),
+      width: 8 * Math.pow(attributeImpact ? 1.2 : 1.12, tail.range) * experienceRangeScale,
       markerFixedHpRegen: (experience.hpRegen || 0) * 0.8,
       markerFixedLifeStealChance: (experience.lifeSteal || 0) * 0.015,
       markerFixedCritChance: (experience.critChance || 0) * 0.03,
@@ -351,6 +371,7 @@
       markerFixedLuck: (experience.luck || 0) * 5,
       markerFixedHarvesting: (experience.harvesting || 0) * 5,
       markerFixedTest: true,
+      markerFixedCoverageScale: rangeScale,
       markerFixedCopyLevel: copyLevel,
       markerFixedArchiveLevel: archiveLevel,
       markerFixedParallelLines: copyLevel >= 2 ? 2 : copyLevel === 1 ? 1 : 0,

@@ -441,6 +441,9 @@
       state.demoV2.centeredRunStart = !!coordinatorConfig.centeredRunStart;
       state.demoV2.randomizedPerimeterSpawns = !!coordinatorConfig.randomizedPerimeterSpawns;
       state.demoV2.bossPatternPass = !!coordinatorConfig.bossPatternPass;
+      state.demoV2.sustainedPressurePass = !!coordinatorConfig.sustainedPressurePass;
+      state.demoV2.bossPressurePass = !!coordinatorConfig.bossPressurePass;
+      state.demoV2.attributeImpactPass = !!coordinatorConfig.attributeImpactPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     if (state.demoV2.centeredRunStart) {
@@ -525,6 +528,9 @@
         state.demoV2.centeredRunStart = !!requestedFixedConfig.centeredRunStart;
         state.demoV2.randomizedPerimeterSpawns = !!requestedFixedConfig.randomizedPerimeterSpawns;
         state.demoV2.bossPatternPass = !!requestedFixedConfig.bossPatternPass;
+        state.demoV2.sustainedPressurePass = !!requestedFixedConfig.sustainedPressurePass;
+        state.demoV2.bossPressurePass = !!requestedFixedConfig.bossPressurePass;
+        state.demoV2.attributeImpactPass = !!requestedFixedConfig.attributeImpactPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

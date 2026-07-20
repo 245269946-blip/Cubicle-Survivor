@@ -197,4 +197,31 @@
 
   V2.demoV2.fourWeaponV34 = fourWeaponV34;
   V2.demoV2.fixedTests["four-weapon-v3-4"] = fourWeaponV34;
+
+  // Demo V3.5 turns the V3.4 encounter-space repair into sustained pressure.
+  // It keeps the same four weapons and Boss telegraphs, but paces enemy quota
+  // across the whole encounter, restores Boss attacks between pattern windows,
+  // and makes component-driven attack-shape growth easier to read.
+  const fourWeaponV35 = Object.assign({}, fourWeaponV34, {
+    id: "four-weapon-v3-5",
+    version: "Demo V3.5",
+    visualVersion: "持续压力与属性兑现版",
+    title: "持续压力与属性兑现版",
+    subtitle: "怪群不再集中于开场耗尽配额，而会持续压入战场；Boss在专属招式之间继续射击或冲刺，范围等属性会同步扩大真实攻击形态。",
+    sustainedPressurePass: true,
+    bossPressurePass: true,
+    attributeImpactPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV34.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.5 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV35 = fourWeaponV35;
+  V2.demoV2.fixedTests["four-weapon-v3-5"] = fourWeaponV35;
 })();

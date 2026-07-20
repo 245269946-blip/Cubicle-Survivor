@@ -1505,6 +1505,109 @@ if (v34State.projectiles.filter(function (shot) { return shot.source === "boss_t
   process.exit(1);
 }
 console.log("OK Demo V3.4 encounter space: centred start, full-ring perimeter entries, and two telegraphed Boss damage grammars");
+const fourWeaponV35 = V2.demoV2 && V2.demoV2.fourWeaponV35;
+const v35EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-5.html"), "utf8");
+if (!fourWeaponV35 || fourWeaponV35.version !== "Demo V3.5"
+  || !fourWeaponV35.sustainedPressurePass || !fourWeaponV35.bossPressurePass || !fourWeaponV35.attributeImpactPass
+  || !fourWeaponV35.centeredRunStart || !fourWeaponV35.randomizedPerimeterSpawns || !fourWeaponV35.bossPatternPass
+  || !v35EntrySource.includes('params.set("demoV2", "four-weapon-v3-5")')) {
+  console.error("Demo V3.5 must preserve V3.4 while enabling sustained pressure, Boss pressure, and visible attribute impact", fourWeaponV35);
+  process.exit(1);
+}
+
+function makeVersionedWeaponState(version, weaponId) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: version });
+  V2.dispatch({ type: "START_RUN", weaponId });
+  return V2.getState();
+}
+
+const v35State = makeVersionedWeaponState("four-weapon-v3-5", "marker");
+const v35Config = V2.getDemoV2FixedTestConfig(v35State);
+v35Config.startEncounter(v35State, 2);
+const v35BossEncounter = v35Config.currentEncounter(v35State);
+const v34ComparisonState = makeVersionedWeaponState("four-weapon-v3-4", "marker");
+const v34ComparisonConfig = V2.getDemoV2FixedTestConfig(v34ComparisonState);
+v34ComparisonConfig.startEncounter(v34ComparisonState, 2);
+const v34BossEncounter = v34ComparisonConfig.currentEncounter(v34ComparisonState);
+if (v35BossEncounter.enemyHp < v34BossEncounter.enemyHp * 1.35
+  || v35BossEncounter.enemySpeed <= v34BossEncounter.enemySpeed
+  || v35BossEncounter.spawnTotal <= v34BossEncounter.spawnTotal) {
+  console.error("Demo V3.5 Boss encounters must add material durability, approach speed, and sustained adds", v34BossEncounter, v35BossEncounter);
+  process.exit(1);
+}
+
+const openingV35State = makeVersionedWeaponState("four-weapon-v3-5", "marker");
+const openingV35Config = V2.getDemoV2FixedTestConfig(openingV35State);
+const openingV35Encounter = openingV35Config.currentEncounter(openingV35State);
+const openingV35Runtime = openingV35State.demoV2[openingV35Config.runtimeKey];
+const releasedAtStart = V2.combat.qa.demoV2ReleasedQuota(openingV35State, openingV35Encounter, openingV35Runtime);
+openingV35State.stageTime = openingV35Encounter.duration * 0.08;
+const releasedNearEnd = V2.combat.qa.demoV2ReleasedQuota(openingV35State, openingV35Encounter, openingV35Runtime);
+if (!(releasedAtStart < openingV35Encounter.spawnTotal * 0.7)
+  || releasedAtStart < openingV35Encounter.batchSize
+  || releasedNearEnd !== openingV35Encounter.spawnTotal) {
+  console.error("Demo V3.5 quota must begin with a readable pack and release the complete roster across the encounter", openingV35Encounter, releasedAtStart, releasedNearEnd);
+  process.exit(1);
+}
+
+const v35BossState = makeVersionedWeaponState("four-weapon-v3-5", "marker");
+const v35BossConfig = V2.getDemoV2FixedTestConfig(v35BossState);
+v35BossConfig.startEncounter(v35BossState, 2);
+v35BossState.warmupTime = 0;
+V2.combat.update(0.02);
+const v35Boss = v35BossState.enemies.find(function (enemy) { return enemy.boss; });
+v35Boss.x = v35BossState.player.x + 260;
+v35Boss.y = v35BossState.player.y;
+v35Boss.bossPatternKind = "";
+v35Boss.bossPatternCooldown = 3;
+v35Boss.shootCooldown = 0;
+const ordinaryShotsBefore = v35BossState.projectiles.length;
+const ownsCooldownIntent = V2.combat.qa.updateBossPatternIntent(v35BossState, v35Boss, 0.02);
+V2.combat.qa.updateEnemyIntent(v35BossState, v35Boss, 0.02, -260, 0, 260);
+if (ownsCooldownIntent || v35BossState.projectiles.length <= ordinaryShotsBefore) {
+  console.error("Demo V3.5 Bosses must keep ordinary attacks active between special-pattern windows", ownsCooldownIntent, v35Boss, v35BossState.projectiles);
+  process.exit(1);
+}
+V2.combat.qa.beginBossPattern(v35BossState, v35Boss);
+V2.combat.qa.releaseBossPattern(v35BossState, v35Boss);
+if (v35BossState.projectiles.filter(function (shot) { return shot.source === "boss_test_priority_lane"; }).length < 7
+  || v35Boss.bossPatternCooldown >= 3.8) {
+  console.error("Demo V3.5 Boss specials must be denser and return faster", v35Boss.bossPatternCooldown, v35BossState.projectiles);
+  process.exit(1);
+}
+
+function componentShape(version, weaponId, partId, statId, readShape) {
+  const state = makeVersionedWeaponState(version, weaponId);
+  const config = V2.getDemoV2FixedTestConfig(state);
+  const runtime = state.demoV2[config.runtimeKey];
+  runtime.parts[partId].allocations[statId] = 4;
+  config.rebuildParams(state);
+  return readShape(state);
+}
+
+const attributeShapes = [
+  { weaponId: "marker", partId: "tail", statId: "range", read: function (state) { return state.activeFormParams.width; } },
+  { weaponId: "thermos", partId: "tail", statId: "range", read: function (state) { return state.activeFormParams.width; } },
+  { weaponId: "scissors", partId: "tail", statId: "range", read: function (state) { return state.activeFormParams.scissorsFanRange; } },
+  { weaponId: "correction_fluid", partId: "body", statId: "amount", read: function (state) { return state.activeFormParams.correctionAreaRadius; } }
+];
+attributeShapes.forEach(function (shape) {
+  const before = componentShape("four-weapon-v3-4", shape.weaponId, shape.partId, shape.statId, shape.read);
+  const after = componentShape("four-weapon-v3-5", shape.weaponId, shape.partId, shape.statId, shape.read);
+  if (after < before * 1.14) {
+    console.error("Demo V3.5 range investment must visibly enlarge each weapon's real attack shape", shape, before, after);
+    process.exit(1);
+  }
+});
+if (!combatVisualSource.includes('const fixedMarkerLaser = /^marker_test_(base|copy|second_round)$/.test(source);')
+  || !combatVisualSource.includes('Archive owns a soft, low-frequency cyan band on the world layer.')
+  || !combatVisualSource.includes('const closedStrikeActive = scissors.weaponVisualTime > 0')
+  || !combatVisualSource.includes('event.x2 - Math.cos(angle) * (source === "scissors_test_sever" ? 20 : 14)')) {
+  console.error("Demo V3.5 mixed Marker and Closed-Blade Scissors must preserve their distinct visual layers");
+  process.exit(1);
+}
+console.log("OK Demo V3.5 sustained pressure: staged quota, faster contact, active Boss cooldowns, denser specials, and visible attack-shape scaling");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')
@@ -1824,12 +1927,12 @@ function buyAutomatedComponents(state) {
   V2.dispatch({ type: "CONTINUE_MARKER_TEST" });
 }
 
-function runAutomatedFixedSuite(weaponId, routeIndex, seed) {
+function runAutomatedFixedSuite(weaponId, routeIndex, seed, demoPhase) {
   const originalRandom = Math.random;
   Math.random = makeSeededRandom(seed);
   try {
     V2.dispatch({ type: "RESTART" });
-    V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-fixed" });
+    V2.dispatch({ type: "INIT", demoV2Phase: demoPhase || "four-weapon-fixed" });
     V2.dispatch({ type: "START_RUN", weaponId });
     const state = V2.getState();
     let simulated = 0;
@@ -1874,7 +1977,7 @@ function runAutomatedFixedSuite(weaponId, routeIndex, seed) {
     if (state.mode !== "result" || !state.flags.won || runtime.completedEncounters !== 17 || runtime.moduleChoiceIndex !== 5 || runtime.completedStages !== 6) {
       throw new Error(weaponId + " route " + routeIndex + " did not complete the real 17-encounter flow: " + JSON.stringify({ mode: state.mode, won: state.flags.won, hp: state.hp, completed: runtime.completedEncounters, modules: runtime.moduleChoiceIndex, shops: runtime.completedStages, stage: state.stage.id }));
     }
-    return { weaponId, routeIndex, hp: state.hp, kills: state.kills, level: state.level, components: runtime.componentsBought };
+    return { demoPhase: demoPhase || "four-weapon-fixed", weaponId, routeIndex, hp: state.hp, kills: state.kills, level: state.level, components: runtime.componentsBought };
   } finally {
     Math.random = originalRandom;
   }
@@ -1903,6 +2006,7 @@ function runEarlyPressureProbe(weaponId, seed, demoPhase) {
 }
 
 const pressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 2500 + index));
+const v35PressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 7500 + index, "four-weapon-v3-5"));
 const correctionV32Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-2");
 const correctionV33Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-3");
 if (correctionV33Opening.kills <= correctionV32Opening.kills || correctionV33Opening.damageDone <= correctionV32Opening.damageDone * 1.25) {
@@ -1913,7 +2017,9 @@ for (const weaponId of ["marker", "thermos", "scissors", "correction_fluid"]) {
   automatedRuns.push(runAutomatedFixedSuite(weaponId, 0, 2900 + automatedRuns.length));
   automatedRuns.push(runAutomatedFixedSuite(weaponId, 1, 3900 + automatedRuns.length));
 }
+const v35AutomatedRuns = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runAutomatedFixedSuite(weaponId, index % 2, 8900 + index, "four-weapon-v3-5"));
 console.log("OK Demo V2.9 pressure/flow audit: four real-damage openings and eight real-timer pure-route progression soaks completed", pressureProbes, automatedRuns);
+console.log("OK Demo V3.5 pressure/flow audit: four moving real-damage openings and four complete sustained-pressure progression soaks completed", v35PressureProbes, v35AutomatedRuns);
 console.log("OK Demo V3.3 opening pressure: Correction Fluid materially exceeds its V3.2 first-stage throughput", correctionV32Opening, correctionV33Opening);
 console.log("OK Demo V2.9 integration: four weapons share one selection/version and neon layer while retaining isolated mechanisms");
 

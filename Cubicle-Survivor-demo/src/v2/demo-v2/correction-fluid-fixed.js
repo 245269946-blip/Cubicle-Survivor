@@ -114,16 +114,17 @@
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const openingPass = !!(state.demoV2 && state.demoV2.correctionOpeningPass);
-    const damage = (openingPass ? 5.8 : deepTriangle ? 5 : highFrequency ? 6.5 : 11) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage || 0);
-    const cooldown = (openingPass ? 0.27 : deepTriangle ? 0.29 : highFrequency ? 0.36 : 0.62) * Math.pow(0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
-    const rangeScale = Math.pow(1.1, tube.amount || 0) * Math.pow(1.05, experience.range || 0);
+    const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
+    const damage = (openingPass ? 5.8 : deepTriangle ? 5 : highFrequency ? 6.5 : 11) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, tip.damage || 0);
+    const cooldown = (openingPass ? 0.27 : deepTriangle ? 0.29 : highFrequency ? 0.36 : 0.62) * Math.pow(attributeImpact ? 0.84 : 0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
+    const rangeScale = Math.pow(attributeImpact ? 1.14 : 1.1, tube.amount || 0) * Math.pow(1.05, experience.range || 0);
     const durationScale = Math.pow(1.24, bottle.range || 0);
     const targetCount = correctionLevel >= 3 ? 4 : correctionLevel === 2 ? 3 : correctionLevel === 1 ? 2 : 1;
 
     state.activeFormParams = {
       damage,
       cooldown: Math.max(deepTriangle ? 0.14 : highFrequency ? 0.18 : 0.24, cooldown),
-      range: Math.min(560, 360 * rangeScale),
+      range: Math.min(attributeImpact ? 620 : 560, 360 * rangeScale),
       width: 24 * rangeScale,
       amount: 1,
       pierce: 1,
@@ -139,12 +140,12 @@
       correctionFatalLevel: correctionLevel,
       correctionTargetCount: targetCount,
       correctionOpeningOverspray: openingPass && correctionLevel === 0,
-      correctionOpeningOversprayRadius: 68 * Math.min(1.25, rangeScale),
+      correctionOpeningOversprayRadius: 68 * Math.min(attributeImpact ? 1.45 : 1.25, rangeScale),
       correctionOpeningOversprayDamageScale: 0.52,
       correctionErrorDuration: 5.3 * durationScale * (correctionLevel >= 3 ? 1.35 : 1),
       correctionSlowMultiplier: 0.82,
       correctionVulnerability: correctionLevel >= 3 ? 1.5 : 1.28,
-      correctionAreaRadius: Math.min(140, (82 + spreadLevel * 8) * (1 + (rangeScale - 1) * 0.45)),
+      correctionAreaRadius: Math.min(attributeImpact ? 165 : 140, (82 + spreadLevel * 8) * (1 + (rangeScale - 1) * (attributeImpact ? 0.7 : 0.45))),
       correctionAreaDuration: (3.2 + (spreadLevel >= 2 ? 1.1 : 0)) * durationScale,
       correctionAreaDamage: Math.max(0.7, damage * (spreadLevel >= 2 ? 0.16 : 0.12)),
       correctionAreaTick: spreadLevel >= 3 ? 0.58 : 0.72,

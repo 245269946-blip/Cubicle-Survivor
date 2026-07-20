@@ -355,7 +355,9 @@
       const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
       const palette = profile.palette || {};
       const isCorrection = family === "correction" || family === "correction_fluid";
-      const color = palette.core || (isCorrection ? "#ff4fd8" : family === "scissors" ? "#ffd36b" : "#55f7ff");
+      const fixedMarkerLaser = /^marker_test_(base|copy|second_round)$/.test(source);
+      const color = fixedMarkerLaser ? (source === "marker_test_copy" ? "#ffb84f" : "#ffe77d")
+        : palette.core || (isCorrection ? "#ff4fd8" : family === "scissors" ? "#ffd36b" : "#55f7ff");
       const size = clamp((item.width || 8) * (family === "scissors" ? 5.2 : 3.8), 38, isCorrection ? 82 : 68);
       const sprite = family === "thermos" ? "thermos_release_art"
         : family === "scissors" ? "scissors_slash_v24"
@@ -422,6 +424,28 @@
     const dy = event.y2 - event.y1;
     const length = Math.hypot(dx, dy) || 1;
     const angle = Math.atan2(dy, dx);
+    if (/^marker_test_(base|copy|second_round)$/.test(source)) {
+      // Copy is a short, hard laser event. Keep it warm and razor-edged so it
+      // remains legible above the broad cyan archive ink in hybrid builds.
+      const copy = source === "marker_test_copy";
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+      ctx.shadowColor = copy ? "#ff9f43" : "#ffd65c";
+      ctx.shadowBlur = 18 + (event.width || 8) * 0.8;
+      ctx.strokeStyle = copy ? "rgba(255,184,79,0.72)" : "rgba(255,231,125,0.82)";
+      ctx.lineWidth = Math.max(5, (event.width || 8) * 1.5);
+      ctx.beginPath();
+      ctx.moveTo(event.x1, event.y1);
+      ctx.lineTo(event.x2, event.y2);
+      ctx.stroke();
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = "rgba(255,255,232,0.96)";
+      ctx.lineWidth = Math.max(2, (event.width || 8) * 0.45);
+      ctx.stroke();
+      ctx.restore();
+      return true;
+    }
     if (source === "correction_test_spray") {
       drawSpriteFrame(ctx, "correction_fluid_spray_v25", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(52, (event.width || 18) * 3.2), Math.min(1, alpha + 0.14), angle);
       return true;
@@ -447,6 +471,14 @@
       if (source === "scissors_test_sever") {
         drawSpriteFrame(ctx, "scissors_slash_v24", 3, event.x2, event.y2, Math.max(132, height * 1.55), Math.max(132, height * 1.55), Math.min(0.92, alpha + 0.08), angle);
       }
+      // Closed Blade is the ordinary scissors physically driving the thrust,
+      // not a detached effect plus a second weapon beside the player.
+      drawSprite(ctx, "scissors_v23",
+        event.x2 - Math.cos(angle) * (source === "scissors_test_sever" ? 20 : 14),
+        event.y2 - Math.sin(angle) * (source === "scissors_test_sever" ? 20 : 14),
+        source === "scissors_test_sever" ? 88 : 72,
+        source === "scissors_test_sever" ? 88 : 72,
+        Math.min(1, alpha + 0.14), angle + Math.PI * 0.25);
       return true;
     }
     if (source === "scissors_test_base") {
@@ -1622,7 +1654,9 @@
   function addMarkerFixedArchive(state, p, line, baseIndex) {
     const trailCount = p.markerFixedArchiveTrails || 0;
     if (!trailCount) return;
-    const spacing = Math.max(28, (p.width || 8) * 3.4);
+    const coverageScale = p.markerFixedCoverageScale || 1;
+    const coverageSpread = 1 + Math.max(0, coverageScale - 1) * 0.55;
+    const spacing = Math.max(28, (p.width || 8) * 3.4) * coverageSpread;
     const offsets = trailCount === 1 ? [0] : trailCount === 2 ? [-spacing * 0.55, spacing * 0.55] : [-spacing, 0, spacing];
     const nx = -Math.sin(line.angle);
     const ny = Math.cos(line.angle);
@@ -1634,7 +1668,7 @@
       const duration = p.markerFixedTrailDuration || 2;
       addDamageZone(state, {
         type: "line", source: "marker_test_archive", x1, y1, x2, y2,
-        width: Math.max(32, line.width * 3.6),
+        width: Math.max(32, line.width * 3.6) * (1 + Math.max(0, coverageScale - 1) * 0.35),
         damage: (p.markerFixedTrailDamage || 5) * ([1, 0.75, 0.58, 0.44, 0.38][p.markerFixedArchiveLevel || 0] || 0.38),
         life: duration, maxLife: duration, tickEvery: 0.44,
         color: "#77b9d8", slow: 0.24, visual: "marker_grid_line",
@@ -1706,7 +1740,8 @@
     const baseAngle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
     const baseAmount = Math.max(1, p.amount || 1);
     const angleStep = 0.075;
-    const copySpacing = Math.max(22, (p.width || 8) * 3.4);
+    const coverageScale = p.markerFixedCoverageScale || 1;
+    const copySpacing = Math.max(22, (p.width || 8) * 3.4) * (1 + Math.max(0, coverageScale - 1) * 0.55);
     const copyLevel = p.markerFixedCopyLevel || 0;
     const baseScale = p.markerFixedBaseLineScale || (copyLevel >= 4 ? 0.78 : copyLevel >= 3 ? 0.86 : 1);
     const copyScale = p.markerFixedCopyLineScale || (copyLevel >= 4 ? 0.44 : copyLevel >= 3 ? 0.5 : 0.58);
@@ -3165,6 +3200,11 @@
     const speed = boss
       ? stage.enemySpeed * (def.speed || 1)
       : stage.enemySpeed * (def.speed || 1) + Math.random() * 8;
+    const sustainedPressure = !!(state.demoV2 && state.demoV2.sustainedPressurePass);
+    const bossPressure = boss && !!(state.demoV2 && state.demoV2.bossPressurePass);
+    const actionRateScale = bossPressure ? 0.7 : sustainedPressure ? 0.74 : 1;
+    const projectileSpeedScale = bossPressure ? 1.18 : sustainedPressure ? 1.2 : 1;
+    const damagePressureScale = bossPressure ? 1.14 : 1;
     return {
       id: "e" + Date.now() + "_" + Math.random().toString(16).slice(2),
       typeId: boss ? (stage.bossType || "boss") : typeId,
@@ -3176,7 +3216,7 @@
       hp: fragment ? hp * 0.34 : hp,
       maxHp: fragment ? hp * 0.34 : hp,
       speed: fragment ? speed * 1.18 : speed,
-      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1),
+      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1) * damagePressureScale,
       xp: boss ? 50 : Math.max(3, Math.round((def.xp || 5) * (fragment ? 0.45 : 1))),
       boss,
       fragment,
@@ -3189,17 +3229,17 @@
       accent: def.accent || "#ff6b8a",
       armor: def.armor || 0,
       bossHitCap: boss ? (stage.bossHitCap || 0) : 0,
-      shootEvery: def.shootEvery || 0,
-      projectileSpeed: def.projectileSpeed || 245,
-      shootCooldown: (def.shootEvery || 2.4) * (0.55 + Math.random() * 0.55),
-      chargeEvery: def.chargeEvery || 0,
-      chargeSpeed: def.chargeSpeed || 240,
-      chargeCooldown: (def.chargeEvery || 2.8) * (0.5 + Math.random() * 0.6),
+      shootEvery: (def.shootEvery || (bossPressure ? 2.25 : 0)) * actionRateScale,
+      projectileSpeed: (def.projectileSpeed || 245) * projectileSpeedScale,
+      shootCooldown: (def.shootEvery || (bossPressure ? 2.25 : 2.4)) * actionRateScale * (0.42 + Math.random() * 0.48),
+      chargeEvery: (def.chargeEvery || 0) * actionRateScale,
+      chargeSpeed: (def.chargeSpeed || 240) * (bossPressure ? 1.12 : sustainedPressure ? 1.16 : 1),
+      chargeCooldown: (def.chargeEvery || 2.8) * actionRateScale * (0.42 + Math.random() * 0.5),
       chargeTime: 0,
       chargeVx: 0,
       chargeVy: 0,
       splitType: def.splitType || "",
-      bossPatternCooldown: boss ? 1.25 : 0,
+      bossPatternCooldown: boss ? (bossPressure ? 0.82 : 1.25) : 0,
       bossPatternKind: "",
       bossPatternTimer: 0,
       bossPatternAngle: 0,
@@ -3415,6 +3455,21 @@
     state.stats.demoV2WaveCounts[wave.id] = (state.stats.demoV2WaveCounts[wave.id] || 0) + 1;
   }
 
+  function demoV2ReleasedQuota(state, encounter, test) {
+    if (!encounter || !test || !state.demoV2 || !state.demoV2.sustainedPressurePass) {
+      return encounter ? encounter.spawnTotal : Infinity;
+    }
+    const elapsed = Math.max(0, encounter.duration - state.stageTime);
+    const releaseWindow = Math.max(1, encounter.duration * (encounter.pressureSpawnWindowRatio || 0.88));
+    const initialQuota = Math.min(encounter.spawnTotal, Math.max(
+      Math.ceil(encounter.batchSize * 1.25),
+      Math.ceil(encounter.floor * 0.48),
+      Math.ceil(encounter.spawnTotal * 0.14)
+    ));
+    const progress = clamp(elapsed / releaseWindow, 0, 1);
+    return Math.min(encounter.spawnTotal, Math.ceil(initialQuota + (encounter.spawnTotal - initialQuota) * progress));
+  }
+
   function updateDemoV2Director(state, dt) {
     const phase = state.stage && state.stage.demoV2Phase;
     const fixedConfig = fixedTestConfig(state);
@@ -3453,7 +3508,9 @@
         enemyRoster: markerEncounter.enemyRoster || wave.enemyRoster
       });
     }
-    const quotaRemaining = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
+    const releasedQuota = markerEncounter && markerTest ? demoV2ReleasedQuota(state, markerEncounter, markerTest) : Infinity;
+    if (markerTest && markerEncounter) markerTest.releasedQuota = releasedQuota;
+    const quotaRemaining = markerEncounter && markerTest ? Math.max(0, releasedQuota - markerTest.encounterSpawned) : Infinity;
     const enemyCap = markerEncounter ? markerEncounter.cap : config.enemyCap;
     const enemyFloor = markerEncounter ? markerEncounter.floor : config.enemyFloor;
     if (fixedConfig && markerEncounter && markerEncounter.boss) spawnMarkerFixedBoss(state, config);
@@ -3467,11 +3524,11 @@
 
     runtime.floorTimer = (runtime.floorTimer || 0) - dt;
     const encounterLocalElapsed = markerEncounter ? Math.max(0, markerEncounter.duration - state.stageTime) : runtime.elapsed;
-    const remainingAfterWave = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
+    const remainingAfterWave = markerEncounter && markerTest ? Math.max(0, releasedQuota - markerTest.encounterSpawned) : Infinity;
     if (encounterLocalElapsed >= 2 && state.enemies.length < enemyFloor && runtime.floorTimer <= 0 && remainingAfterWave > 0) {
-      const fillWave = { id: "cluster", batchSize: Math.min(6, enemyFloor - state.enemies.length, remainingAfterWave), enemyRoster: wave.enemyRoster };
+      const fillWave = { id: "cluster", batchSize: Math.min(state.demoV2.sustainedPressurePass ? 4 : 6, enemyFloor - state.enemies.length, remainingAfterWave), enemyRoster: wave.enemyRoster };
       spawnDemoV2ClusterWave(state, fillWave, runtime.waveSerial || 0);
-      runtime.floorTimer = 1.1;
+      runtime.floorTimer = state.demoV2.sustainedPressurePass ? 0.62 : 1.1;
     }
 
     runtime.peakEnemies = Math.max(runtime.peakEnemies || 0, state.enemies.length);
@@ -3628,12 +3685,14 @@
     const angle = enemy.bossPatternAngle || 0;
     const phase = bossPatternPhase(state);
     const lowHealth = enemy.maxHp > 0 && enemy.hp / enemy.maxHp <= 0.5;
+    const pressure = !!(state.demoV2 && state.demoV2.bossPressurePass);
     if (kind === "lane") {
-      const speed = 390 + phase * 9;
+      const speed = (390 + phase * 9) * (pressure ? 1.14 : 1);
       const damage = enemy.damage * (lowHealth ? 1.02 : 0.9);
       const px = -Math.sin(angle);
       const py = Math.cos(angle);
-      [-42, -21, 0, 21, 42].forEach(function (offset) {
+      const offsets = pressure ? [-54, -36, -18, 0, 18, 36, 54] : [-42, -21, 0, 21, 42];
+      offsets.forEach(function (offset) {
         state.projectiles.push(CombatPrimitives.projectile({
           hostile: true,
           x: enemy.x + px * offset,
@@ -3654,9 +3713,9 @@
         enemy.y + Math.sin(angle) * 1120,
         "#fff2fb", 22, 0.22, "beam", false, "boss_test_lane_release", { damagingVolley: true });
     } else if (kind === "burst") {
-      const count = 14 + phase * 2 + (lowHealth ? 2 : 0);
+      const count = 14 + phase * 2 + (lowHealth ? 2 : 0) + (pressure ? 4 : 0);
       const safeHalfAngle = 0.42;
-      const speed = 205 + phase * 11;
+      const speed = (205 + phase * 11) * (pressure ? 1.14 : 1);
       const damage = enemy.damage * (lowHealth ? 0.72 : 0.62);
       for (let i = 0; i < count; i++) {
         const shotAngle = Math.PI * 2 * i / count + enemy.phase * 0.25;
@@ -3682,7 +3741,7 @@
     recordBossPattern(state, enemy, kind, "release");
     enemy.bossPatternKind = "";
     enemy.bossPatternTimer = 0;
-    const cadence = Math.max(2.55, 4.85 - phase * 0.34);
+    const cadence = pressure ? Math.max(1.72, 3.65 - phase * 0.27) : Math.max(2.55, 4.85 - phase * 0.34);
     enemy.bossPatternCooldown = cadence * (lowHealth ? 0.76 : 1) * (0.9 + Math.random() * 0.2);
   }
 
@@ -3694,17 +3753,23 @@
       return true;
     }
     enemy.bossPatternCooldown = Math.max(0, (enemy.bossPatternCooldown || 0) - dt);
-    if (enemy.bossPatternCooldown <= 0) beginBossPattern(state, enemy);
-    return true;
+    if (enemy.bossPatternCooldown <= 0 && enemy.chargeTime <= 0) {
+      beginBossPattern(state, enemy);
+      return true;
+    }
+    // The old V3.4 path returned true for the entire cooldown and therefore
+    // silenced every ordinary Boss shot/charge between special patterns.
+    return false;
   }
 
   function updateEnemyIntent(state, enemy, dt, dx, dy, len) {
-    const ranged = enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield" || enemy.behavior === "boss_final";
+    const pressure = !!(state.demoV2 && state.demoV2.bossPressurePass);
+    const ranged = enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield" || enemy.behavior === "boss_final" || (pressure && enemy.behavior === "boss");
     if (ranged) {
       enemy.shootCooldown = Math.max(0, enemy.shootCooldown - dt);
       if (enemy.shootCooldown <= 0 && len < (enemy.boss ? 760 : 620)) {
         fireEnemyShot(state, enemy, dx, dy, len);
-        enemy.shootCooldown = Math.max(0.8, (enemy.shootEvery || 2.2) * (0.82 + Math.random() * 0.32));
+        enemy.shootCooldown = Math.max(pressure && enemy.boss ? 0.52 : 0.8, (enemy.shootEvery || 2.2) * (0.82 + Math.random() * 0.32));
       }
     }
     const charger = enemy.behavior === "charger" || enemy.behavior === "boss_charger" || enemy.behavior === "boss_final";
@@ -3714,7 +3779,7 @@
         enemy.chargeTime = enemy.boss ? 0.62 : 0.48;
         enemy.chargeVx = dx / len;
         enemy.chargeVy = dy / len;
-        enemy.chargeCooldown = Math.max(1.25, (enemy.chargeEvery || 2.7) * (0.82 + Math.random() * 0.42));
+        enemy.chargeCooldown = Math.max(pressure && enemy.boss ? 0.88 : 1.25, (enemy.chargeEvery || 2.7) * (0.82 + Math.random() * 0.42));
         addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, enemy.boss ? "冲刺评审" : "DDL", enemy.accent || "#ffd36a", 0.42);
       }
     }
@@ -3759,7 +3824,7 @@
       if ((enemy.correctionErrorStacks || 0) >= 1) moveSpeed *= state.activeFormParams.correctionSlowMultiplier || 0.82;
       enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
       if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
-      if (enemy.chargeTime > 0) {
+      if (!enemy.bossPatternKind && enemy.chargeTime > 0) {
         enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
         mx = enemy.chargeVx || mx;
         my = enemy.chargeVy || my;
@@ -3771,7 +3836,10 @@
         mx = dx / len * 0.86 + px * wobble;
         my = dy / len * 0.86 + py * wobble;
       } else if (enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield") {
-        const desired = enemy.boss ? 310 : 250;
+        // A short-range build must be able to contest a ranged Boss. Bosses
+        // hold a dangerous mid-range orbit instead of permanently kiting just
+        // outside Thermos coverage; V3.5 moves that orbit slightly closer.
+        const desired = enemy.boss ? (state.demoV2 && state.demoV2.bossPressurePass ? 185 : 205) : 250;
         const strafe = Math.sin(enemy.age * 2.2 + enemy.phase) * 0.5;
         const px = -dy / len;
         const py = dx / len;
@@ -4282,15 +4350,17 @@
       const openLevel = scissors.modules && (scissors.modules.archive || 0);
       const openStrikeActive = openLevel > 0 && scissors.weaponVisualTime > 0
         && (scissors.weaponVisualKind === "open" || scissors.weaponVisualKind === "finale");
+      const closedStrikeActive = scissors.weaponVisualTime > 0
+        && (scissors.weaponVisualKind === "thrust" || scissors.weaponVisualKind === "sever");
       if (openLevel > 0) {
-        if (!openStrikeActive) {
+        if (!openStrikeActive && !closedStrikeActive) {
           const openOrbit = 38;
           drawSpriteFrame(ctx, "scissors_strike_v27", 0,
             Math.cos(angle) * openOrbit, Math.sin(angle) * openOrbit,
             92 * pulse, 92 * pulse, 0.98, angle + Math.PI * 0.25);
         }
       } else {
-        drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
+        if (!closedStrikeActive) drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
       }
       const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
       drawCombatProgress(ctx, 0, 39, 82, 11, charge);
@@ -4572,18 +4642,32 @@
         continue;
       }
       if (z.type === "line") {
-        drawSuiteNeonLine(ctx, state, z, alpha, progress);
         if (z.inkTrail) {
           const dx = z.x2 - z.x1;
           const dy = z.y2 - z.y1;
           const length = Math.hypot(dx, dy) || 1;
           const width = z.width || 24;
+          // Archive owns a soft, low-frequency cyan band on the world layer.
+          // Do not run it through the high-intensity laser bloom grammar.
+          ctx.save();
+          ctx.globalCompositeOperation = "source-over";
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "rgba(34, 167, 190, 0.2)";
+          ctx.shadowColor = "#168aa3";
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = Math.max(20, width * 1.18);
+          ctx.beginPath();
+          ctx.moveTo(z.x1, z.y1);
+          ctx.lineTo(z.x2, z.y2);
+          ctx.stroke();
           drawSprite(ctx, "marker_ink_art",
             z.x1 + dx / 2, z.y1 + dy / 2,
             Math.max(96, length + 44), Math.max(48, width * 1.65),
-            Math.min(0.72, alpha * 0.62 + 0.1), Math.atan2(dy, dx));
+            Math.min(0.56, alpha * 0.48 + 0.08), Math.atan2(dy, dx));
+          ctx.restore();
           continue;
         }
+        drawSuiteNeonLine(ctx, state, z, alpha, progress);
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), z.x1, z.y1, z.x2, z.y2, z.width || 8, Math.min(0.94, alpha + 0.12));
         continue;
       }
@@ -5222,6 +5306,10 @@
       updateEnemies,
       beginBossPattern,
       releaseBossPattern,
+      updateBossPatternIntent,
+      updateEnemyIntent,
+      demoV2ReleasedQuota,
+      updateDemoV2Director,
       demoV2PerimeterPoint,
       spawnDemoV2Wave,
       fireScissorsFixedTest,

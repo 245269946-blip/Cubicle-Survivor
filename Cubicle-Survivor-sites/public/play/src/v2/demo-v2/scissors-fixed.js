@@ -115,9 +115,10 @@
     // isolated historical entry retain their previous values.
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
-    const damage = (deepTriangle ? 10.5 : highFrequency ? 13.5 : 25) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, blade.damage || 0);
-    const speedScale = Math.max(0.55, Math.pow(0.9, pivot.attackSpeed || 0) * Math.pow(0.96, experience.attackSpeed || 0));
-    const rangeScale = Math.min(1.38, Math.pow(1.09, handle.range || 0) * Math.pow(1.05, experience.range || 0));
+    const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
+    const damage = (deepTriangle ? 10.5 : highFrequency ? 13.5 : 25) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, blade.damage || 0);
+    const speedScale = Math.max(0.5, Math.pow(attributeImpact ? 0.86 : 0.9, pivot.attackSpeed || 0) * Math.pow(0.96, experience.attackSpeed || 0));
+    const rangeScale = Math.min(attributeImpact ? 1.65 : 1.38, Math.pow(attributeImpact ? 1.14 : 1.09, handle.range || 0) * Math.pow(1.05, experience.range || 0));
     const thrustCount = Math.min(3, closedLevel);
     const cutCount = openLevel >= 3 ? 6 : openLevel === 2 ? 4 : openLevel === 1 ? 2 : 0;
     const thrustEnd = thrustCount ? 0.06 + (thrustCount - 1) * 0.11 : 0;
@@ -134,7 +135,7 @@
     state.activeFormParams = {
       damage,
       cooldown,
-      range: Math.min(252, (190 + closedLevel * 8) * rangeScale),
+      range: Math.min(attributeImpact ? 300 : 252, (190 + closedLevel * 8) * rangeScale),
       width: 26 * rangeScale,
       amount: 1,
       pierce: 99,
@@ -142,7 +143,10 @@
       markerFixedLifeStealChance: (experience.lifeSteal || 0) * 0.015,
       markerFixedCritChance: Math.min(0.72, (experience.critChance || 0) * 0.03 + (blade.pierce || 0) * 0.055),
       markerFixedArmor: experience.armor || 0,
-      markerFixedDodgeChance: Math.min(0.62, (experience.dodge || 0) * 0.03 + (pivot.amount || 0) * 0.05),
+      // V3.5 asks every build to face a faster, continuously replenished ring.
+      // The only pure melee weapon gets a small innate evasive margin instead
+      // of extra health or damage, preserving its movement-first identity.
+      markerFixedDodgeChance: Math.min(0.62, (experience.dodge || 0) * 0.03 + (pivot.amount || 0) * 0.05 + (state.demoV2 && state.demoV2.sustainedPressurePass ? 0.14 : 0)),
       markerFixedLuck: (experience.luck || 0) * 5,
       markerFixedHarvesting: (experience.harvesting || 0) * 5,
       scissorsFixedTest: true,
@@ -154,14 +158,14 @@
       scissorsFinale: openLevel >= 4,
       scissorsActionScale: speedScale,
       scissorsActionDuration: actionDuration,
-      scissorsThrustRange: Math.min(252, (190 + closedLevel * 8) * rangeScale),
-      scissorsThrustWidth: Math.min(54, 32 * rangeScale + closedLevel * 2),
+      scissorsThrustRange: Math.min(attributeImpact ? 300 : 252, (190 + closedLevel * 8) * rangeScale),
+      scissorsThrustWidth: Math.min(attributeImpact ? 70 : 54, 32 * rangeScale + closedLevel * 2),
       scissorsThrustDamage: damage * 1.08,
-      scissorsFanRange: Math.min(205, (140 + openLevel * 7) * rangeScale),
-      scissorsFanHalfAngle: Math.min(0.78, 0.54 + openLevel * 0.045 + (rangeScale - 1) * 0.08),
+      scissorsFanRange: Math.min(attributeImpact ? 245 : 205, (140 + openLevel * 7) * rangeScale),
+      scissorsFanHalfAngle: Math.min(attributeImpact ? 0.92 : 0.78, 0.54 + openLevel * 0.045 + (rangeScale - 1) * (attributeImpact ? 0.18 : 0.08)),
       scissorsFanDamage: damage * 0.5,
-      scissorsSeverRange: Math.min(305, 246 * rangeScale),
-      scissorsSeverWidth: Math.min(92, 64 * rangeScale),
+      scissorsSeverRange: Math.min(attributeImpact ? 350 : 305, 246 * rangeScale),
+      scissorsSeverWidth: Math.min(attributeImpact ? 110 : 92, 64 * rangeScale),
       scissorsSeverDamage: damage * 1.7,
       scissorsSeverSlow: 0.35,
       scissorsSeverSlowDuration: 1.75,
