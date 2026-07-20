@@ -119,4 +119,30 @@
 
   V2.demoV2.fourWeaponV31 = fourWeaponV31;
   V2.demoV2.fixedTests["four-weapon-v3-1"] = fourWeaponV31;
+
+  // Demo V3.2 deepens the combat triangle rather than adding a fourth balance
+  // axis: each strike is smaller, strikes happen more often, and the encounter
+  // director keeps a larger pool of valid targets on screen. Neon bloom is a
+  // separate presentation flag so V3.1 remains a stable regression snapshot.
+  const fourWeaponV32 = Object.assign({}, fourWeaponV31, {
+    id: "four-weapon-v3-2",
+    version: "Demo V3.2",
+    visualVersion: "深层割草预算与霓虹增幅版",
+    title: "深层割草预算与霓虹增幅版",
+    subtitle: "继续压低单击、缩短攻击空窗并维持有效敌群，让每次机制成长都有足够目标承接，同时强化真实技能事件的霓虹辉光。",
+    combatTrianglePass: true,
+    neonBloomPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV31.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.2 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV32 = fourWeaponV32;
+  V2.demoV2.fixedTests["four-weapon-v3-2"] = fourWeaponV32;
 })();

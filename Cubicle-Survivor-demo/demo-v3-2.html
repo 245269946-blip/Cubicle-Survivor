@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>工位幸存者 Demo V3.2</title>
+    <meta http-equiv="refresh" content="0; url=index.html?demoV2=four-weapon-v3-2" />
+  </head>
+  <body>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      params.set("demoV2", "four-weapon-v3-2");
+      window.location.replace("index.html?" + params.toString());
+    </script>
+    <p><a href="index.html?demoV2=four-weapon-v3-2">进入工位幸存者 Demo V3.2</a></p>
+  </body>
+</html>

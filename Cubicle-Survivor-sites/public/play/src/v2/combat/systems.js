@@ -350,6 +350,7 @@
     const source = item.source || "";
     if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x1 == null || item.x2 == null) return;
     if (state.demoV2.combatExperiencePass) {
+      const bloom = !!state.demoV2.neonBloomPass;
       const profile = item.visualProfile || eventVisual(source);
       const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
       const palette = profile.palette || {};
@@ -361,10 +362,17 @@
           : isCorrection ? "correction_fluid_glitch_v25" : "marker_impact_art";
       ctx.save();
       ctx.shadowColor = color;
-      ctx.shadowBlur = 18 + (profile.intensity || 1) * 7;
+      ctx.shadowBlur = (bloom ? 32 : 18) + (profile.intensity || 1) * (bloom ? 11 : 7);
+      if (bloom) {
+        ctx.globalCompositeOperation = "lighter";
+        drawGeneratedLine(ctx, generatedLineSprite(profile), item.x1, item.y1, item.x2, item.y2,
+          Math.max(10, (item.width || 8) * 2.15), Math.min(0.28, (alpha || 0.5) * 0.3));
+      }
       if (family === "scissors" || isCorrection) {
+        if (bloom) drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x2, item.y2, size * 1.34, size * 1.34, Math.min(0.28, (alpha || 0.5) * 0.3), Math.atan2(item.y2 - item.y1, item.x2 - item.x1));
         drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x2, item.y2, size, size, Math.min(0.86, (alpha || 0.5) * 0.78), Math.atan2(item.y2 - item.y1, item.x2 - item.x1));
       } else {
+        if (bloom) drawSprite(ctx, sprite, item.x2, item.y2, size * 1.34, size * 1.34, Math.min(0.24, (alpha || 0.5) * 0.26), progress * 0.08);
         drawSprite(ctx, sprite, item.x2, item.y2, size, size, Math.min(0.72, (alpha || 0.5) * 0.68), progress * 0.08);
       }
       ctx.restore();
@@ -379,6 +387,7 @@
     if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x == null) return;
     const r = Math.max(16, radius || item.radius || 40);
     if (state.demoV2.combatExperiencePass) {
+      const bloom = !!state.demoV2.neonBloomPass;
       const profile = item.visualProfile || eventVisual(source);
       const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
       const palette = profile.palette || {};
@@ -390,10 +399,13 @@
       const scale = isCorrection ? 1.86 : family === "scissors" ? 1.62 : 1.48;
       ctx.save();
       ctx.shadowColor = color;
-      ctx.shadowBlur = 20 + (profile.intensity || 1) * 8;
+      ctx.shadowBlur = (bloom ? 36 : 20) + (profile.intensity || 1) * (bloom ? 12 : 8);
+      if (bloom) ctx.globalCompositeOperation = "lighter";
       if (family === "scissors" || isCorrection) {
+        if (bloom) drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x, item.y, r * scale * 1.28, r * scale * 1.28, Math.min(0.25, (alpha || 0.5) * 0.27), 0);
         drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(0.78, (alpha || 0.5) * 0.72), 0);
       } else {
+        if (bloom) drawSprite(ctx, sprite, item.x, item.y, r * scale * 1.28, r * scale * 1.28, Math.min(0.22, (alpha || 0.5) * 0.24), progress * 0.06);
         drawSprite(ctx, sprite, item.x, item.y, r * scale, r * scale, Math.min(0.68, (alpha || 0.5) * 0.66), progress * 0.06);
       }
       ctx.restore();
@@ -498,7 +510,16 @@
     }
     if (source === "thermos_test_kill_heatwave" || source === "thermos_test_fullscreen_ignition") {
       const silhouettePass = !!(state && state.demoV2 && state.demoV2.skillSilhouettePass);
+      const bloom = !!(state && state.demoV2 && state.demoV2.neonBloomPass);
       const ringSize = Math.max(silhouettePass ? 104 : 66, radius * (silhouettePass ? 2.68 : 2.08));
+      if (bloom) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.shadowColor = "#ff9d45";
+        ctx.shadowBlur = 42;
+        drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, ringSize * 1.22, ringSize * 1.22, Math.min(0.34, alpha * 0.34 + 0.08), progress * 0.08);
+        ctx.restore();
+      }
       drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, ringSize, ringSize, Math.min(1, alpha + 0.16), progress * 0.08);
       if (silhouettePass) {
         // Kill Heatwave owns a hot core, a fast amber front and a pale outer
@@ -3990,7 +4011,7 @@
         });
         if (!insideStation) nextAttackDelay *= 1.25;
       }
-      attackTimer = Math.max(state.demoV2 && state.demoV2.combatDensityPass ? 0.16 : 0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
+      attackTimer = Math.max(state.demoV2 && state.demoV2.combatTrianglePass ? 0.12 : state.demoV2 && state.demoV2.combatDensityPass ? 0.16 : 0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
       if (state.activeFormParams.demoV2OverdraftEvery > 0 && state.stats.shots > 0 && state.stats.shots % state.activeFormParams.demoV2OverdraftEvery === 0) {
         attackTimer += state.activeFormParams.demoV2OverdraftPause || 0;
       }
@@ -4385,6 +4406,10 @@
         ctx.font = "bold 14px sans-serif";
         ctx.textAlign = "center";
         ctx.fillStyle = event.color || "#ffffff";
+        if (state.demoV2 && state.demoV2.neonBloomPass) {
+          ctx.shadowColor = event.color || "#ffffff";
+          ctx.shadowBlur = 10;
+        }
         ctx.fillText(event.text, event.x, event.y - progress * 18);
         ctx.restore();
         continue;
@@ -4691,7 +4716,12 @@
       state.activeFormParams.heat = 90;
     } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
       const focus = addLabEnemy("thermos-fixed-focus", 525, 360);
-      if (kind === "thermos_fixed_heatwave") focus.hp = 20;
+      if (kind === "thermos_fixed_heatwave") {
+        // Keep the visual lab deterministic as the base-hit budget changes:
+        // one real focused hit must still earn one real death heatwave.
+        focus.hp = Math.max(1, (state.activeFormParams.damage || 20) * 1.25);
+        focus.maxHp = focus.hp;
+      }
       addLabEnemy("thermos-fixed-upper", 560, 315);
       addLabEnemy("thermos-fixed-lower", 585, 405);
       addLabEnemy("thermos-fixed-edge", 620, 350);

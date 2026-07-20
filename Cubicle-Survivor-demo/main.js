@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -290,6 +290,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "Boss 关只温和增加杂兵；剪刀指向落在武器前方地面，不遮挡持械动作。";
         }
         if (startButton) startButton.textContent = "进入高频霓虹割草实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-2") {
+        document.title = "工位幸存者 Demo V3.2 · 深层割草预算与霓虹增幅版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.2 · 深层割草预算与霓虹增幅版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.2 深层割草预算与霓虹增幅版");
+        if (subtitle) subtitle.textContent = "继续压低单击、缩短攻击空窗并抬高有效敌群，让路径、空间、位移与状态机制持续发生；霓虹辉光只附着于真实判定。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "三角预算联动";
+          guideCards[0].querySelector("span:last-child").textContent = "单击更小、攻击更快、目标更多；三项同时调整，避免秒怪空屏和拥挤刮痧。";
+          guideCards[1].querySelector("strong").textContent = "有效敌群地板";
+          guideCards[1].querySelector("span:last-child").textContent = "普通关维持更高同时在场数和补位批次，Boss关只做受控增量。";
+          guideCards[2].querySelector("strong").textContent = "双层霓虹辉光";
+          guideCards[2].querySelector("span:last-child").textContent = "攻击拥有低透明外辉光和高对比核心，残影跟随真实轨迹、区域和冲击波。";
+          guideCards[3].querySelector("strong").textContent = "危险信息优先";
+          guideCards[3].querySelector("span:last-child").textContent = "霓虹不会扩大命中判定，也不会覆盖敌人血条、Boss轮廓和危险预警。";
+        }
+        if (startButton) startButton.textContent = "进入深层霓虹割草实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

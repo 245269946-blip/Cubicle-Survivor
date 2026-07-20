@@ -1,6 +1,12 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.1
+## 当前推荐四武器体验：Demo V3.2
+
+- `DEMO_V3_2_COMBAT_TRIANGLE_NEON_PASS.md`：继续深化单击伤害、攻击频率与有效敌群地板的联动预算，并为真实技能事件增加低透明外辉光和高对比核心。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-2.html`。
+- Demo V3.1及更早入口继续作为回归快照保留。
+
+## 上一版四武器体验：Demo V3.1
 
 - `DEMO_V3_1_COMBAT_DENSITY_PASS.md`：把单次大数字拆成高频小事件，提高普通关敌群地板、批次和配额，并完成剪刀突进地面指向与保温杯击杀热浪的技能轮廓分离。
 - 入口：`../Cubicle-Survivor-demo/demo-v3-1.html`。

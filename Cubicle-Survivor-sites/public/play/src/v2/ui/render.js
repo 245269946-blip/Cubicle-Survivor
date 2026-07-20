@@ -206,6 +206,7 @@
     const neonCity = !!(fixedConfig && fixedConfig.neonCityTheme) || !!(state.demoV2 && state.demoV2.neonCityTheme);
     wrap.dataset.experiencePass = experiencePass ? "true" : "";
     wrap.dataset.neonCity = neonCity ? "true" : "";
+    wrap.dataset.neonBloom = state.demoV2 && state.demoV2.neonBloomPass ? "true" : "";
     const versionStamp = el("titleVersionStamp");
     if (versionStamp) versionStamp.textContent = (state.demoV2 && state.demoV2.suiteVersion) || (fixedConfig && fixedConfig.version) || "Demo V1";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");

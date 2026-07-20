@@ -1359,6 +1359,49 @@ if (!combatVisualSource.includes("const directionDistance = 94 + charge * 18")
   process.exit(1);
 }
 console.log("OK Demo V3.1 density pass: smaller faster hits, denser authored encounters, projected dash intent and layered Kill Heatwave");
+
+const fourWeaponV32 = V2.demoV2 && V2.demoV2.fourWeaponV32;
+const v32EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-2.html"), "utf8");
+if (!fourWeaponV32 || fourWeaponV32.version !== "Demo V3.2"
+  || !fourWeaponV32.combatTrianglePass || !fourWeaponV32.neonBloomPass
+  || !v32EntrySource.includes('params.set("demoV2", "four-weapon-v3-2")')) {
+  console.error("Demo V3.2 must preserve V3.1 while deepening the combat triangle and neon bloom", fourWeaponV32);
+  process.exit(1);
+}
+const v32ExpectedBase = {
+  marker: { damage: 8.5, cooldown: 0.46 },
+  thermos: { damage: 7.2, cooldown: 0.46 },
+  scissors: { damage: 10.5, cooldown: 0.25 },
+  correction_fluid: { damage: 5, cooldown: 0.29 }
+};
+for (const weaponId of Object.keys(v32ExpectedBase)) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-2" });
+  V2.dispatch({ type: "START_RUN", weaponId });
+  const triangleState = V2.getState();
+  const expected = v32ExpectedBase[weaponId];
+  if (!triangleState.demoV2.combatTrianglePass || !triangleState.demoV2.neonBloomPass
+    || Math.abs(triangleState.activeFormParams.damage - expected.damage) > 0.0001
+    || Math.abs(triangleState.activeFormParams.cooldown - expected.cooldown) > 0.0001) {
+    console.error("Demo V3.2 must deepen smaller/faster weapon events without changing V3.1", weaponId, triangleState.activeFormParams, triangleState.demoV2);
+    process.exit(1);
+  }
+  const triangleConfig = V2.getDemoV2FixedTestConfig(triangleState);
+  const opening = triangleConfig.currentEncounter(triangleState);
+  if (!opening.v32CombatTrianglePass || opening.spawnTotal < 83 || opening.floor < 21
+    || opening.cap < 58 || opening.batchSize < 10 || opening.cadence > 1.36) {
+    console.error("Demo V3.2 opening must hold a deeper effective-target floor", weaponId, opening);
+    process.exit(1);
+  }
+}
+if (!combatVisualSource.includes('globalCompositeOperation = "lighter"')
+  || !combatVisualSource.includes("size * 1.34")
+  || !combatVisualSource.includes("ringSize * 1.22")
+  || !v3SkinSource.includes('[data-neon-bloom="true"] canvas')) {
+  console.error("Demo V3.2 neon amplification must use layered event-driven bloom and a scoped UI surface");
+  process.exit(1);
+}
+console.log("OK Demo V3.2 combat triangle and neon bloom: deeper target floor, smaller faster events, layered event-driven light");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')

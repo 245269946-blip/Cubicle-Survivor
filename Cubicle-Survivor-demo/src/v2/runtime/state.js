@@ -435,6 +435,8 @@
       state.demoV2.neonCityTheme = !!coordinatorConfig.neonCityTheme;
       state.demoV2.combatDensityPass = !!coordinatorConfig.combatDensityPass;
       state.demoV2.skillSilhouettePass = !!coordinatorConfig.skillSilhouettePass;
+      state.demoV2.combatTrianglePass = !!coordinatorConfig.combatTrianglePass;
+      state.demoV2.neonBloomPass = !!coordinatorConfig.neonBloomPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
@@ -507,6 +509,8 @@
         state.demoV2.neonCityTheme = !!requestedFixedConfig.neonCityTheme;
         state.demoV2.combatDensityPass = !!requestedFixedConfig.combatDensityPass;
         state.demoV2.skillSilhouettePass = !!requestedFixedConfig.skillSilhouettePass;
+        state.demoV2.combatTrianglePass = !!requestedFixedConfig.combatTrianglePass;
+        state.demoV2.neonBloomPass = !!requestedFixedConfig.neonBloomPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }
