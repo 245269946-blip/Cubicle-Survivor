@@ -22,14 +22,14 @@ async function render() {
   );
 }
 
-test("renders the playable Demo V3.2 wrapper", async () => {
+test("renders the playable Demo V3.3 wrapper", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>工位幸存者 Demo V3\.2<\/title>/);
-  assert.match(html, /src="\/play\/demo-v3-2\.html"/);
+  assert.match(html, /<title>工位幸存者 Demo V3\.3<\/title>/);
+  assert.match(html, /src="\/play\/demo-v3-3\.html"/);
   assert.match(html, /在线试玩/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Starter Project/);
 });

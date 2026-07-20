@@ -1402,6 +1402,38 @@ if (!combatVisualSource.includes('globalCompositeOperation = "lighter"')
   process.exit(1);
 }
 console.log("OK Demo V3.2 combat triangle and neon bloom: deeper target floor, smaller faster events, layered event-driven light");
+const fourWeaponV33 = V2.demoV2 && V2.demoV2.fourWeaponV33;
+const v33EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-3.html"), "utf8");
+if (!fourWeaponV33 || fourWeaponV33.version !== "Demo V3.3" || !fourWeaponV33.correctionOpeningPass
+  || !fourWeaponV33.combatTrianglePass || !fourWeaponV33.neonBloomPass
+  || !v33EntrySource.includes('params.set("demoV2", "four-weapon-v3-3")')) {
+  console.error("Demo V3.3 must preserve V3.2 while enabling the Correction Fluid opening pass", fourWeaponV33);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-3" });
+V2.dispatch({ type: "START_RUN", weaponId: "correction_fluid" });
+const v33CorrectionState = V2.getState();
+v33CorrectionState.warmupTime = 0;
+const v33Primary = { id: "v33-primary", typeId: "todo", x: v33CorrectionState.player.x + 120, y: v33CorrectionState.player.y, r: 12, hp: 100, maxHp: 100, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+const v33Overspray = { id: "v33-overspray", typeId: "todo", x: v33CorrectionState.player.x + 158, y: v33CorrectionState.player.y + 18, r: 12, hp: 100, maxHp: 100, speed: 0, damage: 0, dead: false, color: "#fff", rooted: 0 };
+v33CorrectionState.enemies = [v33Primary, v33Overspray];
+V2.combat.fireWeapon(v33CorrectionState);
+if (Math.abs(v33CorrectionState.activeFormParams.damage - 5.8) > 0.0001
+  || Math.abs(v33CorrectionState.activeFormParams.cooldown - 0.27) > 0.0001
+  || !v33CorrectionState.activeFormParams.correctionOpeningOverspray
+  || v33Primary.correctionErrorStacks !== 1 || v33Overspray.correctionErrorStacks !== 1
+  || v33Overspray.hp >= v33Overspray.maxHp
+  || !v33CorrectionState.formEvents.some((event) => event.source === "correction_test_spray" && event.meta && event.meta.overspray)) {
+  console.error("Demo V3.3 Correction Fluid must turn one primary lock into one weak nearby overspray", v33CorrectionState.activeFormParams, v33Primary, v33Overspray, v33CorrectionState.formEvents);
+  process.exit(1);
+}
+correctionFixed.applyModule(v33CorrectionState, "correction", true);
+if (v33CorrectionState.activeFormParams.correctionTargetCount !== 2 || v33CorrectionState.activeFormParams.correctionOpeningOverspray) {
+  console.error("Fatal Correction Lv1 must replace opening overspray with two independent primary locks", v33CorrectionState.activeFormParams);
+  process.exit(1);
+}
+console.log("OK Demo V3.3 Correction Fluid opening: stronger primary cadence, one nearby overspray, and preserved Fatal Correction identity");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')
@@ -1777,12 +1809,12 @@ function runAutomatedFixedSuite(weaponId, routeIndex, seed) {
   }
 }
 
-function runEarlyPressureProbe(weaponId, seed) {
+function runEarlyPressureProbe(weaponId, seed, demoPhase) {
   const originalRandom = Math.random;
   Math.random = makeSeededRandom(seed);
   try {
     V2.dispatch({ type: "RESTART" });
-    V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-fixed" });
+    V2.dispatch({ type: "INIT", demoV2Phase: demoPhase || "four-weapon-fixed" });
     V2.dispatch({ type: "START_RUN", weaponId });
     const state = V2.getState();
     for (let step = 0; step < 120 && state.mode === "combat"; step++) {
@@ -1800,12 +1832,18 @@ function runEarlyPressureProbe(weaponId, seed) {
 }
 
 const pressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 2500 + index));
+const correctionV32Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-2");
+const correctionV33Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-3");
+if (correctionV33Opening.kills <= correctionV32Opening.kills || correctionV33Opening.damageDone <= correctionV32Opening.damageDone * 1.25) {
+  throw new Error("Demo V3.3 must materially improve Correction Fluid opening throughput over V3.2: " + JSON.stringify({ correctionV32Opening, correctionV33Opening }));
+}
 const automatedRuns = [];
 for (const weaponId of ["marker", "thermos", "scissors", "correction_fluid"]) {
   automatedRuns.push(runAutomatedFixedSuite(weaponId, 0, 2900 + automatedRuns.length));
   automatedRuns.push(runAutomatedFixedSuite(weaponId, 1, 3900 + automatedRuns.length));
 }
 console.log("OK Demo V2.9 pressure/flow audit: four real-damage openings and eight real-timer pure-route progression soaks completed", pressureProbes, automatedRuns);
+console.log("OK Demo V3.3 opening pressure: Correction Fluid materially exceeds its V3.2 first-stage throughput", correctionV32Opening, correctionV33Opening);
 console.log("OK Demo V2.9 integration: four weapons share one selection/version and neon layer while retaining isolated mechanisms");
 
 V2.dispatch({ type: "RESTART" });

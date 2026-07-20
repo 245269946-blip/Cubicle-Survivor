@@ -113,8 +113,9 @@
     const correctionLevel = test.modules.archive;
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
-    const damage = (deepTriangle ? 5 : highFrequency ? 6.5 : 11) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage || 0);
-    const cooldown = (deepTriangle ? 0.29 : highFrequency ? 0.36 : 0.62) * Math.pow(0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
+    const openingPass = !!(state.demoV2 && state.demoV2.correctionOpeningPass);
+    const damage = (openingPass ? 5.8 : deepTriangle ? 5 : highFrequency ? 6.5 : 11) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage || 0);
+    const cooldown = (openingPass ? 0.27 : deepTriangle ? 0.29 : highFrequency ? 0.36 : 0.62) * Math.pow(0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
     const rangeScale = Math.pow(1.1, tube.amount || 0) * Math.pow(1.05, experience.range || 0);
     const durationScale = Math.pow(1.24, bottle.range || 0);
     const targetCount = correctionLevel >= 3 ? 4 : correctionLevel === 2 ? 3 : correctionLevel === 1 ? 2 : 1;
@@ -137,6 +138,9 @@
       correctionSpreadLevel: spreadLevel,
       correctionFatalLevel: correctionLevel,
       correctionTargetCount: targetCount,
+      correctionOpeningOverspray: openingPass && correctionLevel === 0,
+      correctionOpeningOversprayRadius: 68 * Math.min(1.25, rangeScale),
+      correctionOpeningOversprayDamageScale: 0.52,
       correctionErrorDuration: 5.3 * durationScale * (correctionLevel >= 3 ? 1.35 : 1),
       correctionSlowMultiplier: 0.82,
       correctionVulnerability: correctionLevel >= 3 ? 1.5 : 1.28,

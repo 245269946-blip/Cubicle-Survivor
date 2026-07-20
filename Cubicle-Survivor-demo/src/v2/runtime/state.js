@@ -437,6 +437,7 @@
       state.demoV2.skillSilhouettePass = !!coordinatorConfig.skillSilhouettePass;
       state.demoV2.combatTrianglePass = !!coordinatorConfig.combatTrianglePass;
       state.demoV2.neonBloomPass = !!coordinatorConfig.neonBloomPass;
+      state.demoV2.correctionOpeningPass = !!coordinatorConfig.correctionOpeningPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
@@ -511,6 +512,7 @@
         state.demoV2.skillSilhouettePass = !!requestedFixedConfig.skillSilhouettePass;
         state.demoV2.combatTrianglePass = !!requestedFixedConfig.combatTrianglePass;
         state.demoV2.neonBloomPass = !!requestedFixedConfig.neonBloomPass;
+        state.demoV2.correctionOpeningPass = !!requestedFixedConfig.correctionOpeningPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

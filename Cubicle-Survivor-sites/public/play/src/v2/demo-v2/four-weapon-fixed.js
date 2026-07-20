@@ -145,4 +145,29 @@
 
   V2.demoV2.fourWeaponV32 = fourWeaponV32;
   V2.demoV2.fixedTests["four-weapon-v3-2"] = fourWeaponV32;
+
+  // Demo V3.3 keeps the V3.2 combat triangle intact and repairs only the
+  // Correction Fluid opening. Its primary spray remains a single lock, but
+  // the liquid may overspray one nearby enemy until Fatal Correction provides
+  // true independent multi-target cultivation.
+  const fourWeaponV33 = Object.assign({}, fourWeaponV32, {
+    id: "four-weapon-v3-3",
+    version: "Demo V3.3",
+    visualVersion: "修正液前期循环强化版",
+    title: "修正液前期循环强化版",
+    subtitle: "保留单目标主喷涂与三层错误母题，通过近邻溅写让修正液在第一阶段就能周转敌群；致命纠错仍独占真正的多目标锁定。",
+    correctionOpeningPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV32.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.3 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV33 = fourWeaponV33;
+  V2.demoV2.fixedTests["four-weapon-v3-3"] = fourWeaponV33;
 })();

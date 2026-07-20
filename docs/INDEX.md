@@ -1,6 +1,13 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.2
+## 当前推荐四武器体验：Demo V3.3
+
+- 入口：`../Cubicle-Survivor-demo/demo-v3-3.html`。
+- 范围：保留 Demo V3.2 的战斗三角预算与双层霓虹，只修复修正液前期单点周转困难。
+- 规则：主喷涂命中后向一个近邻目标溅写弱伤害和1层错误；致命纠错 Lv1 仍独占真正的双目标锁定。
+- 说明：`DEMO_V3_3_CORRECTION_OPENING_PASS.md`。
+
+## Demo V3.2 回归入口
 
 - `DEMO_V3_2_COMBAT_TRIANGLE_NEON_PASS.md`：继续深化单击伤害、攻击频率与有效敌群地板的联动预算，并为真实技能事件增加低透明外辉光和高对比核心。
 - 入口：`../Cubicle-Survivor-demo/demo-v3-2.html`。

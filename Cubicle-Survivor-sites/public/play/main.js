@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -312,6 +312,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "霓虹不会扩大命中判定，也不会覆盖敌人血条、Boss轮廓和危险预警。";
         }
         if (startButton) startButton.textContent = "进入深层霓虹割草实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-3") {
+        document.title = "工位幸存者 Demo V3.3 · 修正液前期循环强化版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.3 · 修正液前期循环强化版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.3 修正液前期循环强化版");
+        if (subtitle) subtitle.textContent = "延续 V3.2 的高频敌群与霓虹反馈，修正液主喷涂命中后会向一个近邻目标溅写，让错误循环从第一阶段就能转动。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "主喷涂仍是单锁定";
+          guideCards[0].querySelector("span:last-child").textContent = "优先处理最近威胁，保留修正液围绕目标培养错误的核心操作。";
+          guideCards[1].querySelector("strong").textContent = "液体近邻溅写";
+          guideCards[1].querySelector("span:last-child").textContent = "命中后向附近一个敌人追加弱伤害和1层错误，缓解第一阶段单点周转困难。";
+          guideCards[2].querySelector("strong").textContent = "多目标路线不被替代";
+          guideCards[2].querySelector("span:last-child").textContent = "致命纠错 Lv1 仍提供两个独立主目标；选中后基础溅写关闭，升级差异清晰。";
+          guideCards[3].querySelector("strong").textContent = "其余三武器保持 V3.2";
+          guideCards[3].querySelector("span:last-child").textContent = "怪群密度、低伤高频预算和双层霓虹表现不做额外漂移。";
+        }
+        if (startButton) startButton.textContent = "进入修正液循环强化实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

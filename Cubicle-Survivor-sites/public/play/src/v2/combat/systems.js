@@ -1566,6 +1566,29 @@
         addTextEvent(state, target.x, target.y - target.r - 18, "错误泄漏", "#ff72d8", 0.52);
       }
       addBeamEvent(state, x1, y1, target.x, target.y, index % 2 ? "#ff5bd5" : "#dfffff", p.width || 24, 0.27, "steam", false, "correction_test_spray", { targetId: target.id, targetIndex: index, errorStacks: target.correctionErrorStacks || 0 });
+      if (index === 0 && p.correctionOpeningOverspray) {
+        const oversprayRadius = p.correctionOpeningOversprayRadius || 68;
+        const oversprayTarget = state.enemies.filter(function (enemy) {
+          return !enemy.dead && enemy !== target && targets.indexOf(enemy) < 0
+            && Math.hypot(enemy.x - target.x, enemy.y - target.y) <= oversprayRadius + enemy.r;
+        }).sort(function (a, b) {
+          return Math.hypot(a.x - target.x, a.y - target.y) - Math.hypot(b.x - target.x, b.y - target.y);
+        })[0];
+        if (oversprayTarget) {
+          applyCorrectionError(state, oversprayTarget, 1, "correction_test_spray");
+          correctionDamageEnemy(state, oversprayTarget, (p.damage || 7) * (p.correctionOpeningOversprayDamageScale || 0.52), "correction_test_spray");
+          addCircleEvent(state, target.x, target.y, oversprayRadius, "#ff5bd5", 0.16, "mark", false, "correction_test_spray", {
+            targetId: target.id,
+            oversprayTargetId: oversprayTarget.id,
+            overspray: true
+          });
+          addBeamEvent(state, target.x, target.y, oversprayTarget.x, oversprayTarget.y, "#ff8de5", Math.max(9, (p.width || 24) * 0.54), 0.2, "steam", false, "correction_test_spray", {
+            targetId: oversprayTarget.id,
+            oversprayFromId: target.id,
+            overspray: true
+          });
+        }
+      }
     });
     if (targets.length) state.stats.shots += 1;
     triggerFinalCorrection(state, test, p, elapsed);
