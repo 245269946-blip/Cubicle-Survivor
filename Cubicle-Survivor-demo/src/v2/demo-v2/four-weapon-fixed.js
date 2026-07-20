@@ -63,4 +63,34 @@
 
   V2.demoV2.fourWeaponFixed = fourWeaponFixed;
   V2.demoV2.fixedTests["four-weapon-fixed"] = fourWeaponFixed;
+
+  // Demo V3.0 is a presentation-and-feedback pass over the proven V2.9
+  // framework. It deliberately reuses the same four isolated weapon configs,
+  // encounters, shops and module rules; only the coordinator opts into the
+  // stronger player-facing combat grammar and neon-city surface treatment.
+  const fourWeaponV3 = {
+    id: "four-weapon-v3",
+    version: "Demo V3.0",
+    visualVersion: "霓虹战斗感知版",
+    coordinator: true,
+    combatExperiencePass: true,
+    neonCityTheme: true,
+    weaponId: "",
+    weaponName: "四武器",
+    title: "霓虹战斗感知版",
+    subtitle: "在同一套17关成长框架中，用路径、空间、位移与错误状态建立四种一眼可辨的战斗因果链。",
+    weaponCards,
+    childPhaseByWeapon: Object.assign({}, fourWeaponFixed.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.0 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  };
+
+  V2.demoV2.fourWeaponV3 = fourWeaponV3;
+  V2.demoV2.fixedTests["four-weapon-v3"] = fourWeaponV3;
 })();

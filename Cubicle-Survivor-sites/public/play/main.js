@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -246,6 +246,28 @@
         const shell = document.querySelector(".game-wrap");
         if (stamp) stamp.textContent = "Demo V2.9 · 四武器一致性修正版";
         if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V2.9 四武器一致性修正版");
+      }
+      if (demoV2Phase === "four-weapon-v3") {
+        document.title = "工位幸存者 Demo V3.0 · 霓虹战斗感知版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.0 · 霓虹战斗感知版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.0 霓虹战斗感知版");
+        if (subtitle) subtitle.textContent = "先看懂攻击如何改变敌人和战场，再把办公工具推向失控；本轮只强化已有战斗因果与反馈。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "四种可见因果";
+          guideCards[0].querySelector("span:last-child").textContent = "马克笔改路径，保温杯改空间，剪刀改位置，修正液改敌人状态。";
+          guideCards[1].querySelector("strong").textContent = "命中与击杀确认";
+          guideCards[1].querySelector("span:last-child").textContent = "敌人受击会形变，危险攻击先预告，击杀按武器家族留下不同确认。";
+          guideCards[2].querySelector("strong").textContent = "成长立即生效";
+          guideCards[2].querySelector("span:last-child").textContent = "属性、模块和组件完成后，回到战斗会短暂说明下一轮攻击发生了什么变化。";
+          guideCards[3].querySelector("strong").textContent = "都市霓虹信息层";
+          guideCards[3].querySelector("span:last-child").textContent = "青色表示路径与信息，品红表示错误与危险，金色表示成长和结算确认。";
+        }
+        if (startButton) startButton.textContent = "进入四武器霓虹实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

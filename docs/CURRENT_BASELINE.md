@@ -1,6 +1,6 @@
 # Cubicle Survivor Demo V1 Current Baseline
 
-Last verified: 2026-07-16
+Last verified: 2026-07-20
 
 This file is the first source to read before any project audit, plan, implementation, or playtest. Its purpose is to prevent the historical web prototype, early Demo V1 snapshots, and the active Demo V1 worktree from being confused again.
 
@@ -44,6 +44,8 @@ Implementation status on 2026-07-14:
 - Demo V2.5 adds the isolated Correction Fluid error-state test documented in `docs/DEMO_V2_CORRECTION_FLUID_FIXED_TEST.md`.
 - Demo V2.6 adds `demo-v2-6.html`, a unified selection entry for Marker, Thermos, Scissors and Correction Fluid. It routes each choice to the existing isolated fixed configuration and adds only shared version identity plus event-driven cyber-neon highlights.
 - Demo V2.7 adds `demo-v2-7.html` as the current recommended four-weapon playable entry. It repairs the real stage path, advances the first module choice to encounter 1, separates Boss health from normal-add health, and completes the Scissors dash/readability and fixed-suite UI pass documented in `docs/DEMO_V2_7_PLAYABLE_EXPERIENCE_FIX.md`.
+- Demo V2.8 and Demo V2.9 remain preserved regression snapshots for combat tempo and horizontal consistency.
+- Demo V3.0 adds `demo-v3-0.html` as the current recommended four-weapon experience entry. It is a scoped combat-perception pass over Demo V2.9: no new item or enemy system, but complete hit/lock/defeat feedback, readable Correction Fluid states, short growth confirmations, Scissors risk correction, and a Japanese neon-city information layer across all player-visible screens. See `docs/DEMO_V3_0_COMBAT_PERCEPTION_PASS.md`.
 
 ## Authoritative development location
 

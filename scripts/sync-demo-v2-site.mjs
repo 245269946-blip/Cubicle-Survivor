@@ -11,6 +11,7 @@ const checkOnly = process.argv.includes("--check");
 const runtimeEntries = [
   "index.html",
   "demo-v2-9.html",
+  "demo-v3-0.html",
   "main.js",
   "styles.css",
   "generated-skin.css",
@@ -46,6 +47,7 @@ async function verifyRequiredFiles() {
   const required = [
     "index.html",
     "demo-v2-9.html",
+    "demo-v3-0.html",
     "main.js",
     "styles.css",
     "generated-skin.css",
@@ -65,13 +67,13 @@ async function verifyRequiredFiles() {
       throw new Error(`Hosted runtime drifted from the active demo: ${relativePath}`);
     }
   }
-  const entry = await readFile(path.join(targetRoot, "demo-v2-9.html"), "utf8");
+  const entry = await readFile(path.join(targetRoot, "demo-v3-0.html"), "utf8");
   const suite = await readFile(path.join(targetRoot, "src/v2/demo-v2/four-weapon-fixed.js"), "utf8");
-  if (!entry.includes("Demo V2.9") || !entry.includes('params.set("demoV2", "four-weapon-fixed")')) {
-    throw new Error("Hosted entry does not route to the Demo V2.9 four-weapon suite");
+  if (!entry.includes("Demo V3.0") || !entry.includes('params.set("demoV2", "four-weapon-v3")')) {
+    throw new Error("Hosted entry does not route to the Demo V3.0 four-weapon suite");
   }
-  if (!suite.includes('version: "Demo V2.9"') || !suite.includes('activeIds: weaponCards.map')) {
-    throw new Error("Hosted coordinator is not the validated Demo V2.9 four-weapon build");
+  if (!suite.includes('version: "Demo V3.0"') || !suite.includes('combatExperiencePass: true') || !suite.includes('activeIds: weaponCards.map')) {
+    throw new Error("Hosted coordinator is not the validated Demo V3.0 combat-perception build");
   }
 }
 
@@ -88,10 +90,10 @@ if (!checkOnly) {
     path.join(targetRoot, "release-manifest.json"),
     JSON.stringify(
       {
-        version: "Demo V2.9",
-        entry: "/play/demo-v2-9.html",
+        version: "Demo V3.0",
+        entry: "/play/demo-v3-0.html",
         source: "Cubicle-Survivor-demo",
-        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md",
+        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_0_COMBAT_PERCEPTION_PASS.md",
       },
       null,
       2,

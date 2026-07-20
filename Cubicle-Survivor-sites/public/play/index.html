@@ -23,7 +23,7 @@
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
     <link rel="stylesheet" href="styles.css?v=41" />
-    <link rel="stylesheet" href="generated-skin.css?v=44" />
+    <link rel="stylesheet" href="generated-skin.css?v=45" />
   </head>
   <body>
     <script>
@@ -100,6 +100,11 @@
           <b id="combatStatusValue">准备中</b>
           <span id="combatStatusHint">观察当前主武器的触发节奏。</span>
         </div>
+        <div id="growthFeedback" class="growth-feedback hidden" aria-live="polite" aria-atomic="true">
+          <span id="growthFeedbackKind">WORKFLOW UPDATE</span>
+          <strong id="growthFeedbackTitle">能力已更新</strong>
+          <p id="growthFeedbackDetail">下一轮攻击会立即呈现变化。</p>
+        </div>
 
         <div id="warmupOverlay" class="warmup-overlay transition-card hidden" data-transition-kind="encounter" aria-live="polite">
           <div id="warmupEmoji" class="transition-symbol" aria-hidden="true">预告</div>
@@ -126,7 +131,7 @@
         <div id="startPanel" class="overlay">
           <div class="panel intro-panel v2-panel">
             <div class="title-hero">
-              <span class="title-stamp">Demo V1</span>
+              <span id="titleVersionStamp" class="title-stamp">Demo V1</span>
               <h1><span class="title-glitch">工位</span>幸存者</h1>
               <p class="subtitle">先选办公工具，再把它养成荒诞但好用的职场武器。</p>
               <div class="title-bar" aria-hidden="true"></div>
@@ -300,7 +305,7 @@
     <script src="src/data/balance.js"></script>
     <script src="src/core/build-state.js"></script>
     <script src="src/v2/data/weapon-forms.js?v=7"></script>
-    <script src="src/v2/data/form-signatures.js?v=8"></script>
+    <script src="src/v2/data/form-signatures.js?v=9"></script>
     <script src="src/v2/audio/audio.js?v=5"></script>
     <script src="src/v2/compat/legacy.js?v=3"></script>
     <script src="src/v2/demo-v2/phase-a.js?v=2"></script>
@@ -309,12 +314,12 @@
     <script src="src/v2/demo-v2/thermos-fixed.js?v=1"></script>
     <script src="src/v2/demo-v2/scissors-fixed.js?v=1"></script>
     <script src="src/v2/demo-v2/correction-fluid-fixed.js?v=2"></script>
-    <script src="src/v2/demo-v2/four-weapon-fixed.js?v=2"></script>
-    <script src="src/v2/runtime/state.js?v=19"></script>
+    <script src="src/v2/demo-v2/four-weapon-fixed.js?v=3"></script>
+    <script src="src/v2/runtime/state.js?v=20"></script>
     <script src="src/v2/progression/progression.js?v=8"></script>
-  <script src="src/v2/combat/systems.js?v=74"></script>
+  <script src="src/v2/combat/systems.js?v=75"></script>
     <script src="src/v2/ui/view-model.js?v=28"></script>
-    <script src="src/v2/ui/render.js?v=33"></script>
-    <script src="main.js?v=76"></script>
+    <script src="src/v2/ui/render.js?v=34"></script>
+    <script src="main.js?v=77"></script>
   </body>
 </html>

@@ -1,5 +1,11 @@
 # 文档索引
 
+## 当前推荐四武器体验：Demo V3.0
+
+- `DEMO_V3_0_COMBAT_PERCEPTION_PASS.md`：在 Demo V2.9 固定框架上完成战斗感知、修正液状态可读性、成长确认、剪刀风险校正，以及覆盖全部玩家可视页面的日本霓虹都市信息层。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-0.html`。
+- Demo V2.9 及更早入口继续作为回归快照保留。
+
 ## 下一目标：Demo V2
 
 - `DEMO_V2_PRODUCTION_BRIEF.md`：Demo V2 的目标、三武器/六形态/六模块冻结范围、敌人生态、8–10 分钟节奏、制作门禁和明确不做事项。

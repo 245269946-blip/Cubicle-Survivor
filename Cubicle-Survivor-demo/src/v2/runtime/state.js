@@ -113,7 +113,8 @@
         waveIndex: -1,
         waveTimer: 0,
         wavesSeen: [],
-        peakEnemies: 0
+        peakEnemies: 0,
+        growthFeedback: null
       },
       activeForm: null,
       activeFormParams: {},
@@ -443,6 +444,21 @@
     if (V2.progression) state.shopOffers = V2.progression.makeShopOffers(state);
   }
 
+  function queueGrowthFeedback(state, kind, title, detail) {
+    if (!state.demoV2 || !state.demoV2.combatExperiencePass) return;
+    const family = state.selectedWeaponId === "correction_fluid" ? "correction"
+      : state.selectedWeaponId === "thermos" ? "thermos"
+        : state.selectedWeaponId === "scissors" ? "scissors" : "marker";
+    state.demoV2.growthFeedback = {
+      kind: kind || "growth",
+      family,
+      title: title || "工作流已更新",
+      detail: detail || "下一轮攻击会直接展示变化。",
+      time: 2.2,
+      maxTime: 2.2
+    };
+  }
+
   function selectWeapon(state, weaponId) {
     const previousDebug = state.flags.debug;
     const previousLoop = state.loop;
@@ -477,6 +493,8 @@
         state.demoV2.suiteVersion = requestedFixedConfig.version;
         state.demoV2.suiteLabel = requestedFixedConfig.title;
         state.demoV2.cyberNeonSuite = true;
+        state.demoV2.combatExperiencePass = !!requestedFixedConfig.combatExperiencePass;
+        state.demoV2.neonCityTheme = !!requestedFixedConfig.neonCityTheme;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }
@@ -651,20 +669,35 @@
           break;
         case "SELECT_UPGRADE":
           if (fixedTestConfig(state)) {
+            const experienceChoice = (state.upgradeChoices || []).find(function (choice) { return choice.id === action.upgradeId; });
             fixedTestConfig(state).chooseExperienceStat(state, action.upgradeId);
+            if (experienceChoice) queueGrowthFeedback(state, "attribute", experienceChoice.title + " 已提升", experienceChoice.effect);
           } else {
             applyUpgrade(state, action.upgradeId);
           }
           break;
         case "SELECT_DEMO_V2_MODULE":
           if (fixedTestConfig(state)) {
-            fixedTestConfig(state).applyModule(state, action.moduleId);
+            const moduleConfig = fixedTestConfig(state);
+            const moduleChoice = moduleConfig.makeModuleChoices(state).find(function (choice) { return choice.id === action.moduleId; });
+            moduleConfig.applyModule(state, action.moduleId);
+            if (moduleChoice) queueGrowthFeedback(state, "module", moduleChoice.name + " Lv." + (moduleChoice.level + 1), moduleChoice.effect);
           } else if (V2.demoV2 && V2.demoV2.phaseB) {
             V2.demoV2.phaseB.applyModule(state, action.moduleId);
           }
           break;
         case "BUY_MARKER_COMPONENT":
-          if (fixedTestConfig(state)) fixedTestConfig(state).buyComponent(state, action.offerId);
+          if (fixedTestConfig(state)) {
+            const componentConfig = fixedTestConfig(state);
+            const componentRuntime = state.demoV2 && state.demoV2[componentConfig.runtimeKey];
+            const componentOffer = componentRuntime && componentRuntime.offers.find(function (offer) { return offer.id === action.offerId; });
+            const wasSold = componentOffer && componentOffer.sold;
+            componentConfig.buyComponent(state, action.offerId);
+            if (componentOffer && !wasSold && componentOffer.sold) {
+              const actionName = componentOffer.action === "replace" ? "替换" : componentOffer.action === "upgrade" ? "升级" : "装入";
+              queueGrowthFeedback(state, "component", componentOffer.name + " · " + actionName, "基础属性已写入当前武器；下一轮攻击按新参数运行。");
+            }
+          }
           break;
         case "SELECT_MARKER_COMPONENT_STAT":
           if (fixedTestConfig(state)) fixedTestConfig(state).chooseComponentStat(state, action.statId);

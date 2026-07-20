@@ -98,11 +98,11 @@
     todo: { name: "待办便签", behavior: "chase", hp: 1, speed: 1, damage: 7, radius: 13, xp: 5, color: "#c82345", accent: "#ff6b8a" },
     email: { name: "未读邮件", behavior: "zigzag", hp: 0.72, speed: 1.28, damage: 6, radius: 11, xp: 5, color: "#cf3fcf", accent: "#ff8aff" },
     meeting: { name: "临时会议", behavior: "tank", hp: 1.45, speed: 0.74, damage: 9, radius: 17, xp: 7, color: "#a83250", accent: "#ffc26b" },
-    ping: { name: "群消息轰炸", behavior: "shooter", hp: 0.82, speed: 0.78, damage: 6, radius: 12, xp: 6, color: "#a943d6", accent: "#d78cff", shootEvery: 2.35, projectileSpeed: 240 },
-    deadline: { name: "截止日期", behavior: "charger", hp: 1.04, speed: 1.08, damage: 11, radius: 13, xp: 7, color: "#e44b3f", accent: "#ffd36a", chargeEvery: 2.6, chargeSpeed: 265 },
+    ping: { name: "群消息轰炸", behavior: "shooter", hp: 0.82, speed: 0.78, damage: 6.5, radius: 12, xp: 6, color: "#a943d6", accent: "#d78cff", shootEvery: 2.35, projectileSpeed: 240 },
+    deadline: { name: "截止日期", behavior: "charger", hp: 1.04, speed: 1.08, damage: 12, radius: 13, xp: 7, color: "#e44b3f", accent: "#ffd36a", chargeEvery: 2.6, chargeSpeed: 265 },
     scope: { name: "需求变更", behavior: "splitter", hp: 1.18, speed: 0.84, damage: 8, radius: 15, xp: 7, color: "#3d9bd6", accent: "#91e6ff", splitType: "todo" },
     approval: { name: "审批流", behavior: "shield", hp: 1.38, speed: 0.7, damage: 10, radius: 16, xp: 8, color: "#6d6f8f", accent: "#d9e6ff", armor: 0.28 },
-    client: { name: "客户追问", behavior: "shooter", hp: 1.02, speed: 0.92, damage: 9, radius: 14, xp: 8, color: "#d65a8d", accent: "#ffb0d0", shootEvery: 2.05, projectileSpeed: 275 }
+    client: { name: "客户追问", behavior: "shooter", hp: 1.02, speed: 0.92, damage: 10, radius: 14, xp: 8, color: "#d65a8d", accent: "#ffb0d0", shootEvery: 2.05, projectileSpeed: 275 }
   };
   const BOSS_DEFS = {
     lead: { name: "实习导师", behavior: "boss", color: "#ff8a3d", accent: "#ffd36a", shootEvery: 2.8 },
@@ -349,6 +349,27 @@
   function drawSuiteNeonLine(ctx, state, item, alpha, progress) {
     const source = item.source || "";
     if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x1 == null || item.x2 == null) return;
+    if (state.demoV2.combatExperiencePass) {
+      const profile = item.visualProfile || eventVisual(source);
+      const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
+      const palette = profile.palette || {};
+      const isCorrection = family === "correction" || family === "correction_fluid";
+      const color = palette.core || (isCorrection ? "#ff4fd8" : family === "scissors" ? "#ffd36b" : "#55f7ff");
+      const size = clamp((item.width || 8) * (family === "scissors" ? 5.2 : 3.8), 38, isCorrection ? 82 : 68);
+      const sprite = family === "thermos" ? "thermos_release_art"
+        : family === "scissors" ? "scissors_slash_v24"
+          : isCorrection ? "correction_fluid_glitch_v25" : "marker_impact_art";
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 18 + (profile.intensity || 1) * 7;
+      if (family === "scissors" || isCorrection) {
+        drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x2, item.y2, size, size, Math.min(0.86, (alpha || 0.5) * 0.78), Math.atan2(item.y2 - item.y1, item.x2 - item.x1));
+      } else {
+        drawSprite(ctx, sprite, item.x2, item.y2, size, size, Math.min(0.72, (alpha || 0.5) * 0.68), progress * 0.08);
+      }
+      ctx.restore();
+      return;
+    }
     const size = clamp((item.width || 8) * 3.2, 28, /correction/.test(source) ? 72 : 52);
     drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x2, item.y2, size, size, Math.min(/correction/.test(source) ? 0.58 : 0.22, (alpha || 0.5) * 0.5), 0);
   }
@@ -357,6 +378,27 @@
     const source = item.source || "";
     if (!state.demoV2 || !state.demoV2.cyberNeonSuite || !/_test_/.test(source) || item.x == null) return;
     const r = Math.max(16, radius || item.radius || 40);
+    if (state.demoV2.combatExperiencePass) {
+      const profile = item.visualProfile || eventVisual(source);
+      const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
+      const palette = profile.palette || {};
+      const isCorrection = family === "correction" || family === "correction_fluid";
+      const color = palette.core || (isCorrection ? "#ff4fd8" : family === "scissors" ? "#ffd36b" : "#55f7ff");
+      const sprite = family === "thermos" ? "thermos_release_art"
+        : family === "scissors" ? "scissors_slash_v24"
+          : isCorrection ? "correction_fluid_glitch_v25" : "marker_impact_art";
+      const scale = isCorrection ? 1.86 : family === "scissors" ? 1.62 : 1.48;
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 20 + (profile.intensity || 1) * 8;
+      if (family === "scissors" || isCorrection) {
+        drawSpriteFrame(ctx, sprite, v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(0.78, (alpha || 0.5) * 0.72), 0);
+      } else {
+        drawSprite(ctx, sprite, item.x, item.y, r * scale, r * scale, Math.min(0.68, (alpha || 0.5) * 0.66), progress * 0.06);
+      }
+      ctx.restore();
+      return;
+    }
     const scale = /correction/.test(source) ? 1.72 : 1.36;
     drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(/correction/.test(source) ? 0.46 : 0.16, (alpha || 0.5) * 0.45), 0);
   }
@@ -395,19 +437,32 @@
       }
       return true;
     }
-    if (source === "scissors_test_base" || source === "scissors_test_open" || source === "scissors_test_finale") {
+    if (source === "scissors_test_base") {
       if (meta.edge && meta.edge !== "left") return true;
       const lockedAngle = meta.lockedAngle == null ? angle : meta.lockedAngle;
       const range = meta.fanRange || length;
       const halfAngle = meta.fanHalfAngle || 0.45;
-      const heavy = source === "scissors_test_finale";
-      const frame = heavy ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
-      const width = range * (heavy ? 1.42 : 1.3);
-      const height = Math.max(94, Math.sin(halfAngle) * range * (heavy ? 2.5 : 2.24));
-      // The held red scissors remains the only weapon body. This sheet is a
-      // blade arc rooted at the player, so the attack no longer looks like a
-      // second unrelated pair of scissors flying in front of the character.
+      const frame = v24Frame(progress);
+      const width = range * 1.3;
+      const height = Math.max(94, Math.sin(halfAngle) * range * 2.24);
       drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.52, event.y1 + Math.sin(lockedAngle) * range * 0.52, width, Math.max(width * 0.84, height), Math.min(1, alpha + 0.14), lockedAngle);
+      return true;
+    }
+    if (source === "scissors_test_open" || source === "scissors_test_finale") {
+      if (meta.edge && meta.edge !== "left") return true;
+      const lockedAngle = meta.lockedAngle == null ? angle : meta.lockedAngle;
+      const range = meta.fanRange || length;
+      const heavy = source === "scissors_test_finale";
+      const frame = heavy ? 3 : Math.min(2, v24Frame(progress));
+      const visualSize = range * (heavy ? 1.82 : 1.62);
+      const anchorDistance = Math.min(range * 0.54, visualSize * 0.38);
+      // Open Blade owns a complete pair of scissors, not two detached blade
+      // arcs. Keep the handles around the player and rotate the blades outward
+      // along the same locked angle used by the real fan judgment.
+      drawSpriteFrame(ctx, "scissors_strike_v27", frame,
+        event.x1 + Math.cos(lockedAngle) * anchorDistance,
+        event.y1 + Math.sin(lockedAngle) * anchorDistance,
+        visualSize, visualSize, Math.min(1, alpha + 0.12), lockedAngle + Math.PI * 0.25);
       return true;
     }
     return false;
@@ -678,6 +733,10 @@
       amount = Math.min(amount, enemy.maxHp * enemy.bossHitCap);
     }
     enemy.hp -= amount;
+    const impactVisual = eventVisual(source || "impact");
+    enemy.hitFlash = Math.max(enemy.hitFlash || 0, enemy.boss ? 0.16 : 0.12);
+    enemy.hitFamily = impactVisual.family;
+    enemy.hitSeverity = clamp(amount / Math.max(1, enemy.maxHp || amount), 0.08, 0.42);
     state.stats.damageDone[source] = (state.stats.damageDone[source] || 0) + amount;
     if (markerTest && markerParams.markerFixedLifeStealChance > 0 && markerTest.lifeStealCooldown <= 0
       && state.hp < state.maxHp && Math.random() < markerParams.markerFixedLifeStealChance) {
@@ -700,6 +759,17 @@
       if (enemy.boss) state.stageBossDefeated = true;
       state.kills += 1;
       state.stageKills += 1;
+      if (state.demoV2 && state.demoV2.combatExperiencePass && state.formEvents.length < 140) {
+        const family = impactVisual.family;
+        const defeatSource = family === "thermos" ? "thermos_test_defeat"
+          : family === "scissors" ? "scissors_test_defeat"
+            : family === "correction_fluid" ? "correction_test_defeat" : "marker_test_defeat";
+        const defeatColor = family === "thermos" ? "#ffb45e"
+          : family === "scissors" ? "#ff5f72"
+            : family === "correction_fluid" ? "#ff3fbd" : "#67f7ff";
+        addCircleEvent(state, enemy.x, enemy.y, enemy.r + (enemy.boss ? 44 : 18), defeatColor,
+          enemy.boss ? 0.46 : 0.22, "blast", false, defeatSource, { enemyId: enemy.id, boss: !!enemy.boss });
+      }
       if (enemy.stickyDebuff) {
         const spread = enemy.stickyDebuff;
         addCircleEvent(state, enemy.x, enemy.y, spread.radius || 120, "#8df7ff", 0.38, "sticky_spread");
@@ -1347,6 +1417,10 @@
       smallCorrectionArea: !!(options && options.small)
     };
     addDamageZone(state, zone);
+    addCircleEvent(state, x, y, baseRadius * 0.9, "#eefeff", 0.34, "field", false, "correction_test_error_area", {
+      infectionPulse: true,
+      areaId: zone.correctionAreaId
+    });
     test.totalAreasCreated += 1;
     test.largestErrorArea = Math.max(test.largestErrorArea || 0, baseRadius);
     return zone;
@@ -1439,6 +1513,12 @@
       const angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
       const x1 = state.player.x + Math.cos(angle) * 20;
       const y1 = state.player.y + Math.sin(angle) * 20;
+      addCircleEvent(state, target.x, target.y, target.r + 14 + index * 3,
+        index ? "#ff5bd5" : "#79f7ff", 0.18, "mark", false, "correction_test_lock", {
+          targetId: target.id,
+          targetIndex: index,
+          errorStacks: target.correctionErrorStacks || 0
+        });
       applyCorrectionError(state, target, 1, "correction_test_spray");
       correctionDamageEnemy(state, target, (p.damage || 7) * (index ? 0.86 : 1), "correction_test_spray");
       // A spread build cannot rely on killing the Boss to create its core
@@ -1668,6 +1748,7 @@
     if (!test) return;
     test.weaponVisualAngle = action.angle;
     test.weaponVisualTime = action.kind === "finale" || action.kind === "sever" ? 0.42 : 0.3;
+    test.weaponVisualKind = action.kind;
     if (action.kind === "base") {
       scissorsFan(state, p, action.angle, 138, 0.44, p.damage || 28, "scissors_test_base", 0);
       return;
@@ -3345,7 +3426,9 @@
       y: enemy.y,
       vx: dx / len * speed,
       vy: dy / len * speed,
-      damage: enemy.damage * (enemy.boss ? 0.72 : 0.64),
+      // V3.0 raises only telegraphed projectile pressure. Basic contact chip
+      // remains unchanged so early melee keeps a learnable survival window.
+      damage: enemy.damage * (enemy.boss ? 0.76 : 0.68),
       radius: enemy.boss ? 7 : 5,
       life: enemy.boss ? 3.6 : 2.8,
       source: "enemy_" + (enemy.typeId || "shot"),
@@ -3388,6 +3471,7 @@
     for (const enemy of state.enemies) {
       if (enemy.dead) continue;
       enemy.age = (enemy.age || 0) + dt;
+      enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
       if (enemy.p0Marked) {
         enemy.p0MarkTime = Math.max(0, (enemy.p0MarkTime || 0) - dt);
         if (enemy.p0MarkTime <= 0) {
@@ -3812,6 +3896,10 @@
   }
 
   function updateEffects(state, dt) {
+    if (state.demoV2 && state.demoV2.growthFeedback && state.warmupTime <= 0) {
+      state.demoV2.growthFeedback.time = Math.max(0, (state.demoV2.growthFeedback.time || 0) - dt);
+      if (state.demoV2.growthFeedback.time <= 0) state.demoV2.growthFeedback = null;
+    }
     state.particles.forEach(function (p) {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -3929,7 +4017,19 @@
       const angle = scissors.weaponVisualTime > 0 ? scissors.weaponVisualAngle : scissors.facingAngle || 0;
       const orbit = 31;
       const pulse = scissors.weaponVisualTime > 0 ? 1.12 : 1;
-      drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
+      const openLevel = scissors.modules && (scissors.modules.archive || 0);
+      const openStrikeActive = openLevel > 0 && scissors.weaponVisualTime > 0
+        && (scissors.weaponVisualKind === "open" || scissors.weaponVisualKind === "finale");
+      if (openLevel > 0) {
+        if (!openStrikeActive) {
+          const openOrbit = 38;
+          drawSpriteFrame(ctx, "scissors_strike_v27", 0,
+            Math.cos(angle) * openOrbit, Math.sin(angle) * openOrbit,
+            92 * pulse, 92 * pulse, 0.98, angle + Math.PI * 0.25);
+        }
+      } else {
+        drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
+      }
       const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
       drawCombatProgress(ctx, 0, 39, 82, 11, charge);
       const moving = state.input.left || state.input.right || state.input.up || state.input.down;
@@ -3965,7 +4065,28 @@
       ctx.translate(e.x, e.y);
       const cell = ENEMY_ATLAS_CELLS[e.typeId] || ENEMY_ATLAS_CELLS.todo;
       const bodySize = e.boss ? 96 : Math.max(48, e.r * 3.6);
-      drawAtlasCell(ctx, "office_atlas", cell[0], cell[1], 0, 0, bodySize, bodySize, e.fragment ? 0.86 : 1, 0);
+      const hitRatio = clamp((e.hitFlash || 0) / (e.boss ? 0.16 : 0.12), 0, 1);
+      const hitColor = e.hitFamily === "thermos" ? "#ffb45e"
+        : e.hitFamily === "scissors" ? "#ff5f72"
+          : e.hitFamily === "correction_fluid" ? "#ff3fbd" : "#67f7ff";
+      ctx.save();
+      if (hitRatio > 0) {
+        ctx.shadowColor = hitColor;
+        ctx.shadowBlur = 10 + hitRatio * 18;
+      }
+      drawAtlasCell(ctx, "office_atlas", cell[0], cell[1], 0, 0,
+        bodySize * (1 + hitRatio * 0.08), bodySize * (1 - hitRatio * 0.06),
+        e.fragment ? 0.86 : 1, hitRatio * 0.035);
+      ctx.restore();
+      const ranged = e.behavior === "shooter" || e.behavior === "boss_shooter" || e.behavior === "boss_shield" || e.behavior === "boss_final";
+      if (ranged && e.shootCooldown > 0 && e.shootCooldown < 0.42) {
+        const warning = 1 - clamp(e.shootCooldown / 0.42, 0, 1);
+        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", Math.min(3, Math.floor(warning * 4)),
+          0, 0, bodySize + 22 + warning * 18, bodySize + 22 + warning * 18,
+          0.26 + warning * 0.52, e.age * 0.35);
+        drawSprite(ctx, "enemy_projectile_art", 0, -bodySize * 0.62,
+          36 + warning * 18, 13 + warning * 6, 0.48 + warning * 0.48, -Math.PI / 2);
+      }
       if (e.chargeTime > 0) {
         drawSprite(ctx, "thermos_charge_art", 0, 0, bodySize + 26, bodySize + 26, 0.72, e.age * 0.9);
       }
@@ -3981,7 +4102,14 @@
       }
       if (e.correctionErrorStacks) {
         const errorFrame = clamp((e.correctionErrorStacks || 1) - 1, 0, 3);
-        drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2, bodySize + 24, bodySize + 24, 0.9, 0);
+        const stackPulse = e.correctionErrorStacks >= 3 ? 1 + Math.sin((e.age || 0) * 9) * 0.06 : 1;
+        drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2,
+          (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
+          (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
+          0.82 + e.correctionErrorStacks * 0.055, 0);
+        if (e.correctionErrorStacks === 2) {
+          drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 1, 0, -2, bodySize + 31, bodySize + 31, 0.4, 0);
+        }
         if (e.correctionErrorStacks >= 3) {
           drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 3, 0, -2, bodySize + 38, bodySize + 38, 0.76 + Math.sin((e.age || 0) * 9) * 0.08, 0);
         }

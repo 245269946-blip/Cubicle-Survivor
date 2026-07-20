@@ -202,6 +202,12 @@
     wrap.dataset.stagePhase = theme.phase.id;
     const fixedConfig = fixedTestConfig(state);
     wrap.dataset.fixedSuite = fixedConfig && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)) ? "four-weapon" : "";
+    const experiencePass = !!(fixedConfig && fixedConfig.combatExperiencePass) || !!(state.demoV2 && state.demoV2.combatExperiencePass);
+    const neonCity = !!(fixedConfig && fixedConfig.neonCityTheme) || !!(state.demoV2 && state.demoV2.neonCityTheme);
+    wrap.dataset.experiencePass = experiencePass ? "true" : "";
+    wrap.dataset.neonCity = neonCity ? "true" : "";
+    const versionStamp = el("titleVersionStamp");
+    if (versionStamp) versionStamp.textContent = (state.demoV2 && state.demoV2.suiteVersion) || (fixedConfig && fixedConfig.version) || "Demo V1";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
   }
 
@@ -273,11 +279,27 @@
     if (warmupFill) warmupFill.style.width = Math.max(0, Math.min(100, (1 - vm.warmup / (transition.duration || (vm.collecting ? 10 : 3))) * 100)) + "%";
     const combatStatus = el("combatStatus");
     if (combatStatus && vm.combatStatus) {
-      combatStatus.classList.remove("hidden", "tone-marker", "tone-thermos", "tone-sticky");
+      combatStatus.classList.remove("hidden", "tone-marker", "tone-thermos", "tone-sticky", "tone-scissors", "tone-correction");
       combatStatus.classList.add("tone-" + vm.combatStatus.tone);
       setText("combatStatusLabel", vm.combatStatus.label);
       setText("combatStatusValue", vm.combatStatus.value);
       setText("combatStatusHint", vm.combatStatus.hint);
+    }
+    const growthFeedback = el("growthFeedback");
+    const growth = state.demoV2 && state.demoV2.growthFeedback;
+    if (growthFeedback) {
+      const visible = !!growth && growth.time > 0 && state.mode === "combat";
+      growthFeedback.classList.toggle("hidden", !visible);
+      if (visible) {
+        growthFeedback.dataset.family = growth.family || "marker";
+        growthFeedback.dataset.kind = growth.kind || "growth";
+        const feedbackProgress = Math.max(0, Math.min(1, growth.time / (growth.maxTime || 2.2)));
+        growthFeedback.style.setProperty("--feedback-progress", feedbackProgress);
+        growthFeedback.style.setProperty("--feedback-opacity", Math.min(1, feedbackProgress * 5));
+        setText("growthFeedbackKind", growth.kind === "module" ? "WORKFLOW MUTATION" : growth.kind === "component" ? "COMPONENT SYNC" : "ATTRIBUTE UPLINK");
+        setText("growthFeedbackTitle", growth.title);
+        setText("growthFeedbackDetail", growth.detail);
+      }
     }
 
     const b = vm.build;

@@ -111,7 +111,9 @@
     const experience = test.experienceAllocations;
     const closedLevel = test.modules.copy;
     const openLevel = test.modules.archive;
-    const damage = 28 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, blade.damage || 0);
+    // V3.0 keeps Scissors explosive at point-blank range without letting the
+    // melee weapon erase every encounter before its positional risk matters.
+    const damage = 25 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, blade.damage || 0);
     const speedScale = Math.max(0.55, Math.pow(0.9, pivot.attackSpeed || 0) * Math.pow(0.96, experience.attackSpeed || 0));
     const rangeScale = Math.min(1.38, Math.pow(1.09, handle.range || 0) * Math.pow(1.05, experience.range || 0));
     const thrustCount = Math.min(3, closedLevel);
@@ -156,7 +158,7 @@
       scissorsFanDamage: damage * 0.5,
       scissorsSeverRange: Math.min(305, 246 * rangeScale),
       scissorsSeverWidth: Math.min(92, 64 * rangeScale),
-      scissorsSeverDamage: damage * 1.85,
+      scissorsSeverDamage: damage * 1.7,
       scissorsSeverSlow: 0.35,
       scissorsSeverSlowDuration: 1.75,
       scissorsFinaleDamage: damage * 1.35,
@@ -204,6 +206,7 @@
     test.facingAngle = 0;
     test.weaponVisualAngle = 0;
     test.weaponVisualTime = 0;
+    test.weaponVisualKind = "idle";
     test.shelterActive = false;
     test.shelterTime = 0;
     test.shelterCooldown = 0;

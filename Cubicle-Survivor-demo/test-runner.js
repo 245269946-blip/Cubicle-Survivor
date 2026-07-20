@@ -1278,9 +1278,50 @@ if (!fourWeaponFixed || fourWeaponFixed.version !== "Demo V2.9" || !fourWeaponFi
   console.error("Demo V2.9 four-weapon coordinator or shared cyber-neon combat layer missing", fourWeaponFixed);
   process.exit(1);
 }
+const fourWeaponV3 = V2.demoV2 && V2.demoV2.fourWeaponV3;
+const v3SkinSource = fs.readFileSync(path.join(baseDir, "generated-skin.css"), "utf8");
+const v3EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-0.html"), "utf8");
+if (!fourWeaponV3 || fourWeaponV3.version !== "Demo V3.0" || !fourWeaponV3.combatExperiencePass || !fourWeaponV3.neonCityTheme
+  || fourWeaponV3.weaponCards.map((weapon) => weapon.id).join(",") !== fourWeaponFixed.weaponCards.map((weapon) => weapon.id).join(",")
+  || !v3EntrySource.includes('params.set("demoV2", "four-weapon-v3")')
+  || !v3SkinSource.includes('data-experience-pass="true"') || !v3SkinSource.includes(".growth-feedback")) {
+  console.error("Demo V3.0 must remain a scoped perception pass over V2.9 with its own entry, neon surface and growth confirmation", fourWeaponV3);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+const v3FeedbackState = V2.getState();
+const v3FeedbackConfig = V2.getDemoV2FixedTestConfig(v3FeedbackState);
+const v3ModuleChoice = v3FeedbackConfig.makeModuleChoices(v3FeedbackState).find((choice) => !choice.disabled);
+V2.dispatch({ type: "SELECT_DEMO_V2_MODULE", moduleId: v3ModuleChoice.id });
+if (v3FeedbackState.demoV2.suiteVersion !== "Demo V3.0" || !v3FeedbackState.demoV2.combatExperiencePass
+  || !v3FeedbackState.demoV2.neonCityTheme || !v3FeedbackState.demoV2.growthFeedback
+  || v3FeedbackState.demoV2.growthFeedback.kind !== "module") {
+  console.error("Demo V3.0 selection must retain suite identity and queue a player-visible mechanism confirmation", v3FeedbackState.demoV2);
+  process.exit(1);
+}
+if (!combatVisualSource.includes("enemy.hitFlash") || !combatVisualSource.includes("correction_test_lock")
+  || !combatVisualSource.includes("marker_test_defeat") || !combatVisualSource.includes("thermos_test_defeat")
+  || !combatVisualSource.includes("scissors_test_defeat") || !combatVisualSource.includes("correction_test_defeat")) {
+  console.error("Demo V3.0 combat perception grammar must cover hit, target lock and four family-specific defeat confirmations");
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+const v3ScissorsBalanceState = V2.getState();
+if (v3ScissorsBalanceState.activeFormParams.damage !== 25
+  || Math.abs(v3ScissorsBalanceState.activeFormParams.scissorsSeverDamage - 42.5) > 0.0001) {
+  console.error("Demo V3.0 Scissors balance pass must reduce standing damage without removing its full visual model", v3ScissorsBalanceState.activeFormParams);
+  process.exit(1);
+}
+console.log("OK Demo V3.0 perception pass: scoped neon UI, growth confirmation, hit/lock/defeat grammar and Scissors damage correction");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
-  || combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')) {
-  console.error("Scissors attacks must use the held-body plus rooted slash arc, not a second full-scissor strike sprite");
+  || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
+  || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')
+  || !combatVisualSource.includes('const openLevel = scissors.modules && (scissors.modules.archive || 0)')) {
+  console.error("Open-Blade Scissors must restore the complete anchored scissors model and strike frames while the base route keeps its rooted slash arc");
   process.exit(1);
 }
 for (const weapon of fourWeaponFixed.weaponCards) {

@@ -12,19 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V2.9",
-    description: "选择马克笔、保温杯、剪刀或修正液，在浏览器中完成 17 关办公室异化生存挑战。",
+    title: "工位幸存者 Demo V3.0",
+    description: "选择马克笔、保温杯、剪刀或修正液，在日本霓虹都市感的办公室战场中完成 17 关异化生存挑战。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V2.9",
-      description: "四种异化办公武器、双路线模块成长、五阶段17关在线试玩。",
-      images: [`${origin}/og.png`],
+      title: "工位幸存者 Demo V3.0",
+      description: "四种异化办公武器、可视战斗因果、双路线模块成长与五阶段17关在线试玩。",
     },
     twitter: {
-      card: "summary_large_image",
-      title: "工位幸存者 Demo V2.9",
-      description: "四种异化办公武器、双路线模块成长、五阶段17关在线试玩。",
-      images: [`${origin}/og.png`],
+      card: "summary",
+      title: "工位幸存者 Demo V3.0",
+      description: "四种异化办公武器、可视战斗因果、双路线模块成长与五阶段17关在线试玩。",
     },
   };
 }
