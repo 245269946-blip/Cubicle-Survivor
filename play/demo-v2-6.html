@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工位幸存者 Demo V2.6 · 四武器霓虹整合测试</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <p>正在进入 Demo V2.6 四武器霓虹整合测试……</p>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search || "");
+        params.set("demoV2", "four-weapon-fixed");
+        window.location.replace("index.html?" + params.toString() + window.location.hash);
+      })();
+    </script>
+  </body>
+</html>

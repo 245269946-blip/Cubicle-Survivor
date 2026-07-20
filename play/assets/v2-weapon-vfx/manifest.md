@@ -1,0 +1,42 @@
+# Demo V1 weapon VFX runtime manifest
+
+> Last verified: 2026-07-13. This is a whitelist, not an asset inventory.
+
+## Approved runtime sprites
+
+| File | Runtime meaning |
+| --- | --- |
+| `sprites/thermos_drone_v2.png` | Tech Thermos patrol module body |
+| `sprites/thermos_station_v2.png` | Admin Thermos station body |
+| `sprites/sticky_note_v2.png` | Shared physical Sticky Note body |
+
+Demo V2.3 的隔离剪刀测试使用 `assets/generated-vfx/sprites/scissors-v23.png`。该文件是透明背景的单主体像素剪刀，由图像生成后执行色键去背；只作为剪刀武器实体与 UI 识别图，不授权进入 Demo V1 三武器资源池。
+
+Demo V2.4 为隔离的 Demo V2.2 / V2.3 测试追加以下透明资产，不覆盖上述实体与 Demo V1 白名单：`thermos-body-v24.png`、`thermos-fan-v24-sheet.png`、`thermos-condensation-v24-sheet.png`、`thermos-focus-v24-sheet.png`、`thermos-heatwave-v24-sheet.png`、`scissors-dash-v24-sheet.png`、`scissors-slash-v24-sheet.png`、`scissors-thrust-v24-sheet.png`、`scissors-shelter-v24-sheet.png`。8 张 `sheet` 均为 2×2、4 帧精灵表，只能由现有 `thermos_test_*` / `scissors_test_*` 事件的真实位置、方向、范围和寿命驱动。
+
+Demo V2.5 修正液固定测试追加 7 张透明资产：`correction-fluid-body-v25.png`、`correction-fluid-spray-v25-sheet.png`、`correction-fluid-error-v25-sheet.png`、`correction-fluid-area-v25-sheet.png`、`correction-fluid-crash-v25-sheet.png`、`correction-fluid-glitch-v25-sheet.png`、`correction-fluid-final-v25-sheet.png`。除瓶体外均为 2×2、4 帧精灵表。白色修正介质负责状态可读，青/品红故障霓虹负责错误升级，橙红只用于崩溃与纠错。Demo V2.6 可在其他三把固定武器的真实 `*_test_*` 事件上低透明度复用故障环作为共享高光；不得新增虚假判定、可见 Canvas 几何或把四把武器统一成同一颜色。
+
+Demo V2.7 为剪刀追加 3 张透明 2×2、4 帧精灵表：`assets/generated-vfx/sprites/scissors-strike-v27-sheet.png`、`assets/generated-vfx/sprites/scissors-shelter-v27-sheet.png`、`assets/generated-vfx/sprites/scissors-dash-direction-v27-sheet.png`。Strike 负责可读的剪切/突刺释放，Shelter 只绘制不遮挡角色的空心防护边界，Dash Direction 同时承担蓄力进度和朝向提示。三者只能读取真实 `scissors_test_*` 事件、Light-Step charge 和 facing state，不得制造额外命中或无判定范围。
+
+All three files are 128×128 RGBA, contain one subject and have transparent
+corners. They are entity bodies only. Ranges, lines, rings, links, impacts and
+timing use the approved office sprites under `assets/generated-vfx/sprites/`;
+the renderer derives position, rotation, authored aspect ratio and live scale
+from the same runtime objects used by combat judgment. Visible Canvas geometry
+primitives are forbidden in the active renderer.
+
+## Removed from runnable package
+
+The three contact sheets, 25 legacy first-pass crops and five generated/keyed
+intermediates were removed on 2026-07-13. They had opaque corners, baked panels,
+checkerboard contamination or multiple states in one crop. Their pre-cleanup
+copies remain in:
+
+`C:\Users\Administrator\Documents\DemoV1-backups\demo-v1-pre-visual-cleanup-20260713.tar.gz`
+
+Do not restore them to CSS, HTML preload lists or JavaScript sprite registries.
+See `docs/DEMO_V1_VISUAL_ASSET_AUDIT.md` for the runtime contract.
+
+## Demo V2.8 runtime selection
+
+Demo V2.8 keeps the V2.7 sheets as historical assets, but cut, Open-Blade and finale events no longer render `scissors-strike-v27-sheet.png` as a second full weapon body. The player-anchored `scissors-v23.png` is the only visible scissors body, and the existing `scissors-slash-v24-sheet.png` supplies outward blade arcs. Thrust and shelter assets retain their existing event-driven roles.
