@@ -1,6 +1,6 @@
 {
-  "version": "Demo V3.3",
-  "entry": "/play/demo-v3-3.html",
+  "version": "Demo V3.4",
+  "entry": "/play/demo-v3-4.html",
   "source": "Cubicle-Survivor-demo",
-  "validation": "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_3_CORRECTION_OPENING_PASS.md"
+  "validation": "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_4_ENCOUNTER_SPACE_PASS.md"
 }

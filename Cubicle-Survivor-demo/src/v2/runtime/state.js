@@ -438,7 +438,16 @@
       state.demoV2.combatTrianglePass = !!coordinatorConfig.combatTrianglePass;
       state.demoV2.neonBloomPass = !!coordinatorConfig.neonBloomPass;
       state.demoV2.correctionOpeningPass = !!coordinatorConfig.correctionOpeningPass;
+      state.demoV2.centeredRunStart = !!coordinatorConfig.centeredRunStart;
+      state.demoV2.randomizedPerimeterSpawns = !!coordinatorConfig.randomizedPerimeterSpawns;
+      state.demoV2.bossPatternPass = !!coordinatorConfig.bossPatternPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
+    }
+    if (state.demoV2.centeredRunStart) {
+      state.player.x = state.world.width / 2;
+      state.player.y = state.world.height / 2;
+      state.camera.x = Math.max(0, state.player.x - state.camera.width / 2);
+      state.camera.y = Math.max(0, state.player.y - state.camera.height / 2);
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
     config.rebuildParams(state);
@@ -513,6 +522,9 @@
         state.demoV2.combatTrianglePass = !!requestedFixedConfig.combatTrianglePass;
         state.demoV2.neonBloomPass = !!requestedFixedConfig.neonBloomPass;
         state.demoV2.correctionOpeningPass = !!requestedFixedConfig.correctionOpeningPass;
+        state.demoV2.centeredRunStart = !!requestedFixedConfig.centeredRunStart;
+        state.demoV2.randomizedPerimeterSpawns = !!requestedFixedConfig.randomizedPerimeterSpawns;
+        state.demoV2.bossPatternPass = !!requestedFixedConfig.bossPatternPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

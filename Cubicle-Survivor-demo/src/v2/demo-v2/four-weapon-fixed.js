@@ -170,4 +170,31 @@
 
   V2.demoV2.fourWeaponV33 = fourWeaponV33;
   V2.demoV2.fixedTests["four-weapon-v3-3"] = fourWeaponV33;
+
+  // Demo V3.4 keeps the four weapon builds and their V3.3 balance intact.
+  // This pass changes encounter space only: runs begin at the world centre,
+  // enemy waves enter from a randomized perimeter, and Bosses gain readable
+  // avoidable attack patterns instead of relying on health alone.
+  const fourWeaponV34 = Object.assign({}, fourWeaponV33, {
+    id: "four-weapon-v3-4",
+    version: "Demo V3.4",
+    visualVersion: "Boss机制与环形战场版",
+    title: "Boss机制与环形战场版",
+    subtitle: "出生点回到战场中心，怪群从完整环形边界随机进入；Boss用锁定走廊与缺口弹幕迫使玩家读招和移动，而不是只靠厚血量拖延。",
+    centeredRunStart: true,
+    randomizedPerimeterSpawns: true,
+    bossPatternPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV33.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.4 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV34 = fourWeaponV34;
+  V2.demoV2.fixedTests["four-weapon-v3-4"] = fourWeaponV34;
 })();

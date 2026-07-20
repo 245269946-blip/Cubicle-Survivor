@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -334,6 +334,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "怪群密度、低伤高频预算和双层霓虹表现不做额外漂移。";
         }
         if (startButton) startButton.textContent = "进入修正液循环强化实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-4") {
+        document.title = "工位幸存者 Demo V3.4 · Boss机制与环形战场版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.4 · Boss机制与环形战场版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.4 Boss机制与环形战场版");
+        if (subtitle) subtitle.textContent = "从战场中心进入一局，怪群沿完整环形边界随机到场；Boss会先给出真实危险轨迹，再释放锁定走廊或带安全缺口的弹幕。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "战场中心出生";
+          guideCards[0].querySelector("span:last-child").textContent = "开局拥有四向一致的观察与移动空间，不再从地图左上角被迫单向推进。";
+          guideCards[1].querySelector("strong").textContent = "完整环形来敌";
+          guideCards[1].querySelector("span:last-child").textContent = "每批怪物从随机角度进入；队列和集群仍保留阵型，但不会固定挤在四个出口。";
+          guideCards[2].querySelector("strong").textContent = "Boss先读招再受伤";
+          guideCards[2].querySelector("span:last-child").textContent = "品红走廊需要横向躲避，琥珀弹幕必须寻找预先标出的安全缺口。";
+          guideCards[3].querySelector("strong").textContent = "Build暂不扩容";
+          guideCards[3].querySelector("span:last-child").textContent = "四把武器、模块与组件沿用 V3.3，本轮只验证空间公平性与Boss战斗内容。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.4 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

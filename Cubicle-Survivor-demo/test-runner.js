@@ -1434,6 +1434,77 @@ if (v33CorrectionState.activeFormParams.correctionTargetCount !== 2 || v33Correc
   process.exit(1);
 }
 console.log("OK Demo V3.3 Correction Fluid opening: stronger primary cadence, one nearby overspray, and preserved Fatal Correction identity");
+const fourWeaponV34 = V2.demoV2 && V2.demoV2.fourWeaponV34;
+const v34EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-4.html"), "utf8");
+if (!fourWeaponV34 || fourWeaponV34.version !== "Demo V3.4"
+  || !fourWeaponV34.centeredRunStart || !fourWeaponV34.randomizedPerimeterSpawns || !fourWeaponV34.bossPatternPass
+  || !fourWeaponV34.correctionOpeningPass || !fourWeaponV34.combatTrianglePass || !fourWeaponV34.neonBloomPass
+  || !v34EntrySource.includes('params.set("demoV2", "four-weapon-v3-4")')) {
+  console.error("Demo V3.4 must preserve V3.3 while enabling the spatial and Boss-pattern pass", fourWeaponV34);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-4" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+const v34State = V2.getState();
+if (v34State.player.x !== v34State.world.width / 2 || v34State.player.y !== v34State.world.height / 2
+  || !v34State.demoV2.randomizedPerimeterSpawns || !v34State.demoV2.bossPatternPass) {
+  console.error("Demo V3.4 must begin at the actual world centre with both encounter flags active", v34State.player, v34State.world, v34State.demoV2);
+  process.exit(1);
+}
+V2.combat.updateCamera(v34State);
+const perimeterSamples = Array.from({ length: 12 }, function (_, index) {
+  return V2.combat.qa.demoV2PerimeterPoint(v34State, Math.PI * 2 * index / 12, 0, 0);
+});
+const perimeterQuadrants = new Set(perimeterSamples.map(function (point) {
+  return (point.x >= v34State.player.x ? "R" : "L") + (point.y >= v34State.player.y ? "B" : "T");
+}));
+if (perimeterQuadrants.size !== 4 || perimeterSamples.some(function (point) {
+  return point.x > v34State.camera.x && point.x < v34State.camera.x + v34State.camera.width
+    && point.y > v34State.camera.y && point.y < v34State.camera.y + v34State.camera.height;
+})) {
+  console.error("Randomized perimeter spawning must cover the whole ring while staying outside the visible field", perimeterSamples, v34State.camera);
+  process.exit(1);
+}
+const v34Config = V2.getDemoV2FixedTestConfig(v34State);
+v34Config.startEncounter(v34State, 2);
+v34State.warmupTime = 0;
+V2.combat.update(0.02);
+const v34Boss = v34State.enemies.find(function (enemy) { return enemy.boss; });
+if (!v34Boss) {
+  console.error("Demo V3.4 Boss encounter must spawn a real Boss before pattern validation", v34State.enemies);
+  process.exit(1);
+}
+const hpBeforeWarning = v34State.hp;
+const projectilesBeforeWarning = v34State.projectiles.length;
+V2.combat.qa.beginBossPattern(v34State, v34Boss);
+if (v34State.hp !== hpBeforeWarning || v34State.projectiles.length !== projectilesBeforeWarning
+  || !v34State.formEvents.some(function (event) { return event.source === "boss_test_lane_warning"; })) {
+  console.error("Boss lane must telegraph its real corridor before creating damage", v34State.formEvents, v34State.projectiles);
+  process.exit(1);
+}
+V2.combat.qa.releaseBossPattern(v34State, v34Boss);
+if (v34State.projectiles.filter(function (shot) { return shot.source === "boss_test_priority_lane"; }).length !== 5
+  || !v34State.formEvents.some(function (event) { return event.source === "boss_test_lane_release"; })) {
+  console.error("Boss lane release must create one readable five-projectile corridor", v34State.projectiles, v34State.formEvents);
+  process.exit(1);
+}
+v34Boss.typeId = "director";
+v34Boss.bossPatternIndex = 0;
+V2.combat.qa.beginBossPattern(v34State, v34Boss);
+if (!v34State.formEvents.some(function (event) { return event.source === "boss_test_burst_warning"; })
+  || v34State.formEvents.filter(function (event) { return event.source === "boss_test_safe_gap"; }).length < 2) {
+  console.error("Boss radial burst must show both the danger ring and the real safe-gap edges", v34State.formEvents);
+  process.exit(1);
+}
+V2.combat.qa.releaseBossPattern(v34State, v34Boss);
+if (v34State.projectiles.filter(function (shot) { return shot.source === "boss_test_audit_burst"; }).length < 8
+  || !v34State.stats.bossPatterns.some(function (pattern) { return pattern.kind === "lane" && pattern.step === "release"; })
+  || !v34State.stats.bossPatterns.some(function (pattern) { return pattern.kind === "burst" && pattern.step === "release"; })) {
+  console.error("Demo V3.4 Bosses must expose two distinct damaging pattern families", v34State.projectiles, v34State.stats.bossPatterns);
+  process.exit(1);
+}
+console.log("OK Demo V3.4 encounter space: centred start, full-ring perimeter entries, and two telegraphed Boss damage grammars");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')

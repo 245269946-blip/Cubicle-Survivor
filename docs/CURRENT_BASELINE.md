@@ -49,6 +49,7 @@ Implementation status on 2026-07-14:
 - Demo V3.1 adds `demo-v3-1.html` as the current recommended four-weapon entry. It redistributes weapon output into smaller, faster events; raises fixed-encounter enemy floors, batches and quotas; projects the Scissors dash intent beyond the held weapon; and separates Thermos Kill Heatwave from Condensation through a hot core, expanding amber front and pressure echo. See `docs/DEMO_V3_1_COMBAT_DENSITY_PASS.md`.
 - Demo V3.2 adds `demo-v3-2.html` as the current recommended four-weapon entry. It deepens the same three-part combat budget—smaller strikes, shorter attack gaps and a higher effective-target floor—while adding low-opacity outer bloom plus a sharp inner core to real weapon events. V3.1 remains preserved. See `docs/DEMO_V3_2_COMBAT_TRIANGLE_NEON_PASS.md`.
 - Demo V3.3 adds `demo-v3-3.html` as the current recommended four-weapon entry. It preserves V3.2 and only repairs Correction Fluid's opening: slightly stronger/faster primary spray plus one weak nearby overspray until Fatal Correction supplies true independent multi-target locks. See `docs/DEMO_V3_3_CORRECTION_OPENING_PASS.md`.
+- Demo V3.4 adds `demo-v3-4.html` as the current recommended four-weapon entry. It preserves V3.3 weapon growth while moving the run start to the world centre, randomizing wave entry across the full view perimeter, and adding telegraphed Boss lane and safe-gap barrage attacks. See `docs/DEMO_V3_4_ENCOUNTER_SPACE_PASS.md`.
 
 ## Authoritative development location
 

@@ -154,6 +154,13 @@
       visualCue: "蓝金贴纸拉线围成规则区",
       focus: ["连线", "围区", "控制"],
       sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "sticky_notice_relay", "sticky_module_archive", "sticky_module_expedite", "sticky_module_merge", "sticky_module_overdraft", "secondary_sticky_link", "secondary_sticky_notice"]
+    },
+    boss_pressure: {
+      topology: "Boss读招压力",
+      process: "先显示真实危险方向与安全缺口，再释放可躲避的高威胁攻击",
+      visualCue: "品红锁定走廊与琥珀弹幕预警严格对应随后出现的伤害轨迹",
+      focus: ["预警", "走位", "锁定走廊", "安全缺口"],
+      sources: ["boss_test_lane_warning", "boss_test_lane_release", "boss_test_burst_warning", "boss_test_safe_gap", "boss_test_burst_release"]
     }
   };
 
@@ -280,7 +287,12 @@
     support_marker: "cast",
     support_thermos_wave: "expand",
     support_sticky_trap: "deploy",
-    support_sticky_trigger: "detonate"
+    support_sticky_trigger: "detonate",
+    boss_test_lane_warning: "charge",
+    boss_test_lane_release: "release",
+    boss_test_burst_warning: "charge",
+    boss_test_safe_gap: "charge",
+    boss_test_burst_release: "detonate"
   };
 
   const PHASE_TIMELINES = {
@@ -314,7 +326,8 @@
     thermos: { core: "#bdf5ff", accent: "#8fffe7", warning: "#ffb067" },
     scissors: { core: "#f1f5f6", accent: "#ff7b5f", warning: "#ffe58f" },
     correction_fluid: { core: "#f4ffff", accent: "#61f5ff", warning: "#ff3f7d" },
-    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" }
+    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" },
+    boss: { core: "#ff3f9f", accent: "#ffd36a", warning: "#ff5c57" }
   };
 
   const SOURCE_VISUAL_RULES = {
@@ -445,10 +458,17 @@
     support_marker: ["support_line", "borrowed_marker"],
     support_thermos_wave: ["support_ring", "borrowed_thermos"],
     support_sticky_trap: ["support_trap", "borrowed_sticky"],
-    support_sticky_trigger: ["radial_blast", "support_trigger"]
+    support_sticky_trigger: ["radial_blast", "support_trigger"],
+
+    boss_test_lane_warning: ["piercing_line", "locked_danger_lane"],
+    boss_test_lane_release: ["piercing_line", "lane_release"],
+    boss_test_burst_warning: ["target_mark", "radial_warning"],
+    boss_test_safe_gap: ["residual_line", "safe_gap_edges"],
+    boss_test_burst_release: ["radial_blast", "radial_release"]
   };
 
   function visualFamily(source) {
+    if (/boss_test/.test(source)) return "boss";
     if (/correction/.test(source)) return "correction_fluid";
     if (/scissors/.test(source)) return "scissors";
     if (/thermos/.test(source)) return "thermos";

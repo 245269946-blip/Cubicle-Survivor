@@ -15,6 +15,7 @@ const runtimeEntries = [
   "demo-v3-1.html",
   "demo-v3-2.html",
   "demo-v3-3.html",
+  "demo-v3-4.html",
   "main.js",
   "styles.css",
   "generated-skin.css",
@@ -54,6 +55,7 @@ async function verifyRequiredFiles() {
     "demo-v3-1.html",
     "demo-v3-2.html",
     "demo-v3-3.html",
+    "demo-v3-4.html",
     "main.js",
     "styles.css",
     "generated-skin.css",
@@ -73,13 +75,13 @@ async function verifyRequiredFiles() {
       throw new Error(`Hosted runtime drifted from the active demo: ${relativePath}`);
     }
   }
-  const entry = await readFile(path.join(targetRoot, "demo-v3-3.html"), "utf8");
+  const entry = await readFile(path.join(targetRoot, "demo-v3-4.html"), "utf8");
   const suite = await readFile(path.join(targetRoot, "src/v2/demo-v2/four-weapon-fixed.js"), "utf8");
-  if (!entry.includes("Demo V3.3") || !entry.includes('params.set("demoV2", "four-weapon-v3-3")')) {
-    throw new Error("Hosted entry does not route to the Demo V3.3 four-weapon suite");
+  if (!entry.includes("Demo V3.4") || !entry.includes('params.set("demoV2", "four-weapon-v3-4")')) {
+    throw new Error("Hosted entry does not route to the Demo V3.4 four-weapon suite");
   }
-  if (!suite.includes('version: "Demo V3.3"') || !suite.includes('combatTrianglePass: true') || !suite.includes('neonBloomPass: true') || !suite.includes('correctionOpeningPass: true')) {
-    throw new Error("Hosted coordinator is not the validated Demo V3.3 Correction Fluid opening build");
+  if (!suite.includes('version: "Demo V3.4"') || !suite.includes('combatTrianglePass: true') || !suite.includes('neonBloomPass: true') || !suite.includes('correctionOpeningPass: true') || !suite.includes('bossPatternPass: true') || !suite.includes('randomizedPerimeterSpawns: true')) {
+    throw new Error("Hosted coordinator is not the validated Demo V3.4 encounter-space build");
   }
 }
 
@@ -96,10 +98,10 @@ if (!checkOnly) {
     path.join(targetRoot, "release-manifest.json"),
     JSON.stringify(
       {
-        version: "Demo V3.3",
-        entry: "/play/demo-v3-3.html",
+        version: "Demo V3.4",
+        entry: "/play/demo-v3-4.html",
         source: "Cubicle-Survivor-demo",
-        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_3_CORRECTION_OPENING_PASS.md",
+        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_4_ENCOUNTER_SPACE_PASS.md",
       },
       null,
       2,

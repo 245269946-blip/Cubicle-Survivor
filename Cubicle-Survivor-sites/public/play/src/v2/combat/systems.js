@@ -3198,7 +3198,12 @@
       chargeTime: 0,
       chargeVx: 0,
       chargeVy: 0,
-      splitType: def.splitType || ""
+      splitType: def.splitType || "",
+      bossPatternCooldown: boss ? 1.25 : 0,
+      bossPatternKind: "",
+      bossPatternTimer: 0,
+      bossPatternAngle: 0,
+      bossPatternIndex: 0
     };
   }
 
@@ -3312,7 +3317,33 @@
     return { x: state.player.x + offset, y: camera.y + camera.height + margin };
   }
 
+  function demoV2PerimeterPoint(state, angle, depth, tangentOffset) {
+    updateCamera(state);
+    const camera = state.camera || { x: 0, y: 0, width: W, height: H };
+    const vx = Math.cos(angle);
+    const vy = Math.sin(angle);
+    const margin = 52 + Math.max(0, depth || 0);
+    const horizontalDistance = Math.abs(vx) < 0.001 ? Infinity : (camera.width / 2 + margin) / Math.abs(vx);
+    const verticalDistance = Math.abs(vy) < 0.001 ? Infinity : (camera.height / 2 + margin) / Math.abs(vy);
+    const radius = Math.min(horizontalDistance, verticalDistance);
+    const tangent = tangentOffset || 0;
+    return {
+      x: clamp(state.player.x + vx * radius - vy * tangent, -margin, worldWidth(state) + margin),
+      y: clamp(state.player.y + vy * radius + vx * tangent, -margin, worldHeight(state) + margin),
+      angle
+    };
+  }
+
   function spawnDemoV2QueueWave(state, wave, serial) {
+    if (state.demoV2 && state.demoV2.randomizedPerimeterSpawns) {
+      const baseAngle = Math.random() * Math.PI * 2;
+      for (let i = 0; i < wave.batchSize; i++) {
+        const laneOffset = (i - (wave.batchSize - 1) / 2) * 11;
+        const point = demoV2PerimeterPoint(state, baseAngle + (Math.random() - 0.5) * 0.12, i * 13, laneOffset);
+        addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i % 3 === 1 ? "email" : "todo"), point.x, point.y);
+      }
+      return;
+    }
     const side = serial % 4;
     for (let i = 0; i < wave.batchSize; i++) {
       const point = demoV2EdgePoint(state, side, (i % 2 ? 1 : -1) * Math.floor(i / 2) * 7, i * 34);
@@ -3327,6 +3358,15 @@
   }
 
   function spawnDemoV2ClusterWave(state, wave, serial) {
+    if (state.demoV2 && state.demoV2.randomizedPerimeterSpawns) {
+      const center = demoV2PerimeterPoint(state, Math.random() * Math.PI * 2, 10 + Math.random() * 34, 0);
+      for (let i = 0; i < wave.batchSize; i++) {
+        const angle = Math.PI * 2 * i / wave.batchSize + Math.random() * 0.24;
+        const radius = 18 + Math.random() * 30;
+        addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, i === wave.batchSize - 1 ? "meeting" : "todo"), center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius);
+      }
+      return;
+    }
     const side = (serial + 1) % 4;
     const center = demoV2EdgePoint(state, side, ((serial % 3) - 1) * 90, 8);
     for (let i = 0; i < wave.batchSize; i++) {
@@ -3337,20 +3377,28 @@
   }
 
   function spawnDemoV2PursuitWave(state, wave, serial) {
+    const randomizedPerimeter = state.demoV2 && state.demoV2.randomizedPerimeterSpawns;
+    const rotation = randomizedPerimeter ? Math.random() * Math.PI * 2 : serial * 0.37;
     for (let i = 0; i < wave.batchSize; i++) {
-      const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.37;
-      const radius = 430 + (i % 2) * 48;
+      const angle = Math.PI * 2 * i / wave.batchSize + rotation + (randomizedPerimeter ? (Math.random() - 0.5) * 0.38 : 0);
       const typeId = demoV2WaveEnemyType(wave, i, serial, i % 4 === 0 ? "deadline" : i % 3 === 0 ? "email" : "todo");
-      addDemoV2Enemy(state, typeId, state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
+      const point = randomizedPerimeter
+        ? demoV2PerimeterPoint(state, angle, Math.random() * 70, (Math.random() - 0.5) * 34)
+        : { x: state.player.x + Math.cos(angle) * (430 + (i % 2) * 48), y: state.player.y + Math.sin(angle) * (430 + (i % 2) * 48) };
+      addDemoV2Enemy(state, typeId, point.x, point.y);
     }
   }
 
   function spawnDemoV2ReviewWave(state, wave, serial) {
     const types = ["todo", "todo", "email", "meeting", "ping", "deadline", "scope", "approval", "client"];
+    const randomizedPerimeter = state.demoV2 && state.demoV2.randomizedPerimeterSpawns;
+    const rotation = randomizedPerimeter ? Math.random() * Math.PI * 2 : serial * 0.29;
     for (let i = 0; i < wave.batchSize; i++) {
-      const angle = Math.PI * 2 * i / wave.batchSize + serial * 0.29;
-      const radius = 410 + (i % 3) * 42;
-      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, types[(i + serial) % types.length]), state.player.x + Math.cos(angle) * radius, state.player.y + Math.sin(angle) * radius);
+      const angle = Math.PI * 2 * i / wave.batchSize + rotation + (randomizedPerimeter ? (Math.random() - 0.5) * 0.44 : 0);
+      const point = randomizedPerimeter
+        ? demoV2PerimeterPoint(state, angle, Math.random() * 92, (Math.random() - 0.5) * 42)
+        : { x: state.player.x + Math.cos(angle) * (410 + (i % 3) * 42), y: state.player.y + Math.sin(angle) * (410 + (i % 3) * 42) };
+      addDemoV2Enemy(state, demoV2WaveEnemyType(wave, i, serial, types[(i + serial) % types.length]), point.x, point.y);
     }
   }
 
@@ -3511,6 +3559,145 @@
     addCircleEvent(state, enemy.x, enemy.y, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
   }
 
+  function bossPatternSequence(enemy) {
+    if (enemy.typeId === "director") return ["burst", "lane"];
+    if (enemy.typeId === "delivery") return ["lane", "lane", "burst"];
+    if (enemy.typeId === "client") return ["burst", "lane", "burst"];
+    if (enemy.typeId === "ceo") return ["lane", "burst"];
+    return ["lane", "burst"];
+  }
+
+  function bossPatternPhase(state) {
+    const config = fixedTestConfig(state);
+    const encounter = config && config.currentEncounter ? config.currentEncounter(state) : null;
+    return encounter && encounter.phase || Math.max(1, Math.ceil((state.stage && state.stage.id || 1) / 3));
+  }
+
+  function recordBossPattern(state, enemy, kind, step) {
+    if (!state.stats.bossPatterns) state.stats.bossPatterns = [];
+    state.stats.bossPatterns.push({
+      bossId: enemy.id,
+      bossType: enemy.typeId,
+      stageId: state.stage && state.stage.id,
+      kind,
+      step,
+      time: state.totalTime
+    });
+    if (state.stats.bossPatterns.length > 80) state.stats.bossPatterns.shift();
+  }
+
+  function beginBossPattern(state, enemy) {
+    const sequence = bossPatternSequence(enemy);
+    const kind = sequence[(enemy.bossPatternIndex || 0) % sequence.length];
+    const dx = state.player.x - enemy.x;
+    const dy = state.player.y - enemy.y;
+    const angle = Math.atan2(dy, dx);
+    const warningTime = kind === "lane" ? 0.86 : 0.96;
+    enemy.bossPatternKind = kind;
+    enemy.bossPatternTimer = warningTime;
+    enemy.bossPatternAngle = angle;
+    enemy.bossPatternIndex = (enemy.bossPatternIndex || 0) + 1;
+    recordBossPattern(state, enemy, kind, "warning");
+
+    if (kind === "lane") {
+      const distance = 1120;
+      addBeamEvent(state, enemy.x, enemy.y,
+        enemy.x + Math.cos(angle) * distance,
+        enemy.y + Math.sin(angle) * distance,
+        "#ff3f9f", 76, warningTime, "beam", false, "boss_test_lane_warning", { telegraph: true });
+      addTextEvent(state, enemy.x, enemy.y - enemy.r - 20, "点名追责", "#ff8ac8", warningTime);
+      return kind;
+    }
+
+    const safeHalfAngle = 0.42;
+    const safeDistance = 510;
+    addCircleEvent(state, enemy.x, enemy.y, 176, "#ffd36a", warningTime, "mark", false, "boss_test_burst_warning", { telegraph: true, safeAngle: angle });
+    [-1, 1].forEach(function (side) {
+      const edgeAngle = angle + side * safeHalfAngle;
+      addBeamEvent(state, enemy.x, enemy.y,
+        enemy.x + Math.cos(edgeAngle) * safeDistance,
+        enemy.y + Math.sin(edgeAngle) * safeDistance,
+        "#ffd36a", 5, warningTime, "grid", false, "boss_test_safe_gap", { telegraph: true, safeEdge: side });
+    });
+    addTextEvent(state, enemy.x, enemy.y - enemy.r - 20, "弹幕复核 · 缺口避让", "#ffe28a", warningTime);
+    return kind;
+  }
+
+  function releaseBossPattern(state, enemy) {
+    const kind = enemy.bossPatternKind;
+    const angle = enemy.bossPatternAngle || 0;
+    const phase = bossPatternPhase(state);
+    const lowHealth = enemy.maxHp > 0 && enemy.hp / enemy.maxHp <= 0.5;
+    if (kind === "lane") {
+      const speed = 390 + phase * 9;
+      const damage = enemy.damage * (lowHealth ? 1.02 : 0.9);
+      const px = -Math.sin(angle);
+      const py = Math.cos(angle);
+      [-42, -21, 0, 21, 42].forEach(function (offset) {
+        state.projectiles.push(CombatPrimitives.projectile({
+          hostile: true,
+          x: enemy.x + px * offset,
+          y: enemy.y + py * offset,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          damage,
+          radius: 9,
+          life: 3.2,
+          source: "boss_test_priority_lane",
+          color: "#ff3f9f",
+          originX: enemy.x,
+          originY: enemy.y
+        }));
+      });
+      addBeamEvent(state, enemy.x, enemy.y,
+        enemy.x + Math.cos(angle) * 1120,
+        enemy.y + Math.sin(angle) * 1120,
+        "#fff2fb", 22, 0.22, "beam", false, "boss_test_lane_release", { damagingVolley: true });
+    } else if (kind === "burst") {
+      const count = 14 + phase * 2 + (lowHealth ? 2 : 0);
+      const safeHalfAngle = 0.42;
+      const speed = 205 + phase * 11;
+      const damage = enemy.damage * (lowHealth ? 0.72 : 0.62);
+      for (let i = 0; i < count; i++) {
+        const shotAngle = Math.PI * 2 * i / count + enemy.phase * 0.25;
+        const gapDelta = Math.atan2(Math.sin(shotAngle - angle), Math.cos(shotAngle - angle));
+        if (Math.abs(gapDelta) < safeHalfAngle) continue;
+        state.projectiles.push(CombatPrimitives.projectile({
+          hostile: true,
+          x: enemy.x + Math.cos(shotAngle) * (enemy.r + 8),
+          y: enemy.y + Math.sin(shotAngle) * (enemy.r + 8),
+          vx: Math.cos(shotAngle) * speed,
+          vy: Math.sin(shotAngle) * speed,
+          damage,
+          radius: 7,
+          life: 4.2,
+          source: "boss_test_audit_burst",
+          color: "#ffd36a",
+          originX: enemy.x,
+          originY: enemy.y
+        }));
+      }
+      addCircleEvent(state, enemy.x, enemy.y, 188, "#ff5c57", 0.28, "blast", false, "boss_test_burst_release", { safeAngle: angle });
+    }
+    recordBossPattern(state, enemy, kind, "release");
+    enemy.bossPatternKind = "";
+    enemy.bossPatternTimer = 0;
+    const cadence = Math.max(2.55, 4.85 - phase * 0.34);
+    enemy.bossPatternCooldown = cadence * (lowHealth ? 0.76 : 1) * (0.9 + Math.random() * 0.2);
+  }
+
+  function updateBossPatternIntent(state, enemy, dt) {
+    if (!state.demoV2 || !state.demoV2.bossPatternPass || !enemy.boss) return false;
+    if (enemy.bossPatternKind) {
+      enemy.bossPatternTimer = Math.max(0, (enemy.bossPatternTimer || 0) - dt);
+      if (enemy.bossPatternTimer <= 0) releaseBossPattern(state, enemy);
+      return true;
+    }
+    enemy.bossPatternCooldown = Math.max(0, (enemy.bossPatternCooldown || 0) - dt);
+    if (enemy.bossPatternCooldown <= 0) beginBossPattern(state, enemy);
+    return true;
+  }
+
   function updateEnemyIntent(state, enemy, dt, dx, dy, len) {
     const ranged = enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield" || enemy.behavior === "boss_final";
     if (ranged) {
@@ -3561,10 +3748,14 @@
       const dx = state.player.x - enemy.x;
       const dy = state.player.y - enemy.y;
       const len = Math.hypot(dx, dy) || 1;
-      if (enemy.rooted <= 0) updateEnemyIntent(state, enemy, dt, dx, dy, len);
+      const bossPatternOwnsIntent = updateBossPatternIntent(state, enemy, dt);
+      if (enemy.rooted <= 0 && !bossPatternOwnsIntent) updateEnemyIntent(state, enemy, dt, dx, dy, len);
       let mx = dx / len;
       let my = dy / len;
       let moveSpeed = enemy.speed;
+      // Keep the Boss origin fixed while a V3.4 warning is visible so the
+      // displayed corridor/gap and the eventual projectile origin agree.
+      if (enemy.boss && enemy.bossPatternKind) moveSpeed = 0;
       if ((enemy.correctionErrorStacks || 0) >= 1) moveSpeed *= state.activeFormParams.correctionSlowMultiplier || 0.82;
       enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
       if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
@@ -5028,6 +5219,11 @@
       updateThermosFixedPendingFocus,
       updateScissorsFixedActions,
       updateInput,
+      updateEnemies,
+      beginBossPattern,
+      releaseBossPattern,
+      demoV2PerimeterPoint,
+      spawnDemoV2Wave,
       fireScissorsFixedTest,
       fireSupportSkill
     }
