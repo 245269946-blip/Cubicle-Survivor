@@ -100,11 +100,12 @@
     const experience = test.experienceAllocations;
     const condensationLevel = test.modules.copy;
     const heatwaveLevel = test.modules.archive;
-    const damage = 18 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, lid.damage || 0);
+    const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
+    const damage = (highFrequency ? 9.5 : 18) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, lid.damage || 0);
     const rangeScale = Math.pow(1.1, cupBase.range || 0);
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: 1.05 * Math.pow(0.88, body.attackSpeed || 0) * Math.pow(0.95, experience.attackSpeed || 0),
+      cooldown: (highFrequency ? 0.58 : 1.05) * Math.pow(0.88, body.attackSpeed || 0) * Math.pow(0.95, experience.attackSpeed || 0),
       range: 225 * rangeScale * Math.pow(1.05, experience.range || 0),
       amount: 1 + (body.amount || 0),
       width: 205 * Math.pow(1.08, cupBase.range || 0),

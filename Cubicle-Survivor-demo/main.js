@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -268,6 +268,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "青色表示路径与信息，品红表示错误与危险，金色表示成长和结算确认。";
         }
         if (startButton) startButton.textContent = "进入四武器霓虹实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-1") {
+        document.title = "工位幸存者 Demo V3.1 · 高频割草与技能轮廓版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.1 · 高频割草与技能轮廓版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.1 高频割草与技能轮廓版");
+        if (subtitle) subtitle.textContent = "把同一份输出拆成更多次攻击，让密集敌群持续承接穿透、铺场、连剪与状态传播。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "小数字，高频率";
+          guideCards[0].querySelector("span:last-child").textContent = "单次伤害降低，攻击间隔缩短；成长会表现为更多攻击事件，而不是一击清空。";
+          guideCards[1].querySelector("strong").textContent = "敌群持续补位";
+          guideCards[1].querySelector("span:last-child").textContent = "普通关提高敌群地板、批次和配额，让穿透、区域和传播始终有目标可吃。";
+          guideCards[2].querySelector("strong").textContent = "技能轮廓分离";
+          guideCards[2].querySelector("span:last-child").textContent = "热浪是金色爆心与外扩压力环，冷凝保持青色留场；每条路线拥有不同运动方式。";
+          guideCards[3].querySelector("strong").textContent = "风险仍然存在";
+          guideCards[3].querySelector("span:last-child").textContent = "Boss 关只温和增加杂兵；剪刀指向落在武器前方地面，不遮挡持械动作。";
+        }
+        if (startButton) startButton.textContent = "进入高频霓虹割草实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

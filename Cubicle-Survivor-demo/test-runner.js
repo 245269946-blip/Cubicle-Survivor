@@ -1308,7 +1308,7 @@ if (!combatVisualSource.includes("enemy.hitFlash") || !combatVisualSource.includ
   process.exit(1);
 }
 V2.dispatch({ type: "RESTART" });
-V2.dispatch({ type: "INIT", demoV2Phase: "scissors-fixed" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3" });
 V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
 const v3ScissorsBalanceState = V2.getState();
 if (v3ScissorsBalanceState.activeFormParams.damage !== 25
@@ -1317,6 +1317,48 @@ if (v3ScissorsBalanceState.activeFormParams.damage !== 25
   process.exit(1);
 }
 console.log("OK Demo V3.0 perception pass: scoped neon UI, growth confirmation, hit/lock/defeat grammar and Scissors damage correction");
+
+const fourWeaponV31 = V2.demoV2 && V2.demoV2.fourWeaponV31;
+const v31EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-1.html"), "utf8");
+if (!fourWeaponV31 || fourWeaponV31.version !== "Demo V3.1"
+  || !fourWeaponV31.combatDensityPass || !fourWeaponV31.skillSilhouettePass
+  || !v31EntrySource.includes('params.set("demoV2", "four-weapon-v3-1")')) {
+  console.error("Demo V3.1 must preserve V3.0 while opting into high-frequency combat and distinct skill silhouettes", fourWeaponV31);
+  process.exit(1);
+}
+const v31ExpectedBase = {
+  marker: { damage: 11, cooldown: 0.58 },
+  thermos: { damage: 9.5, cooldown: 0.58 },
+  scissors: { damage: 13.5, cooldown: 0.3 },
+  correction_fluid: { damage: 6.5, cooldown: 0.36 }
+};
+for (const weaponId of Object.keys(v31ExpectedBase)) {
+  V2.dispatch({ type: "RESTART" });
+  V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-1" });
+  V2.dispatch({ type: "START_RUN", weaponId });
+  const tempoState = V2.getState();
+  const expected = v31ExpectedBase[weaponId];
+  if (!tempoState.demoV2.combatDensityPass || !tempoState.demoV2.skillSilhouettePass
+    || Math.abs(tempoState.activeFormParams.damage - expected.damage) > 0.0001
+    || Math.abs(tempoState.activeFormParams.cooldown - expected.cooldown) > 0.0001) {
+    console.error("Demo V3.1 weapon budget must use smaller, faster attack events", weaponId, tempoState.activeFormParams, tempoState.demoV2);
+    process.exit(1);
+  }
+  const tempoConfig = V2.getDemoV2FixedTestConfig(tempoState);
+  const opening = tempoConfig.currentEncounter(tempoState);
+  if (opening.spawnTotal < 70 || opening.floor < 18 || opening.cap < 49 || opening.batchSize < 9 || opening.cadence > 1.7) {
+    console.error("Demo V3.1 opening encounter must sustain a materially denser enemy field", weaponId, opening);
+    process.exit(1);
+  }
+}
+if (!combatVisualSource.includes("const directionDistance = 94 + charge * 18")
+  || !combatVisualSource.includes("ringSize * 1.16")
+  || !combatVisualSource.includes('"热浪转发"')
+  || !combatVisualSource.includes("markerEncounter.batchSize")) {
+  console.error("Demo V3.1 must keep the dash indicator ahead of the weapon and give Kill Heatwave a distinct layered silhouette");
+  process.exit(1);
+}
+console.log("OK Demo V3.1 density pass: smaller faster hits, denser authored encounters, projected dash intent and layered Kill Heatwave");
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')

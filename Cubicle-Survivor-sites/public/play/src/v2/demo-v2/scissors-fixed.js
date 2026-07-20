@@ -111,9 +111,10 @@
     const experience = test.experienceAllocations;
     const closedLevel = test.modules.copy;
     const openLevel = test.modules.archive;
-    // V3.0 keeps Scissors explosive at point-blank range without letting the
-    // melee weapon erase every encounter before its positional risk matters.
-    const damage = 25 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, blade.damage || 0);
+    // V3.1 redistributes melee output across more visible cuts. V3.0 and the
+    // isolated historical entry retain their previous values.
+    const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
+    const damage = (highFrequency ? 13.5 : 25) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, blade.damage || 0);
     const speedScale = Math.max(0.55, Math.pow(0.9, pivot.attackSpeed || 0) * Math.pow(0.96, experience.attackSpeed || 0));
     const rangeScale = Math.min(1.38, Math.pow(1.09, handle.range || 0) * Math.pow(1.05, experience.range || 0));
     const thrustCount = Math.min(3, closedLevel);
@@ -124,7 +125,9 @@
     const specialEnd = closedLevel >= 4 ? thrustEnd + 0.14 : 0;
     const finaleEnd = openLevel >= 4 ? openEnd + 0.14 : 0;
     const actionDuration = Math.max(0.16, thrustEnd, openEnd, specialEnd, finaleEnd) * speedScale;
-    const cooldown = Math.max(0.42, actionDuration + 0.28 * speedScale);
+    const cooldown = highFrequency
+      ? Math.max(0.3, actionDuration * 0.82 + 0.16 * speedScale)
+      : Math.max(0.42, actionDuration + 0.28 * speedScale);
     const maxHp = 58 + (experience.maxHp || 0) * 12;
 
     state.activeFormParams = {

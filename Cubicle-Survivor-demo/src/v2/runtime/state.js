@@ -390,7 +390,7 @@
     return activeConfig && state.demoV2 ? state.demoV2[activeConfig.runtimeKey] : null;
   }
 
-  function startDemoV2FixedTest(state, phase) {
+  function startDemoV2FixedTest(state, phase, coordinatorConfig) {
     const config = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(phase) : null;
     if (!config) {
       startStage(state, 0);
@@ -427,6 +427,16 @@
       peakEnemies: 0,
       moduleChoices: []
     };
+    if (coordinatorConfig && coordinatorConfig.coordinator) {
+      state.demoV2.suiteVersion = coordinatorConfig.version;
+      state.demoV2.suiteLabel = coordinatorConfig.title;
+      state.demoV2.cyberNeonSuite = true;
+      state.demoV2.combatExperiencePass = !!coordinatorConfig.combatExperiencePass;
+      state.demoV2.neonCityTheme = !!coordinatorConfig.neonCityTheme;
+      state.demoV2.combatDensityPass = !!coordinatorConfig.combatDensityPass;
+      state.demoV2.skillSilhouettePass = !!coordinatorConfig.skillSilhouettePass;
+      state.demoV2.coordinatorPhase = coordinatorConfig.id;
+    }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
     config.rebuildParams(state);
     config.startEncounter(state, 0);
@@ -488,13 +498,15 @@
     if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
     else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
     else if (selectedFixedConfig) {
-      startDemoV2FixedTest(state, selectedFixedConfig.id);
+      startDemoV2FixedTest(state, selectedFixedConfig.id, requestedFixedConfig && requestedFixedConfig.coordinator ? requestedFixedConfig : null);
       if (requestedFixedConfig && requestedFixedConfig.coordinator) {
         state.demoV2.suiteVersion = requestedFixedConfig.version;
         state.demoV2.suiteLabel = requestedFixedConfig.title;
         state.demoV2.cyberNeonSuite = true;
         state.demoV2.combatExperiencePass = !!requestedFixedConfig.combatExperiencePass;
         state.demoV2.neonCityTheme = !!requestedFixedConfig.neonCityTheme;
+        state.demoV2.combatDensityPass = !!requestedFixedConfig.combatDensityPass;
+        state.demoV2.skillSilhouettePass = !!requestedFixedConfig.skillSilhouettePass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

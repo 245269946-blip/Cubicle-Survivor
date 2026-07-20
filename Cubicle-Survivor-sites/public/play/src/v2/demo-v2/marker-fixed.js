@@ -203,9 +203,27 @@
     return state.demoV2 && state.demoV2.phase === "marker-fixed" ? state.demoV2.marker : null;
   }
 
+  function densityEncounter(state, encounter) {
+    if (!encounter || !state.demoV2 || !state.demoV2.combatDensityPass) return encounter;
+    const boss = !!encounter.boss;
+    const densityScale = boss ? 1.28 : 1.62;
+    const floorScale = boss ? 1.22 : 1.48;
+    const capScale = boss ? 1.24 : 1.46;
+    const batchScale = boss ? 1.2 : 1.42;
+    const cadenceScale = boss ? 0.78 : 0.64;
+    return Object.assign({}, encounter, {
+      spawnTotal: Math.ceil(encounter.spawnTotal * densityScale),
+      floor: Math.ceil(encounter.floor * floorScale),
+      cap: Math.max(Math.ceil(encounter.cap * capScale), Math.ceil(encounter.floor * floorScale) + 14),
+      batchSize: Math.ceil(encounter.batchSize * batchScale),
+      cadence: Math.max(0.72, encounter.cadence * cadenceScale),
+      v31DensityPass: true
+    });
+  }
+
   function currentEncounter(state) {
     const test = runtime(state);
-    return test ? ENCOUNTERS[test.currentEncounterIndex] || null : null;
+    return test ? densityEncounter(state, ENCOUNTERS[test.currentEncounterIndex] || null) : null;
   }
 
   function elapsedBeforeEncounter(index) {
@@ -255,7 +273,7 @@
 
   function startEncounter(state, index) {
     const test = runtime(state);
-    const encounter = ENCOUNTERS[index];
+    const encounter = densityEncounter(state, ENCOUNTERS[index]);
     if (!test || !encounter) return;
     test.currentEncounterIndex = index;
     test.currentPhase = encounter.phase;
@@ -312,11 +330,12 @@
     const copyLevel = test.modules.copy;
     const archiveLevel = test.modules.archive;
     const experience = test.experienceAllocations;
-    const damage = 21 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage);
+    const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
+    const damage = (highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage);
     const rangeScale = Math.pow(1.1, tail.range);
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: 1.05 * Math.pow(0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
+      cooldown: (highFrequency ? 0.58 : 1.05) * Math.pow(0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
       range: 720 * rangeScale * Math.pow(1.05, experience.range || 0),
       pierce: 4 + tip.pierce,
       amount: 1 + body.amount,

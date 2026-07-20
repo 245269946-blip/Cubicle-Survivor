@@ -468,7 +468,7 @@
     return false;
   }
 
-  function drawV24AreaEvent(ctx, item, alpha, progress, radius) {
+  function drawV24AreaEvent(ctx, item, alpha, progress, radius, state) {
     const source = item.source || "";
     if (source === "correction_test_error_area" || source === "correction_test_area_merge") {
       const frame = source === "correction_test_area_merge" ? 3 : clamp((item.mergeCount || 1) - 1, 0, 3);
@@ -497,7 +497,21 @@
       return true;
     }
     if (source === "thermos_test_kill_heatwave" || source === "thermos_test_fullscreen_ignition") {
-      drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, Math.max(66, radius * 2.08), Math.max(66, radius * 2.08), Math.min(0.96, alpha + 0.12), 0);
+      const silhouettePass = !!(state && state.demoV2 && state.demoV2.skillSilhouettePass);
+      const ringSize = Math.max(silhouettePass ? 104 : 66, radius * (silhouettePass ? 2.68 : 2.08));
+      drawSpriteFrame(ctx, "thermos_heatwave_v24", v24Frame(progress), item.x, item.y, ringSize, ringSize, Math.min(1, alpha + 0.16), progress * 0.08);
+      if (silhouettePass) {
+        // Kill Heatwave owns a hot core, a fast amber front and a pale outer
+        // pressure echo. Condensation remains a soft cyan field, so the two
+        // routes no longer read as differently coloured circles.
+        drawSprite(ctx, "thermos_release_art", item.x, item.y,
+          Math.max(58, radius * (0.78 + progress * 0.28)),
+          Math.max(58, radius * (0.78 + progress * 0.28)),
+          Math.min(0.98, alpha + 0.18), progress * 0.22);
+        drawSprite(ctx, "thermos_wave_art", item.x, item.y,
+          ringSize * 1.16, ringSize * 1.16,
+          Math.min(0.78, alpha * 0.76 + 0.12), -progress * 0.16);
+      }
       return true;
     }
     if (source === "scissors_test_shelter") return true;
@@ -2430,13 +2444,17 @@
   }
 
   function addThermosFixedHeatwave(state, p, x, y, test) {
-    const radius = Math.max(68, (p.range || 225) * 0.38);
+    const silhouettePass = !!(state.demoV2 && state.demoV2.skillSilhouettePass);
+    const radius = Math.max(silhouettePass ? 96 : 68, (p.range || 225) * (silhouettePass ? 0.46 : 0.38));
     addThermosWavefront(state, {
       source: "thermos_test_kill_heatwave", x, y, radius,
       damage: p.thermosFixedHeatwaveDamage || 7,
-      duration: 0.44, thickness: 30, color: "#ffd7a0", visual: "thermos_wavefront",
+      duration: silhouettePass ? 0.58 : 0.44,
+      thickness: silhouettePass ? 42 : 30,
+      color: "#ffd06f", visual: "thermos_wavefront",
       noKnockback: true
     });
+    if (silhouettePass) addTextEvent(state, x, y - 30, "热浪转发", "#ffd06f", 0.62);
     test.stageHeatwaveTriggers += 1;
     test.totalHeatwaveTriggers += 1;
   }
@@ -3319,7 +3337,7 @@
     const waveIndex = markerWaveIndex >= 0 ? markerWaveIndex : Math.max(0, config.waves.findIndex(function (wave) {
       return runtime.elapsed >= wave.start && runtime.elapsed < wave.end;
     }));
-    const wave = config.waves[waveIndex] || config.waves[config.waves.length - 1];
+    let wave = config.waves[waveIndex] || config.waves[config.waves.length - 1];
 
     if (runtime.waveIndex !== waveIndex) {
       runtime.waveIndex = waveIndex;
@@ -3334,6 +3352,15 @@
 
     const markerEncounter = fixedConfig && config.currentEncounter ? config.currentEncounter(state) : null;
     const markerTest = fixedRuntime;
+    if (markerEncounter) {
+      // The encounter is authoritative for fixed-suite density. V3.1 can now
+      // tune one real roster without mutating the preserved config snapshots.
+      wave = Object.assign({}, wave, {
+        batchSize: markerEncounter.batchSize,
+        cadence: markerEncounter.cadence,
+        enemyRoster: markerEncounter.enemyRoster || wave.enemyRoster
+      });
+    }
     const quotaRemaining = markerEncounter && markerTest ? Math.max(0, markerEncounter.spawnTotal - markerTest.encounterSpawned) : Infinity;
     const enemyCap = markerEncounter ? markerEncounter.cap : config.enemyCap;
     const enemyFloor = markerEncounter ? markerEncounter.floor : config.enemyFloor;
@@ -3963,7 +3990,7 @@
         });
         if (!insideStation) nextAttackDelay *= 1.25;
       }
-      attackTimer = Math.max(0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
+      attackTimer = Math.max(state.demoV2 && state.demoV2.combatDensityPass ? 0.16 : 0.25, nextAttackDelay, state.activeFormParams.releaseLockout || 0);
       if (state.activeFormParams.demoV2OverdraftEvery > 0 && state.stats.shots > 0 && state.stats.shots % state.activeFormParams.demoV2OverdraftEvery === 0) {
         attackTimer += state.activeFormParams.demoV2OverdraftPause || 0;
       }
@@ -4034,11 +4061,14 @@
       drawCombatProgress(ctx, 0, 39, 82, 11, charge);
       const moving = state.input.left || state.input.right || state.input.up || state.input.down;
       const directionFrame = clamp(Math.floor(charge * 4), 0, 3);
-      const directionDistance = 66 + charge * 24;
+      // Project the dash intent onto the floor ahead of the held weapon. The
+      // shorter glyph starts beyond the weapon orbit, avoiding the old visual
+      // overlap while preserving a readable movement direction.
+      const directionDistance = 94 + charge * 18;
       drawSpriteFrame(ctx, "scissors_dash_direction_v27", directionFrame,
         Math.cos(scissors.facingAngle || 0) * directionDistance,
         Math.sin(scissors.facingAngle || 0) * directionDistance,
-        88 + charge * 42, 52 + charge * 14,
+        62 + charge * 24, 36 + charge * 8,
         moving ? 0.72 + charge * 0.26 : 0.42 + charge * 0.2,
         scissors.facingAngle || 0);
       if (scissors.shelterActive) {
@@ -4329,7 +4359,7 @@
       const radius = Math.max(24, z.radius || 44);
       const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
       drawSuiteNeonArea(ctx, state, z, alpha, progress, mechanicRadius);
-      if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius)) continue;
+      if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius, state)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, z.source, z.type, z.visual, z.x, z.y, mechanicRadius, Math.min(0.9, alpha + 0.1), progress)) continue;
       const size = Math.min(520, radius * (z.type === "polygon" ? 2.2 : 1.55 + progress * 0.8));
@@ -4373,7 +4403,7 @@
       }
       const radius = Math.max(26, event.radius || 44);
       drawSuiteNeonArea(ctx, state, event, alpha, progress, radius);
-      if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius)) continue;
+      if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius, state)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
       if (drawGeneratedMechanicSprite(ctx, sprite, event.source, event.kind, event.visual, event.x, event.y, radius, Math.min(0.94, alpha + 0.1), progress)) continue;
       const size = Math.min(440, radius * (1.25 + progress * 1.2));
@@ -4392,7 +4422,7 @@
       const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
       const progress = eventProgress(z);
       const radius = Math.max(8, ringCurrentRadius(z));
-      drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius);
+      drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius, state);
     }
 
     for (const projectile of state.projectiles) {

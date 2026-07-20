@@ -111,15 +111,16 @@
     const experience = test.experienceAllocations;
     const spreadLevel = test.modules.copy;
     const correctionLevel = test.modules.archive;
-    const damage = 11 * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage || 0);
-    const cooldown = 0.62 * Math.pow(0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
+    const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
+    const damage = (highFrequency ? 6.5 : 11) * Math.pow(1.05, experience.damage || 0) * Math.pow(1.15, tip.damage || 0);
+    const cooldown = (highFrequency ? 0.36 : 0.62) * Math.pow(0.87, tip.pierce || 0) * Math.pow(0.95, experience.attackSpeed || 0);
     const rangeScale = Math.pow(1.1, tube.amount || 0) * Math.pow(1.05, experience.range || 0);
     const durationScale = Math.pow(1.24, bottle.range || 0);
     const targetCount = correctionLevel >= 3 ? 4 : correctionLevel === 2 ? 3 : correctionLevel === 1 ? 2 : 1;
 
     state.activeFormParams = {
       damage,
-      cooldown: Math.max(0.24, cooldown),
+      cooldown: Math.max(highFrequency ? 0.18 : 0.24, cooldown),
       range: Math.min(560, 360 * rangeScale),
       width: 24 * rangeScale,
       amount: 1,

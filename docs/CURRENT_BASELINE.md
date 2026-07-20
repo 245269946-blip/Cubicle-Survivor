@@ -46,6 +46,7 @@ Implementation status on 2026-07-14:
 - Demo V2.7 adds `demo-v2-7.html` as the current recommended four-weapon playable entry. It repairs the real stage path, advances the first module choice to encounter 1, separates Boss health from normal-add health, and completes the Scissors dash/readability and fixed-suite UI pass documented in `docs/DEMO_V2_7_PLAYABLE_EXPERIENCE_FIX.md`.
 - Demo V2.8 and Demo V2.9 remain preserved regression snapshots for combat tempo and horizontal consistency.
 - Demo V3.0 adds `demo-v3-0.html` as the current recommended four-weapon experience entry. It is a scoped combat-perception pass over Demo V2.9: no new item or enemy system, but complete hit/lock/defeat feedback, readable Correction Fluid states, short growth confirmations, Scissors risk correction, and a Japanese neon-city information layer across all player-visible screens. See `docs/DEMO_V3_0_COMBAT_PERCEPTION_PASS.md`.
+- Demo V3.1 adds `demo-v3-1.html` as the current recommended four-weapon entry. It redistributes weapon output into smaller, faster events; raises fixed-encounter enemy floors, batches and quotas; projects the Scissors dash intent beyond the held weapon; and separates Thermos Kill Heatwave from Condensation through a hot core, expanding amber front and pressure echo. See `docs/DEMO_V3_1_COMBAT_DENSITY_PASS.md`.
 
 ## Authoritative development location
 

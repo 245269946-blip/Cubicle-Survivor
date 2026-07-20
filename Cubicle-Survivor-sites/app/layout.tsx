@@ -12,17 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V3.0",
-    description: "选择马克笔、保温杯、剪刀或修正液，在日本霓虹都市感的办公室战场中完成 17 关异化生存挑战。",
+    title: "工位幸存者 Demo V3.1",
+    description: "选择马克笔、保温杯、剪刀或修正液，在高频攻击与密集敌群中完成 17 关霓虹办公室生存挑战。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V3.0",
-      description: "四种异化办公武器、可视战斗因果、双路线模块成长与五阶段17关在线试玩。",
+      title: "工位幸存者 Demo V3.1",
+      description: "更小更快的攻击事件、持续补位的敌群，以及轮廓分离的四武器技能在线试玩。",
     },
     twitter: {
       card: "summary",
-      title: "工位幸存者 Demo V3.0",
-      description: "四种异化办公武器、可视战斗因果、双路线模块成长与五阶段17关在线试玩。",
+      title: "工位幸存者 Demo V3.1",
+      description: "更小更快的攻击事件、持续补位的敌群，以及轮廓分离的四武器技能在线试玩。",
     },
   };
 }

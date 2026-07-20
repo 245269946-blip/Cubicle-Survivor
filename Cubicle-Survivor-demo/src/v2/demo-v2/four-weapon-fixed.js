@@ -93,4 +93,30 @@
 
   V2.demoV2.fourWeaponV3 = fourWeaponV3;
   V2.demoV2.fixedTests["four-weapon-v3"] = fourWeaponV3;
+
+  // Demo V3.1 keeps every V3.0 system and route, but redistributes the same
+  // combat budget into smaller, faster hits and denser enemy batches. The
+  // extra flag also enables route-specific silhouette polish without leaking
+  // those balance or rendering changes into the preserved V2/V3.0 snapshots.
+  const fourWeaponV31 = Object.assign({}, fourWeaponV3, {
+    id: "four-weapon-v3-1",
+    version: "Demo V3.1",
+    visualVersion: "高频割草与技能轮廓版",
+    title: "高频割草与技能轮廓版",
+    subtitle: "降低单次数字、提高攻击频率与敌群供给，让路径、空间、位移与错误状态持续拥有可收割的目标。",
+    combatDensityPass: true,
+    skillSilhouettePass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV3.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.1 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV31 = fourWeaponV31;
+  V2.demoV2.fixedTests["four-weapon-v3-1"] = fourWeaponV31;
 })();

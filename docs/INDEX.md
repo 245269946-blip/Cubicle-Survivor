@@ -1,6 +1,12 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.0
+## 当前推荐四武器体验：Demo V3.1
+
+- `DEMO_V3_1_COMBAT_DENSITY_PASS.md`：把单次大数字拆成高频小事件，提高普通关敌群地板、批次和配额，并完成剪刀突进地面指向与保温杯击杀热浪的技能轮廓分离。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-1.html`。
+- Demo V3.0 及更早入口继续作为回归快照保留。
+
+## 上一版四武器体验：Demo V3.0
 
 - `DEMO_V3_0_COMBAT_PERCEPTION_PASS.md`：在 Demo V2.9 固定框架上完成战斗感知、修正液状态可读性、成长确认、剪刀风险校正，以及覆盖全部玩家可视页面的日本霓虹都市信息层。
 - 入口：`../Cubicle-Survivor-demo/demo-v3-0.html`。
