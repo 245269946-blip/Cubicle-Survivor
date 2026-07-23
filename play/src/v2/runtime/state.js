@@ -444,6 +444,11 @@
       state.demoV2.sustainedPressurePass = !!coordinatorConfig.sustainedPressurePass;
       state.demoV2.bossPressurePass = !!coordinatorConfig.bossPressurePass;
       state.demoV2.attributeImpactPass = !!coordinatorConfig.attributeImpactPass;
+      state.demoV2.weaponEmbodimentPass = !!coordinatorConfig.weaponEmbodimentPass;
+      state.demoV2.thermosEmbodimentPass = !!coordinatorConfig.thermosEmbodimentPass;
+      state.demoV2.thermosBackPressurePass = !!coordinatorConfig.thermosBackPressurePass;
+      state.demoV2.scissorsEmbodimentPass = !!coordinatorConfig.scissorsEmbodimentPass;
+      state.demoV2.correctionEmbodimentPass = !!coordinatorConfig.correctionEmbodimentPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     if (state.demoV2.centeredRunStart) {
@@ -531,6 +536,11 @@
         state.demoV2.sustainedPressurePass = !!requestedFixedConfig.sustainedPressurePass;
         state.demoV2.bossPressurePass = !!requestedFixedConfig.bossPressurePass;
         state.demoV2.attributeImpactPass = !!requestedFixedConfig.attributeImpactPass;
+        state.demoV2.weaponEmbodimentPass = !!requestedFixedConfig.weaponEmbodimentPass;
+        state.demoV2.thermosEmbodimentPass = !!requestedFixedConfig.thermosEmbodimentPass;
+        state.demoV2.thermosBackPressurePass = !!requestedFixedConfig.thermosBackPressurePass;
+        state.demoV2.scissorsEmbodimentPass = !!requestedFixedConfig.scissorsEmbodimentPass;
+        state.demoV2.correctionEmbodimentPass = !!requestedFixedConfig.correctionEmbodimentPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

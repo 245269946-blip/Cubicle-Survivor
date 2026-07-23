@@ -211,6 +211,7 @@
     test.dashMotionVy = 0;
     test.dashActionDelay = 0;
     test.dashAvoidedIds = {};
+    test.bodyFacing = 0;
     test.facingAngle = 0;
     test.weaponVisualAngle = 0;
     test.weaponVisualTime = 0;

@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -378,6 +378,94 @@
           guideCards[3].querySelector("span:last-child").textContent = "范围会更明显地扩大线宽、并行间距、扇面、近战覆盖和错误区域。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.5 高压实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-6") {
+        document.title = "工位幸存者 Demo V3.6 · 马克笔人武器实体化版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.6 · 马克笔人武器实体化版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.6 马克笔人武器实体化版");
+        if (subtitle) subtitle.textContent = "沿用 V3.5 的完整数值与压力曲线，把马克笔实验中的穿戴、瞄准和模块光感正式接入四武器试玩。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "笔跟随真实攻击";
+          guideCards[0].querySelector("span:last-child").textContent = "马克笔只跟随当前目标方向，笔尖位置与真正发出的激光保持一致。";
+          guideCards[1].querySelector("strong").textContent = "墨盒跟随身体";
+          guideCards[1].querySelector("span:last-child").textContent = "复写和留档墨盒固定在背部支架，不会跟着攻击方向脱离穿戴关系。";
+          guideCards[2].querySelector("strong").textContent = "等级进入光感";
+          guideCards[2].querySelector("span:last-child").textContent = "复写用暖黄、留档用冷青，模块等级越高，墨盒核心和外围辉光越明确。";
+          guideCards[3].querySelector("strong").textContent = "V3.5 数值原样继承";
+          guideCards[3].querySelector("span:last-child").textContent = "怪物、Boss、组件、模块与成长数值不改，本版只验证武器实体成长是否看得见。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.6 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-7") {
+        document.title = "工位幸存者 Demo V3.7 · 保温杯压力工位异化版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.7 · 保温杯压力工位异化版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.7 保温杯压力工位异化版");
+        if (subtitle) subtitle.textContent = "沿用 V3.6 的全部数值和马克笔实体化，把保温杯、冷凝仓、热浪储压仓与真实蒸汽出口接入同一套穿戴因果链。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "杯口跟随真实攻击";
+          guideCards[0].querySelector("span:last-child").textContent = "保温杯靠近角色，只有杯盖喷口朝向当前敌群；蒸汽从真实喷口向外展开。";
+          guideCards[1].querySelector("strong").textContent = "压力架跟随身体";
+          guideCards[1].querySelector("span:last-child").textContent = "冷凝仓和热浪储压仓共用背部支架，不随自动瞄准旋转，也不会悬空漂移。";
+          guideCards[2].querySelector("strong").textContent = "路线长成实体";
+          guideCards[2].querySelector("span:last-child").textContent = "冷凝用冷青液窗与线圈，热浪用琥珀压力表与泄压口；等级提升会增加真实外挂模块。";
+          guideCards[3].querySelector("strong").textContent = "V3.6 数值原样继承";
+          guideCards[3].querySelector("span:last-child").textContent = "怪物、Boss、组件、模块和伤害数值不改，本版只验证保温杯成长是否真正看得见。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.7 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-8") {
+        document.title = "工位幸存者 Demo V3.8 · 保温杯双路泄压反馈版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.8 · 保温杯双路泄压反馈版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.8 保温杯双路泄压反馈版");
+        if (subtitle) subtitle.textContent = "沿用 V3.7 的全部数值和穿戴结构，让背部压力装置在每轮真实攻击时产生路线明确的泄压与后坐反馈。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "每轮攻击同步泄压";
+          guideCards[0].querySelector("span:last-child").textContent = "杯口喷出主攻击时，背部压力装置同步工作，不再只是静态挂件。";
+          guideCards[1].querySelector("strong").textContent = "冷凝形成冰霜半环";
+          guideCards[1].querySelector("span:last-child").textContent = "冷凝侧形成贴身冷青冰霜半环，等级越高，环体越厚、冰晶越密。";
+          guideCards[2].querySelector("strong").textContent = "热浪形成蒸汽半环";
+          guideCards[2].querySelector("span:last-child").textContent = "热浪侧形成贴身琥珀蒸汽半环，两条路线同时存在时仍能直接区分。";
+          guideCards[3].querySelector("strong").textContent = "V3.7 数值原样继承";
+          guideCards[3].querySelector("span:last-child").textContent = "本版只新增泄压动画、装置后坐和等级化光效，不改变武器、怪物或经济数值。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.8 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-9") {
+        document.title = "工位幸存者 Demo V3.9 · 剪刀与修正液异化显形版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.9 · 剪刀与修正液异化显形版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.9 剪刀与修正液异化显形版");
+        if (subtitle) subtitle.textContent = "沿用 V3.8 的全部数值与关卡，把完整剪刀的真实开合，以及修正液从身体储液囊到白色错误痕迹的因果链落入实战。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "同一把完整剪刀";
+          guideCards[0].querySelector("span:last-child").textContent = "双环、铰链与双刃共同开合；攻击时待机武器退场，不再出现第二把剪刀或无来源刀光。";
+          guideCards[1].querySelector("strong").textContent = "梦幻霓虹裁切";
+          guideCards[1].querySelector("span:last-child").textContent = "合刃用冷青聚焦，张刃用青与品红完成宽幅连剪，终局仍由真实刃口产生。";
+          guideCards[2].querySelector("strong").textContent = "修正液因果链";
+          guideCards[2].querySelector("span:last-child").textContent = "身体储液囊挤压、软管脉冲、喷头喷出白色介质，敌人再依层数出现白色覆盖与故障过载。";
+          guideCards[3].querySelector("strong").textContent = "统一角色比例";
+          guideCards[3].querySelector("span:last-child").textContent = "四把武器共用同一头身比、战斗高度与办公角色身份；异化只改变贴身装置和武器。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.9 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

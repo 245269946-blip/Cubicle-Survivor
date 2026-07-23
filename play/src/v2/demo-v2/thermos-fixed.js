@@ -160,6 +160,10 @@
     test.stageHeatwaveTriggers = 0;
     test.totalFocusKills = 0;
     test.totalHeatwaveTriggers = 0;
+    test.bodyFacing = 0;
+    test.facingAngle = 0;
+    test.condensationRecoil = 0;
+    test.heatwaveRecoil = 0;
     return test;
   }
 

@@ -224,4 +224,104 @@
 
   V2.demoV2.fourWeaponV35 = fourWeaponV35;
   V2.demoV2.fixedTests["four-weapon-v3-5"] = fourWeaponV35;
+
+  // Demo V3.6 preserves the complete V3.5 balance and encounter package.
+  // This pass packages the Marker desire-loop visual contract into the fixed
+  // four-weapon suite: body-facing printer cartridges stay readable on the
+  // wearer, while the physical pen follows the real attack aim and amount.
+  const fourWeaponV36 = Object.assign({}, fourWeaponV35, {
+    id: "four-weapon-v3-6",
+    version: "Demo V3.6",
+    visualVersion: "马克笔人武器实体化版",
+    title: "马克笔人武器实体化版",
+    subtitle: "完整继承 V3.5 数值、敌群与构筑；马克笔、复写墨盒和留档墨盒进入实机穿戴层，攻击方向、组件数量和模块亮度都由真实战斗状态驱动。",
+    weaponEmbodimentPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV35.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.6 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV36 = fourWeaponV36;
+  V2.demoV2.fixedTests["four-weapon-v3-6"] = fourWeaponV36;
+
+  // Demo V3.7 preserves every V3.6 combat and Marker-embodiment rule while
+  // extending the same physical-ownership contract to Thermos. The worn
+  // pressure rack follows body facing; only the real cup/nozzle follows aim.
+  const fourWeaponV37 = Object.assign({}, fourWeaponV36, {
+    id: "four-weapon-v3-7",
+    version: "Demo V3.7",
+    visualVersion: "保温杯压力工位异化版",
+    title: "保温杯压力工位异化版",
+    subtitle: "完整继承 V3.6 数值、敌群与马克笔实体化；保温杯改为随身茶水压力架，冷凝仓和热浪储压仓固定穿戴，杯口只跟随真实攻击方向。",
+    thermosEmbodimentPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV36.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.7 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV37 = fourWeaponV37;
+  V2.demoV2.fixedTests["four-weapon-v3-7"] = fourWeaponV37;
+
+  // Demo V3.8 keeps the complete V3.7 combat snapshot and makes the worn
+  // Thermos pressure system react on every real attack. Condensation vents
+  // frost gas, Kill-Heatwave vents hot steam, and the physical route packs
+  // absorb the release with a short body-facing recoil.
+  const fourWeaponV38 = Object.assign({}, fourWeaponV37, {
+    id: "four-weapon-v3-8",
+    version: "Demo V3.8",
+    visualVersion: "保温杯双路泄压反馈版",
+    title: "保温杯双路泄压反馈版",
+    subtitle: "完整继承 V3.7 数值、敌群与穿戴结构；每轮攻击同步驱动背部压力装置，冷凝侧释放冰雾霜粒，热浪侧释放高温蒸汽与火星，并以短促后坐缓冲强化异化感。",
+    thermosBackPressurePass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV37.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.8 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV38 = fourWeaponV38;
+  V2.demoV2.fixedTests["four-weapon-v3-8"] = fourWeaponV38;
+
+  // Demo V3.9 preserves the complete V3.8 combat snapshot and extends the
+  // physical-ownership contract to Scissors and Correction Fluid. One full
+  // pair of scissors owns every cut; the correction reservoir visibly
+  // squeezes through attached nozzles before white error marks appear.
+  const fourWeaponV39 = Object.assign({}, fourWeaponV38, {
+    id: "four-weapon-v3-9",
+    version: "Demo V3.9",
+    visualVersion: "剪刀与修正液异化显形版",
+    title: "剪刀与修正液异化显形版",
+    subtitle: "完整继承 V3.8 数值、敌群与关卡；剪刀以完整双环、铰链和双刃直接完成突刺与梦幻连剪，修正液以身体储液囊、软管喷头和白色错误痕迹建立可见因果链。",
+    scissorsEmbodimentPass: true,
+    correctionEmbodimentPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV38.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.9 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV39 = fourWeaponV39;
+  V2.demoV2.fixedTests["four-weapon-v3-9"] = fourWeaponV39;
 })();

@@ -1,0 +1,6 @@
+{
+  "version": "Demo V3.9",
+  "entry": "/play/demo-v3-9.html",
+  "source": "Cubicle-Survivor-demo",
+  "validation": "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_6_MARKER_EMBODIMENT_PASS.md + docs/DEMO_V3_7_THERMOS_PRESSURE_RIG_PASS.md + docs/DEMO_V3_8_THERMOS_BACK_PRESSURE_PASS.md + docs/DEMO_V3_9_SCISSORS_CORRECTION_EMBODIMENT_PASS.md"
+}

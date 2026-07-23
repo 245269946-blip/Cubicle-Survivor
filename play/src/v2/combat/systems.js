@@ -47,6 +47,9 @@
     scissors_strike_v27: "assets/generated-vfx/sprites/scissors-strike-v27-sheet.png",
     scissors_shelter_v27: "assets/generated-vfx/sprites/scissors-shelter-v27-sheet.png",
     scissors_dash_direction_v27: "assets/generated-vfx/sprites/scissors-dash-direction-v27-sheet.png",
+    scissors_person_pivot_rig_v39: "assets/generated-vfx/sprites/scissors-person-pivot-rig-directions-v39.png",
+    scissors_complete_directions_v39: "assets/generated-vfx/sprites/scissors-complete-directions-v39.png",
+    scissors_cut_routes_v39: "assets/generated-vfx/sprites/scissors-cut-routes-v39.png",
     correction_fluid_body_v25: "assets/generated-vfx/sprites/correction-fluid-body-v25.png",
     correction_fluid_spray_v25: "assets/generated-vfx/sprites/correction-fluid-spray-v25-sheet.png",
     correction_fluid_error_v25: "assets/generated-vfx/sprites/correction-fluid-error-v25-sheet.png",
@@ -54,6 +57,17 @@
     correction_fluid_crash_v25: "assets/generated-vfx/sprites/correction-fluid-crash-v25-sheet.png",
     correction_fluid_glitch_v25: "assets/generated-vfx/sprites/correction-fluid-glitch-v25-sheet.png",
     correction_fluid_final_v25: "assets/generated-vfx/sprites/correction-fluid-final-v25-sheet.png",
+    correction_person_reservoir_v39: "assets/generated-vfx/sprites/correction-person-reservoir-directions-v39.png",
+    correction_nozzle_directions_v39: "assets/generated-vfx/sprites/correction-nozzle-directions-v39.png",
+    correction_route_mutations_v39: "assets/generated-vfx/sprites/correction-route-mutations-v39.png",
+    correction_spray_error_v39: "assets/generated-vfx/sprites/correction-spray-error-v39.png",
+    marker_person_printer_rig_v5: "assets/generated-vfx/sprites/marker-person-printer-rig-directions-v5.png",
+    marker_weapon_directions_v4: "assets/generated-vfx/sprites/marker-weapon-directions-v4.png",
+    marker_growth_parts: "assets/generated-vfx/sprites/marker-growth-parts.svg",
+    thermos_person_pressure_rig_v1: "assets/generated-vfx/sprites/thermos-person-pressure-rig-directions-v1.png",
+    thermos_weapon_directions_v1: "assets/generated-vfx/sprites/thermos-weapon-directions-v1.png",
+    thermos_route_packs_v2: "assets/generated-vfx/sprites/thermos-route-packs-directions-v2.png",
+    thermos_backpressure_half_ring_v38: "assets/generated-vfx/sprites/thermos-backpressure-half-ring-v38-sheet.png",
     status_shield_art: "assets/generated-vfx/sprites/status-shield-office-v2.png",
     status_root_art: "assets/generated-vfx/sprites/status-root-office-v2.png",
     status_mark_art: "assets/generated-vfx/sprites/status-mark-office-v2.png",
@@ -80,6 +94,26 @@
     trap_link_control_zone: ["sticky_link_line", "sticky_notice_zone"]
   };
   const runtimeImages = {};
+  const markerEmbodimentAssets = {
+    riggedPersonVisuals: [],
+    weaponCells: [],
+    partCells: []
+  };
+  const thermosEmbodimentAssets = {
+    riggedPersonVisuals: [],
+    weaponCells: [],
+    routeCells: [],
+    backPressureCells: []
+  };
+  const scissorsEmbodimentAssets = {
+    personCells: [],
+    weaponCells: []
+  };
+  const correctionEmbodimentAssets = {
+    personCells: [],
+    nozzleCells: [],
+    routeCells: []
+  };
   const ENEMY_ATLAS_CELLS = {
     todo: [2, 0],
     email: [1, 0],
@@ -180,12 +214,260 @@
       if (runtimeImages[id]) return;
       const img = new Image();
       img.onload = function () {
+        if (id === "marker_person_printer_rig_v5" || id === "marker_weapon_directions_v4" || id === "marker_growth_parts") {
+          prepareMarkerEmbodimentAssets();
+        }
+        if (id === "thermos_person_pressure_rig_v1" || id === "thermos_weapon_directions_v1" || id === "thermos_route_packs_v2" || id === "thermos_backpressure_half_ring_v38") {
+          prepareThermosEmbodimentAssets();
+        }
+        if (id === "scissors_person_pivot_rig_v39" || id === "scissors_complete_directions_v39") {
+          prepareScissorsEmbodimentAssets();
+        }
+        if (id === "correction_person_reservoir_v39" || id === "correction_nozzle_directions_v39" || id === "correction_route_mutations_v39") {
+          prepareCorrectionEmbodimentAssets();
+        }
         const state = V2.getState();
         if (state && state.loop && !state.loop.running) draw();
       };
       img.src = RUNTIME_SPRITES[id];
       runtimeImages[id] = img;
     });
+  }
+
+  function alphaCropCanvas(image, threshold) {
+    if (!image || !image.width) return null;
+    const probe = document.createElement("canvas");
+    probe.width = image.width;
+    probe.height = image.height;
+    const probeCtx = probe.getContext("2d", { willReadFrequently: true });
+    probeCtx.drawImage(image, 0, 0);
+    const pixels = probeCtx.getImageData(0, 0, probe.width, probe.height).data;
+    let minX = probe.width;
+    let minY = probe.height;
+    let maxX = -1;
+    let maxY = -1;
+    const floor = threshold == null ? 10 : threshold;
+    for (let y = 0; y < probe.height; y += 1) {
+      for (let x = 0; x < probe.width; x += 1) {
+        if (pixels[(y * probe.width + x) * 4 + 3] < floor) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    if (maxX < minX || maxY < minY) return null;
+    const out = document.createElement("canvas");
+    out.width = maxX - minX + 1;
+    out.height = maxY - minY + 1;
+    out.getContext("2d").drawImage(probe, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+    return out;
+  }
+
+  function sliceAlphaAtlas(image, columns, rows) {
+    if (!image || !image.naturalWidth) return [];
+    const sourceWidth = Math.floor(image.naturalWidth / columns);
+    const sourceHeight = Math.floor(image.naturalHeight / rows);
+    const cells = [];
+    for (let index = 0; index < columns * rows; index++) {
+      const cell = document.createElement("canvas");
+      cell.width = sourceWidth;
+      cell.height = sourceHeight;
+      cell.getContext("2d").drawImage(
+        image,
+        index % columns * sourceWidth,
+        Math.floor(index / columns) * sourceHeight,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        sourceWidth,
+        sourceHeight
+      );
+      const cropped = alphaCropCanvas(cell, 10);
+      if (cropped) cells.push(cropped);
+    }
+    return cells;
+  }
+
+  function markerRouteRegionAllows(family, facing, x, width) {
+    const ratio = x / Math.max(1, width);
+    if (family === "archive") {
+      if (facing === 3) return false;
+      return ratio < (facing === 1 ? 0.62 : 0.46);
+    }
+    if (facing === 1) return false;
+    return ratio > (facing === 3 ? 0.42 : 0.54);
+  }
+
+  function markerRoutePixelFamily(red, green, blue, x, width, facing) {
+    const archive = markerRouteRegionAllows("archive", facing, x, width)
+      && green > 105 && blue > 120 && green > red * 1.28 && blue > red * 1.35;
+    if (archive) return "archive";
+    const copy = markerRouteRegionAllows("copy", facing, x, width)
+      && red > 145 && green > 88 && blue < green * 0.72 && red > blue * 1.65;
+    return copy ? "copy" : null;
+  }
+
+  function makeMarkerRiggedRouteVisuals(image, facing) {
+    if (!image) return null;
+    const base = document.createElement("canvas");
+    const copy = document.createElement("canvas");
+    const archive = document.createElement("canvas");
+    [base, copy, archive].forEach(function (surface) {
+      surface.width = image.width;
+      surface.height = image.height;
+    });
+    const baseCtx = base.getContext("2d", { willReadFrequently: true });
+    baseCtx.drawImage(image, 0, 0);
+    const basePixels = baseCtx.getImageData(0, 0, base.width, base.height);
+    const copyPixels = copy.getContext("2d").createImageData(base.width, base.height);
+    const archivePixels = archive.getContext("2d").createImageData(base.width, base.height);
+    for (let y = 0; y < base.height; y += 1) {
+      for (let x = 0; x < base.width; x += 1) {
+        const offset = (y * base.width + x) * 4;
+        const alpha = basePixels.data[offset + 3];
+        if (!alpha) continue;
+        const family = markerRoutePixelFamily(
+          basePixels.data[offset],
+          basePixels.data[offset + 1],
+          basePixels.data[offset + 2],
+          x,
+          base.width,
+          facing
+        );
+        if (!family) continue;
+        const target = family === "copy" ? copyPixels.data : archivePixels.data;
+        target[offset] = basePixels.data[offset];
+        target[offset + 1] = basePixels.data[offset + 1];
+        target[offset + 2] = basePixels.data[offset + 2];
+        target[offset + 3] = alpha;
+        basePixels.data[offset] = Math.round(basePixels.data[offset] * 0.34);
+        basePixels.data[offset + 1] = Math.round(basePixels.data[offset + 1] * 0.34);
+        basePixels.data[offset + 2] = Math.round(basePixels.data[offset + 2] * 0.34);
+      }
+    }
+    baseCtx.putImageData(basePixels, 0, 0);
+    copy.getContext("2d").putImageData(copyPixels, 0, 0);
+    archive.getContext("2d").putImageData(archivePixels, 0, 0);
+    return { base, copy, archive };
+  }
+
+  function prepareMarkerEmbodimentAssets() {
+    const rig = runtimeImages.marker_person_printer_rig_v5;
+    const weapons = runtimeImages.marker_weapon_directions_v4;
+    const parts = runtimeImages.marker_growth_parts;
+    if (rig && rig.complete && rig.naturalWidth > 0 && !markerEmbodimentAssets.riggedPersonVisuals.length) {
+      markerEmbodimentAssets.riggedPersonVisuals = sliceAlphaAtlas(rig, 4, 1).map(function (cell, facing) {
+        return makeMarkerRiggedRouteVisuals(cell, facing);
+      });
+    }
+    if (weapons && weapons.complete && weapons.naturalWidth > 0 && !markerEmbodimentAssets.weaponCells.length) {
+      markerEmbodimentAssets.weaponCells = sliceAlphaAtlas(weapons, 4, 2);
+    }
+    if (parts && parts.complete && parts.naturalWidth > 0 && !markerEmbodimentAssets.partCells.length) {
+      markerEmbodimentAssets.partCells = sliceAlphaAtlas(parts, 6, 1);
+    }
+  }
+
+  function thermosRoutePixelFamily(red, green, blue, x, width) {
+    const ratio = x / Math.max(1, width);
+    const condensation = ratio < 0.49 && green > 105 && blue > 118
+      && green > red * 1.24 && blue > red * 1.32;
+    if (condensation) return "condensation";
+    const heatwave = ratio > 0.51 && red > 140 && green > 72 && blue < green * 0.72
+      && red > blue * 1.72;
+    return heatwave ? "heatwave" : null;
+  }
+
+  function makeThermosRiggedRouteVisuals(image) {
+    if (!image) return null;
+    const base = document.createElement("canvas");
+    const condensation = document.createElement("canvas");
+    const heatwave = document.createElement("canvas");
+    [base, condensation, heatwave].forEach(function (surface) {
+      surface.width = image.width;
+      surface.height = image.height;
+    });
+    const baseCtx = base.getContext("2d", { willReadFrequently: true });
+    baseCtx.drawImage(image, 0, 0);
+    const basePixels = baseCtx.getImageData(0, 0, base.width, base.height);
+    const condensationPixels = condensation.getContext("2d").createImageData(base.width, base.height);
+    const heatwavePixels = heatwave.getContext("2d").createImageData(base.width, base.height);
+    for (let y = 0; y < base.height; y += 1) {
+      for (let x = 0; x < base.width; x += 1) {
+        const offset = (y * base.width + x) * 4;
+        const alpha = basePixels.data[offset + 3];
+        if (!alpha) continue;
+        const family = thermosRoutePixelFamily(
+          basePixels.data[offset],
+          basePixels.data[offset + 1],
+          basePixels.data[offset + 2],
+          x,
+          base.width
+        );
+        if (!family) continue;
+        const target = family === "condensation" ? condensationPixels.data : heatwavePixels.data;
+        target[offset] = basePixels.data[offset];
+        target[offset + 1] = basePixels.data[offset + 1];
+        target[offset + 2] = basePixels.data[offset + 2];
+        target[offset + 3] = alpha;
+        basePixels.data[offset] = Math.round(basePixels.data[offset] * 0.32);
+        basePixels.data[offset + 1] = Math.round(basePixels.data[offset + 1] * 0.32);
+        basePixels.data[offset + 2] = Math.round(basePixels.data[offset + 2] * 0.32);
+      }
+    }
+    baseCtx.putImageData(basePixels, 0, 0);
+    condensation.getContext("2d").putImageData(condensationPixels, 0, 0);
+    heatwave.getContext("2d").putImageData(heatwavePixels, 0, 0);
+    return { base, condensation, heatwave };
+  }
+
+  function prepareThermosEmbodimentAssets() {
+    const rig = runtimeImages.thermos_person_pressure_rig_v1;
+    const weapons = runtimeImages.thermos_weapon_directions_v1;
+    const routeAddons = runtimeImages.thermos_route_packs_v2;
+    const backPressure = runtimeImages.thermos_backpressure_half_ring_v38;
+    if (rig && rig.complete && rig.naturalWidth > 0 && !thermosEmbodimentAssets.riggedPersonVisuals.length) {
+      thermosEmbodimentAssets.riggedPersonVisuals = sliceAlphaAtlas(rig, 4, 1).map(function (cell) {
+        return makeThermosRiggedRouteVisuals(cell);
+      });
+    }
+    if (weapons && weapons.complete && weapons.naturalWidth > 0 && !thermosEmbodimentAssets.weaponCells.length) {
+      thermosEmbodimentAssets.weaponCells = sliceAlphaAtlas(weapons, 4, 2);
+    }
+    if (routeAddons && routeAddons.complete && routeAddons.naturalWidth > 0 && !thermosEmbodimentAssets.routeCells.length) {
+      thermosEmbodimentAssets.routeCells = sliceAlphaAtlas(routeAddons, 4, 2);
+    }
+    if (backPressure && backPressure.complete && backPressure.naturalWidth > 0 && !thermosEmbodimentAssets.backPressureCells.length) {
+      thermosEmbodimentAssets.backPressureCells = sliceAlphaAtlas(backPressure, 4, 2);
+    }
+  }
+
+  function prepareScissorsEmbodimentAssets() {
+    const person = runtimeImages.scissors_person_pivot_rig_v39;
+    const weapon = runtimeImages.scissors_complete_directions_v39;
+    if (person && person.complete && person.naturalWidth > 0 && !scissorsEmbodimentAssets.personCells.length) {
+      scissorsEmbodimentAssets.personCells = sliceAlphaAtlas(person, 4, 1);
+    }
+    if (weapon && weapon.complete && weapon.naturalWidth > 0 && !scissorsEmbodimentAssets.weaponCells.length) {
+      scissorsEmbodimentAssets.weaponCells = sliceAlphaAtlas(weapon, 4, 2);
+    }
+  }
+
+  function prepareCorrectionEmbodimentAssets() {
+    const person = runtimeImages.correction_person_reservoir_v39;
+    const nozzle = runtimeImages.correction_nozzle_directions_v39;
+    const routes = runtimeImages.correction_route_mutations_v39;
+    if (person && person.complete && person.naturalWidth > 0 && !correctionEmbodimentAssets.personCells.length) {
+      correctionEmbodimentAssets.personCells = sliceAlphaAtlas(person, 4, 1);
+    }
+    if (nozzle && nozzle.complete && nozzle.naturalWidth > 0 && !correctionEmbodimentAssets.nozzleCells.length) {
+      correctionEmbodimentAssets.nozzleCells = sliceAlphaAtlas(nozzle, 4, 2);
+    }
+    if (routes && routes.complete && routes.naturalWidth > 0 && !correctionEmbodimentAssets.routeCells.length) {
+      correctionEmbodimentAssets.routeCells = sliceAlphaAtlas(routes, 4, 2);
+    }
   }
 
   function isSpriteReady(id) {
@@ -324,6 +606,637 @@
     return true;
   }
 
+  function drawCanvasSprite(ctx, image, x, y, width, height, alpha, rotation, filter, composite) {
+    if (!image || !image.width) return false;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.globalCompositeOperation = composite || "source-over";
+    ctx.filter = filter || "none";
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function markerDirectionFrame(angle) {
+    const normalized = (angle + Math.PI * 2) % (Math.PI * 2);
+    return Math.round(normalized / (Math.PI / 4)) % 8;
+  }
+
+  function markerBodyFacingFromVector(x, y) {
+    if (Math.abs(x) > Math.abs(y)) return x > 0 ? 1 : 3;
+    return y < 0 ? 2 : 0;
+  }
+
+  function markerEmbodimentVisualState(state) {
+    const test = markerFixedRuntime(state);
+    const p = state.activeFormParams || {};
+    const copyLevel = test && test.modules ? test.modules.copy || 0 : p.markerFixedCopyLevel || 0;
+    const archiveLevel = test && test.modules ? test.modules.archive || 0 : p.markerFixedArchiveLevel || 0;
+    const baseAmount = Math.max(1, p.amount || 1);
+    const copyLines = copyLevel >= 2 ? 2 : copyLevel === 1 ? 1 : 0;
+    const parts = test && test.parts ? test.parts : {};
+    const componentState = function (id) {
+      const part = parts[id] || {};
+      return {
+        copies: part.copies || 0,
+        activeStat: part.activeStat || ""
+      };
+    };
+    return {
+      enabled: !!(state.demoV2 && state.demoV2.weaponEmbodimentPass && test),
+      facing: test && test.bodyFacing != null ? test.bodyFacing : 0,
+      aimAngle: test && Number.isFinite(test.weaponVisualAngle) ? test.weaponVisualAngle : 0,
+      copyLevel,
+      archiveLevel,
+      baseAmount,
+      copyLines,
+      penCount: Math.min(6, baseAmount * (1 + copyLines)),
+      components: {
+        tip: componentState("tip"),
+        body: componentState("body"),
+        tail: componentState("tail")
+      }
+    };
+  }
+
+  function drawMarkerRouteGlow(ctx, image, level, x, y, width, height, color) {
+    if (!image || level <= 0) return;
+    const coreAlpha = [0, 0.56, 0.7, 0.84, 0.98][level] || 0.98;
+    const bloomAlpha = [0, 0.13, 0.19, 0.27, 0.36][level] || 0.36;
+    const bloomScale = 1.018 + level * 0.01;
+    drawCanvasSprite(
+      ctx,
+      image,
+      x,
+      y,
+      width * bloomScale,
+      height * bloomScale,
+      bloomAlpha,
+      0,
+      "blur(" + (2 + level * 0.9) + "px) brightness(1.85) saturate(1.5) drop-shadow(0 0 " + (4 + level * 2) + "px " + color + ")",
+      "screen"
+    );
+    drawCanvasSprite(
+      ctx,
+      image,
+      x,
+      y,
+      width,
+      height,
+      coreAlpha,
+      0,
+      "brightness(" + (1.06 + level * 0.11) + ") saturate(" + (1.1 + level * 0.08) + ") drop-shadow(0 0 " + (3 + level * 1.3) + "px " + color + ")",
+      "screen"
+    );
+  }
+
+  function markerPenNodes(visual) {
+    const nodes = [];
+    const forwardX = Math.cos(visual.aimAngle);
+    const forwardY = Math.sin(visual.aimAngle);
+    const lateralX = -forwardY;
+    const lateralY = forwardX;
+    const orbit = 40;
+    const baseOffsets = visual.baseAmount <= 1 ? [0] : [-9, 9];
+    baseOffsets.forEach(function (offset, index) {
+      nodes.push({
+        family: "base",
+        x: forwardX * orbit + lateralX * offset,
+        y: forwardY * orbit + lateralY * offset,
+        index
+      });
+    });
+    const copyOffsets = visual.copyLines === 1 ? [18] : visual.copyLines >= 2 ? [-22, 22] : [];
+    copyOffsets.forEach(function (offset, laneIndex) {
+      baseOffsets.forEach(function (baseOffset, amountIndex) {
+        nodes.push({
+          family: "copy",
+          x: forwardX * orbit + lateralX * (offset + baseOffset * 0.55),
+          y: forwardY * orbit + lateralY * (offset + baseOffset * 0.55),
+          index: laneIndex * 2 + amountIndex
+        });
+      });
+    });
+    return nodes.slice(0, 6);
+  }
+
+  function drawMarkerPen(ctx, cell, node, copyLevel) {
+    if (!cell) return;
+    const height = 38;
+    const width = height * cell.width / Math.max(1, cell.height);
+    const copy = node.family === "copy";
+    const glow = copy ? "#ffd75f" : "#f5ffff";
+    const alpha = copy ? 0.88 + Math.min(0.1, copyLevel * 0.025) : 0.98;
+    drawCanvasSprite(
+      ctx,
+      cell,
+      node.x,
+      node.y,
+      width,
+      height,
+      alpha,
+      0,
+      "brightness(" + (copy ? 1.08 + copyLevel * 0.04 : 1.04) + ") drop-shadow(0 0 " + (copy ? 5 + copyLevel : 4) + "px " + glow + ")",
+      "source-over"
+    );
+  }
+
+  function markerComponentQuality(copies) {
+    if (copies >= 8) return 4;
+    if (copies >= 4) return 3;
+    if (copies >= 2) return 2;
+    return copies >= 1 ? 1 : 0;
+  }
+
+  function drawMarkerAttachedComponent(ctx, cell, x, y, width, height, angle, copies, color) {
+    if (!cell || copies <= 0) return;
+    const quality = markerComponentQuality(copies);
+    drawCanvasSprite(
+      ctx,
+      cell,
+      x,
+      y,
+      width * (1 + quality * 0.035),
+      height * (1 + quality * 0.035),
+      0.84 + quality * 0.035,
+      angle,
+      "brightness(" + (0.96 + quality * 0.1) + ") saturate(" + (1 + quality * 0.08) + ") drop-shadow(0 0 " + (2 + quality * 1.35) + "px " + color + ")",
+      "source-over"
+    );
+  }
+
+  function drawMarkerPenComponents(ctx, visual, node) {
+    const cells = markerEmbodimentAssets.partCells;
+    if (!cells || cells.length < 6) return;
+    const forwardX = Math.cos(visual.aimAngle);
+    const forwardY = Math.sin(visual.aimAngle);
+    const tip = visual.components.tip;
+    const body = visual.components.body;
+    const tail = visual.components.tail;
+    if (tip.copies > 0) {
+      drawMarkerAttachedComponent(ctx, cells[3], node.x + forwardX * 19, node.y + forwardY * 19, 25, 21, visual.aimAngle, tip.copies, "#ffd75f");
+    }
+    if (body.copies > 0 && node.family === "base") {
+      drawMarkerAttachedComponent(ctx, cells[4], node.x, node.y, 27, 22, visual.aimAngle, body.copies, "#ff65dc");
+    }
+    if (tail.copies > 0 && tail.activeStat !== "duration") {
+      drawMarkerAttachedComponent(ctx, cells[5], node.x - forwardX * 19, node.y - forwardY * 19, 28, 20, visual.aimAngle, tail.copies, "#68efff");
+    }
+  }
+
+  function markerBodyBasis(facing) {
+    const angle = [Math.PI / 2, 0, -Math.PI / 2, Math.PI][facing] || 0;
+    return {
+      forwardX: Math.cos(angle),
+      forwardY: Math.sin(angle),
+      rightX: -Math.sin(angle),
+      rightY: Math.cos(angle)
+    };
+  }
+
+  function drawMarkerWornComponents(ctx, visual) {
+    const tail = visual.components.tail;
+    const cells = markerEmbodimentAssets.partCells;
+    if (!cells || cells.length < 6 || tail.copies <= 0 || tail.activeStat !== "duration") return;
+    const basis = markerBodyBasis(visual.facing);
+    const x = -basis.forwardX * 12 - basis.rightX * 27;
+    const y = -7 - basis.forwardY * 12 - basis.rightY * 27;
+    const rotation = Math.atan2(basis.forwardY, basis.forwardX);
+    drawMarkerAttachedComponent(ctx, cells[2], x, y, 31, 31, rotation, tail.copies, "#68efff");
+  }
+
+  function drawMarkerEmbodiedPlayer(ctx, state) {
+    const visual = markerEmbodimentVisualState(state);
+    if (!visual.enabled) return false;
+    prepareMarkerEmbodimentAssets();
+    const rig = markerEmbodimentAssets.riggedPersonVisuals[visual.facing];
+    const pen = markerEmbodimentAssets.weaponCells[markerDirectionFrame(visual.aimAngle)];
+    if (!rig || !rig.base || !pen) return false;
+    const height = 112;
+    const width = height * rig.base.width / Math.max(1, rig.base.height);
+    const bodyY = -7;
+    const penNodes = markerPenNodes(visual);
+    penNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
+      drawMarkerPen(ctx, pen, node, visual.copyLevel);
+      drawMarkerPenComponents(ctx, visual, node);
+    });
+    drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
+    drawMarkerRouteGlow(ctx, rig.copy, visual.copyLevel, 0, bodyY, width, height, "#ffd75f");
+    drawMarkerRouteGlow(ctx, rig.archive, visual.archiveLevel, 0, bodyY, width, height, "#68efff");
+    drawMarkerWornComponents(ctx, visual);
+    penNodes.filter(function (node) { return node.y >= bodyY; }).forEach(function (node) {
+      drawMarkerPen(ctx, pen, node, visual.copyLevel);
+      drawMarkerPenComponents(ctx, visual, node);
+    });
+    return true;
+  }
+
+  function thermosEmbodimentVisualState(state) {
+    const config = fixedTestConfig(state);
+    const test = config && config.weaponId === "thermos" ? fixedTestRuntime(state) : null;
+    const p = state.activeFormParams || {};
+    const parts = test && test.parts ? test.parts : {};
+    const componentState = function (id) {
+      const part = parts[id] || {};
+      return {
+        copies: part.copies || 0,
+        activeStat: part.activeStat || ""
+      };
+    };
+    return {
+      enabled: !!(state.demoV2 && state.demoV2.thermosEmbodimentPass && test),
+      facing: test && test.bodyFacing != null ? test.bodyFacing : 0,
+      aimAngle: test && Number.isFinite(test.facingAngle) ? test.facingAngle : 0,
+      condensationLevel: test && test.modules ? test.modules.copy || 0 : p.thermosFixedCondensationLevel || 0,
+      heatwaveLevel: test && test.modules ? test.modules.archive || 0 : p.thermosFixedHeatwaveLevel || 0,
+      condensationRecoil: test ? test.condensationRecoil || 0 : 0,
+      heatwaveRecoil: test ? test.heatwaveRecoil || 0 : 0,
+      cupCount: Math.min(4, Math.max(1, p.amount || 1)),
+      components: {
+        lid: componentState("tip"),
+        body: componentState("body"),
+        base: componentState("tail")
+      }
+    };
+  }
+
+  function thermosWeaponVisual(angle) {
+    const frame = markerDirectionFrame(angle);
+    if (frame === 0) return { cell: thermosEmbodimentAssets.weaponCells[0], mirrorX: true };
+    return { cell: thermosEmbodimentAssets.weaponCells[frame], mirrorX: false };
+  }
+
+  function thermosCupNodes(visual) {
+    const forwardX = Math.cos(visual.aimAngle);
+    const forwardY = Math.sin(visual.aimAngle);
+    const lateralX = -forwardY;
+    const lateralY = forwardX;
+    const offsets = visual.cupCount === 1 ? [0]
+      : visual.cupCount === 2 ? [-12, 12]
+        : visual.cupCount === 3 ? [-18, 0, 18] : [-24, -8, 8, 24];
+    return offsets.map(function (offset, index) {
+      return {
+        x: forwardX * 39 + lateralX * offset,
+        y: forwardY * 39 + lateralY * offset,
+        index
+      };
+    });
+  }
+
+  function drawThermosCup(ctx, visual, node) {
+    const weapon = thermosWeaponVisual(visual.aimAngle);
+    if (!weapon.cell) return;
+    const bodyQuality = markerComponentQuality(visual.components.body.copies);
+    const lidQuality = markerComponentQuality(visual.components.lid.copies);
+    const baseQuality = markerComponentQuality(visual.components.base.copies);
+    const quality = Math.max(bodyQuality, lidQuality, baseQuality);
+    const height = 48 + quality * 1.4;
+    const width = height * weapon.cell.width / Math.max(1, weapon.cell.height);
+    ctx.save();
+    ctx.translate(node.x, node.y);
+    if (weapon.mirrorX) ctx.scale(-1, 1);
+    drawCanvasSprite(
+      ctx,
+      weapon.cell,
+      0,
+      0,
+      width,
+      height,
+      0.96,
+      0,
+      "brightness(" + (1.02 + quality * 0.055) + ") saturate(" + (1.03 + quality * 0.05) + ") drop-shadow(0 0 " + (3 + quality) + "px rgba(174,247,255,.86))",
+      "source-over"
+    );
+    ctx.restore();
+  }
+
+  function thermosRoutePackNodes(visual, family) {
+    const level = family === "condensation" ? visual.condensationLevel : visual.heatwaveLevel;
+    if (level <= 0) return [];
+    const basis = markerBodyBasis(visual.facing);
+    const side = family === "condensation" ? 1 : -1;
+    const recoil = family === "condensation" ? visual.condensationRecoil : visual.heatwaveRecoil;
+    const recoilProgress = recoil > 0 ? clamp(1 - recoil / 0.32, 0, 1) : 1;
+    const recoilKick = recoil > 0 ? Math.sin(recoilProgress * Math.PI) * (2.2 + level * 0.7) : 0;
+    const exhaustX = -basis.forwardX * 0.82 + basis.rightX * side * 0.58;
+    const exhaustY = -basis.forwardY * 0.82 + basis.rightY * side * 0.58;
+    const count = Math.min(3, level);
+    const rowOffset = family === "condensation" ? 0 : 4;
+    const cell = thermosEmbodimentAssets.routeCells[rowOffset + visual.facing];
+    if (!cell) return [];
+    const nodes = [];
+    for (let index = 0; index < count; index++) {
+      const sideDistance = 38 + index * 8;
+      const rearDistance = 4 + index * 3;
+      nodes.push({
+        family,
+        level,
+        cell,
+        x: basis.rightX * side * sideDistance - basis.forwardX * rearDistance + basis.forwardX * recoilKick,
+        y: -8 + basis.rightY * side * sideDistance - basis.forwardY * rearDistance + basis.forwardY * recoilKick,
+        width: 35 - index * 2,
+        height: 41 - index * 2,
+        recoil,
+        exhaustX,
+        exhaustY,
+        index
+      });
+    }
+    return nodes;
+  }
+
+  function drawThermosRoutePack(ctx, node) {
+    const color = node.family === "condensation" ? "#66efff" : "#ffb343";
+    const coreAlpha = [0, 0.76, 0.84, 0.92, 1][node.level] || 1;
+    const bloomAlpha = [0, 0.12, 0.18, 0.26, 0.35][node.level] || 0.35;
+    const terminalScale = node.level >= 4 && node.index === 2 ? 1.16 : 1;
+    drawCanvasSprite(
+      ctx,
+      node.cell,
+      node.x,
+      node.y,
+      node.width * terminalScale * 1.08,
+      node.height * terminalScale * 1.08,
+      bloomAlpha,
+      0,
+      "blur(" + (1.4 + node.level * 0.55) + "px) brightness(1.8) saturate(1.45) drop-shadow(0 0 " + (4 + node.level * 1.8) + "px " + color + ")",
+      "screen"
+    );
+    drawCanvasSprite(
+      ctx,
+      node.cell,
+      node.x,
+      node.y,
+      node.width * terminalScale,
+      node.height * terminalScale,
+      coreAlpha,
+      0,
+      "brightness(" + (1.02 + node.level * 0.08) + ") saturate(" + (1.04 + node.level * 0.07) + ") drop-shadow(0 0 " + (2 + node.level) + "px " + color + ")",
+      "source-over"
+    );
+  }
+
+  function drawThermosRoutePacks(ctx, visual, foreground) {
+    ["condensation", "heatwave"].forEach(function (family) {
+      thermosRoutePackNodes(visual, family).forEach(function (node) {
+        if ((node.y >= -7) !== foreground) return;
+        drawThermosRoutePack(ctx, node);
+      });
+    });
+  }
+
+  function drawThermosEmbodiedPlayer(ctx, state) {
+    const visual = thermosEmbodimentVisualState(state);
+    if (!visual.enabled) return false;
+    prepareThermosEmbodimentAssets();
+    const rig = thermosEmbodimentAssets.riggedPersonVisuals[visual.facing];
+    if (!rig || !rig.base || !thermosWeaponVisual(visual.aimAngle).cell) return false;
+    const height = 112;
+    const width = height * rig.base.width / Math.max(1, rig.base.height);
+    const bodyY = -7;
+    const cupNodes = thermosCupNodes(visual);
+    state.formEvents.filter(function (event) {
+      return event.kind === "thermos_backpressure";
+    }).forEach(function (event) {
+      const duration = event.duration || event.maxLife || 0.3;
+      const activeLife = Math.min(duration, event.life == null ? duration : event.life);
+      const alpha = event.debugHold ? 1 : clamp(activeLife / duration, 0, 1);
+      const progress = event.debugHold ? (event.debugProgress == null ? 0.7 : event.debugProgress) : 1 - alpha;
+      drawThermosBackPressureEvent(ctx, Object.assign({}, event, { x: 0, y: bodyY }), alpha, progress);
+    });
+    cupNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
+      drawThermosCup(ctx, visual, node);
+    });
+    drawThermosRoutePacks(ctx, visual, false);
+    drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
+    drawMarkerRouteGlow(ctx, rig.condensation, visual.condensationLevel, 0, bodyY, width, height, "#66efff");
+    drawMarkerRouteGlow(ctx, rig.heatwave, visual.heatwaveLevel, 0, bodyY, width, height, "#ffb343");
+    drawThermosRoutePacks(ctx, visual, true);
+    cupNodes.filter(function (node) { return node.y >= bodyY; }).forEach(function (node) {
+      drawThermosCup(ctx, visual, node);
+    });
+    return true;
+  }
+
+  function scissorsEmbodimentVisualState(state) {
+    const test = scissorsFixedRuntime(state);
+    const p = state.activeFormParams || {};
+    return {
+      enabled: !!(state.demoV2 && state.demoV2.scissorsEmbodimentPass && test),
+      facing: test && test.bodyFacing != null ? test.bodyFacing : 0,
+      aimAngle: test && Number.isFinite(test.weaponVisualAngle) ? test.weaponVisualAngle
+        : test && Number.isFinite(test.facingAngle) ? test.facingAngle : 0,
+      closedLevel: test && test.modules ? test.modules.copy || 0 : p.scissorsClosedLevel || 0,
+      openLevel: test && test.modules ? test.modules.archive || 0 : p.scissorsOpenLevel || 0,
+      attacking: !!(test && test.weaponVisualTime > 0)
+    };
+  }
+
+  function drawScissorsComplete(ctx, visual, nodeX, nodeY) {
+    const cell = scissorsEmbodimentAssets.weaponCells[markerDirectionFrame(visual.aimAngle)];
+    if (!cell) return;
+    const level = Math.max(visual.closedLevel, visual.openLevel);
+    const glow = visual.openLevel > visual.closedLevel ? "#ff56df" : visual.closedLevel > 0 ? "#66efff" : "#e8f6ff";
+    const height = 64 + level * 2.4;
+    const width = height * cell.width / Math.max(1, cell.height);
+    drawCanvasSprite(ctx, cell, nodeX, nodeY, width * 1.06, height * 1.06,
+      0.16 + level * 0.035, 0,
+      "blur(" + (1.5 + level * 0.45) + "px) brightness(1.8) saturate(1.5) drop-shadow(0 0 " + (5 + level * 2) + "px " + glow + ")",
+      "screen");
+    drawCanvasSprite(ctx, cell, nodeX, nodeY, width, height, 0.98, 0,
+      "brightness(" + (1.02 + level * 0.06) + ") saturate(" + (1.04 + level * 0.08) + ") drop-shadow(0 0 " + (3 + level) + "px " + glow + ")",
+      "source-over");
+  }
+
+  function drawScissorsEmbodiedPlayer(ctx, state) {
+    const visual = scissorsEmbodimentVisualState(state);
+    if (!visual.enabled) return false;
+    prepareScissorsEmbodimentAssets();
+    const person = scissorsEmbodimentAssets.personCells[visual.facing];
+    if (!person || scissorsEmbodimentAssets.weaponCells.length < 8) return false;
+    const bodyY = -7;
+    const bodyHeight = 112;
+    const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
+    const orbit = 31;
+    const nodeX = Math.cos(visual.aimAngle) * orbit;
+    const nodeY = Math.sin(visual.aimAngle) * orbit;
+    if (!visual.attacking && nodeY < bodyY) drawScissorsComplete(ctx, visual, nodeX, nodeY);
+    const routeLevel = Math.max(visual.closedLevel, visual.openLevel);
+    const bodyFilter = routeLevel > 0
+      ? "brightness(" + (1.02 + routeLevel * 0.035) + ") saturate(" + (1.04 + routeLevel * 0.05) + ") drop-shadow(0 0 " + (3 + routeLevel) + "px " + (visual.openLevel >= visual.closedLevel ? "#ff56df" : "#66efff") + ")"
+      : "drop-shadow(0 5px 4px rgba(0,0,0,.62))";
+    drawCanvasSprite(ctx, person, 0, bodyY, bodyWidth, bodyHeight, 1, 0, bodyFilter, "source-over");
+    if (!visual.attacking && nodeY >= bodyY) drawScissorsComplete(ctx, visual, nodeX, nodeY);
+    return true;
+  }
+
+  function correctionEmbodimentVisualState(state) {
+    const test = correctionFluidRuntime(state);
+    const p = state.activeFormParams || {};
+    return {
+      enabled: !!(state.demoV2 && state.demoV2.correctionEmbodimentPass && test),
+      facing: test && test.bodyFacing != null ? test.bodyFacing : 0,
+      aimAngle: test && Number.isFinite(test.facingAngle) ? test.facingAngle : 0,
+      sprayAngles: test && test.weaponVisualTime > 0 && Array.isArray(test.weaponVisualAngles) && test.weaponVisualAngles.length
+        ? test.weaponVisualAngles : null,
+      squeeze: test ? clamp((test.weaponVisualTime || 0) / 0.26, 0, 1) : 0,
+      spreadLevel: test && test.modules ? test.modules.copy || 0 : p.correctionSpreadLevel || 0,
+      fatalLevel: test && test.modules ? test.modules.archive || 0 : p.correctionFatalLevel || 0
+    };
+  }
+
+  function drawCorrectionRouteMutation(ctx, visual, family, foreground) {
+    const level = family === "spread" ? visual.spreadLevel : visual.fatalLevel;
+    if (level <= 0) return;
+    const basis = markerBodyBasis(visual.facing);
+    const side = family === "spread" ? -1 : 1;
+    const rowOffset = family === "spread" ? 0 : 4;
+    const cell = correctionEmbodimentAssets.routeCells[rowOffset + visual.facing];
+    if (!cell) return;
+    const x = basis.rightX * side * (28 + level * 1.1) - basis.forwardX * 5;
+    const y = -8 + basis.rightY * side * (28 + level * 1.1) - basis.forwardY * 5;
+    if ((y >= -7) !== foreground) return;
+    const color = family === "spread" ? "#ff49d0" : "#62efff";
+    const height = 28 + level * 2.5;
+    const width = height * cell.width / Math.max(1, cell.height);
+    drawCanvasSprite(ctx, cell, x, y, width * 1.08, height * 1.08,
+      0.12 + level * 0.055, 0,
+      "blur(" + (1.4 + level * 0.5) + "px) brightness(1.9) saturate(1.5) drop-shadow(0 0 " + (5 + level * 2) + "px " + color + ")",
+      "screen");
+    drawCanvasSprite(ctx, cell, x, y, width, height, 0.78 + level * 0.05, 0,
+      "brightness(" + (1.02 + level * 0.075) + ") saturate(" + (1.05 + level * 0.08) + ") drop-shadow(0 0 " + (3 + level) + "px " + color + ")",
+      "source-over");
+  }
+
+  function drawCorrectionNozzle(ctx, angle, index, count, active) {
+    const cell = correctionEmbodimentAssets.nozzleCells[markerDirectionFrame(angle)];
+    if (!cell) return;
+    const lateralX = -Math.sin(angle);
+    const lateralY = Math.cos(angle);
+    const offset = (index - (count - 1) * 0.5) * 9;
+    const orbit = 28;
+    const x = Math.cos(angle) * orbit + lateralX * offset;
+    const y = Math.sin(angle) * orbit + lateralY * offset;
+    const height = active ? 32 : 29;
+    const width = height * cell.width / Math.max(1, cell.height);
+    drawCanvasSprite(ctx, cell, x, y, width * 1.06, height * 1.06, active ? 0.26 : 0.14, 0,
+      "blur(1.8px) brightness(1.85) saturate(1.4) drop-shadow(0 0 8px #7df8ff)", "screen");
+    drawCanvasSprite(ctx, cell, x, y, width, height, 0.98, 0,
+      "brightness(1.08) saturate(1.08) drop-shadow(0 0 4px #ff5bd5)", "source-over");
+  }
+
+  function drawCorrectionEmbodiedPlayer(ctx, state) {
+    const visual = correctionEmbodimentVisualState(state);
+    if (!visual.enabled) return false;
+    prepareCorrectionEmbodimentAssets();
+    const person = correctionEmbodimentAssets.personCells[visual.facing];
+    if (!person || correctionEmbodimentAssets.nozzleCells.length < 8) return false;
+    const bodyY = -7;
+    const bodyHeight = 112;
+    const squeezeKick = Math.sin((1 - visual.squeeze) * Math.PI) * visual.squeeze;
+    const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
+    const angles = visual.sprayAngles || [visual.aimAngle];
+    const backAngles = angles.filter(function (angle) { return Math.sin(angle) < -0.1; });
+    const frontAngles = angles.filter(function (angle) { return Math.sin(angle) >= -0.1; });
+    backAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, angle, index, backAngles.length, !!visual.sprayAngles); });
+    drawCorrectionRouteMutation(ctx, visual, "spread", false);
+    drawCorrectionRouteMutation(ctx, visual, "fatal", false);
+    drawCanvasSprite(ctx, person, 0, bodyY + squeezeKick * 2.2,
+      bodyWidth * (1 + squeezeKick * 0.045), bodyHeight * (1 - squeezeKick * 0.025), 1, 0,
+      "brightness(" + (1.02 + squeezeKick * 0.14) + ") saturate(" + (1.04 + squeezeKick * 0.16) + ") drop-shadow(0 0 " + (4 + squeezeKick * 8) + "px rgba(116,244,255,.82))",
+      "source-over");
+    drawCorrectionRouteMutation(ctx, visual, "spread", true);
+    drawCorrectionRouteMutation(ctx, visual, "fatal", true);
+    frontAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, angle, index, frontAngles.length, !!visual.sprayAngles); });
+    return true;
+  }
+
+  function thermosBackPressureEmitter(state, visual, family, level) {
+    const basis = markerBodyBasis(visual.facing);
+    const side = family === "condensation" ? 1 : family === "heatwave" ? -1 : 0;
+    const x = state.player.x;
+    const y = state.player.y - 7;
+    let dx = -basis.forwardX;
+    let dy = -basis.forwardY;
+    if (side) {
+      dx = -basis.forwardX * 0.82 + basis.rightX * side * 0.58;
+      dy = -basis.forwardY * 0.82 + basis.rightY * side * 0.58;
+      const length = Math.hypot(dx, dy) || 1;
+      dx /= length;
+      dy /= length;
+    }
+    return { x, y, dx, dy, family, level };
+  }
+
+  function triggerThermosBackPressure(state, test) {
+    if (!state.demoV2 || !state.demoV2.thermosBackPressurePass || !test) return;
+    const visual = thermosEmbodimentVisualState(state);
+    const emitters = [];
+    if (visual.condensationLevel > 0) {
+      emitters.push(thermosBackPressureEmitter(state, visual, "condensation", visual.condensationLevel));
+      test.condensationRecoil = 0.32;
+    }
+    if (visual.heatwaveLevel > 0) {
+      emitters.push(thermosBackPressureEmitter(state, visual, "heatwave", visual.heatwaveLevel));
+      test.heatwaveRecoil = 0.32;
+    }
+    if (!emitters.length) emitters.push(thermosBackPressureEmitter(state, visual, "neutral", 0));
+    emitters.forEach(function (emitter, index) {
+      const duration = 0.3 + emitter.level * 0.025;
+      state.formEvents.push({
+        kind: "thermos_backpressure",
+        primitive: "thermos_backpressure",
+        source: "thermos_backpressure_" + emitter.family,
+        x: emitter.x,
+        y: emitter.y,
+        dx: emitter.dx,
+        dy: emitter.dy,
+        family: emitter.family,
+        level: emitter.level,
+        seed: (state.stats.shots || 0) * 17 + index * 31 + visual.facing * 7,
+        life: duration,
+        duration,
+        maxLife: duration,
+        age: 0
+      });
+    });
+  }
+
+  function drawThermosBackPressureEvent(ctx, event, alpha, progress) {
+    prepareThermosEmbodimentAssets();
+    const level = event.level || 0;
+    const family = event.family || "neutral";
+    const rowOffset = family === "heatwave" ? 4 : 0;
+    const frame = clamp(Math.floor(clamp(progress, 0, 0.999) * 4), 0, 3);
+    const cell = thermosEmbodimentAssets.backPressureCells[rowOffset + frame];
+    if (!cell) return;
+    const direction = Math.atan2(event.dy || 0, event.dx || 1);
+    // The player plus both wearable packs span roughly 100 px. Keep the arc
+    // just outside that silhouette so it reads as a body-hugging pressure
+    // buffer instead of disappearing underneath the hardware.
+    const size = 118 + level * 9;
+    const filter = family === "neutral"
+      ? "grayscale(1) brightness(1.2) drop-shadow(0 0 5px rgba(230,252,255,.82))"
+      : family === "condensation"
+        ? "brightness(" + (1.02 + level * 0.08) + ") saturate(1.18) drop-shadow(0 0 " + (5 + level * 1.6) + "px rgba(96,235,255,.9))"
+        : "brightness(" + (1.02 + level * 0.08) + ") saturate(1.2) drop-shadow(0 0 " + (5 + level * 1.6) + "px rgba(255,166,55,.92))";
+    drawCanvasSprite(
+      ctx,
+      cell,
+      event.x,
+      event.y,
+      size,
+      size,
+      Math.min(0.96, alpha * (0.78 + level * 0.045)),
+      direction,
+      filter,
+      "screen"
+    );
+  }
+
   function drawSpriteFrame(ctx, id, frame, x, y, width, height, alpha, rotation) {
     if (!isSpriteReady(id)) return false;
     const img = runtimeImages[id];
@@ -334,6 +1247,27 @@
     const sourceY = Math.floor(index / 2) * sourceHeight;
     ctx.save();
     ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function drawGridSpriteFrame(ctx, id, columns, rows, frame, x, y, width, height, alpha, rotation, filter, composite) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const maxFrame = Math.max(0, columns * rows - 1);
+    const index = clamp(Math.floor(frame || 0), 0, maxFrame);
+    const sourceWidth = Math.floor(img.naturalWidth / columns);
+    const sourceHeight = Math.floor(img.naturalHeight / rows);
+    const sourceX = index % columns * sourceWidth;
+    const sourceY = Math.floor(index / columns) * sourceHeight;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.globalCompositeOperation = composite || "source-over";
+    ctx.filter = filter || "none";
     ctx.translate(x, y);
     if (rotation) ctx.rotate(rotation);
     ctx.imageSmoothingEnabled = false;
@@ -417,7 +1351,7 @@
     drawSpriteFrame(ctx, "correction_fluid_glitch_v25", v24Frame(progress), item.x, item.y, r * scale, r * scale, Math.min(/correction/.test(source) ? 0.46 : 0.16, (alpha || 0.5) * 0.45), 0);
   }
 
-  function drawV24LinearEvent(ctx, event, alpha, progress) {
+  function drawV24LinearEvent(ctx, event, alpha, progress, state) {
     const source = event.source || "";
     const meta = event.meta || {};
     const dx = event.x2 - event.x1;
@@ -425,17 +1359,34 @@
     const length = Math.hypot(dx, dy) || 1;
     const angle = Math.atan2(dy, dx);
     if (source === "correction_test_spray") {
+      if (state && state.demoV2 && state.demoV2.correctionEmbodimentPass) {
+        const frame = v24Frame(progress);
+        drawGridSpriteFrame(ctx, "correction_spray_error_v39", 4, 2, frame,
+          event.x1 + dx * 0.5, event.y1 + dy * 0.5,
+          length * 1.18, Math.max(58, (event.width || 18) * 3.5),
+          Math.min(1, alpha + 0.14), angle,
+          "brightness(1.08) saturate(1.1) drop-shadow(0 0 8px rgba(103,247,255,.86))", "source-over");
+        return true;
+      }
       drawSpriteFrame(ctx, "correction_fluid_spray_v25", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(52, (event.width || 18) * 3.2), Math.min(1, alpha + 0.14), angle);
       return true;
     }
     if (source === "thermos_test_base") {
       if (Math.abs(meta.fanOffset || 0) > 0.001) return true;
       const fanWidth = meta.fanWidth || Math.max(150, (event.width || 10) * 18);
-      drawSpriteFrame(ctx, "thermos_fan_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.18, fanWidth * 1.08, Math.min(0.96, alpha + 0.12), angle);
+      const visibleOffset = Math.min(length * 0.28, meta.visualOriginDistance || 0);
+      const visibleX1 = event.x1 + dx / length * visibleOffset;
+      const visibleY1 = event.y1 + dy / length * visibleOffset;
+      const visibleLength = Math.max(20, length - visibleOffset);
+      drawSpriteFrame(ctx, "thermos_fan_v24", v24Frame(progress), visibleX1 + dx / length * visibleLength * 0.5, visibleY1 + dy / length * visibleLength * 0.5, visibleLength * 1.18, fanWidth * 1.08, Math.min(0.96, alpha + 0.12), angle);
       return true;
     }
     if (source === "thermos_test_focus") {
-      drawSpriteFrame(ctx, "thermos_focus_v24", v24Frame(progress), event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.16, Math.max(64, (event.width || 10) * 7.2), Math.min(1, alpha + 0.14), angle);
+      const visibleOffset = Math.min(length * 0.34, meta.visualOriginDistance || 0);
+      const visibleX1 = event.x1 + dx / length * visibleOffset;
+      const visibleY1 = event.y1 + dy / length * visibleOffset;
+      const visibleLength = Math.max(20, length - visibleOffset);
+      drawSpriteFrame(ctx, "thermos_focus_v24", v24Frame(progress), visibleX1 + dx / length * visibleLength * 0.5, visibleY1 + dy / length * visibleLength * 0.5, visibleLength * 1.16, Math.max(64, (event.width || 10) * 7.2), Math.min(1, alpha + 0.14), angle);
       return true;
     }
     if (source === "scissors_test_dash") {
@@ -443,6 +1394,16 @@
       return true;
     }
     if (source === "scissors_test_thrust" || source === "scissors_test_sever") {
+      if (state && state.demoV2 && state.demoV2.scissorsEmbodimentPass) {
+        const frame = source === "scissors_test_sever" ? 3 : v24Frame(progress);
+        const height = source === "scissors_test_sever" ? Math.max(118, (event.width || 52) * 2.4) : Math.max(76, (event.width || 26) * 2.8);
+        drawGridSpriteFrame(ctx, "scissors_cut_routes_v39", 4, 2, frame,
+          event.x1 + dx * 0.51, event.y1 + dy * 0.51,
+          length * (source === "scissors_test_sever" ? 1.48 : 1.3), height,
+          Math.min(1, alpha + 0.16), angle,
+          "brightness(1.1) saturate(1.12) drop-shadow(0 0 10px rgba(102,239,255,.9))", "source-over");
+        return true;
+      }
       const frame = source === "scissors_test_sever" ? Math.min(3, 1 + v24Frame(progress)) : v24Frame(progress);
       const height = source === "scissors_test_sever" ? Math.max(92, (event.width || 52) * 2.2) : Math.max(58, (event.width || 26) * 2.35);
       drawSpriteFrame(ctx, "scissors_thrust_v24", frame, event.x1 + dx * 0.5, event.y1 + dy * 0.5, length * 1.28, height * 1.12, Math.min(1, alpha + 0.16), angle);
@@ -467,6 +1428,14 @@
       const frame = v24Frame(progress);
       const width = range * 1.3;
       const height = Math.max(94, Math.sin(halfAngle) * range * 2.24);
+      if (state && state.demoV2 && state.demoV2.scissorsEmbodimentPass) {
+        drawGridSpriteFrame(ctx, "scissors_cut_routes_v39", 4, 2, 4 + v24Frame(progress),
+          event.x1 + Math.cos(lockedAngle) * range * 0.48,
+          event.y1 + Math.sin(lockedAngle) * range * 0.48,
+          width * 1.12, Math.max(width * 0.88, height), Math.min(1, alpha + 0.14), lockedAngle,
+          "brightness(1.08) saturate(1.16) drop-shadow(0 0 11px rgba(255,86,223,.9))", "source-over");
+        return true;
+      }
       drawSpriteFrame(ctx, "scissors_slash_v24", frame, event.x1 + Math.cos(lockedAngle) * range * 0.52, event.y1 + Math.sin(lockedAngle) * range * 0.52, width, Math.max(width * 0.84, height), Math.min(1, alpha + 0.14), lockedAngle);
       return true;
     }
@@ -478,6 +1447,15 @@
       const frame = heavy ? 3 : Math.min(2, v24Frame(progress));
       const visualSize = range * (heavy ? 1.82 : 1.62);
       const anchorDistance = Math.min(range * 0.54, visualSize * 0.38);
+      if (state && state.demoV2 && state.demoV2.scissorsEmbodimentPass) {
+        drawGridSpriteFrame(ctx, "scissors_cut_routes_v39", 4, 2, 4 + frame,
+          event.x1 + Math.cos(lockedAngle) * anchorDistance,
+          event.y1 + Math.sin(lockedAngle) * anchorDistance,
+          visualSize * (heavy ? 1.12 : 1), visualSize * (heavy ? 1.12 : 1),
+          Math.min(1, alpha + 0.12), lockedAngle,
+          "brightness(1.1) saturate(1.22) drop-shadow(0 0 14px rgba(255,72,218,.92))", "source-over");
+        return true;
+      }
       // Open Blade owns a complete pair of scissors, not two detached blade
       // arcs. Keep the handles around the player and rotate the blades outward
       // along the same locked angle used by the real fan judgment.
@@ -1554,6 +2532,13 @@
       return distanceBand || a.hp - b.hp || (b.correctionErrorStacks || 0) - (a.correctionErrorStacks || 0) || distanceToPlayer(a) - distanceToPlayer(b);
     });
     targets.push.apply(targets, candidates.slice(0, Math.max(0, (p.correctionTargetCount || 1) - 1)));
+    if (targets.length) {
+      test.weaponVisualAngles = targets.map(function (target) {
+        return Math.atan2(target.y - state.player.y, target.x - state.player.x);
+      });
+      test.facingAngle = test.weaponVisualAngles[0];
+      test.weaponVisualTime = 0.26;
+    }
     targets.forEach(function (target, index) {
       const angle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
       const x1 = state.player.x + Math.cos(angle) * 20;
@@ -1716,6 +2701,8 @@
     }) || nearestEnemy(state, range);
     if (!target) return;
     const baseAngle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
+    test.weaponVisualAngle = baseAngle;
+    test.weaponVisualTime = 0.38;
     const baseAmount = Math.max(1, p.amount || 1);
     const angleStep = 0.075;
     const coverageScale = p.markerFixedCoverageScale || 1;
@@ -2475,7 +3462,15 @@
         "steam",
         false,
         source,
-        { thermosFixedFan: true, groupIndex, fanOffset: offset, fanAngle: fan.angle, fanRange: fan.range, fanWidth: width }
+        {
+          thermosFixedFan: true,
+          groupIndex,
+          fanOffset: offset,
+          fanAngle: fan.angle,
+          fanRange: fan.range,
+          fanWidth: width,
+          visualOriginDistance: state.demoV2 && state.demoV2.thermosEmbodimentPass ? 24 : 0
+        }
       );
     });
   }
@@ -2523,7 +3518,11 @@
     const target = thermosFixedTargetInFan(state, pending.angle, p.range || 225, 0.5);
     if (!target) return;
     const wasAlive = !target.dead;
-    addBeamEvent(state, state.player.x, state.player.y, target.x, target.y, "#ffe0a1", 10, 0.22, "steam", false, "thermos_test_focus", { targetEnemyId: target.id, focusIndex: pending.focusIndex });
+    addBeamEvent(state, state.player.x, state.player.y, target.x, target.y, "#ffe0a1", 10, 0.22, "steam", false, "thermos_test_focus", {
+      targetEnemyId: target.id,
+      focusIndex: pending.focusIndex,
+      visualOriginDistance: state.demoV2 && state.demoV2.thermosEmbodimentPass ? 39 : 0
+    });
     damageEnemy(state, target, p.thermosFixedFocusDamage || (p.damage || 14) * 1.55, "thermos_test_focus", null);
     if (wasAlive && target.dead) {
       test.stageFocusKills += 1;
@@ -2575,6 +3574,7 @@
     if (!test || mainAngle == null) return;
     test.facingAngle = mainAngle;
     state.stats.shots += 1;
+    triggerThermosBackPressure(state, test);
     const count = Math.max(1, p.amount || 1);
     const spread = count > 1 ? Math.min(0.68, 0.18 + count * 0.1) : 0;
     const hitThisRound = new Set();
@@ -3523,7 +4523,16 @@
     if (input.down) y += 1;
     const len = Math.hypot(x, y) || 1;
     const scissors = scissorsFixedRuntime(state);
-    if (scissors && (x || y)) scissors.facingAngle = Math.atan2(y, x);
+    if (scissors && (x || y)) {
+      scissors.facingAngle = Math.atan2(y, x);
+      scissors.bodyFacing = markerBodyFacingFromVector(x, y);
+    }
+    const marker = markerFixedRuntime(state);
+    if (marker && (x || y)) marker.bodyFacing = markerBodyFacingFromVector(x, y);
+    const thermos = fixedTestConfig(state) && fixedTestConfig(state).weaponId === "thermos" ? fixedTestRuntime(state) : null;
+    if (thermos && (x || y)) thermos.bodyFacing = markerBodyFacingFromVector(x, y);
+    const correction = correctionFluidRuntime(state);
+    if (correction && (x || y)) correction.bodyFacing = markerBodyFacingFromVector(x, y);
     if (scissors && scissors.dashMotionTime > 0) {
       const motionStep = Math.min(dt, scissors.dashMotionTime);
       state.player.x = clamp(state.player.x + (scissors.dashMotionVx || 0) * motionStep, 26, worldWidth(state) - 26);
@@ -3922,15 +4931,6 @@
         });
       }
     }
-    const correction = correctionFluidRuntime(state);
-    if (correction) {
-      const target = nearestEnemy(state, state.activeFormParams.range || 360);
-      const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : 0;
-      drawSprite(ctx, "correction_fluid_body_v25", 28, -3, 50, 50, 0.98, angle * 0.16);
-      if ((correction.activeErrorAreas || 0) >= (state.activeFormParams.correctionCrashAreaThreshold || 3) && state.activeFormParams.correctionCrashEnabled) {
-        drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 2, 0, 34, 70, 70, 0.72, 0);
-      }
-    }
   }
 
   function spawnStickyExpiryBranches(state, zone) {
@@ -4204,6 +5204,15 @@
   }
 
   function updateEffects(state, dt) {
+    const marker = markerFixedRuntime(state);
+    if (marker) marker.weaponVisualTime = Math.max(0, (marker.weaponVisualTime || 0) - dt);
+    const thermos = fixedTestRuntime(state);
+    if (thermos && fixedTestConfig(state) && fixedTestConfig(state).weaponId === "thermos") {
+      thermos.condensationRecoil = Math.max(0, (thermos.condensationRecoil || 0) - dt);
+      thermos.heatwaveRecoil = Math.max(0, (thermos.heatwaveRecoil || 0) - dt);
+    }
+    const correction = correctionFluidRuntime(state);
+    if (correction) correction.weaponVisualTime = Math.max(0, (correction.weaponVisualTime || 0) - dt);
     if (state.demoV2 && state.demoV2.growthFeedback && state.warmupTime <= 0) {
       state.demoV2.growthFeedback.time = Math.max(0, (state.demoV2.growthFeedback.time || 0) - dt);
       if (state.demoV2.growthFeedback.time <= 0) state.demoV2.growthFeedback = null;
@@ -4315,9 +5324,15 @@
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
-    drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    const markerEmbodied = drawMarkerEmbodiedPlayer(ctx, state);
+    const thermosEmbodied = markerEmbodied ? false : drawThermosEmbodiedPlayer(ctx, state);
+    const scissorsEmbodied = markerEmbodied || thermosEmbodied ? false : drawScissorsEmbodiedPlayer(ctx, state);
+    const correctionEmbodied = markerEmbodied || thermosEmbodied || scissorsEmbodied ? false : drawCorrectionEmbodiedPlayer(ctx, state);
+    if (!markerEmbodied && !thermosEmbodied && !scissorsEmbodied && !correctionEmbodied) {
+      drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
+    }
     const thermos = state.demoV2 && state.demoV2.phase === "thermos-fixed" ? fixedTestRuntime(state) : null;
-    if (thermos) {
+    if (thermos && !thermosEmbodied) {
       drawSprite(ctx, "thermos_body_v24", 28, -3, 50, 50, 0.96, 0);
     }
     const scissors = scissorsFixedRuntime(state);
@@ -4330,15 +5345,17 @@
         && (scissors.weaponVisualKind === "open" || scissors.weaponVisualKind === "finale");
       const closedStrikeActive = scissors.weaponVisualTime > 0
         && (scissors.weaponVisualKind === "thrust" || scissors.weaponVisualKind === "sever");
-      if (openLevel > 0) {
-        if (!openStrikeActive && !closedStrikeActive) {
-          const openOrbit = 38;
-          drawSpriteFrame(ctx, "scissors_strike_v27", 0,
-            Math.cos(angle) * openOrbit, Math.sin(angle) * openOrbit,
-            92 * pulse, 92 * pulse, 0.98, angle + Math.PI * 0.25);
+      if (!scissorsEmbodied) {
+        if (openLevel > 0) {
+          if (!openStrikeActive && !closedStrikeActive) {
+            const openOrbit = 38;
+            drawSpriteFrame(ctx, "scissors_strike_v27", 0,
+              Math.cos(angle) * openOrbit, Math.sin(angle) * openOrbit,
+              92 * pulse, 92 * pulse, 0.98, angle + Math.PI * 0.25);
+          }
+        } else {
+          if (!closedStrikeActive) drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
         }
-      } else {
-        if (!closedStrikeActive) drawSprite(ctx, "scissors_v23", Math.cos(angle) * orbit, Math.sin(angle) * orbit, 64 * pulse, 64 * pulse, 0.98, angle + Math.PI * 0.25);
       }
       const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
       drawCombatProgress(ctx, 0, 39, 82, 11, charge);
@@ -4416,15 +5433,24 @@
       if (e.correctionErrorStacks) {
         const errorFrame = clamp((e.correctionErrorStacks || 1) - 1, 0, 3);
         const stackPulse = e.correctionErrorStacks >= 3 ? 1 + Math.sin((e.age || 0) * 9) * 0.06 : 1;
-        drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2,
-          (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
-          (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
-          0.82 + e.correctionErrorStacks * 0.055, 0);
-        if (e.correctionErrorStacks === 2) {
-          drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 1, 0, -2, bodySize + 31, bodySize + 31, 0.4, 0);
-        }
-        if (e.correctionErrorStacks >= 3) {
-          drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 3, 0, -2, bodySize + 38, bodySize + 38, 0.76 + Math.sin((e.age || 0) * 9) * 0.08, 0);
+        if (state.demoV2 && state.demoV2.correctionEmbodimentPass) {
+          const v39Frame = 4 + Math.min(3, errorFrame + (e.correctionErrorStacks >= 3 ? 1 : 0));
+          const size = (bodySize + 26 + e.correctionErrorStacks * 7) * stackPulse;
+          drawGridSpriteFrame(ctx, "correction_spray_error_v39", 4, 2, v39Frame, 0, -2,
+            size * 1.08, size, 0.88 + e.correctionErrorStacks * 0.035, 0,
+            "brightness(1.1) saturate(1.12) drop-shadow(0 0 " + (5 + e.correctionErrorStacks * 2) + "px rgba(104,246,255,.88))",
+            "source-over");
+        } else {
+          drawSpriteFrame(ctx, "correction_fluid_error_v25", errorFrame, 0, -2,
+            (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
+            (bodySize + 24 + e.correctionErrorStacks * 5) * stackPulse,
+            0.82 + e.correctionErrorStacks * 0.055, 0);
+          if (e.correctionErrorStacks === 2) {
+            drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 1, 0, -2, bodySize + 31, bodySize + 31, 0.4, 0);
+          }
+          if (e.correctionErrorStacks >= 3) {
+            drawSpriteFrame(ctx, "correction_fluid_glitch_v25", 3, 0, -2, bodySize + 38, bodySize + 38, 0.76 + Math.sin((e.age || 0) * 9) * 0.08, 0);
+          }
         }
       }
       if (e.rooted > 0) {
@@ -4678,9 +5704,12 @@
         ctx.restore();
         continue;
       }
+      if (event.kind === "thermos_backpressure") {
+        continue;
+      }
       if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
         drawSuiteNeonLine(ctx, state, event, alpha, progress);
-        if (drawV24LinearEvent(ctx, event, alpha, progress)) continue;
+        if (drawV24LinearEvent(ctx, event, alpha, progress, state)) continue;
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
         const impactSize = profile.family === "thermos"
           ? Math.min(92, Math.max(48, (event.width || 6) * 4.5))
@@ -4978,6 +6007,10 @@
       addLabEnemy("station-a", 520, 360);
       addLabEnemy("station-b", 500, 420);
       state.activeFormParams.heat = 90;
+    } else if (kind === "thermos_backpressure") {
+      // Isolated attachment-scale review: the real fixed-test runtime and
+      // module levels drive the two half-rings, but no forward attack obscures
+      // their relationship to the worn pressure packs.
     } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
       const focus = addLabEnemy("thermos-fixed-focus", 525, 360);
       if (kind === "thermos_fixed_heatwave") {
@@ -5098,6 +6131,8 @@
         fireThermos(state);
         updateZones(state, 0.18);
       }
+    } else if (kind === "thermos_backpressure") {
+      triggerThermosBackPressure(state, fixedTestRuntime(state));
     } else if (kind === "thermos_fixed" || kind === "thermos_fixed_heatwave") {
       if (kind === "thermos_fixed_heatwave") state.activeFormParams.thermosFixedFullscreenChance = 0;
       fireThermos(state);
@@ -5278,6 +6313,11 @@
       updateDemoV2Director,
       demoV2PerimeterPoint,
       spawnDemoV2Wave,
+      markerEmbodimentVisualState,
+      thermosEmbodimentVisualState,
+      scissorsEmbodimentVisualState,
+      correctionEmbodimentVisualState,
+      triggerThermosBackPressure,
       fireScissorsFixedTest,
       fireSupportSkill
     }

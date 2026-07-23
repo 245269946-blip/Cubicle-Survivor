@@ -189,6 +189,10 @@
     test.totalSystemCrashes = 0;
     test.totalFinalCorrections = 0;
     test.totalFinalKills = 0;
+    test.bodyFacing = 0;
+    test.facingAngle = 0;
+    test.weaponVisualTime = 0;
+    test.weaponVisualAngles = [];
     return test;
   }
 

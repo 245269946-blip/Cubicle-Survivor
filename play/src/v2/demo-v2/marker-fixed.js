@@ -843,7 +843,8 @@
         offers: [], carriedLocks: [], pendingStatPart: "", pendingQualityIndex: 0,
         eliteCandidateSerial: 0,
         pendingRounds: [], fullscreenCopyReadyAt: 0, fullscreenArchiveReadyAt: 0,
-        fullscreenCopyTriggers: 0, fullscreenArchiveTriggers: 0
+        fullscreenCopyTriggers: 0, fullscreenArchiveTriggers: 0,
+        bodyFacing: 0, weaponVisualAngle: 0, weaponVisualTime: 0
       };
     },
     rebuildParams,
