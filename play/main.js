@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -466,6 +466,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "四把武器共用同一头身比、战斗高度与办公角色身份；异化只改变贴身装置和武器。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.9 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-10") {
+        document.title = "工位幸存者 Demo V3.10 · 战场比例与外围武器修正版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.10 · 战场比例与外围武器修正版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.10 战场比例与外围武器修正版");
+        if (subtitle) subtitle.textContent = "人物恢复接近旧版的战场占比；穿戴件留在身体挂点，真正瞄准的武器按素材长度环绕在外围，不再压住角色。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "回到旧版战场比例";
+          guideCards[0].querySelector("span:last-child").textContent = "人物可见高度回到约 55—59px，与普通怪物和地图空间重新建立合理尺度。";
+          guideCards[1].querySelector("strong").textContent = "武器内缘退出人物主体";
+          guideCards[1].querySelector("span:last-child").textContent = "不是只移动中心点，而是按马克笔、剪刀和喷头的真实长轴计算外围半径。";
+          guideCards[2].querySelector("strong").textContent = "穿戴与瞄准重新分层";
+          guideCards[2].querySelector("span:last-child").textContent = "背包、墨仓和压力件仍贴身安装；只有笔、杯、剪刀和喷头围绕人物追随攻击方向。";
+          guideCards[3].querySelector("strong").textContent = "V3.9 数值原样继承";
+          guideCards[3].querySelector("span:last-child").textContent = "伤害、攻速、怪物、关卡、模块与组件不变，本版只修正比例、外围轨道和遮挡关系。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.10 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

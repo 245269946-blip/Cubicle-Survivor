@@ -630,6 +630,58 @@
     return y < 0 ? 2 : 0;
   }
 
+  function embodiedCombatLayout(state) {
+    const compact = !!(state.demoV2 && state.demoV2.combatScaleOrbitPass);
+    if (!compact) {
+      return {
+        compact: false,
+        bodyHeight: 112,
+        bodyY: -7,
+        markerOrbit: 40,
+        markerWeaponHeight: 38,
+        markerBaseSpacing: 9,
+        markerCopySpacingOne: 18,
+        markerCopySpacingTwo: 22,
+        markerAttachmentScale: 1,
+        thermosOrbit: 39,
+        thermosWeaponHeight: 48,
+        thermosSpacingScale: 1,
+        thermosRouteScale: 1,
+        scissorsOrbit: 31,
+        scissorsWeaponHeight: 64,
+        scissorsWeaponGrowth: 2.4,
+        correctionOrbit: 28,
+        correctionWeaponHeight: 29,
+        correctionActiveWeaponHeight: 32,
+        correctionLaneSpacing: 9,
+        correctionRouteScale: 1
+      };
+    }
+    return {
+      compact: true,
+      bodyHeight: 78,
+      bodyY: -4,
+      markerOrbit: 54,
+      markerWeaponHeight: 22,
+      markerBaseSpacing: 7,
+      markerCopySpacingOne: 14,
+      markerCopySpacingTwo: 18,
+      markerAttachmentScale: 0.74,
+      thermosOrbit: 47,
+      thermosWeaponHeight: 32,
+      thermosSpacingScale: 0.72,
+      thermosRouteScale: 0.74,
+      scissorsOrbit: 49,
+      scissorsWeaponHeight: 48,
+      scissorsWeaponGrowth: 1.4,
+      correctionOrbit: 51,
+      correctionWeaponHeight: 18,
+      correctionActiveWeaponHeight: 21,
+      correctionLaneSpacing: 7,
+      correctionRouteScale: 0.74
+    };
+  }
+
   function markerEmbodimentVisualState(state) {
     const test = markerFixedRuntime(state);
     const p = state.activeFormParams || {};
@@ -654,6 +706,7 @@
       baseAmount,
       copyLines,
       penCount: Math.min(6, baseAmount * (1 + copyLines)),
+      layout: embodiedCombatLayout(state),
       components: {
         tip: componentState("tip"),
         body: componentState("body"),
@@ -699,24 +752,29 @@
     const forwardY = Math.sin(visual.aimAngle);
     const lateralX = -forwardY;
     const lateralY = forwardX;
-    const orbit = 40;
-    const baseOffsets = visual.baseAmount <= 1 ? [0] : [-9, 9];
+    const layout = visual.layout;
+    const orbit = layout.markerOrbit;
+    const baseSpacing = layout.markerBaseSpacing;
+    const baseOffsets = visual.baseAmount <= 1 ? [0] : [-baseSpacing, baseSpacing];
     baseOffsets.forEach(function (offset, index) {
       nodes.push({
         family: "base",
         x: forwardX * orbit + lateralX * offset,
         y: forwardY * orbit + lateralY * offset,
-        index
+        index,
+        weaponHeight: layout.markerWeaponHeight
       });
     });
-    const copyOffsets = visual.copyLines === 1 ? [18] : visual.copyLines >= 2 ? [-22, 22] : [];
+    const copyOffsets = visual.copyLines === 1 ? [layout.markerCopySpacingOne]
+      : visual.copyLines >= 2 ? [-layout.markerCopySpacingTwo, layout.markerCopySpacingTwo] : [];
     copyOffsets.forEach(function (offset, laneIndex) {
       baseOffsets.forEach(function (baseOffset, amountIndex) {
         nodes.push({
           family: "copy",
           x: forwardX * orbit + lateralX * (offset + baseOffset * 0.55),
           y: forwardY * orbit + lateralY * (offset + baseOffset * 0.55),
-          index: laneIndex * 2 + amountIndex
+          index: laneIndex * 2 + amountIndex,
+          weaponHeight: layout.markerWeaponHeight
         });
       });
     });
@@ -725,7 +783,7 @@
 
   function drawMarkerPen(ctx, cell, node, copyLevel) {
     if (!cell) return;
-    const height = 38;
+    const height = node.weaponHeight || 38;
     const width = height * cell.width / Math.max(1, cell.height);
     const copy = node.family === "copy";
     const glow = copy ? "#ffd75f" : "#f5ffff";
@@ -776,14 +834,15 @@
     const tip = visual.components.tip;
     const body = visual.components.body;
     const tail = visual.components.tail;
+    const scale = visual.layout.markerAttachmentScale;
     if (tip.copies > 0) {
-      drawMarkerAttachedComponent(ctx, cells[3], node.x + forwardX * 19, node.y + forwardY * 19, 25, 21, visual.aimAngle, tip.copies, "#ffd75f");
+      drawMarkerAttachedComponent(ctx, cells[3], node.x + forwardX * 19 * scale, node.y + forwardY * 19 * scale, 25 * scale, 21 * scale, visual.aimAngle, tip.copies, "#ffd75f");
     }
     if (body.copies > 0 && node.family === "base") {
-      drawMarkerAttachedComponent(ctx, cells[4], node.x, node.y, 27, 22, visual.aimAngle, body.copies, "#ff65dc");
+      drawMarkerAttachedComponent(ctx, cells[4], node.x, node.y, 27 * scale, 22 * scale, visual.aimAngle, body.copies, "#ff65dc");
     }
     if (tail.copies > 0 && tail.activeStat !== "duration") {
-      drawMarkerAttachedComponent(ctx, cells[5], node.x - forwardX * 19, node.y - forwardY * 19, 28, 20, visual.aimAngle, tail.copies, "#68efff");
+      drawMarkerAttachedComponent(ctx, cells[5], node.x - forwardX * 19 * scale, node.y - forwardY * 19 * scale, 28 * scale, 20 * scale, visual.aimAngle, tail.copies, "#68efff");
     }
   }
 
@@ -802,10 +861,11 @@
     const cells = markerEmbodimentAssets.partCells;
     if (!cells || cells.length < 6 || tail.copies <= 0 || tail.activeStat !== "duration") return;
     const basis = markerBodyBasis(visual.facing);
-    const x = -basis.forwardX * 12 - basis.rightX * 27;
-    const y = -7 - basis.forwardY * 12 - basis.rightY * 27;
+    const scale = visual.layout.markerAttachmentScale;
+    const x = -basis.forwardX * 12 * scale - basis.rightX * 27 * scale;
+    const y = visual.layout.bodyY - basis.forwardY * 12 * scale - basis.rightY * 27 * scale;
     const rotation = Math.atan2(basis.forwardY, basis.forwardX);
-    drawMarkerAttachedComponent(ctx, cells[2], x, y, 31, 31, rotation, tail.copies, "#68efff");
+    drawMarkerAttachedComponent(ctx, cells[2], x, y, 31 * scale, 31 * scale, rotation, tail.copies, "#68efff");
   }
 
   function drawMarkerEmbodiedPlayer(ctx, state) {
@@ -815,9 +875,9 @@
     const rig = markerEmbodimentAssets.riggedPersonVisuals[visual.facing];
     const pen = markerEmbodimentAssets.weaponCells[markerDirectionFrame(visual.aimAngle)];
     if (!rig || !rig.base || !pen) return false;
-    const height = 112;
+    const height = visual.layout.bodyHeight;
     const width = height * rig.base.width / Math.max(1, rig.base.height);
-    const bodyY = -7;
+    const bodyY = visual.layout.bodyY;
     const penNodes = markerPenNodes(visual);
     penNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
       drawMarkerPen(ctx, pen, node, visual.copyLevel);
@@ -855,6 +915,7 @@
       condensationRecoil: test ? test.condensationRecoil || 0 : 0,
       heatwaveRecoil: test ? test.heatwaveRecoil || 0 : 0,
       cupCount: Math.min(4, Math.max(1, p.amount || 1)),
+      layout: embodiedCombatLayout(state),
       components: {
         lid: componentState("tip"),
         body: componentState("body"),
@@ -874,13 +935,16 @@
     const forwardY = Math.sin(visual.aimAngle);
     const lateralX = -forwardY;
     const lateralY = forwardX;
-    const offsets = visual.cupCount === 1 ? [0]
+    const spacingScale = visual.layout.thermosSpacingScale;
+    const offsets = (visual.cupCount === 1 ? [0]
       : visual.cupCount === 2 ? [-12, 12]
-        : visual.cupCount === 3 ? [-18, 0, 18] : [-24, -8, 8, 24];
+        : visual.cupCount === 3 ? [-18, 0, 18] : [-24, -8, 8, 24]).map(function (value) {
+      return value * spacingScale;
+    });
     return offsets.map(function (offset, index) {
       return {
-        x: forwardX * 39 + lateralX * offset,
-        y: forwardY * 39 + lateralY * offset,
+        x: forwardX * visual.layout.thermosOrbit + lateralX * offset,
+        y: forwardY * visual.layout.thermosOrbit + lateralY * offset,
         index
       };
     });
@@ -893,7 +957,7 @@
     const lidQuality = markerComponentQuality(visual.components.lid.copies);
     const baseQuality = markerComponentQuality(visual.components.base.copies);
     const quality = Math.max(bodyQuality, lidQuality, baseQuality);
-    const height = 48 + quality * 1.4;
+    const height = visual.layout.thermosWeaponHeight + quality * (visual.layout.compact ? 0.8 : 1.4);
     const width = height * weapon.cell.width / Math.max(1, weapon.cell.height);
     ctx.save();
     ctx.translate(node.x, node.y);
@@ -927,18 +991,19 @@
     const rowOffset = family === "condensation" ? 0 : 4;
     const cell = thermosEmbodimentAssets.routeCells[rowOffset + visual.facing];
     if (!cell) return [];
+    const scale = visual.layout.thermosRouteScale;
     const nodes = [];
     for (let index = 0; index < count; index++) {
-      const sideDistance = 38 + index * 8;
-      const rearDistance = 4 + index * 3;
+      const sideDistance = (38 + index * 8) * scale;
+      const rearDistance = (4 + index * 3) * scale;
       nodes.push({
         family,
         level,
         cell,
         x: basis.rightX * side * sideDistance - basis.forwardX * rearDistance + basis.forwardX * recoilKick,
-        y: -8 + basis.rightY * side * sideDistance - basis.forwardY * rearDistance + basis.forwardY * recoilKick,
-        width: 35 - index * 2,
-        height: 41 - index * 2,
+        y: visual.layout.bodyY - 1 + basis.rightY * side * sideDistance - basis.forwardY * rearDistance + basis.forwardY * recoilKick,
+        width: (35 - index * 2) * scale,
+        height: (41 - index * 2) * scale,
         recoil,
         exhaustX,
         exhaustY,
@@ -982,7 +1047,7 @@
   function drawThermosRoutePacks(ctx, visual, foreground) {
     ["condensation", "heatwave"].forEach(function (family) {
       thermosRoutePackNodes(visual, family).forEach(function (node) {
-        if ((node.y >= -7) !== foreground) return;
+        if ((node.y >= visual.layout.bodyY) !== foreground) return;
         drawThermosRoutePack(ctx, node);
       });
     });
@@ -994,9 +1059,9 @@
     prepareThermosEmbodimentAssets();
     const rig = thermosEmbodimentAssets.riggedPersonVisuals[visual.facing];
     if (!rig || !rig.base || !thermosWeaponVisual(visual.aimAngle).cell) return false;
-    const height = 112;
+    const height = visual.layout.bodyHeight;
     const width = height * rig.base.width / Math.max(1, rig.base.height);
-    const bodyY = -7;
+    const bodyY = visual.layout.bodyY;
     const cupNodes = thermosCupNodes(visual);
     state.formEvents.filter(function (event) {
       return event.kind === "thermos_backpressure";
@@ -1005,7 +1070,11 @@
       const activeLife = Math.min(duration, event.life == null ? duration : event.life);
       const alpha = event.debugHold ? 1 : clamp(activeLife / duration, 0, 1);
       const progress = event.debugHold ? (event.debugProgress == null ? 0.7 : event.debugProgress) : 1 - alpha;
-      drawThermosBackPressureEvent(ctx, Object.assign({}, event, { x: 0, y: bodyY }), alpha, progress);
+      drawThermosBackPressureEvent(ctx, Object.assign({}, event, {
+        x: 0,
+        y: bodyY,
+        compact: visual.layout.compact
+      }), alpha, progress);
     });
     cupNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
       drawThermosCup(ctx, visual, node);
@@ -1031,7 +1100,8 @@
         : test && Number.isFinite(test.facingAngle) ? test.facingAngle : 0,
       closedLevel: test && test.modules ? test.modules.copy || 0 : p.scissorsClosedLevel || 0,
       openLevel: test && test.modules ? test.modules.archive || 0 : p.scissorsOpenLevel || 0,
-      attacking: !!(test && test.weaponVisualTime > 0)
+      attacking: !!(test && test.weaponVisualTime > 0),
+      layout: embodiedCombatLayout(state)
     };
   }
 
@@ -1040,7 +1110,7 @@
     if (!cell) return;
     const level = Math.max(visual.closedLevel, visual.openLevel);
     const glow = visual.openLevel > visual.closedLevel ? "#ff56df" : visual.closedLevel > 0 ? "#66efff" : "#e8f6ff";
-    const height = 64 + level * 2.4;
+    const height = visual.layout.scissorsWeaponHeight + level * visual.layout.scissorsWeaponGrowth;
     const width = height * cell.width / Math.max(1, cell.height);
     drawCanvasSprite(ctx, cell, nodeX, nodeY, width * 1.06, height * 1.06,
       0.16 + level * 0.035, 0,
@@ -1057,10 +1127,10 @@
     prepareScissorsEmbodimentAssets();
     const person = scissorsEmbodimentAssets.personCells[visual.facing];
     if (!person || scissorsEmbodimentAssets.weaponCells.length < 8) return false;
-    const bodyY = -7;
-    const bodyHeight = 112;
+    const bodyY = visual.layout.bodyY;
+    const bodyHeight = visual.layout.bodyHeight;
     const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
-    const orbit = 31;
+    const orbit = visual.layout.scissorsOrbit;
     const nodeX = Math.cos(visual.aimAngle) * orbit;
     const nodeY = Math.sin(visual.aimAngle) * orbit;
     if (!visual.attacking && nodeY < bodyY) drawScissorsComplete(ctx, visual, nodeX, nodeY);
@@ -1084,7 +1154,8 @@
         ? test.weaponVisualAngles : null,
       squeeze: test ? clamp((test.weaponVisualTime || 0) / 0.26, 0, 1) : 0,
       spreadLevel: test && test.modules ? test.modules.copy || 0 : p.correctionSpreadLevel || 0,
-      fatalLevel: test && test.modules ? test.modules.archive || 0 : p.correctionFatalLevel || 0
+      fatalLevel: test && test.modules ? test.modules.archive || 0 : p.correctionFatalLevel || 0,
+      layout: embodiedCombatLayout(state)
     };
   }
 
@@ -1096,11 +1167,12 @@
     const rowOffset = family === "spread" ? 0 : 4;
     const cell = correctionEmbodimentAssets.routeCells[rowOffset + visual.facing];
     if (!cell) return;
-    const x = basis.rightX * side * (28 + level * 1.1) - basis.forwardX * 5;
-    const y = -8 + basis.rightY * side * (28 + level * 1.1) - basis.forwardY * 5;
-    if ((y >= -7) !== foreground) return;
+    const scale = visual.layout.correctionRouteScale;
+    const x = basis.rightX * side * (28 + level * 1.1) * scale - basis.forwardX * 5 * scale;
+    const y = visual.layout.bodyY - 1 + basis.rightY * side * (28 + level * 1.1) * scale - basis.forwardY * 5 * scale;
+    if ((y >= visual.layout.bodyY) !== foreground) return;
     const color = family === "spread" ? "#ff49d0" : "#62efff";
-    const height = 28 + level * 2.5;
+    const height = (28 + level * 2.5) * scale;
     const width = height * cell.width / Math.max(1, cell.height);
     drawCanvasSprite(ctx, cell, x, y, width * 1.08, height * 1.08,
       0.12 + level * 0.055, 0,
@@ -1111,16 +1183,16 @@
       "source-over");
   }
 
-  function drawCorrectionNozzle(ctx, angle, index, count, active) {
+  function drawCorrectionNozzle(ctx, visual, angle, index, count, active) {
     const cell = correctionEmbodimentAssets.nozzleCells[markerDirectionFrame(angle)];
     if (!cell) return;
     const lateralX = -Math.sin(angle);
     const lateralY = Math.cos(angle);
-    const offset = (index - (count - 1) * 0.5) * 9;
-    const orbit = 28;
+    const offset = (index - (count - 1) * 0.5) * visual.layout.correctionLaneSpacing;
+    const orbit = visual.layout.correctionOrbit;
     const x = Math.cos(angle) * orbit + lateralX * offset;
     const y = Math.sin(angle) * orbit + lateralY * offset;
-    const height = active ? 32 : 29;
+    const height = active ? visual.layout.correctionActiveWeaponHeight : visual.layout.correctionWeaponHeight;
     const width = height * cell.width / Math.max(1, cell.height);
     drawCanvasSprite(ctx, cell, x, y, width * 1.06, height * 1.06, active ? 0.26 : 0.14, 0,
       "blur(1.8px) brightness(1.85) saturate(1.4) drop-shadow(0 0 8px #7df8ff)", "screen");
@@ -1134,14 +1206,14 @@
     prepareCorrectionEmbodimentAssets();
     const person = correctionEmbodimentAssets.personCells[visual.facing];
     if (!person || correctionEmbodimentAssets.nozzleCells.length < 8) return false;
-    const bodyY = -7;
-    const bodyHeight = 112;
+    const bodyY = visual.layout.bodyY;
+    const bodyHeight = visual.layout.bodyHeight;
     const squeezeKick = Math.sin((1 - visual.squeeze) * Math.PI) * visual.squeeze;
     const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
     const angles = visual.sprayAngles || [visual.aimAngle];
     const backAngles = angles.filter(function (angle) { return Math.sin(angle) < -0.1; });
     const frontAngles = angles.filter(function (angle) { return Math.sin(angle) >= -0.1; });
-    backAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, angle, index, backAngles.length, !!visual.sprayAngles); });
+    backAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, visual, angle, index, backAngles.length, !!visual.sprayAngles); });
     drawCorrectionRouteMutation(ctx, visual, "spread", false);
     drawCorrectionRouteMutation(ctx, visual, "fatal", false);
     drawCanvasSprite(ctx, person, 0, bodyY + squeezeKick * 2.2,
@@ -1150,7 +1222,7 @@
       "source-over");
     drawCorrectionRouteMutation(ctx, visual, "spread", true);
     drawCorrectionRouteMutation(ctx, visual, "fatal", true);
-    frontAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, angle, index, frontAngles.length, !!visual.sprayAngles); });
+    frontAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, visual, angle, index, frontAngles.length, !!visual.sprayAngles); });
     return true;
   }
 
@@ -1218,6 +1290,7 @@
     // just outside that silhouette so it reads as a body-hugging pressure
     // buffer instead of disappearing underneath the hardware.
     const size = 118 + level * 9;
+    const renderedSize = event.compact ? 84 + level * 6 : size;
     const filter = family === "neutral"
       ? "grayscale(1) brightness(1.2) drop-shadow(0 0 5px rgba(230,252,255,.82))"
       : family === "condensation"
@@ -1228,8 +1301,8 @@
       cell,
       event.x,
       event.y,
-      size,
-      size,
+      renderedSize,
+      renderedSize,
       Math.min(0.96, alpha * (0.78 + level * 0.045)),
       direction,
       filter,

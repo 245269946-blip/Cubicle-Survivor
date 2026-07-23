@@ -449,6 +449,7 @@
       state.demoV2.thermosBackPressurePass = !!coordinatorConfig.thermosBackPressurePass;
       state.demoV2.scissorsEmbodimentPass = !!coordinatorConfig.scissorsEmbodimentPass;
       state.demoV2.correctionEmbodimentPass = !!coordinatorConfig.correctionEmbodimentPass;
+      state.demoV2.combatScaleOrbitPass = !!coordinatorConfig.combatScaleOrbitPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     if (state.demoV2.centeredRunStart) {
@@ -541,6 +542,7 @@
         state.demoV2.thermosBackPressurePass = !!requestedFixedConfig.thermosBackPressurePass;
         state.demoV2.scissorsEmbodimentPass = !!requestedFixedConfig.scissorsEmbodimentPass;
         state.demoV2.correctionEmbodimentPass = !!requestedFixedConfig.correctionEmbodimentPass;
+        state.demoV2.combatScaleOrbitPass = !!requestedFixedConfig.combatScaleOrbitPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

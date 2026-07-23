@@ -324,4 +324,29 @@
 
   V2.demoV2.fourWeaponV39 = fourWeaponV39;
   V2.demoV2.fixedTests["four-weapon-v3-9"] = fourWeaponV39;
+
+  // Demo V3.10 preserves the complete V3.9 combat snapshot while restoring
+  // the older battlefield scale relationship. The stable player skeleton is
+  // reduced to the old visible footprint and every aim-facing weapon moves to
+  // a true outer ring whose inner edge no longer crosses the body core.
+  const fourWeaponV310 = Object.assign({}, fourWeaponV39, {
+    id: "four-weapon-v3-10",
+    version: "Demo V3.10",
+    visualVersion: "战场比例与外围武器修正版",
+    title: "战场比例与外围武器修正版",
+    subtitle: "完整继承 V3.9 数值与机制；人物恢复接近旧版的战场占比，马克笔、保温杯、完整剪刀与修正液喷头按真实素材长度移动到人物外围，不再压住角色主体。",
+    combatScaleOrbitPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV39.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.10 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV310 = fourWeaponV310;
+  V2.demoV2.fixedTests["four-weapon-v3-10"] = fourWeaponV310;
 })();
