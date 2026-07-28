@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -488,6 +488,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "伤害、攻速、怪物、关卡、模块与组件不变，本版只修正比例、外围轨道和遮挡关系。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.10 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-11") {
+        document.title = "工位幸存者 Demo V3.11 · 前期容错与四武器平衡版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.11 · 前期容错与四武器平衡版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.11 前期容错与四武器平衡版");
+        if (subtitle) subtitle.textContent = "前两关保留足够的割草目标，但降低接近速度、碰撞伤害和耐久；剪刀减少空挥，修正液更快建立错误循环。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "第一关用于理解武器";
+          guideCards[0].querySelector("span:last-child").textContent = "敌人仍然成群出现，但接近更慢、伤害更低，保证玩家能活着看到第一次模块选择。";
+          guideCards[1].querySelector("strong").textContent = "第二关逐步恢复压力";
+          guideCards[1].querySelector("span:last-child").textContent = "数量与团块感继续上升，但不会突然跳成高耐久围堵。第三关起恢复正式难度。";
+          guideCards[2].querySelector("strong").textContent = "剪刀与修正液补足机制损耗";
+          guideCards[2].querySelector("span:last-child").textContent = "剪刀只在真实刃口可达时开剪；修正液提高喷涂频率、溅写和错误过载收益。";
+          guideCards[3].querySelector("strong").textContent = "强势武器轻量回收";
+          guideCards[3].querySelector("span:last-child").textContent = "马克笔和保温杯只小幅降低开火预算，不削掉路径贯穿与近距控场的核心优势。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.11 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

@@ -103,12 +103,13 @@
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
-    const damage = (deepTriangle ? 7.2 : highFrequency ? 9.5 : 18) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, lid.damage || 0);
+    const parity = !!(state.demoV2 && state.demoV2.weaponParityPass);
+    const damage = (deepTriangle ? (parity ? 6.75 : 7.2) : highFrequency ? 9.5 : 18) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, lid.damage || 0);
     const experienceRangeScale = Math.pow(1.05, experience.range || 0);
     const rangeScale = Math.pow(attributeImpact ? 1.16 : 1.1, cupBase.range || 0) * experienceRangeScale;
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: (deepTriangle ? 0.46 : highFrequency ? 0.58 : 1.05) * Math.pow(attributeImpact ? 0.84 : 0.88, body.attackSpeed || 0) * Math.pow(0.95, experience.attackSpeed || 0),
+      cooldown: (deepTriangle ? (parity ? 0.49 : 0.46) : highFrequency ? 0.58 : 1.05) * Math.pow(attributeImpact ? 0.84 : 0.88, body.attackSpeed || 0) * Math.pow(0.95, experience.attackSpeed || 0),
       range: 225 * rangeScale,
       amount: 1 + (body.amount || 0),
       width: 205 * Math.pow(attributeImpact ? 1.14 : 1.08, cupBase.range || 0) * experienceRangeScale,

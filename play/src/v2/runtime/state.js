@@ -450,6 +450,8 @@
       state.demoV2.scissorsEmbodimentPass = !!coordinatorConfig.scissorsEmbodimentPass;
       state.demoV2.correctionEmbodimentPass = !!coordinatorConfig.correctionEmbodimentPass;
       state.demoV2.combatScaleOrbitPass = !!coordinatorConfig.combatScaleOrbitPass;
+      state.demoV2.openingComfortPass = !!coordinatorConfig.openingComfortPass;
+      state.demoV2.weaponParityPass = !!coordinatorConfig.weaponParityPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     if (state.demoV2.centeredRunStart) {
@@ -543,6 +545,8 @@
         state.demoV2.scissorsEmbodimentPass = !!requestedFixedConfig.scissorsEmbodimentPass;
         state.demoV2.correctionEmbodimentPass = !!requestedFixedConfig.correctionEmbodimentPass;
         state.demoV2.combatScaleOrbitPass = !!requestedFixedConfig.combatScaleOrbitPass;
+        state.demoV2.openingComfortPass = !!requestedFixedConfig.openingComfortPass;
+        state.demoV2.weaponParityPass = !!requestedFixedConfig.weaponParityPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

@@ -2881,7 +2881,7 @@
     test.weaponVisualTime = action.kind === "finale" || action.kind === "sever" ? 0.42 : 0.3;
     test.weaponVisualKind = action.kind;
     if (action.kind === "base") {
-      scissorsFan(state, p, action.angle, 138, 0.44, p.damage || 28, "scissors_test_base", 0);
+      scissorsFan(state, p, action.angle, p.scissorsBaseRange || 138, p.scissorsBaseHalfAngle || 0.44, p.damage || 28, "scissors_test_base", 0);
       return;
     }
     if (action.kind === "thrust") {
@@ -2986,7 +2986,19 @@
     const p = state.activeFormParams || {};
     const test = scissorsFixedRuntime(state);
     if (!test || test.activeRound) return;
-    const engageRange = Math.max(330, p.scissorsSeverRange || 305);
+    const activeRanges = [p.scissorsBaseRange || 138];
+    if ((p.scissorsThrustCount || 0) > 0) activeRanges.push(p.scissorsThrustRange || 150);
+    if ((p.scissorsCutCount || 0) > 0) activeRanges.push(p.scissorsFanRange || 112);
+    if (p.scissorsSever) activeRanges.push(p.scissorsSeverRange || 215);
+    if (p.scissorsFinale) activeRanges.push((p.scissorsFanRange || 112) * 1.08);
+    // A charged moving dash may acquire a farther target because it closes
+    // the distance first. Ordinary rounds must not begin outside the real
+    // blade reach; those invisible whiffs were the main perceived weakness.
+    const engageRange = p.scissorsRealRangeAcquisition
+      ? (test.dashReady && (state.input.left || state.input.right || state.input.up || state.input.down)
+        ? Math.max(330, Math.max.apply(Math, activeRanges) + 34)
+        : Math.max.apply(Math, activeRanges) + 18)
+      : Math.max(330, p.range || 0);
     const target = state.enemies.filter(function (enemy) {
       return !enemy.dead && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= engageRange + enemy.r;
     }).sort(function (a, b) {
@@ -4253,9 +4265,12 @@
       : stage.enemySpeed * (def.speed || 1) + Math.random() * 8;
     const sustainedPressure = !!(state.demoV2 && state.demoV2.sustainedPressurePass);
     const bossPressure = boss && !!(state.demoV2 && state.demoV2.bossPressurePass);
-    const actionRateScale = bossPressure ? 0.7 : sustainedPressure ? 0.74 : 1;
-    const projectileSpeedScale = bossPressure ? 1.18 : sustainedPressure ? 1.2 : 1;
+    const openingActionScale = stage.enemyActionRateScale || 1;
+    const openingProjectileScale = stage.enemyProjectileSpeedScale || 1;
+    const actionRateScale = (bossPressure ? 0.7 : sustainedPressure ? 0.74 : 1) * openingActionScale;
+    const projectileSpeedScale = (bossPressure ? 1.18 : sustainedPressure ? 1.2 : 1) * openingProjectileScale;
     const damagePressureScale = bossPressure ? 1.14 : 1;
+    const encounterDamageScale = stage.enemyDamageScale || 1;
     return {
       id: "e" + Date.now() + "_" + Math.random().toString(16).slice(2),
       typeId: boss ? (stage.bossType || "boss") : typeId,
@@ -4267,7 +4282,7 @@
       hp: fragment ? hp * 0.34 : hp,
       maxHp: fragment ? hp * 0.34 : hp,
       speed: fragment ? speed * 1.18 : speed,
-      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1) * damagePressureScale,
+      damage: (boss ? 18 + stage.id * 0.45 : def.damage || 7) * (fixedTestConfig(state) ? 1.12 : 1) * damagePressureScale * encounterDamageScale,
       xp: boss ? 50 : Math.max(3, Math.round((def.xp || 5) * (fragment ? 0.45 : 1))),
       boss,
       fragment,

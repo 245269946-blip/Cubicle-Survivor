@@ -349,4 +349,30 @@
 
   V2.demoV2.fourWeaponV310 = fourWeaponV310;
   V2.demoV2.fixedTests["four-weapon-v3-10"] = fourWeaponV310;
+
+  // Demo V3.11 keeps V3.10's compact battlefield composition and weapon
+  // ownership. It opens a protected learning window in encounters 1-2 and
+  // aligns opening throughput by fixing Scissors whiffs and accelerating the
+  // Correction error loop, with only a light Marker/Thermos ceiling trim.
+  const fourWeaponV311 = Object.assign({}, fourWeaponV310, {
+    id: "four-weapon-v3-11",
+    version: "Demo V3.11",
+    visualVersion: "前期容错与四武器平衡版",
+    title: "前期容错与四武器平衡版",
+    subtitle: "第一、二关保留割草密度，但降低接近速度、碰撞伤害与敌人耐久；剪刀减少空挥，修正液更快完成错误循环，四把武器的开局强度更接近。",
+    openingComfortPass: true,
+    weaponParityPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV310.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.11 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV311 = fourWeaponV311;
+  V2.demoV2.fixedTests["four-weapon-v3-11"] = fourWeaponV311;
 })();

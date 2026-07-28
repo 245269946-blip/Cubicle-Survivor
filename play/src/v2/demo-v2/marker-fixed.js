@@ -224,7 +224,7 @@
     });
     if (!sustained) return density;
     const phasePressure = 1 + Math.max(0, (encounter.phase || 1) - 1) * 0.025;
-    return Object.assign({}, density, {
+    const sustainedEncounter = Object.assign({}, density, {
       // V3.5 does not solve difficulty with one opening pile. It carries a
       // larger quota in smaller batches through most of the encounter.
       spawnTotal: Math.ceil(density.spawnTotal * (boss ? 1.12 : 1.2)),
@@ -237,6 +237,27 @@
       enemySpeed: density.enemySpeed * (boss ? 1.1 : 1.16) * phasePressure,
       pressureSpawnWindowRatio: boss ? 0.84 : 0.88,
       v35SustainedPressurePass: true
+    });
+    if (!state.demoV2.openingComfortPass || boss || encounter.id > 2) return sustainedEncounter;
+    const firstEncounter = encounter.id === 1;
+    const comfortFloorScale = firstEncounter ? 0.74 : 0.82;
+    const comfortCapScale = firstEncounter ? 0.78 : 0.84;
+    return Object.assign({}, sustainedEncounter, {
+      // Keep enough bodies for line/fan/cut/error mechanics to read, but give
+      // a first-time player time to understand movement before contact.
+      spawnTotal: Math.ceil(sustainedEncounter.spawnTotal * (firstEncounter ? 0.82 : 0.88)),
+      floor: Math.max(16, Math.ceil(sustainedEncounter.floor * comfortFloorScale)),
+      cap: Math.max(34, Math.ceil(sustainedEncounter.cap * comfortCapScale)),
+      batchSize: Math.max(5, Math.ceil(sustainedEncounter.batchSize * (firstEncounter ? 0.75 : 0.8))),
+      cadence: sustainedEncounter.cadence * (firstEncounter ? 1.18 : 1.12),
+      enemyHp: sustainedEncounter.enemyHp * (firstEncounter ? 0.8 : 0.88),
+      normalEnemyHp: sustainedEncounter.normalEnemyHp * (firstEncounter ? 0.8 : 0.88),
+      enemySpeed: sustainedEncounter.enemySpeed * (firstEncounter ? 0.84 : 0.9),
+      enemyDamageScale: firstEncounter ? 0.68 : 0.78,
+      enemyActionRateScale: firstEncounter ? 1.18 : 1.1,
+      enemyProjectileSpeedScale: firstEncounter ? 0.86 : 0.92,
+      pressureSpawnWindowRatio: firstEncounter ? 0.94 : 0.92,
+      v311OpeningComfortPass: true
     });
   }
 
@@ -308,6 +329,9 @@
     state.stage.enemyHp = encounter.enemyHp;
     state.stage.normalEnemyHp = encounter.normalEnemyHp;
     state.stage.enemySpeed = encounter.enemySpeed;
+    state.stage.enemyDamageScale = encounter.enemyDamageScale || 1;
+    state.stage.enemyActionRateScale = encounter.enemyActionRateScale || 1;
+    state.stage.enemyProjectileSpeedScale = encounter.enemyProjectileSpeedScale || 1;
     state.stage.boss = !!encounter.boss;
     state.stage.bossType = encounter.bossType || "";
     state.stage.bossHitCap = encounter.bossHitCap || 0;
@@ -352,13 +376,14 @@
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
-    const damage = (deepTriangle ? 8.5 : highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, tip.damage);
+    const parity = !!(state.demoV2 && state.demoV2.weaponParityPass);
+    const damage = (deepTriangle ? (parity ? 8 : 8.5) : highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, tip.damage);
     const componentRangeScale = Math.pow(attributeImpact ? 1.16 : 1.1, tail.range);
     const experienceRangeScale = Math.pow(1.05, experience.range || 0);
     const rangeScale = componentRangeScale * experienceRangeScale;
     state.activeFormParams = Object.assign({}, state.activeFormParams, {
       damage,
-      cooldown: (deepTriangle ? 0.46 : highFrequency ? 0.58 : 1.05) * Math.pow(attributeImpact ? 0.84 : 0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
+      cooldown: (deepTriangle ? (parity ? 0.48 : 0.46) : highFrequency ? 0.58 : 1.05) * Math.pow(attributeImpact ? 0.84 : 0.88, body.attackSpeed) * Math.pow(0.95, experience.attackSpeed || 0),
       range: 720 * rangeScale,
       pierce: 4 + tip.pierce * (attributeImpact ? 2 : 1),
       amount: 1 + body.amount,

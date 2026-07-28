@@ -116,7 +116,8 @@
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
-    const damage = (deepTriangle ? 10.5 : highFrequency ? 13.5 : 25) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, blade.damage || 0);
+    const parity = !!(state.demoV2 && state.demoV2.weaponParityPass);
+    const damage = (deepTriangle ? (parity ? 11.8 : 10.5) : highFrequency ? 13.5 : 25) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, blade.damage || 0);
     const speedScale = Math.max(0.5, Math.pow(attributeImpact ? 0.86 : 0.9, pivot.attackSpeed || 0) * Math.pow(0.96, experience.attackSpeed || 0));
     const rangeScale = Math.min(attributeImpact ? 1.65 : 1.38, Math.pow(attributeImpact ? 1.14 : 1.09, handle.range || 0) * Math.pow(1.05, experience.range || 0));
     const thrustCount = Math.min(3, closedLevel);
@@ -146,7 +147,9 @@
       // V3.5 asks every build to face a faster, continuously replenished ring.
       // The only pure melee weapon gets a small innate evasive margin instead
       // of extra health or damage, preserving its movement-first identity.
-      markerFixedDodgeChance: Math.min(0.62, (experience.dodge || 0) * 0.03 + (pivot.amount || 0) * 0.05 + (state.demoV2 && state.demoV2.sustainedPressurePass ? 0.14 : 0)),
+      markerFixedDodgeChance: Math.min(0.62, (experience.dodge || 0) * 0.03 + (pivot.amount || 0) * 0.05
+        + (state.demoV2 && state.demoV2.sustainedPressurePass ? 0.14 : 0)
+        + (parity ? 0.1 : 0)),
       markerFixedLuck: (experience.luck || 0) * 5,
       markerFixedHarvesting: (experience.harvesting || 0) * 5,
       scissorsFixedTest: true,
@@ -158,6 +161,9 @@
       scissorsFinale: openLevel >= 4,
       scissorsActionScale: speedScale,
       scissorsActionDuration: actionDuration,
+      scissorsBaseRange: parity ? 172 : 138,
+      scissorsBaseHalfAngle: parity ? 0.56 : 0.44,
+      scissorsRealRangeAcquisition: parity,
       scissorsThrustRange: Math.min(attributeImpact ? 300 : 252, (190 + closedLevel * 8) * rangeScale),
       scissorsThrustWidth: Math.min(attributeImpact ? 70 : 54, 32 * rangeScale + closedLevel * 2),
       scissorsThrustDamage: damage * 1.08,
@@ -175,7 +181,7 @@
       scissorsDashDistance: 82,
       scissorsDashDuration: 0.18,
       scissorsDashWindow: 0.22,
-      scissorsDashChargeTime: 7.2,
+      scissorsDashChargeTime: parity ? 6.8 : 7.2,
       scissorsDashRoundCharge: 0.13,
       scissorsShelterRadius: 132,
       scissorsShelterDuration: 3.2,
