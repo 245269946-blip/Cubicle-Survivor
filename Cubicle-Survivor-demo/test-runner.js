@@ -2012,8 +2012,8 @@ if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
   || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
   || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
   || !v313IndexSource.includes("systems.js?v=80")
-  || !v313IndexSource.includes("state.js?v=25")
-  || !v313IndexSource.includes("four-weapon-fixed.js?v=8")) {
+  || !v313IndexSource.includes("state.js?v=26")
+  || !v313IndexSource.includes("four-weapon-fixed.js?v=9")) {
   console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
   process.exit(1);
 }
@@ -2160,6 +2160,28 @@ if (!v313CorrectionMixed.formEvents.some(function (event) { return event.source 
   process.exit(1);
 }
 console.log("OK Demo V3.13 all-weapon desire chains: concise promises, physical mounts, pure Lv4 mastery, and three distinct mixed-route causal events all execute");
+
+const fourWeaponV314 = V2.demoV2 && V2.demoV2.fourWeaponV314;
+const v314EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-14.html"), "utf8");
+if (!fourWeaponV314 || fourWeaponV314.version !== "Demo V3.14"
+  || !fourWeaponV314.decisionCompressionPass
+  || !fourWeaponV314.allWeaponDesireLoopPass
+  || !fourWeaponV314.weaponParityPass
+  || !v314EntrySource.includes('params.set("demoV2", "four-weapon-v3-14")')) {
+  console.error("Demo V3.14 must inherit V3.13 and enable only the compact decision-page contract", fourWeaponV314);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-14" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+const v314State = V2.getState();
+if (v314State.demoV2.suiteVersion !== "Demo V3.14"
+  || !v314State.demoV2.decisionCompressionPass
+  || v314State.stage.demoV2Phase !== fourWeaponV314.childPhaseByWeapon.marker) {
+  console.error("Demo V3.14 must preserve the isolated weapon route while carrying compact decision state", v314State.demoV2);
+  process.exit(1);
+}
+console.log("OK Demo V3.14 decision density: V3.13 combat is preserved and the compact choice contract reaches runtime");
 
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')

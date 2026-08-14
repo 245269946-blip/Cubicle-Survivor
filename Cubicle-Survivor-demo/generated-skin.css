@@ -3829,3 +3829,77 @@ body[data-debug-quiet="1"] .debug-panel {
   .growth-feedback { top: 124px; width: calc(100% - 24px); }
   .growth-feedback > p { white-space: normal; }
 }
+
+/* Demo V3.14: decision pages answer only the current question. Keep combat
+   rules discoverable through play instead of stacking four explanations on
+   every card. */
+.v2-game[data-decision-density="compact"] #weaponSelectPanel .panel-note,
+.v2-game[data-decision-density="compact"] #moduleSelectPanel .panel-note,
+.v2-game[data-decision-density="compact"] #componentShopPanel .panel-note {
+  color: #c7d3dc !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.v2-game[data-decision-density="compact"] #weaponSelectPanel .weapon-card p {
+  color: #d4dde3 !important;
+  font-size: clamp(13px, 1vw, 15px) !important;
+  line-height: 1.42 !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+.v2-game[data-decision-density="compact"] #weaponSelectPanel .weapon-card em {
+  min-height: 0 !important;
+  margin-bottom: 1.5% !important;
+}
+
+.v2-game[data-decision-density="compact"] #moduleChoices .module-card {
+  min-height: 0 !important;
+  padding: 18px !important;
+  gap: 10px !important;
+}
+
+.v2-game[data-decision-density="compact"] #moduleChoices .module-promise-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+.v2-game[data-decision-density="compact"] #moduleChoices .module-promise-line {
+  min-height: 0 !important;
+  padding: 11px 12px !important;
+  color: #d6e0e7 !important;
+  font-size: 12px !important;
+  line-height: 1.42 !important;
+}
+
+.v2-game[data-decision-density="compact"] #moduleChoices .module-promise-line b {
+  font-size: 10px !important;
+}
+
+.v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card {
+  gap: 8px !important;
+}
+
+.v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card .compare-line,
+.v2-game[data-decision-density="compact"] #componentShopPanel .component-install-promise {
+  color: #d7e0e6 !important;
+  font-size: 11px !important;
+  line-height: 1.38 !important;
+}
+
+.v2-game[data-decision-density="compact"] #componentShopPanel .component-install-promise {
+  padding: 7px 8px !important;
+}
+
+.v2-game[data-decision-density="compact"] #upgradeChoices .learning-card .card-desc {
+  color: #d4dde3 !important;
+  font-size: 12px !important;
+  line-height: 1.42 !important;
+}
+
+@media (max-width: 760px) {
+  .v2-game[data-decision-density="compact"] #moduleChoices .module-promise-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

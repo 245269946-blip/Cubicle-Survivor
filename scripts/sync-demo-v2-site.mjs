@@ -25,6 +25,7 @@ const runtimeEntries = [
   "demo-v3-11.html",
   "demo-v3-12.html",
   "demo-v3-13.html",
+  "demo-v3-14.html",
   "main.js",
   "styles.css",
   "generated-skin.css",
@@ -74,6 +75,7 @@ async function verifyRequiredFiles() {
     "demo-v3-11.html",
     "demo-v3-12.html",
     "demo-v3-13.html",
+    "demo-v3-14.html",
     "main.js",
     "styles.css",
     "generated-skin.css",
@@ -93,13 +95,13 @@ async function verifyRequiredFiles() {
       throw new Error(`Hosted runtime drifted from the active demo: ${relativePath}`);
     }
   }
-  const entry = await readFile(path.join(targetRoot, "demo-v3-13.html"), "utf8");
+  const entry = await readFile(path.join(targetRoot, "demo-v3-14.html"), "utf8");
   const suite = await readFile(path.join(targetRoot, "src/v2/demo-v2/four-weapon-fixed.js"), "utf8");
-  if (!entry.includes("Demo V3.13") || !entry.includes('params.set("demoV2", "four-weapon-v3-13")')) {
-    throw new Error("Hosted entry does not route to the Demo V3.13 four-weapon suite");
+  if (!entry.includes("Demo V3.14") || !entry.includes('params.set("demoV2", "four-weapon-v3-14")')) {
+    throw new Error("Hosted entry does not route to the Demo V3.14 compact-decision suite");
   }
-  if (!suite.includes('version: "Demo V3.13"') || !suite.includes('allWeaponDesireLoopPass: true') || !suite.includes('markerDesireLoopPass: true') || !suite.includes('combatTrianglePass: true') || !suite.includes('neonBloomPass: true') || !suite.includes('bossPatternPass: true') || !suite.includes('sustainedPressurePass: true') || !suite.includes('bossPressurePass: true') || !suite.includes('attributeImpactPass: true') || !suite.includes('weaponEmbodimentPass: true') || !suite.includes('thermosEmbodimentPass: true') || !suite.includes('thermosBackPressurePass: true') || !suite.includes('scissorsEmbodimentPass: true') || !suite.includes('correctionEmbodimentPass: true') || !suite.includes('combatScaleOrbitPass: true') || !suite.includes('openingComfortPass: true') || !suite.includes('weaponParityPass: true')) {
-    throw new Error("Hosted coordinator is not the validated Demo V3.13 four-weapon desire-chain build");
+  if (!suite.includes('version: "Demo V3.14"') || !suite.includes('decisionCompressionPass: true') || !suite.includes('version: "Demo V3.13"') || !suite.includes('allWeaponDesireLoopPass: true') || !suite.includes('markerDesireLoopPass: true') || !suite.includes('combatTrianglePass: true') || !suite.includes('neonBloomPass: true') || !suite.includes('bossPatternPass: true') || !suite.includes('sustainedPressurePass: true') || !suite.includes('bossPressurePass: true') || !suite.includes('attributeImpactPass: true') || !suite.includes('weaponEmbodimentPass: true') || !suite.includes('thermosEmbodimentPass: true') || !suite.includes('thermosBackPressurePass: true') || !suite.includes('scissorsEmbodimentPass: true') || !suite.includes('correctionEmbodimentPass: true') || !suite.includes('combatScaleOrbitPass: true') || !suite.includes('openingComfortPass: true') || !suite.includes('weaponParityPass: true')) {
+    throw new Error("Hosted coordinator is not the validated Demo V3.14 compact-decision build");
   }
 }
 
@@ -116,10 +118,10 @@ if (!checkOnly) {
     path.join(targetRoot, "release-manifest.json"),
     JSON.stringify(
       {
-        version: "Demo V3.13",
-        entry: "/play/demo-v3-13.html",
+        version: "Demo V3.14",
+        entry: "/play/demo-v3-14.html",
         source: "Cubicle-Survivor-demo",
-        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md",
+        validation: "docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md + docs/DEMO_V3_14_DECISION_DENSITY_PASS.md",
       },
       null,
       2,

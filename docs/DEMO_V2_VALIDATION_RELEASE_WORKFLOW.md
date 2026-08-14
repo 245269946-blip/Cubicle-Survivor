@@ -5,7 +5,7 @@ This is the persistent release gate for the active Cubicle Survivor V2 package. 
 ## Authoritative surfaces
 
 - Active source: `Cubicle-Survivor-demo/`
-- Recommended playable entry: `Cubicle-Survivor-demo/demo-v3-13.html`
+- Recommended playable entry: `Cubicle-Survivor-demo/demo-v3-14.html`
 - Public site project: `Cubicle-Survivor-sites/`
 - Hosted runtime copy: `Cubicle-Survivor-sites/public/play/`
 - Current design/audit baseline: `docs/DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md`

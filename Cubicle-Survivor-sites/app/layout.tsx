@@ -12,17 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V3.11",
-    description: "降低前两关接触压力，修正剪刀空挥与近战风险，并加快修正液的错误状态启动。",
+    title: "工位幸存者 Demo V3.14",
+    description: "四武器战斗与成长保持不变，购买和选择页面改为简短、结果导向的轻量决策。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V3.11",
-      description: "前期容错与四武器平衡版：保留割草密度，缩小武器强度断层。",
+      title: "工位幸存者 Demo V3.14",
+      description: "轻量决策版：少读说明，先看结果，选完立即回到战斗。",
     },
     twitter: {
       card: "summary",
-      title: "工位幸存者 Demo V3.11",
-      description: "前两关更适合首次上手，四把武器拥有更接近的开局兑现能力。",
+      title: "工位幸存者 Demo V3.14",
+      description: "武器、模块、经验与组件选择只保留当前决策需要的信息。",
     },
   };
 }

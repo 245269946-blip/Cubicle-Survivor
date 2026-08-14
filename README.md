@@ -2,6 +2,8 @@
 
 当前工作树是 **Demo V1 唯一开发基线**。真正可运行与验收的版本位于 `Cubicle-Survivor-demo/`。
 
+当前推荐试玩入口：`Cubicle-Survivor-demo/demo-v3-14.html`（轻量决策版）。
+
 产品命名统一使用 `Demo V1`。内部 `src/v2/` 与 `docs/v2-framework/` 是架构代号，不代表另一个对外版本。
 
 ## 版本分区

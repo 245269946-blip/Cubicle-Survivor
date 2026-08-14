@@ -424,4 +424,28 @@
 
   V2.demoV2.fourWeaponV313 = fourWeaponV313;
   V2.demoV2.fixedTests["four-weapon-v3-13"] = fourWeaponV313;
+
+  // Demo V3.14 keeps V3.13's complete combat, progression and desire-chain
+  // behavior. It only lowers decision-page text density so a player can choose
+  // from the immediate result first and discover the rest in combat.
+  const fourWeaponV314 = Object.assign({}, fourWeaponV313, {
+    id: "four-weapon-v3-14",
+    version: "Demo V3.14",
+    visualVersion: "轻量决策版",
+    title: "轻量决策版",
+    subtitle: "完整继承 V3.13 的战斗与成长；武器、模块、经验与组件页只保留当前决策需要的信息。",
+    decisionCompressionPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV313.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.14 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV314 = fourWeaponV314;
+  V2.demoV2.fixedTests["four-weapon-v3-14"] = fourWeaponV314;
 })();

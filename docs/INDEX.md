@@ -1,12 +1,11 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.13
+## 当前推荐四武器体验：Demo V3.14
 
-- 入口：`../Cubicle-Survivor-demo/demo-v3-13.html`。
-- 范围：完整继承 Demo V3.12 数值与关卡，把同一套可读欲望链扩展到保温杯、剪刀与修正液；每把武器只新增一条一句话可解释的混合因果。
-- 版本说明：`DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md`。
-- 全武器复用规范：`WEAPON_VISUAL_DESIGN_STANDARD.md`。
-- Demo V3.11 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-14.html`。
+- 范围：完整继承 Demo V3.13 的战斗、数值、17 关与成长，只压缩武器、经验、模块和组件决策页的信息密度。
+- 版本说明：`DEMO_V3_14_DECISION_DENSITY_PASS.md`。
+- Demo V3.13 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
 
 ## Demo V3.8 回归说明
 
@@ -30,7 +29,7 @@
 - `DEMO_V2_CORRECTION_FLUID_FIXED_TEST.md`：Demo V2.5 修正液的三层错误、错误扩散、致命纠错、组件与赛博故障视觉边界。
 - `DEMO_V2_6_FOUR_WEAPON_NEON_TEST.md`：Demo V2.6 四武器统一入口、机制隔离规则与疯狂办公室霓虹视觉合同。
 
-当前默认完整主线仍是 Demo V1；Demo V2.6 四武器固定框架整合试玩通过 `Cubicle-Survivor-demo/demo-v2-6.html` 进入。四个单武器入口继续保留，V2.6 尚未替换默认 Demo V1 主线。
+当前推荐公开试玩是 Demo V3.14 四武器固定套件；完整 Demo V1、Demo V2.6 和四个单武器入口继续作为机制与流程回归入口保留。
 
 ## 当前可运行主线：Demo V1
 
