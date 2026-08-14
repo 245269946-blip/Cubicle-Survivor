@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" || requestedDemoV2Phase === "four-weapon-v3-12" || requestedDemoV2Phase === "four-weapon-v3-13" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" || requestedDemoV2Phase === "four-weapon-v3-12" || requestedDemoV2Phase === "four-weapon-v3-13" || requestedDemoV2Phase === "four-weapon-v3-14" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -554,6 +554,28 @@
           guideCards[3].querySelector("span:last-child").textContent = "第五次选择可保持纯路线，强化既有 Lv4；组件则明确安装到真实杯体、剪刀或供液装置。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.13 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-14") {
+        document.title = "工位幸存者 Demo V3.14 · 轻量决策版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.14 · 轻量决策版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.14 轻量决策版");
+        if (subtitle) subtitle.textContent = "继承 V3.13 全部战斗与成长；选择页只回答这次该怎么选。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "武器 · 看打法";
+          guideCards[0].querySelector("span:last-child").textContent = "线、空间、近战、状态，选一个想玩的。";
+          guideCards[1].querySelector("strong").textContent = "模块 · 看本次变化";
+          guideCards[1].querySelector("span:last-child").textContent = "卡片只保留立刻效果和一条成长预告。";
+          guideCards[2].querySelector("strong").textContent = "组件 · 看结果";
+          guideCards[2].querySelector("span:last-child").textContent = "安装、升级或替换，一眼看清。";
+          guideCards[3].querySelector("strong").textContent = "选完就打";
+          guideCards[3].querySelector("span:last-child").textContent = "机制用战斗反馈解释，不靠长文案。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.14 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

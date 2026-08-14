@@ -464,6 +464,7 @@
       state.demoV2.weaponParityPass = !!coordinatorConfig.weaponParityPass;
       state.demoV2.markerDesireLoopPass = !!coordinatorConfig.markerDesireLoopPass;
       state.demoV2.allWeaponDesireLoopPass = !!coordinatorConfig.allWeaponDesireLoopPass;
+      state.demoV2.decisionCompressionPass = !!coordinatorConfig.decisionCompressionPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
@@ -560,6 +561,7 @@
         state.demoV2.weaponParityPass = !!requestedFixedConfig.weaponParityPass;
         state.demoV2.markerDesireLoopPass = !!requestedFixedConfig.markerDesireLoopPass;
         state.demoV2.allWeaponDesireLoopPass = !!requestedFixedConfig.allWeaponDesireLoopPass;
+        state.demoV2.decisionCompressionPass = !!requestedFixedConfig.decisionCompressionPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }
