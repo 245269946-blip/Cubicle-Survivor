@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marker Rig Runtime Scale Review</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Microsoft YaHei", sans-serif;
+      background: #061321;
+      color: #eef8ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #061321;
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .battle-cell {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(rgba(0, 12, 26, .12), rgba(0, 12, 26, .12)),
+        url("assets/generated-backgrounds/office-arena-night.png") center / cover;
+      border-right: 1px solid rgba(126, 227, 255, .25);
+    }
+
+    .battle-cell:last-child { border-right: 0; }
+
+    .battle-cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 50% 52%, transparent 0 18%, rgba(0, 4, 14, .28) 72%);
+    }
+
+    .label {
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      z-index: 5;
+      padding: 10px 14px;
+      border: 1px solid rgba(100, 224, 255, .55);
+      border-radius: 8px;
+      background: rgba(2, 13, 26, .84);
+      box-shadow: 0 0 20px rgba(38, 199, 255, .12);
+    }
+
+    .label strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: .04em;
+    }
+
+    .label span {
+      display: block;
+      margin-top: 3px;
+      color: #93adc0;
+      font-size: 12px;
+    }
+
+    .rig-stage {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .rig-stage canvas {
+      position: relative;
+      z-index: 3;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 5px 8px rgba(0, 0, 0, .7));
+    }
+
+    .player-ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 86px;
+      height: 34px;
+      border: 2px solid rgba(110, 235, 255, .6);
+      border-radius: 50%;
+      transform: translate(-50%, 31px);
+      box-shadow: 0 0 16px rgba(69, 220, 255, .32);
+      z-index: 1;
+    }
+
+    .enemy {
+      position: absolute;
+      width: 34px;
+      height: 44px;
+      border: 2px solid rgba(255, 103, 126, .78);
+      border-radius: 42% 42% 32% 32%;
+      background:
+        linear-gradient(#ff687d 0 5px, transparent 5px),
+        linear-gradient(135deg, #1d2636 0 48%, #2e3e54 48% 100%);
+      box-shadow: 0 0 10px rgba(255, 42, 93, .22);
+      opacity: .92;
+      z-index: 2;
+    }
+
+    .enemy::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: -8px;
+      height: 4px;
+      background: #72efff;
+      box-shadow: -8px 0 #07111d;
+    }
+
+    .e1 { left: 18%; top: 37%; }
+    .e2 { left: 29%; top: 66%; transform: scale(.9); }
+    .e3 { right: 19%; top: 32%; transform: scale(1.12); }
+    .e4 { right: 28%; top: 65%; transform: scale(.82); }
+
+    .pixel-note {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      padding: 7px 11px;
+      color: #bdd2df;
+      font-size: 12px;
+      white-space: nowrap;
+      background: rgba(2, 10, 20, .72);
+      border: 1px solid rgba(143, 186, 211, .22);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="review-grid">
+    <section class="battle-cell" data-height="94">
+      <div class="label"><strong>实机上限 · 94 px</strong><span>玩家主体与穿戴设备共同缩放</span></div>
+      <div class="rig-stage"><span class="player-ring"></span><canvas></canvas></div>
+      <i class="enemy e1"></i><i class="enemy e2"></i><i class="enemy e3"></i><i class="enemy e4"></i>
+      <div class="pixel-note">检查：青色液窗 / 黄色输出格栅 / 双肩安装关系</div>
+    </section>
+    <section class="battle-cell" data-height="64">
+      <div class="label"><strong>拥挤下限 · 64 px</strong><span>缩放与密集敌群下仍需区分两条路线</span></div>
+      <div class="rig-stage"><span class="player-ring"></span><canvas></canvas></div>
+      <i class="enemy e1"></i><i class="enemy e2"></i><i class="enemy e3"></i><i class="enemy e4"></i>
+      <div class="pixel-note">检查：不读文字也能判断复写 / 留档</div>
+    </section>
+  </main>
+  <script>
+    const source = new Image();
+    source.src = "assets/generated-vfx/sprites/marker-rig-front-sample-v2.png";
+    source.onload = () => {
+      const probe = document.createElement("canvas");
+      probe.width = source.naturalWidth;
+      probe.height = source.naturalHeight;
+      const context = probe.getContext("2d", { willReadFrequently: true });
+      context.drawImage(source, 0, 0);
+      const pixels = context.getImageData(0, 0, probe.width, probe.height).data;
+      let minX = probe.width;
+      let minY = probe.height;
+      let maxX = -1;
+      let maxY = -1;
+
+      for (let y = 0; y < probe.height; y += 1) {
+        for (let x = 0; x < probe.width; x += 1) {
+          const alpha = pixels[(y * probe.width + x) * 4 + 3];
+          if (alpha < 12) continue;
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+
+      const sourceWidth = maxX - minX + 1;
+      const sourceHeight = maxY - minY + 1;
+      document.querySelectorAll(".battle-cell").forEach((cell) => {
+        const targetHeight = Number(cell.dataset.height);
+        const targetWidth = Math.round(sourceWidth * targetHeight / sourceHeight);
+        const canvas = cell.querySelector("canvas");
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        canvas.style.width = `${targetWidth}px`;
+        canvas.style.height = `${targetHeight}px`;
+        canvas.getContext("2d").drawImage(
+          source,
+          minX,
+          minY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          targetWidth,
+          targetHeight
+        );
+      });
+    };
+  </script>
+</body>
+</html>

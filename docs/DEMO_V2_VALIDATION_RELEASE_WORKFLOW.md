@@ -5,10 +5,10 @@ This is the persistent release gate for the active Cubicle Survivor V2 package. 
 ## Authoritative surfaces
 
 - Active source: `Cubicle-Survivor-demo/`
-- Recommended playable entry: `Cubicle-Survivor-demo/demo-v2-9.html`
+- Recommended playable entry: `Cubicle-Survivor-demo/demo-v3-13.html`
 - Public site project: `Cubicle-Survivor-sites/`
 - Hosted runtime copy: `Cubicle-Survivor-sites/public/play/`
-- Current design/audit baseline: `docs/DEMO_V2_9_HORIZONTAL_CONSISTENCY_AUDIT.md`
+- Current design/audit baseline: `docs/DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md`
 
 The hosted runtime is generated from the active source by `node scripts/sync-demo-v2-site.mjs`. Never hand-edit `Cubicle-Survivor-sites/public/play/`.
 
@@ -43,14 +43,17 @@ The first command replaces only the verified `Cubicle-Survivor-sites/public/play
 6. Eight real-timer 17-encounter pure-route progression soaks.
 7. Hosted-runtime hash and V2.9 entry checks.
 8. Production Sites build and rendered-wrapper test.
+9. V3.13 playability guard: coherent cache tokens, world-centre spawn, immediate input/camera response, and render-layer isolation.
 
 The eight progression soaks disable enemy outgoing damage only. Enemy count, role, movement, HP, targeting, player damage, timer, Boss kill condition, pickups and all public growth choices remain active. These soaks prove that the full route is reachable and cannot deadlock; they are not balance claims.
 
 ## Required player-facing browser matrix
 
-After the automated gate, inspect the deployed candidate at a normal desktop viewport and confirm:
+After the automated gate, inspect the deployed candidate at both a normal desktop viewport and a 2048×1204 wide viewport and confirm:
 
 - Landing and weapon selection show the current version and exactly four playable weapons. Future slots remain code-only.
+- Enter through the real landing button and weapon card rather than a debug URL. The first combat frame must place the player at the world centre, show the player and enemies, accept WASD immediately, and move the camera with the player.
+- Run the first encounter through its late combat and collection transition. A VFX failure must not hide the enemy/player layers, duplicate the background, stop input or stop subsequent frames.
 - Each weapon reaches combat with the correct HP, HUD identity and actual core verb.
 - Encounter preview names the enemies that spawn and contains no weapon-specific instruction or internal test language.
 - Collection presents the 10-second pickup window, auto-collection explanation and next step.
@@ -62,6 +65,7 @@ After the automated gate, inspect the deployed candidate at a normal desktop vie
 - Correction Fluid shows readable error stacks, persistent spread fields and Boss-compatible route behavior.
 - Restart returns to all four weapons.
 - No browser console errors or warnings appear.
+- Every changed runtime/CSS file uses a new cache token in `index.html`; a release must never combine a cached old combat script with a new coordinator or weapon config.
 
 Record any failure as a product issue. Do not waive a browser failure because automated tests pass.
 
@@ -92,4 +96,5 @@ Record any failure as a product issue. Do not waive a browser failure because au
 - Site sync failure: regenerate the hosted copy; never patch the copy directly.
 - Build failure: fix the Sites source and rerun the complete release validator.
 - Browser mismatch: fix presentation or copy and rerun automated QA plus the affected visual checks.
+- Partial-canvas/background-duplication failure: inspect the first failing render layer, preserve player/enemy drawing through layer isolation, bump the complete runtime cache-token set, and rerun the real landing-to-first-encounter path.
 - Deployment failure: keep the last successful public version live and do not claim the new version shipped.

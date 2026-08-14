@@ -1,29 +1,27 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.3
+## 当前推荐四武器体验：Demo V3.13
 
-- 入口：`../Cubicle-Survivor-demo/demo-v3-3.html`。
-- 范围：保留 Demo V3.2 的战斗三角预算与双层霓虹，只修复修正液前期单点周转困难。
-- 规则：主喷涂命中后向一个近邻目标溅写弱伤害和1层错误；致命纠错 Lv1 仍独占真正的双目标锁定。
-- 说明：`DEMO_V3_3_CORRECTION_OPENING_PASS.md`。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-13.html`。
+- 范围：完整继承 Demo V3.12 数值与关卡，把同一套可读欲望链扩展到保温杯、剪刀与修正液；每把武器只新增一条一句话可解释的混合因果。
+- 版本说明：`DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md`。
+- 全武器复用规范：`WEAPON_VISUAL_DESIGN_STANDARD.md`。
+- Demo V3.11 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
 
-## Demo V3.2 回归入口
+## Demo V3.8 回归说明
 
-- `DEMO_V3_2_COMBAT_TRIANGLE_NEON_PASS.md`：继续深化单击伤害、攻击频率与有效敌群地板的联动预算，并为真实技能事件增加低透明外辉光和高对比核心。
-- 入口：`../Cubicle-Survivor-demo/demo-v3-2.html`。
-- Demo V3.1及更早入口继续作为回归快照保留。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-8.html`。
+- 范围：完整继承 Demo V3.7 的数值和穿戴结构，让冷凝与热浪压力装置在每轮真实攻击时分别形成贴身冰霜/高温蒸汽半环并产生短促后坐。
+- 马克笔说明：`DEMO_V3_6_MARKER_EMBODIMENT_PASS.md`。
+- 保温杯说明：`DEMO_V3_7_THERMOS_PRESSURE_RIG_PASS.md`。
+- 泄压反馈说明：`DEMO_V3_8_THERMOS_BACK_PRESSURE_PASS.md`。
+- Demo V3.7 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
 
-## 上一版四武器体验：Demo V3.1
+## 当前独立机制实验：马克笔三分钟欲望闭环
 
-- `DEMO_V3_1_COMBAT_DENSITY_PASS.md`：把单次大数字拆成高频小事件，提高普通关敌群地板、批次和配额，并完成剪刀突进地面指向与保温杯击杀热浪的技能轮廓分离。
-- 入口：`../Cubicle-Survivor-demo/demo-v3-1.html`。
-- Demo V3.0 及更早入口继续作为回归快照保留。
-
-## 上一版四武器体验：Demo V3.0
-
-- `DEMO_V3_0_COMBAT_PERCEPTION_PASS.md`：在 Demo V2.9 固定框架上完成战斗感知、修正液状态可读性、成长确认、剪刀风险校正，以及覆盖全部玩家可视页面的日本霓虹都市信息层。
-- 入口：`../Cubicle-Survivor-demo/demo-v3-0.html`。
-- Demo V2.9 及更早入口继续作为回归快照保留。
+- 入口：`../Cubicle-Survivor-demo/marker-desire-loop.html`；继续作为独立实验保留，不与正式 Demo 版本混用数值。
+- 实验说明：`MARKER_DESIRE_LOOP_EXPERIMENT.md`。
+- 全武器复用规范：`WEAPON_VISUAL_DESIGN_STANDARD.md`，统一约束可见部件所有权、穿戴挂点、朝向、判定因果、霓虹状态语法与视觉验收。
 
 ## 下一目标：Demo V2
 
@@ -44,6 +42,7 @@
 - `DEMO_V1_MECHANIC_AUDIT.md`（三武器 15 形态与增强层唯一审计表）
 - `DEMO_V1_VISUAL_EVENT_MAP.md`（71 个武器事件源到视觉时间线、拓扑与主次层级的映射）
 - `DEMO_V1_VISUAL_ASSET_AUDIT.md`（底层视觉资产白名单、清洗记录与浏览器验收规则）
+- `WEAPON_VISUAL_DESIGN_STANDARD.md`（跨版本武器实体所有权、安装关系、坐标跟随、攻击判定与成长轮廓硬规范）
 - `DEMO_V1_AUDIO_EVENT_MAP.md`（71 个武器事件源到音色、阶段、限流与主次混音的映射）
 - `DEMO_V1_PACING_PASS.md`（16 关时长、刷怪、Boss 韧性与三条实战路径数据）
 - `DEMO_V1_TAPTAP_DIRECTION.md`（TapTap 目标、当前体验优先级与下一轮玩家验收标准）

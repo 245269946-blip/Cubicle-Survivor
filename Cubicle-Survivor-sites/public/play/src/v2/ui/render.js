@@ -429,18 +429,28 @@
     const vm = V2.getViewModel("module_select");
     const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
     const markerFixed = !!fixedConfig;
+    const moduleState = V2.getState ? V2.getState() : null;
+    const simpleDesireChain = !!(markerFixed && moduleState && moduleState.demoV2 && moduleState.demoV2.allWeaponDesireLoopPass);
     const choices = el("moduleChoices");
     if (choices) choices.classList.toggle("marker-module-grid", !!markerFixed);
     setText("moduleContext", "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
-    setText("modulePanelFooter", markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
+    setText("modulePanelFooter", simpleDesireChain
+      ? "先看“立刻”和“怎么用”即可决定；混搭与 Lv4 只负责预告未来。"
+      : markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
     setHtml("moduleFlow", decisionFlowHtml(["关卡完成", "10秒回收", "模块选择", "下一关"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
         (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
-        '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · Lv.' + (choice.level + 1) + '</span>' +
+        '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · ' + escapeHtml(choice.levelLabel || ("Lv." + (choice.level + 1))) + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
-        '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
-        '<small>' + escapeHtml(choice.intent) + '</small>' +
+        (simpleDesireChain ? "" : '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
+          '<small>' + escapeHtml(choice.intent) + '</small>') +
+        (choice.immediate ? '<div class="module-promise-grid">' +
+          '<span class="module-promise-line promise-now"><b>' + (simpleDesireChain ? "立刻" : "现在改变") + '</b>' + escapeHtml(choice.immediate) + '</span>' +
+          '<span class="module-promise-line promise-play"><b>' + (simpleDesireChain ? "怎么用" : "玩法要求") + '</b>' + escapeHtml(choice.playstyle) + '</span>' +
+          '<span class="module-promise-line promise-relation"><b>' + (simpleDesireChain ? "混搭" : "组合关系") + '</b>' + escapeHtml(choice.relationPromise) + '</span>' +
+          '<span class="module-promise-line promise-terminal"><b>' + (simpleDesireChain ? "Lv4" : "终局承诺") + '</b>' + escapeHtml(choice.terminalPromise) + '</span>' +
+        '</div>' : '') +
         (choice.combo ? '<em class="module-combo">' + escapeHtml(choice.combo) + '</em>' : '') +
       '</button>';
     }).join(""));
@@ -466,6 +476,7 @@
         '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
         '<span>' + escapeHtml(part.allocationText) + '</span>' +
         '<small>品质进度：' + escapeHtml(part.progress) + '</small>' +
+        (part.mountText ? '<small class="component-mount-state">实体位置：' + escapeHtml(part.mountText) + '</small>' : '') +
         '</div>' +
       '</div>';
     }).join(""));
@@ -490,6 +501,7 @@
           '</div>' +
         '</div>' +
         '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
+        (offer.mountText ? '<span class="component-install-promise"><b>实体位置</b>' + escapeHtml(offer.mountText) + '；' + escapeHtml(offer.visualPromise) + '</span>' : '') +
         '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>' +
         '<span class="cost">材料 ' + offer.cost + '</span>' +
         '<div class="marker-component-actions">' +

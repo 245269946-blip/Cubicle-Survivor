@@ -3,8 +3,8 @@ export default function Home() {
     <main>
       <iframe
         className="game-frame"
-        src="/play/demo-v3-5.html"
-        title="工位幸存者 Demo V3.5 持续压力与属性兑现版在线试玩"
+        src="/play/demo-v3-13.html"
+        title="工位幸存者 Demo V3.13 四武器欲望链扩展版在线试玩"
         allow="autoplay; fullscreen"
         allowFullScreen
       />

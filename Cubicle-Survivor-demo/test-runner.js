@@ -1600,7 +1600,7 @@ attributeShapes.forEach(function (shape) {
     process.exit(1);
   }
 });
-if (!combatVisualSource.includes('const fixedMarkerLaser = /^marker_test_(base|copy|second_round)$/.test(source);')
+if (!combatVisualSource.includes('const fixedMarkerLaser = /^marker_test_(base|copy|second_round|retrieval)$/.test(source);')
   || !combatVisualSource.includes('Archive owns a soft, low-frequency cyan band on the world layer.')
   || !combatVisualSource.includes('const closedStrikeActive = scissors.weaponVisualTime > 0')
   || !combatVisualSource.includes('event.x2 - Math.cos(angle) * (source === "scissors_test_sever" ? 20 : 14)')) {
@@ -1608,6 +1608,559 @@ if (!combatVisualSource.includes('const fixedMarkerLaser = /^marker_test_(base|c
   process.exit(1);
 }
 console.log("OK Demo V3.5 sustained pressure: staged quota, faster contact, active Boss cooldowns, denser specials, and visible attack-shape scaling");
+
+const fourWeaponV36 = V2.demoV2 && V2.demoV2.fourWeaponV36;
+const v36EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-6.html"), "utf8");
+if (!fourWeaponV36 || fourWeaponV36.version !== "Demo V3.6" || !fourWeaponV36.weaponEmbodimentPass
+  || !fourWeaponV36.sustainedPressurePass || !fourWeaponV36.bossPressurePass || !fourWeaponV36.attributeImpactPass
+  || !v36EntrySource.includes('params.set("demoV2", "four-weapon-v3-6")')) {
+  console.error("Demo V3.6 must preserve the V3.5 combat package and enable only the Marker embodiment pass", fourWeaponV36);
+  process.exit(1);
+}
+
+function numericCombatSnapshot(version, weaponId) {
+  const state = makeVersionedWeaponState(version, weaponId);
+  const keys = Object.keys(state.activeFormParams).filter(function (key) {
+    return typeof state.activeFormParams[key] === "number" || typeof state.activeFormParams[key] === "boolean";
+  }).sort();
+  return JSON.stringify(keys.reduce(function (snapshot, key) {
+    snapshot[key] = state.activeFormParams[key];
+    return snapshot;
+  }, {}));
+}
+
+["marker", "thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const v35Numbers = numericCombatSnapshot("four-weapon-v3-5", weaponId);
+  const v36Numbers = numericCombatSnapshot("four-weapon-v3-6", weaponId);
+  if (v35Numbers !== v36Numbers) {
+    console.error("Demo V3.6 must not import experiment balance into the fixed suite", weaponId, v35Numbers, v36Numbers);
+    process.exit(1);
+  }
+});
+
+const v36MarkerState = makeVersionedWeaponState("four-weapon-v3-6", "marker");
+const v36MarkerConfig = V2.getDemoV2FixedTestConfig(v36MarkerState);
+const v36MarkerRuntime = v36MarkerState.demoV2[v36MarkerConfig.runtimeKey];
+v36MarkerRuntime.modules.copy = 2;
+v36MarkerRuntime.modules.archive = 3;
+v36MarkerRuntime.parts.tip.copies = 4;
+v36MarkerRuntime.parts.tip.activeStat = "damage";
+v36MarkerRuntime.parts.body.copies = 2;
+v36MarkerRuntime.parts.body.activeStat = "amount";
+v36MarkerRuntime.parts.tail.copies = 8;
+v36MarkerRuntime.parts.tail.activeStat = "duration";
+v36MarkerRuntime.parts.body.allocations.amount = 1;
+v36MarkerConfig.rebuildParams(v36MarkerState);
+v36MarkerState.input.right = true;
+V2.combat.qa.updateInput(v36MarkerState, 0.01);
+v36MarkerState.input.right = false;
+const v36Visual = V2.combat.qa.markerEmbodimentVisualState(v36MarkerState);
+if (!v36Visual.enabled || v36Visual.facing !== 1 || v36Visual.copyLevel !== 2 || v36Visual.archiveLevel !== 3
+  || v36Visual.baseAmount !== 2 || v36Visual.copyLines !== 2 || v36Visual.penCount !== 6
+  || v36Visual.components.tip.copies !== 4 || v36Visual.components.tip.activeStat !== "damage"
+  || v36Visual.components.body.copies !== 2 || v36Visual.components.body.activeStat !== "amount"
+  || v36Visual.components.tail.copies !== 8 || v36Visual.components.tail.activeStat !== "duration"
+  || !combatVisualSource.includes("marker-person-printer-rig-directions-v5.png")
+  || !combatVisualSource.includes("marker-weapon-directions-v4.png")
+  || !combatVisualSource.includes("marker-growth-parts.svg")
+  || !combatVisualSource.includes("drawMarkerEmbodiedPlayer")
+  || !combatVisualSource.includes("drawMarkerPenComponents")
+  || !combatVisualSource.includes("drawMarkerWornComponents")) {
+  console.error("Demo V3.6 Marker visuals must bind body-facing cartridges and aim-facing pens to real Demo state", v36Visual);
+  process.exit(1);
+}
+console.log("OK Demo V3.6 Marker embodiment: V3.5 numbers preserved, body-facing cartridges, aim-facing pens, amount and route levels bound to live state");
+
+const fourWeaponV37 = V2.demoV2 && V2.demoV2.fourWeaponV37;
+const v37EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-7.html"), "utf8");
+if (!fourWeaponV37 || fourWeaponV37.version !== "Demo V3.7" || !fourWeaponV37.weaponEmbodimentPass
+  || !fourWeaponV37.thermosEmbodimentPass || !fourWeaponV37.sustainedPressurePass
+  || !fourWeaponV37.bossPressurePass || !fourWeaponV37.attributeImpactPass
+  || !v37EntrySource.includes('params.set("demoV2", "four-weapon-v3-7")')) {
+  console.error("Demo V3.7 must preserve V3.6 and enable the Thermos pressure-rig pass", fourWeaponV37);
+  process.exit(1);
+}
+
+["marker", "thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const v36Numbers = numericCombatSnapshot("four-weapon-v3-6", weaponId);
+  const v37Numbers = numericCombatSnapshot("four-weapon-v3-7", weaponId);
+  if (v36Numbers !== v37Numbers) {
+    console.error("Demo V3.7 visual work must preserve the V3.6 combat snapshot", weaponId, v36Numbers, v37Numbers);
+    process.exit(1);
+  }
+});
+
+const v37ThermosState = makeVersionedWeaponState("four-weapon-v3-7", "thermos");
+const v37ThermosConfig = V2.getDemoV2FixedTestConfig(v37ThermosState);
+const v37ThermosRuntime = v37ThermosState.demoV2[v37ThermosConfig.runtimeKey];
+v37ThermosRuntime.modules.copy = 3;
+v37ThermosRuntime.modules.archive = 2;
+v37ThermosRuntime.parts.tip.copies = 4;
+v37ThermosRuntime.parts.tip.activeStat = "damage";
+v37ThermosRuntime.parts.body.copies = 2;
+v37ThermosRuntime.parts.body.activeStat = "amount";
+v37ThermosRuntime.parts.tail.copies = 8;
+v37ThermosRuntime.parts.tail.activeStat = "duration";
+v37ThermosRuntime.parts.body.allocations.amount = 1;
+v37ThermosConfig.rebuildParams(v37ThermosState);
+v37ThermosRuntime.facingAngle = Math.PI / 4;
+v37ThermosState.input.left = true;
+V2.combat.qa.updateInput(v37ThermosState, 0.01);
+v37ThermosState.input.left = false;
+const v37ThermosVisual = V2.combat.qa.thermosEmbodimentVisualState(v37ThermosState);
+if (!v37ThermosVisual.enabled || v37ThermosVisual.facing !== 3
+  || v37ThermosVisual.condensationLevel !== 3 || v37ThermosVisual.heatwaveLevel !== 2
+  || v37ThermosVisual.cupCount !== 2 || v37ThermosVisual.components.lid.copies !== 4
+  || v37ThermosVisual.components.body.activeStat !== "amount"
+  || v37ThermosVisual.components.base.activeStat !== "duration"
+  || !combatVisualSource.includes("thermos-person-pressure-rig-directions-v1.png")
+  || !combatVisualSource.includes("thermos-weapon-directions-v1.png")
+  || !combatVisualSource.includes("thermos-route-packs-directions-v2.png")
+  || !combatVisualSource.includes("drawThermosEmbodiedPlayer")
+  || !combatVisualSource.includes("visualOriginDistance: state.demoV2 && state.demoV2.thermosEmbodimentPass ? 24 : 0")) {
+  console.error("Demo V3.7 Thermos visuals must bind the worn pressure rig, aim-facing cup, module levels and real outlet", v37ThermosVisual);
+  process.exit(1);
+}
+console.log("OK Demo V3.7 Thermos pressure rig: V3.6 numbers preserved, body-facing modules, aim-facing cups, visible outlet and route levels bound to live state");
+
+const fourWeaponV38 = V2.demoV2 && V2.demoV2.fourWeaponV38;
+const v38EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-8.html"), "utf8");
+if (!fourWeaponV38 || fourWeaponV38.version !== "Demo V3.8" || !fourWeaponV38.weaponEmbodimentPass
+  || !fourWeaponV38.thermosEmbodimentPass || !fourWeaponV38.thermosBackPressurePass
+  || !v38EntrySource.includes('params.set("demoV2", "four-weapon-v3-8")')) {
+  console.error("Demo V3.8 must preserve V3.7 and enable the Thermos dual-route back-pressure pass", fourWeaponV38);
+  process.exit(1);
+}
+
+["marker", "thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const v37Numbers = numericCombatSnapshot("four-weapon-v3-7", weaponId);
+  const v38Numbers = numericCombatSnapshot("four-weapon-v3-8", weaponId);
+  if (v37Numbers !== v38Numbers) {
+    console.error("Demo V3.8 back-pressure feedback must preserve the V3.7 combat snapshot", weaponId, v37Numbers, v38Numbers);
+    process.exit(1);
+  }
+});
+
+const v38ThermosState = makeVersionedWeaponState("four-weapon-v3-8", "thermos");
+const v38ThermosConfig = V2.getDemoV2FixedTestConfig(v38ThermosState);
+const v38ThermosRuntime = v38ThermosState.demoV2[v38ThermosConfig.runtimeKey];
+v38ThermosRuntime.modules.copy = 3;
+v38ThermosRuntime.modules.archive = 2;
+v38ThermosConfig.rebuildParams(v38ThermosState);
+V2.combat.qa.triggerThermosBackPressure(v38ThermosState, v38ThermosRuntime);
+const v38PressureEvents = v38ThermosState.formEvents.filter(function (event) {
+  return event.kind === "thermos_backpressure";
+});
+if (v38PressureEvents.length !== 2
+  || !v38PressureEvents.some(function (event) { return event.family === "condensation" && event.level === 3; })
+  || !v38PressureEvents.some(function (event) { return event.family === "heatwave" && event.level === 2; })
+  || v38ThermosRuntime.condensationRecoil !== 0.32 || v38ThermosRuntime.heatwaveRecoil !== 0.32
+  || !combatVisualSource.includes("drawThermosBackPressureEvent")
+  || !combatVisualSource.includes("thermos-backpressure-half-ring-v38-sheet.png")
+  || !combatVisualSource.includes('source: "thermos_backpressure_" + emitter.family')
+  || !combatVisualSource.includes('const size = 118 + level * 9')
+  || !combatVisualSource.includes('"screen"')) {
+  console.error("Demo V3.8 Thermos attacks must drive distinct frost and hot-steam half-rings with physical route-pack recoil", v38PressureEvents, v38ThermosRuntime);
+  process.exit(1);
+}
+console.log("OK Demo V3.8 Thermos back-pressure: V3.7 numbers preserved, every attack can release route-specific frost/steam half-rings and recoil the worn pressure packs");
+
+const fourWeaponV39 = V2.demoV2 && V2.demoV2.fourWeaponV39;
+const v39EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-9.html"), "utf8");
+if (!fourWeaponV39 || fourWeaponV39.version !== "Demo V3.9"
+  || !fourWeaponV39.weaponEmbodimentPass || !fourWeaponV39.thermosEmbodimentPass
+  || !fourWeaponV39.thermosBackPressurePass || !fourWeaponV39.scissorsEmbodimentPass
+  || !fourWeaponV39.correctionEmbodimentPass
+  || !v39EntrySource.includes('params.set("demoV2", "four-weapon-v3-9")')) {
+  console.error("Demo V3.9 must preserve V3.8 and enable Scissors/Correction embodiment", fourWeaponV39);
+  process.exit(1);
+}
+["marker", "thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const v38Numbers = numericCombatSnapshot("four-weapon-v3-8", weaponId);
+  const v39Numbers = numericCombatSnapshot("four-weapon-v3-9", weaponId);
+  if (v38Numbers !== v39Numbers) {
+    console.error("Demo V3.9 embodiment must preserve the V3.8 combat snapshot", weaponId, v38Numbers, v39Numbers);
+    process.exit(1);
+  }
+});
+const v39ScissorsState = makeVersionedWeaponState("four-weapon-v3-9", "scissors");
+const v39ScissorsRuntime = v39ScissorsState.demoV2.scissors;
+v39ScissorsRuntime.modules.copy = 2;
+v39ScissorsRuntime.modules.archive = 3;
+V2.getDemoV2FixedTestConfig(v39ScissorsState).rebuildParams(v39ScissorsState);
+const v39ScissorsVisual = V2.combat.qa.scissorsEmbodimentVisualState(v39ScissorsState);
+const v39CorrectionState = makeVersionedWeaponState("four-weapon-v3-9", "correction_fluid");
+const v39CorrectionRuntime = v39CorrectionState.demoV2.correctionFluid;
+v39CorrectionRuntime.modules.copy = 3;
+v39CorrectionRuntime.modules.archive = 2;
+V2.getDemoV2FixedTestConfig(v39CorrectionState).rebuildParams(v39CorrectionState);
+const v39CorrectionVisual = V2.combat.qa.correctionEmbodimentVisualState(v39CorrectionState);
+if (!v39ScissorsVisual.enabled || v39ScissorsVisual.closedLevel !== 2 || v39ScissorsVisual.openLevel !== 3
+  || !v39CorrectionVisual.enabled || v39CorrectionVisual.spreadLevel !== 3 || v39CorrectionVisual.fatalLevel !== 2
+  || !combatVisualSource.includes("scissors-person-pivot-rig-directions-v39.png")
+  || !combatVisualSource.includes("scissors-complete-directions-v39.png")
+  || !combatVisualSource.includes("scissors-cut-routes-v39.png")
+  || !combatVisualSource.includes("correction-person-reservoir-directions-v39.png")
+  || !combatVisualSource.includes("correction-nozzle-directions-v39.png")
+  || !combatVisualSource.includes("correction-route-mutations-v39.png")
+  || !combatVisualSource.includes("correction-spray-error-v39.png")
+  || !combatVisualSource.includes("drawScissorsEmbodiedPlayer")
+  || !combatVisualSource.includes("drawCorrectionEmbodiedPlayer")
+  || !combatVisualSource.includes("if (!visual.attacking")
+  || !combatVisualSource.includes("test.weaponVisualAngles = targets.map")) {
+  console.error("Demo V3.9 must bind one complete Scissors weapon and the Correction body-to-nozzle-to-error causal chain", v39ScissorsVisual, v39CorrectionVisual);
+  process.exit(1);
+}
+console.log("OK Demo V3.9 Scissors/Correction embodiment: V3.8 numbers preserved, shared chibi scale, one complete scissors, and visible correction-state causality");
+
+const fourWeaponV310 = V2.demoV2 && V2.demoV2.fourWeaponV310;
+const v310EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-10.html"), "utf8");
+if (!fourWeaponV310 || fourWeaponV310.version !== "Demo V3.10"
+  || !fourWeaponV310.combatScaleOrbitPass
+  || !fourWeaponV310.scissorsEmbodimentPass || !fourWeaponV310.correctionEmbodimentPass
+  || !v310EntrySource.includes('params.set("demoV2", "four-weapon-v3-10")')) {
+  console.error("Demo V3.10 must preserve V3.9 and enable the battlefield-scale/outer-orbit repair", fourWeaponV310);
+  process.exit(1);
+}
+["marker", "thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const v39Numbers = numericCombatSnapshot("four-weapon-v3-9", weaponId);
+  const v310Numbers = numericCombatSnapshot("four-weapon-v3-10", weaponId);
+  if (v39Numbers !== v310Numbers) {
+    console.error("Demo V3.10 visual scale repair must preserve the V3.9 combat snapshot", weaponId, v39Numbers, v310Numbers);
+    process.exit(1);
+  }
+});
+const v310Layouts = [
+  V2.combat.qa.markerEmbodimentVisualState(makeVersionedWeaponState("four-weapon-v3-10", "marker")).layout,
+  V2.combat.qa.thermosEmbodimentVisualState(makeVersionedWeaponState("four-weapon-v3-10", "thermos")).layout,
+  V2.combat.qa.scissorsEmbodimentVisualState(makeVersionedWeaponState("four-weapon-v3-10", "scissors")).layout,
+  V2.combat.qa.correctionEmbodimentVisualState(makeVersionedWeaponState("four-weapon-v3-10", "correction_fluid")).layout
+];
+if (v310Layouts.some(function (layout) { return !layout || !layout.compact || layout.bodyHeight !== 78; })
+  || v310Layouts[0].markerOrbit !== 54 || v310Layouts[0].markerWeaponHeight !== 22
+  || v310Layouts[1].thermosOrbit !== 47 || v310Layouts[1].thermosWeaponHeight !== 32
+  || v310Layouts[2].scissorsOrbit !== 49 || v310Layouts[2].scissorsWeaponHeight !== 48
+  || v310Layouts[3].correctionOrbit !== 51 || v310Layouts[3].correctionWeaponHeight !== 18
+  || !combatVisualSource.includes("function embodiedCombatLayout")
+  || !combatVisualSource.includes("combatScaleOrbitPass")) {
+  console.error("Demo V3.10 must use one compact body scale and weapon-specific outer-ring clearances", v310Layouts);
+  process.exit(1);
+}
+console.log("OK Demo V3.10 battlefield scale: old-size player footprint restored and all aim-facing weapons clear the body core on weapon-specific outer rings");
+
+const fourWeaponV311 = V2.demoV2 && V2.demoV2.fourWeaponV311;
+const v311EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-11.html"), "utf8");
+if (!fourWeaponV311 || fourWeaponV311.version !== "Demo V3.11"
+  || !fourWeaponV311.openingComfortPass || !fourWeaponV311.weaponParityPass
+  || !fourWeaponV311.combatScaleOrbitPass
+  || !v311EntrySource.includes('params.set("demoV2", "four-weapon-v3-11")')) {
+  console.error("Demo V3.11 must inherit V3.10 and enable only opening comfort plus weapon parity", fourWeaponV311);
+  process.exit(1);
+}
+const v310OpeningState = makeVersionedWeaponState("four-weapon-v3-10", "marker");
+const v310OpeningConfig = V2.getDemoV2FixedTestConfig(v310OpeningState);
+const v310Encounter1 = v310OpeningConfig.currentEncounter(v310OpeningState);
+v310OpeningConfig.startEncounter(v310OpeningState, 1);
+const v310Encounter2 = v310OpeningConfig.currentEncounter(v310OpeningState);
+const v311OpeningState = makeVersionedWeaponState("four-weapon-v3-11", "marker");
+const v311OpeningConfig = V2.getDemoV2FixedTestConfig(v311OpeningState);
+const v311Encounter1 = v311OpeningConfig.currentEncounter(v311OpeningState);
+v311OpeningConfig.startEncounter(v311OpeningState, 1);
+const v311Encounter2 = v311OpeningConfig.currentEncounter(v311OpeningState);
+if (!(v311Encounter1.spawnTotal >= 75 && v311Encounter1.spawnTotal < v310Encounter1.spawnTotal)
+  || !(v311Encounter1.floor >= 18 && v311Encounter1.floor < v310Encounter1.floor)
+  || !(v311Encounter1.enemyHp <= v310Encounter1.enemyHp * 0.81)
+  || !(v311Encounter1.enemySpeed <= v310Encounter1.enemySpeed * 0.85)
+  || v311Encounter1.enemyDamageScale !== 0.68
+  || !(v311Encounter2.spawnTotal >= 95 && v311Encounter2.spawnTotal < v310Encounter2.spawnTotal)
+  || !(v311Encounter2.floor >= 24 && v311Encounter2.floor < v310Encounter2.floor)
+  || !(v311Encounter2.enemyHp <= v310Encounter2.enemyHp * 0.89)
+  || !(v311Encounter2.enemySpeed <= v310Encounter2.enemySpeed * 0.91)
+  || v311Encounter2.enemyDamageScale !== 0.78) {
+  console.error("Demo V3.11 encounters 1-2 must preserve grass-cut density while lowering contact pressure", {
+    v310Encounter1, v311Encounter1, v310Encounter2, v311Encounter2
+  });
+  process.exit(1);
+}
+const v310MarkerParams = makeVersionedWeaponState("four-weapon-v3-10", "marker").activeFormParams;
+const v311MarkerParams = makeVersionedWeaponState("four-weapon-v3-11", "marker").activeFormParams;
+const v310ThermosParams = makeVersionedWeaponState("four-weapon-v3-10", "thermos").activeFormParams;
+const v311ThermosParams = makeVersionedWeaponState("four-weapon-v3-11", "thermos").activeFormParams;
+const v310ScissorsParams = makeVersionedWeaponState("four-weapon-v3-10", "scissors").activeFormParams;
+const v311ScissorsParams = makeVersionedWeaponState("four-weapon-v3-11", "scissors").activeFormParams;
+const v310CorrectionParams = makeVersionedWeaponState("four-weapon-v3-10", "correction_fluid").activeFormParams;
+const v311CorrectionParams = makeVersionedWeaponState("four-weapon-v3-11", "correction_fluid").activeFormParams;
+if (!(v311MarkerParams.damage < v310MarkerParams.damage && v311MarkerParams.cooldown > v310MarkerParams.cooldown)
+  || !(v311ThermosParams.damage < v310ThermosParams.damage && v311ThermosParams.cooldown > v310ThermosParams.cooldown)
+  || !(v311ScissorsParams.damage > v310ScissorsParams.damage
+    && v311ScissorsParams.scissorsBaseRange > v310ScissorsParams.scissorsBaseRange
+    && v311ScissorsParams.scissorsBaseHalfAngle > v310ScissorsParams.scissorsBaseHalfAngle
+    && v311ScissorsParams.scissorsDashChargeTime < v310ScissorsParams.scissorsDashChargeTime
+    && v311ScissorsParams.markerFixedDodgeChance > v310ScissorsParams.markerFixedDodgeChance
+    && v311ScissorsParams.scissorsRealRangeAcquisition
+    && !v310ScissorsParams.scissorsRealRangeAcquisition)
+  || !(v311CorrectionParams.damage > v310CorrectionParams.damage
+    && v311CorrectionParams.cooldown < v310CorrectionParams.cooldown
+    && v311CorrectionParams.correctionOpeningOversprayRadius > v310CorrectionParams.correctionOpeningOversprayRadius
+    && v311CorrectionParams.correctionOpeningOversprayDamageScale > v310CorrectionParams.correctionOpeningOversprayDamageScale)
+  || !combatVisualSource.includes("Ordinary rounds must not begin outside the real")
+  || !combatVisualSource.includes("p.scissorsBaseRange || 138")) {
+  console.error("Demo V3.11 weapon parity must trim the two leaders and repair Scissors/Correction mechanism loss", {
+    v310MarkerParams, v311MarkerParams, v310ThermosParams, v311ThermosParams,
+    v310ScissorsParams, v311ScissorsParams, v310CorrectionParams, v311CorrectionParams
+  });
+  process.exit(1);
+}
+console.log("OK Demo V3.11 opening comfort and weapon parity: encounters 1-2 teach before punishing, Scissors stops whiffing, and Correction reaches error payoff sooner");
+
+const fourWeaponV312 = V2.demoV2 && V2.demoV2.fourWeaponV312;
+const v312EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-12.html"), "utf8");
+if (!fourWeaponV312 || fourWeaponV312.version !== "Demo V3.12"
+  || !fourWeaponV312.markerDesireLoopPass
+  || !fourWeaponV312.openingComfortPass || !fourWeaponV312.weaponParityPass
+  || !v312EntrySource.includes('params.set("demoV2", "four-weapon-v3-12")')) {
+  console.error("Demo V3.12 must inherit V3.11 and enable the Marker desire-chain experiment", fourWeaponV312);
+  process.exit(1);
+}
+["thermos", "scissors", "correction_fluid"].forEach(function (weaponId) {
+  const before = numericCombatSnapshot("four-weapon-v3-11", weaponId);
+  const after = numericCombatSnapshot("four-weapon-v3-12", weaponId);
+  if (before !== after) {
+    console.error("Demo V3.12 Marker experiment must preserve all non-Marker combat snapshots", weaponId, before, after);
+    process.exit(1);
+  }
+});
+const v312MarkerOpening = makeVersionedWeaponState("four-weapon-v3-12", "marker");
+const v312MarkerOpeningConfig = V2.getDemoV2FixedTestConfig(v312MarkerOpening);
+const v312OpeningOffers = v312MarkerOpeningConfig.makeShopOffers(v312MarkerOpening);
+const v312OpeningChoices = v312MarkerOpeningConfig.makeModuleChoices(v312MarkerOpening);
+if (v312MarkerOpening.activeFormParams.damage !== v311MarkerParams.damage
+  || v312MarkerOpening.activeFormParams.cooldown !== v311MarkerParams.cooldown
+  || v312MarkerOpening.activeFormParams.range !== v311MarkerParams.range
+  || v312OpeningChoices.some(function (choice) {
+    return !choice.immediate || !choice.playstyle || !choice.terminalPromise || !choice.relationPromise || !choice.levelLabel;
+  })
+  || v312OpeningOffers.some(function (offer) { return !offer.mountText || !offer.visualPromise; })) {
+  console.error("Demo V3.12 must preserve V3.11 opening numbers while exposing complete module and component promises", {
+    params: v312MarkerOpening.activeFormParams,
+    choices: v312OpeningChoices,
+    offers: v312OpeningOffers
+  });
+  process.exit(1);
+}
+const v312PureState = makeVersionedWeaponState("four-weapon-v3-12", "marker");
+const v312PureConfig = V2.getDemoV2FixedTestConfig(v312PureState);
+for (let index = 0; index < 4; index++) v312PureConfig.applyModule(v312PureState, "copy", true);
+const v312TerminalChoices = v312PureConfig.makeModuleChoices(v312PureState);
+const v312PureChoice = v312TerminalChoices.find(function (choice) { return choice.id === "copy"; });
+const v312MixChoice = v312TerminalChoices.find(function (choice) { return choice.id === "archive"; });
+if (!v312PureChoice || !v312PureChoice.mastery || v312PureChoice.disabled || v312PureChoice.levelLabel !== "终局专精"
+  || !v312MixChoice || v312MixChoice.disabled) {
+  console.error("Demo V3.12 fifth Marker choice must be a real pure-mastery versus mixed-route split", v312TerminalChoices);
+  process.exit(1);
+}
+v312PureConfig.applyModule(v312PureState, "copy", true);
+if (v312PureState.demoV2.marker.modules.copy !== 4
+  || v312PureState.demoV2.marker.moduleChoiceIndex !== 5
+  || v312PureState.demoV2.marker.pureRouteCommitted !== "copy"
+  || !v312PureState.activeFormParams.markerFixedPureCopyMastery
+  || v312PureState.activeFormParams.markerFixedRetrieval) {
+  console.error("Demo V3.12 pure Copy mastery must strengthen Lv4 without inventing Lv5 or silently enabling Retrieval", v312PureState.demoV2.marker);
+  process.exit(1);
+}
+const v312MixedState = makeVersionedWeaponState("four-weapon-v3-12", "marker");
+const v312MixedConfig = V2.getDemoV2FixedTestConfig(v312MixedState);
+v312MixedConfig.applyModule(v312MixedState, "copy", true);
+const v312FirstCrossChoice = v312MixedConfig.makeModuleChoices(v312MixedState).find(function (choice) { return choice.id === "archive"; });
+v312MixedConfig.applyModule(v312MixedState, "archive", true);
+const v312ConnectedChoices = v312MixedConfig.makeModuleChoices(v312MixedState);
+if (!v312FirstCrossChoice || v312FirstCrossChoice.relationPromise.indexOf("立即接通") < 0
+  || v312ConnectedChoices.some(function (choice) { return choice.relationPromise.indexOf("调阅已接通") < 0; })) {
+  console.error("Demo V3.12 must announce Retrieval only on the first cross-route choice and show an established relation afterward", {
+    firstCross: v312FirstCrossChoice,
+    connected: v312ConnectedChoices
+  });
+  process.exit(1);
+}
+V2.combat.spawnEnemy(v312MixedState);
+const v312RetrievalTarget = v312MixedState.enemies[0];
+v312RetrievalTarget.x = v312MixedState.player.x + 180;
+v312RetrievalTarget.y = v312MixedState.player.y;
+v312RetrievalTarget.hp = 9999;
+v312RetrievalTarget.maxHp = 9999;
+V2.combat.qa.fireMarkerFixedTest(v312MixedState, false);
+const retrievalBeforeSecondAttack = v312MixedState.demoV2.marker.retrievalTriggers;
+v312MixedState.totalTime += 1;
+V2.combat.qa.fireMarkerFixedTest(v312MixedState, false);
+if (!v312MixedState.activeFormParams.markerFixedRetrieval
+  || retrievalBeforeSecondAttack !== 0
+  || v312MixedState.demoV2.marker.retrievalTriggers <= 0
+  || !v312MixedState.formEvents.some(function (event) { return event.source === "marker_test_retrieval"; })) {
+  console.error("Demo V3.12 mixed Marker route must re-read an older Archive with a distinct Retrieval event", {
+    params: v312MixedState.activeFormParams,
+    runtime: v312MixedState.demoV2.marker,
+    events: v312MixedState.formEvents
+  });
+  process.exit(1);
+}
+console.log("OK Demo V3.12 Marker desire chain: explicit promises, visible component mounting, pure Lv4 mastery, and mixed-route Retrieval all execute");
+
+const fourWeaponV313 = V2.demoV2 && V2.demoV2.fourWeaponV313;
+const v313EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-13.html"), "utf8");
+const v313IndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8");
+if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
+  || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
+  || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
+  || !v313IndexSource.includes("systems.js?v=80")
+  || !v313IndexSource.includes("state.js?v=25")
+  || !v313IndexSource.includes("four-weapon-fixed.js?v=8")) {
+  console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-13" });
+V2.dispatch({ type: "START_RUN", weaponId: "scissors" });
+const v313PlayableStart = V2.getState();
+V2.combat.updateCamera(v313PlayableStart);
+const v313StartX = v313PlayableStart.player.x;
+const v313StartCameraX = v313PlayableStart.camera.x;
+v313PlayableStart.input.right = true;
+V2.combat.qa.updateInput(v313PlayableStart, 0.2);
+v313PlayableStart.input.right = false;
+if (v313StartX !== v313PlayableStart.world.width / 2
+  || v313PlayableStart.player.y !== v313PlayableStart.world.height / 2
+  || v313StartCameraX <= 0
+  || v313PlayableStart.player.x <= v313StartX
+  || v313PlayableStart.camera.x <= v313StartCameraX) {
+  console.error("Demo V3.13 real start must spawn at world centre and immediately accept movement with camera follow", {
+    startX: v313StartX,
+    startCameraX: v313StartCameraX,
+    player: v313PlayableStart.player,
+    camera: v313PlayableStart.camera,
+    world: v313PlayableStart.world
+  });
+  process.exit(1);
+}
+const isolatedLayerCalls = [];
+const isolatedLayerErrors = [];
+V2.combat.qa.drawIsolatedLayers(
+  canvas.getContext("2d"),
+  v313PlayableStart,
+  [
+    { name: "effects", world: true, draw: function () { isolatedLayerCalls.push("effects"); throw new Error("probe"); } },
+    { name: "enemies", world: true, draw: function () { isolatedLayerCalls.push("enemies"); } },
+    { name: "player", world: true, draw: function () { isolatedLayerCalls.push("player"); } }
+  ],
+  function (_, layer) { isolatedLayerErrors.push(layer); }
+);
+if (isolatedLayerCalls.join(",") !== "effects,enemies,player" || isolatedLayerErrors.join(",") !== "effects") {
+  console.error("A failed VFX layer must never prevent enemies or player from rendering", isolatedLayerCalls, isolatedLayerErrors);
+  process.exit(1);
+}
+console.log("OK Demo V3.13 playability guard: cache-coherent runtime, centered start, live input/camera, and isolated render layers");
+const v313RouteSpecs = [
+  { weaponId: "thermos", ids: ["condensation", "heatwave"], runtimeKey: "thermos", pureFlags: ["thermosFixedPureCondensationMastery", "thermosFixedPureHeatwaveMastery"] },
+  { weaponId: "scissors", ids: ["closed", "open"], runtimeKey: "scissors", pureFlags: ["scissorsPureClosedMastery", "scissorsPureOpenMastery"] },
+  { weaponId: "correction_fluid", ids: ["spread", "correction"], runtimeKey: "correctionFluid", pureFlags: ["correctionPureSpreadMastery", "correctionPureFatalMastery"] }
+];
+v313RouteSpecs.forEach(function (spec) {
+  const before = makeVersionedWeaponState("four-weapon-v3-12", spec.weaponId);
+  const state = makeVersionedWeaponState("four-weapon-v3-13", spec.weaponId);
+  const config = V2.getDemoV2FixedTestConfig(state);
+  ["damage", "cooldown", "range", "width", "amount"].forEach(function (key) {
+    if (state.activeFormParams[key] !== before.activeFormParams[key]) {
+      console.error("Demo V3.13 must preserve V3.12 opening combat numbers", spec.weaponId, key, before.activeFormParams[key], state.activeFormParams[key]);
+      process.exit(1);
+    }
+  });
+  const choices = config.makeModuleChoices(state);
+  const offers = config.makeShopOffers(state);
+  if (choices.some(function (choice) {
+    return !choice.immediate || !choice.playstyle || !choice.terminalPromise || !choice.relationPromise || !choice.levelLabel;
+  }) || offers.some(function (offer) { return !offer.mountText || !offer.visualPromise; })) {
+    console.error("Every V3.13 weapon must expose complete but readable module promises and physical component mounts", spec.weaponId, choices, offers);
+    process.exit(1);
+  }
+  spec.ids.forEach(function (routeId, routeIndex) {
+    const pureState = makeVersionedWeaponState("four-weapon-v3-13", spec.weaponId);
+    const pureConfig = V2.getDemoV2FixedTestConfig(pureState);
+    for (let index = 0; index < 4; index++) pureConfig.applyModule(pureState, routeId, true);
+    const masteryChoice = pureConfig.makeModuleChoices(pureState).find(function (choice) { return choice.id === routeId; });
+    if (!masteryChoice || !masteryChoice.mastery || masteryChoice.disabled || masteryChoice.levelLabel !== "终局专精") {
+      console.error("V3.13 fifth choice must preserve a pure Lv4 mastery option", spec.weaponId, routeId, masteryChoice);
+      process.exit(1);
+    }
+    pureConfig.applyModule(pureState, routeId, true);
+    const runtime = pureState.demoV2[spec.runtimeKey];
+    if (runtime.modules[routeIndex === 0 ? "copy" : "archive"] !== 4
+      || runtime.moduleChoiceIndex !== 5
+      || runtime.pureRouteCommitted !== (routeIndex === 0 ? "copy" : "archive")
+      || !pureState.activeFormParams[spec.pureFlags[routeIndex]]) {
+      console.error("V3.13 pure mastery must strengthen Lv4 without creating Lv5", spec.weaponId, routeId, runtime, pureState.activeFormParams);
+      process.exit(1);
+    }
+  });
+});
+
+const v313ThermosMixed = makeVersionedWeaponState("four-weapon-v3-13", "thermos");
+const v313ThermosConfig = V2.getDemoV2FixedTestConfig(v313ThermosMixed);
+v313ThermosConfig.applyModule(v313ThermosMixed, "condensation", true);
+v313ThermosConfig.applyModule(v313ThermosMixed, "heatwave", true);
+V2.combat.spawnEnemy(v313ThermosMixed);
+const v313ThermosEnemy = v313ThermosMixed.enemies[0];
+Object.assign(v313ThermosEnemy, { x: v313ThermosMixed.player.x + 90, y: v313ThermosMixed.player.y, hp: 500, maxHp: 500, dead: false });
+v313ThermosMixed.damageZones.push({
+  type: "circle", source: "thermos_test_condensation", x: v313ThermosEnemy.x, y: v313ThermosEnemy.y,
+  radius: 70, life: 2, maxLife: 2, condensationZone: true, groupIndex: 0, zoneIndex: 0
+});
+V2.combat.qa.triggerThermosFixedThermalExchange(v313ThermosMixed, v313ThermosMixed.activeFormParams, v313ThermosEnemy.x, v313ThermosEnemy.y, 90, v313ThermosMixed.demoV2.thermos);
+if (!v313ThermosMixed.formEvents.some(function (event) { return event.source === "thermos_test_thermal_exchange"; })
+  || v313ThermosMixed.demoV2.thermos.totalThermalExchanges <= 0) {
+  console.error("V3.13 mixed Thermos route must visibly turn Heatwave + Condensation into Thermal Exchange");
+  process.exit(1);
+}
+
+const v313ScissorsMixed = makeVersionedWeaponState("four-weapon-v3-13", "scissors");
+const v313ScissorsConfig = V2.getDemoV2FixedTestConfig(v313ScissorsMixed);
+v313ScissorsConfig.applyModule(v313ScissorsMixed, "closed", true);
+v313ScissorsConfig.applyModule(v313ScissorsMixed, "open", true);
+V2.combat.spawnEnemy(v313ScissorsMixed);
+const v313ScissorsEnemy = v313ScissorsMixed.enemies[0];
+Object.assign(v313ScissorsEnemy, {
+  x: v313ScissorsMixed.player.x + 80, y: v313ScissorsMixed.player.y,
+  hp: 500, maxHp: 500, dead: false, scissorsCutSeamTime: 1.5
+});
+V2.combat.qa.scissorsLine(v313ScissorsMixed, v313ScissorsMixed.activeFormParams, 0, 150, 36, 1, "scissors_test_thrust");
+if (!v313ScissorsMixed.formEvents.some(function (event) { return event.source === "scissors_test_crosscut"; })
+  || v313ScissorsMixed.demoV2.scissors.totalCrossCuts <= 0) {
+  console.error("V3.13 mixed Scissors route must visibly turn Open seam + Closed hit into Cross Cut");
+  process.exit(1);
+}
+
+const v313CorrectionMixed = makeVersionedWeaponState("four-weapon-v3-13", "correction_fluid");
+const v313CorrectionConfig = V2.getDemoV2FixedTestConfig(v313CorrectionMixed);
+v313CorrectionConfig.applyModule(v313CorrectionMixed, "spread", true);
+v313CorrectionConfig.applyModule(v313CorrectionMixed, "correction", true);
+V2.combat.spawnEnemy(v313CorrectionMixed);
+const v313CorrectionEnemy = v313CorrectionMixed.enemies[0];
+Object.assign(v313CorrectionEnemy, { x: v313CorrectionMixed.player.x + 60, y: v313CorrectionMixed.player.y, hp: 500, maxHp: 500, dead: false });
+v313CorrectionMixed.damageZones.push({
+  type: "circle", source: "correction_test_error_area", x: v313CorrectionEnemy.x, y: v313CorrectionEnemy.y,
+  radius: 80, life: 3, maxLife: 3, correctionArea: true, correctionAreaId: 1
+});
+V2.combat.qa.triggerCorrectionCascadingRollback(
+  v313CorrectionMixed,
+  v313CorrectionMixed.demoV2.correctionFluid,
+  v313CorrectionMixed.activeFormParams,
+  { id: "rollback-trigger", x: v313CorrectionEnemy.x, y: v313CorrectionEnemy.y, r: 14 }
+);
+if (!v313CorrectionMixed.formEvents.some(function (event) { return event.source === "correction_test_rollback"; })
+  || v313CorrectionMixed.demoV2.correctionFluid.totalRollbacks <= 0) {
+  console.error("V3.13 mixed Correction Fluid route must visibly turn overload resolution into Cascading Rollback");
+  process.exit(1);
+}
+console.log("OK Demo V3.13 all-weapon desire chains: concise promises, physical mounts, pure Lv4 mastery, and three distinct mixed-route causal events all execute");
+
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')
   || !combatVisualSource.includes('source === "scissors_test_open" || source === "scissors_test_finale"')
@@ -2007,6 +2560,15 @@ function runEarlyPressureProbe(weaponId, seed, demoPhase) {
 
 const pressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 2500 + index));
 const v35PressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 7500 + index, "four-weapon-v3-5"));
+const v310PressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 7500 + index, "four-weapon-v3-10"));
+const v311PressureProbes = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runEarlyPressureProbe(weaponId, 7500 + index, "four-weapon-v3-11"));
+if (v311PressureProbes[0].kills < 14 || v311PressureProbes[1].kills < 14
+  || v311PressureProbes[2].hp <= v310PressureProbes[2].hp + 20
+  || v311PressureProbes[2].kills <= v310PressureProbes[2].kills
+  || v311PressureProbes[3].kills <= v310PressureProbes[3].kills) {
+  throw new Error("Demo V3.11 opening parity must retain leader throughput while materially improving Scissors/Correction: "
+    + JSON.stringify({ v310PressureProbes, v311PressureProbes }));
+}
 const correctionV32Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-2");
 const correctionV33Opening = runEarlyPressureProbe("correction_fluid", 6800, "four-weapon-v3-3");
 if (correctionV33Opening.kills <= correctionV32Opening.kills || correctionV33Opening.damageDone <= correctionV32Opening.damageDone * 1.25) {
@@ -2018,8 +2580,27 @@ for (const weaponId of ["marker", "thermos", "scissors", "correction_fluid"]) {
   automatedRuns.push(runAutomatedFixedSuite(weaponId, 1, 3900 + automatedRuns.length));
 }
 const v35AutomatedRuns = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runAutomatedFixedSuite(weaponId, index % 2, 8900 + index, "four-weapon-v3-5"));
+const v311AutomatedRuns = ["marker", "thermos", "scissors", "correction_fluid"].map((weaponId, index) => runAutomatedFixedSuite(weaponId, index % 2, 12900 + index, "four-weapon-v3-11"));
+const v312MarkerPressure = runEarlyPressureProbe("marker", 7500, "four-weapon-v3-12");
+const v312MarkerRuns = [
+  runAutomatedFixedSuite("marker", 0, 13900, "four-weapon-v3-12"),
+  runAutomatedFixedSuite("marker", 1, 13901, "four-weapon-v3-12")
+];
+const v313RemainingRuns = [
+  runAutomatedFixedSuite("thermos", 1, 12901, "four-weapon-v3-13"),
+  runAutomatedFixedSuite("scissors", 0, 12902, "four-weapon-v3-13"),
+  runAutomatedFixedSuite("correction_fluid", 1, 12903, "four-weapon-v3-13")
+];
+if (v312MarkerPressure.kills !== v311PressureProbes[0].kills
+  || v312MarkerPressure.damageDone !== v311PressureProbes[0].damageDone) {
+  throw new Error("Demo V3.12 must preserve the V3.11 Marker opening before its first module choice: "
+    + JSON.stringify({ v311: v311PressureProbes[0], v312: v312MarkerPressure }));
+}
 console.log("OK Demo V2.9 pressure/flow audit: four real-damage openings and eight real-timer pure-route progression soaks completed", pressureProbes, automatedRuns);
 console.log("OK Demo V3.5 pressure/flow audit: four moving real-damage openings and four complete sustained-pressure progression soaks completed", v35PressureProbes, v35AutomatedRuns);
+console.log("OK Demo V3.11 pressure/flow audit: matched V3.10/V3.11 openings and four complete balance-pass progression soaks completed", v310PressureProbes, v311PressureProbes, v311AutomatedRuns);
+console.log("OK Demo V3.12 pressure/flow audit: V3.11 opening parity and both pure Lv4 mastery routes complete all 17 encounters", v312MarkerPressure, v312MarkerRuns);
+console.log("OK Demo V3.13 pressure/flow audit: Thermos, Scissors and Correction Fluid complete all 17 encounters with the extended desire-chain contract", v313RemainingRuns);
 console.log("OK Demo V3.3 opening pressure: Correction Fluid materially exceeds its V3.2 first-stage throughput", correctionV32Opening, correctionV33Opening);
 console.log("OK Demo V2.9 integration: four weapons share one selection/version and neon layer while retaining isolated mechanisms");
 
