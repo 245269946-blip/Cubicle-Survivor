@@ -45,7 +45,17 @@
     switch_pulse: { wave: "square", start: 440, end: 720, duration: 0.12, gain: 0.1, dual: 1.5 },
     route_tick: { wave: "square", start: 310, end: 420, duration: 0.05, gain: 0.055, noise: 0.025, filter: 2800 },
     transfer_chirp: { wave: "triangle", start: 720, end: 1080, duration: 0.095, gain: 0.08, dual: 1.26 },
-    link_snap: { wave: "square", start: 700, end: 470, duration: 0.075, gain: 0.075, noise: 0.022, filter: 4200 }
+    link_snap: { wave: "square", start: 700, end: 470, duration: 0.075, gain: 0.075, noise: 0.022, filter: 4200 },
+    scissor_snip: { wave: "square", start: 1180, end: 430, duration: 0.075, gain: 0.09, noise: 0.018, filter: 5200 },
+    scissor_thrust: { wave: "sawtooth", start: 760, end: 210, duration: 0.12, gain: 0.105, noise: 0.028, filter: 4200 },
+    scissor_dash: { wave: "triangle", start: 420, end: 880, duration: 0.11, gain: 0.075, noise: 0.04, filter: 3600 },
+    scissor_finish: { wave: "square", start: 310, end: 92, duration: 0.2, gain: 0.13, noise: 0.065, filter: 2800, dual: 1.5 },
+    shelter_ping: { wave: "sine", start: 620, end: 1040, duration: 0.16, gain: 0.085, dual: 1.5 }
+    ,correction_spray: { wave: "triangle", start: 840, end: 360, duration: 0.095, gain: 0.075, noise: 0.075, filter: 3900 }
+    ,error_glitch: { wave: "square", start: 760, end: 1120, duration: 0.075, gain: 0.068, noise: 0.028, filter: 5200, dual: 1.47 }
+    ,error_field: { wave: "sine", start: 205, end: 155, duration: 0.2, gain: 0.068, noise: 0.026, filter: 1800, dual: 1.5 }
+    ,system_crash: { wave: "sawtooth", start: 520, end: 72, duration: 0.24, gain: 0.13, noise: 0.082, filter: 3000, dual: 0.5 }
+    ,correction_execute: { wave: "square", start: 1180, end: 96, duration: 0.21, gain: 0.125, noise: 0.05, filter: 4300, dual: 1.5 }
   };
 
   const TOPOLOGY_AUDIO_RULES = {
@@ -55,6 +65,7 @@
     scan_line: { voice: "marker_scan", triggers: { beam: "release", hit: "impact" }, cooldown: 0.16, hitCooldown: 0.09 },
     support_line: { voice: "marker_stroke", triggers: { beam: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.14 },
     residual_line: { voice: "marker_stroke", triggers: { beam: "residual" }, cooldown: 0.16 },
+    retrieval_line: { voice: "transfer_chirp", triggers: { beam: "release", circle: "impact", hit: "impact" }, cooldown: 0.14, hitCooldown: 0.1 },
     link_line: { voice: "link_snap", triggers: { beam: "release" }, cooldown: 0.11 },
     junction: { voice: "impact_click", triggers: { circle: "impact" }, cooldown: 0.09 },
     target_mark: { voice: "marker_mark", triggers: { circle: "impact" }, cooldown: 0.14 },
@@ -70,14 +81,26 @@
     deployable_field: { voice: "station_drop", triggers: { zone: "release" }, cooldown: 0.3 },
     heat_orb: { voice: "heat_charge", triggers: { circle: "anticipation" }, cooldown: 0.16 },
     steam_line: { voice: "steam_soft", triggers: { beam: "release", hit: "impact" }, cooldown: 0.085, hitCooldown: 0.12 },
+    steam_fan: { voice: "steam_release", triggers: { beam: "release", hit: "impact" }, cooldown: 0.14, hitCooldown: 0.13 },
     steam_column: { voice: "steam_release", triggers: { beam: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.13 },
+    target_barrage: { voice: "steam_release", triggers: { circle: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.14 },
     orbit_entity: { voice: "module_chirp", triggers: { circle: "release", zone: "residual" }, cooldown: 0.22 },
     placed_trap: { voice: "paper_place", triggers: { circle: "anticipation" }, cooldown: 0.09 },
     support_trap: { voice: "paper_place", triggers: { circle: "anticipation" }, cooldown: 0.2 },
     seeking_entity: { voice: "paper_seek", triggers: { circle: "release" }, cooldown: 0.11 },
     switch_pulse: { voice: "switch_pulse", triggers: { circle: "release" }, cooldown: 0.18 },
     trail_route: { voice: "route_tick", triggers: { zone: "residual" }, cooldown: 0.16 },
-    transfer_chain: { voice: "transfer_chirp", triggers: { circle: "release" }, cooldown: 0.12 }
+    transfer_chain: { voice: "transfer_chirp", triggers: { circle: "release" }, cooldown: 0.12 },
+    melee_arc: { voice: "scissor_snip", triggers: { beam: "release", hit: "impact" }, cooldown: 0.055, hitCooldown: 0.07 },
+    melee_thrust: { voice: "scissor_thrust", triggers: { beam: "release", hit: "impact" }, cooldown: 0.075, hitCooldown: 0.08 },
+    dash_trail: { voice: "scissor_dash", triggers: { beam: "release" }, cooldown: 0.16 },
+    execution_cut: { voice: "scissor_finish", triggers: { beam: "release", hit: "impact" }, cooldown: 0.13, hitCooldown: 0.11 },
+    protective_field: { voice: "shelter_ping", triggers: { circle: "release" }, cooldown: 0.13 },
+    correction_spray: { voice: "correction_spray", triggers: { beam: "release", hit: "impact" }, cooldown: 0.075, hitCooldown: 0.09 },
+    error_mark: { voice: "error_glitch", triggers: { circle: "impact", state: "fade" }, cooldown: 0.11 },
+    error_field: { voice: "error_field", triggers: { zone: "residual", circle: "release" }, cooldown: 0.24 },
+    error_burst: { voice: "system_crash", triggers: { circle: "release", hit: "impact" }, cooldown: 0.16, hitCooldown: 0.12 },
+    correction_execute: { voice: "correction_execute", triggers: { circle: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.13 }
   };
 
   const SOURCE_AUDIO_OVERRIDES = {

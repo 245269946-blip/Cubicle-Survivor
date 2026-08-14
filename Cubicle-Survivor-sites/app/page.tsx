@@ -3,8 +3,8 @@ export default function Home() {
     <main>
       <iframe
         className="game-frame"
-        src="/play/index.html"
-        title="工位幸存者 Demo V1 在线试玩"
+        src="/play/demo-v3-14.html"
+        title="工位幸存者 Demo V3.14 轻量决策版在线试玩"
         allow="autoplay; fullscreen"
         allowFullScreen
       />

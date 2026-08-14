@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="128" viewBox="0 0 768 128">
+  <defs>
+    <linearGradient id="body" x1="0" x2="1"><stop stop-color="#f6f3e9"/><stop offset=".46" stop-color="#d9d8d1"/><stop offset=".55" stop-color="#f3f1e8"/><stop offset="1" stop-color="#aaaeb3"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#fff4a6"/><stop offset=".4" stop-color="#ffd65a"/><stop offset="1" stop-color="#ff8f2b"/></linearGradient>
+    <linearGradient id="cyan" x1="0" x2="1"><stop stop-color="#efffff"/><stop offset=".35" stop-color="#68efff"/><stop offset="1" stop-color="#287bc8"/></linearGradient>
+    <linearGradient id="magenta" x1="0" x2="1"><stop stop-color="#fff0ff"/><stop offset=".4" stop-color="#ff65dc"/><stop offset="1" stop-color="#7f4cff"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- cell 0: neutral office marker; runtime tint creates route colors -->
+  <g transform="translate(4 10)">
+    <path d="M9 54 25 37h14v34H25Z" fill="#f6f4eb" stroke="#8e949a" stroke-width="2"/>
+    <path d="M39 30h68l12 14v20l-12 14H39Z" fill="url(#body)" stroke="#7d8389" stroke-width="2"/>
+    <path d="M45 38h57v8H45Z" fill="#ffffff" opacity=".78"/>
+    <path d="M45 58h38v8H45Z" fill="#b9bdc0" opacity=".72"/>
+    <path d="m83 58 17 8H83Z" fill="#70767c" opacity=".82"/>
+    <path d="M107 36h9l8 8v20l-8 8h-9Z" fill="#2d3136" stroke="#777d83" stroke-width="2"/>
+    <circle cx="110" cy="54" r="5" fill="#d9dcde"/>
+    <path d="M28 43h5v22h-5Z" fill="#9da2a6" opacity=".9"/>
+  </g>
+  <!-- cell 1: copy rail attachment -->
+  <g transform="translate(132 16)" filter="url(#glow)">
+    <path d="M12 52 28 34h74l14 12v12l-14 12H28Z" fill="#171729" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M31 48h66l10 6-10 6H31Z" fill="url(#gold)" opacity=".92"/>
+    <path d="M40 39h14v9H40Zm22 0h14v9H62Zm22 0h14v9H84Z" fill="#fff8cd" opacity=".72"/>
+  </g>
+  <!-- cell 2: archive reservoir attachment -->
+  <g transform="translate(264 14)" filter="url(#glow)">
+    <path d="M28 26h67l17 16v38L95 96H28L10 80V42Z" fill="#0a1830" stroke="url(#cyan)" stroke-width="3"/>
+    <path d="M34 35h55l13 12v29L89 87H34L20 76V47Z" fill="url(#cyan)" opacity=".34"/>
+    <path d="M38 43h46v36H38Z" fill="#68efff" opacity=".48"/>
+    <path d="M44 50h34v22H44Z" fill="#eaffff" opacity=".28"/>
+    <circle cx="101" cy="61" r="7" fill="#ff65dc"/>
+  </g>
+  <!-- cell 3: absurd office tip made from a felt nib and binder clip -->
+  <g transform="translate(391 19)" filter="url(#glow)">
+    <path d="M7 45 43 19h48l17 26-17 26H43Z" fill="#eeeade" stroke="#777d83" stroke-width="3"/>
+    <path d="m8 45 34-17v34Z" fill="#fffdf5" stroke="#a2a5a7" stroke-width="2"/>
+    <path d="M49 30h39v30H49Z" fill="#f5c94c" opacity=".78"/>
+    <path d="M75 24h24v42H75Z" fill="#292d32" opacity=".92"/>
+    <path d="M80 20q8-12 16 0M80 70q8 12 16 0" fill="none" stroke="#cfd2d4" stroke-width="3"/>
+  </g>
+  <!-- cell 4: correction-tape body duplication module -->
+  <g transform="translate(517 18)" filter="url(#glow)">
+    <path d="M8 31h53l14 14-14 14H8L2 45Z" fill="#f1efe8" stroke="#ff65dc" stroke-width="3"/>
+    <path d="M50 22h56l16 23-16 23H50L39 45Z" fill="#dddbe0" stroke="#ff65dc" stroke-width="3"/>
+    <circle cx="82" cy="45" r="13" fill="#fff" opacity=".82"/><circle cx="82" cy="45" r="6" fill="#ff65dc"/>
+    <path d="M17 39h31v12H17Z" fill="#ff65dc" opacity=".5"/>
+  </g>
+  <!-- cell 5: ruler-and-file-tab tail -->
+  <g transform="translate(648 16)" filter="url(#glow)">
+    <path d="M8 31h79l28 23-28 23H8L2 54Z" fill="#dff8fb" fill-opacity=".58" stroke="#68efff" stroke-width="3"/>
+    <path d="M18 41h64v26H18Z" fill="#fff" opacity=".28"/>
+    <path d="M27 41v9m12-9v14m12-14v9m12-9v14m12-14v9" stroke="#66737b" stroke-width="2"/>
+    <path d="M91 35h23v13H91Z" fill="#ff65dc"/><path d="M96 54h18v14H96Z" fill="#f5c94c"/>
+  </g>
+</svg>

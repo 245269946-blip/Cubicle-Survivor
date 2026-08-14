@@ -13,7 +13,7 @@
       process: "拉直线穿队列",
       visualCue: "细长蓝光束贯穿多个敌人",
       focus: ["贯穿", "走位", "队列"],
-      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive"]
+      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_retrieval", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive", "marker_test_defeat"]
     },
     line_split: {
       topology: "线性分裂",
@@ -76,14 +76,21 @@
       process: "基础喷汽只覆盖前方近距离扇面；冷凝沿扇面分段留场，聚焦喷汽锁定低血量目标并在击杀后产生一次不连锁热浪。",
       visualCue: "青白蒸汽形成宽钝扇面，冷凝区柔和铺开；金色聚焦汽流和橙色死亡热浪形成清晰的第二路线。",
       focus: ["近距转向", "前向扇面", "分段冷凝", "聚焦击杀", "死亡热浪"],
-      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition"]
+      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_thermal_exchange", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition", "thermos_test_defeat"]
     },
     scissors_fixed_melee: {
       topology: "贴身剪切时间线",
       process: "轻步先完成无伤害位移；整轮锁定一个方向，依次完成合刃窄线突刺与张刃短宽连剪。",
       visualCue: "红柄钢刃贴身闪过，青色轻步残影与白橙剪切弧分离；裁断和合剪终结拥有独立重击反馈。",
       focus: ["纯近战", "轻步进场", "锁向动作轮", "合刃突刺", "张刃连剪", "处决"],
-      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block"]
+      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_cut_seam", "scissors_test_crosscut", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block", "scissors_test_defeat"]
+    },
+    correction_fluid_fixed: {
+      topology: "错误状态循环",
+      process: "喷射制造三层错误；过载死亡可污染战场，或被最终纠错集中清除并处决。",
+      visualCue: "白色修正痕迹说明状态层数，青/品红故障扫描提示过载，橙红错误码只用于系统崩溃与处决。",
+      focus: ["错误层数", "过载目标", "污染区域", "区域融合", "系统崩溃", "最终纠错"],
+      sources: ["correction_test_lock", "correction_test_spray", "correction_test_error_apply", "correction_test_error_overload", "correction_test_error_expire", "correction_test_error_area", "correction_test_area_merge", "correction_test_rollback", "correction_test_system_crash", "correction_test_final", "correction_test_final_blast", "correction_test_defeat"]
     },
     shield_break_pulse: {
       topology: "破盾热浪",
@@ -147,6 +154,13 @@
       visualCue: "蓝金贴纸拉线围成规则区",
       focus: ["连线", "围区", "控制"],
       sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "sticky_notice_relay", "sticky_module_archive", "sticky_module_expedite", "sticky_module_merge", "sticky_module_overdraft", "secondary_sticky_link", "secondary_sticky_notice"]
+    },
+    boss_pressure: {
+      topology: "Boss读招压力",
+      process: "先显示真实危险方向与安全缺口，再释放可躲避的高威胁攻击",
+      visualCue: "品红锁定走廊与琥珀弹幕预警严格对应随后出现的伤害轨迹",
+      focus: ["预警", "走位", "锁定走廊", "安全缺口"],
+      sources: ["boss_test_lane_warning", "boss_test_lane_release", "boss_test_burst_warning", "boss_test_safe_gap", "boss_test_burst_release"]
     }
   };
 
@@ -184,8 +198,10 @@
     marker_test_copy: "cast",
     marker_test_second_round: "cast",
     marker_test_archive: "linger",
+    marker_test_retrieval: "detonate",
     marker_test_fullscreen_copy: "ultimate",
     marker_test_fullscreen_archive: "ultimate",
+    marker_test_defeat: "detonate",
     thermos_warmup: "charge",
     thermos_charge: "charge",
     thermos_release: "release",
@@ -215,18 +231,35 @@
     thermos_test_condensation: "linger",
     thermos_test_focus: "cast",
     thermos_test_kill_heatwave: "expand",
+    thermos_test_thermal_exchange: "detonate",
     thermos_test_fullscreen_condensation: "ultimate",
     thermos_test_fullscreen_ignition: "ultimate",
+    thermos_test_defeat: "detonate",
     scissors_test_base: "cast",
     scissors_test_dash: "release",
     scissors_test_thrust: "cast",
     scissors_test_sever: "ultimate",
     scissors_test_open: "cast",
+    scissors_test_cut_seam: "mark",
+    scissors_test_crosscut: "detonate",
     scissors_test_finale: "detonate",
     scissors_test_finale_boss_bonus: "impact",
     scissors_test_execution: "detonate",
     scissors_test_shelter: "shield",
     scissors_test_shelter_block: "counter",
+    scissors_test_defeat: "detonate",
+    correction_test_lock: "mark",
+    correction_test_spray: "cast",
+    correction_test_error_apply: "mark",
+    correction_test_error_overload: "mark",
+    correction_test_error_expire: "expire",
+    correction_test_error_area: "linger",
+    correction_test_area_merge: "field",
+    correction_test_rollback: "detonate",
+    correction_test_system_crash: "ultimate",
+    correction_test_final: "detonate",
+    correction_test_final_blast: "detonate",
+    correction_test_defeat: "detonate",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -259,7 +292,12 @@
     support_marker: "cast",
     support_thermos_wave: "expand",
     support_sticky_trap: "deploy",
-    support_sticky_trigger: "detonate"
+    support_sticky_trigger: "detonate",
+    boss_test_lane_warning: "charge",
+    boss_test_lane_release: "release",
+    boss_test_burst_warning: "charge",
+    boss_test_safe_gap: "charge",
+    boss_test_burst_release: "detonate"
   };
 
   const PHASE_TIMELINES = {
@@ -292,7 +330,9 @@
     marker: { core: "#9ffcff", accent: "#d8ffff", warning: "#ffb067" },
     thermos: { core: "#bdf5ff", accent: "#8fffe7", warning: "#ffb067" },
     scissors: { core: "#f1f5f6", accent: "#ff7b5f", warning: "#ffe58f" },
-    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" }
+    correction_fluid: { core: "#f4ffff", accent: "#61f5ff", warning: "#ff3f7d" },
+    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" },
+    boss: { core: "#ff3f9f", accent: "#ffd36a", warning: "#ff5c57" }
   };
 
   const SOURCE_VISUAL_RULES = {
@@ -329,8 +369,10 @@
     marker_test_copy: ["piercing_line", "parallel_copy"],
     marker_test_second_round: ["scan_line", "reacquired_second_round"],
     marker_test_archive: ["residual_line", "persistent_ink"],
+    marker_test_retrieval: ["retrieval_line", "archive_reactivation"],
     marker_test_fullscreen_copy: ["scan_line", "fullscreen_copy"],
     marker_test_fullscreen_archive: ["residual_line", "fullscreen_archive"],
+    marker_test_defeat: ["radial_blast", "path_confirmed"],
 
     thermos_warmup: ["steam_line", "heat_buildup"],
     thermos_charge: ["heat_orb", "boil_meter"],
@@ -361,19 +403,37 @@
     thermos_test_condensation: ["deployable_field", "segmented_condensation"],
     thermos_test_focus: ["steam_line", "low_health_focus"],
     thermos_test_kill_heatwave: ["traveling_ring", "single_kill_heatwave"],
+    thermos_test_thermal_exchange: ["traveling_ring", "thermal_exchange"],
     thermos_test_fullscreen_condensation: ["deployable_field", "fullscreen_condensation"],
     thermos_test_fullscreen_ignition: ["target_barrage", "key_target_ignition"],
+    thermos_test_defeat: ["radial_blast", "pressure_confirmed"],
 
     scissors_test_base: ["melee_arc", "base_snip"],
     scissors_test_dash: ["dash_trail", "light_step"],
     scissors_test_thrust: ["melee_thrust", "closed_blade"],
     scissors_test_sever: ["melee_thrust", "sever_slow"],
     scissors_test_open: ["melee_arc", "open_blade_chain"],
+    scissors_test_cut_seam: ["error_mark", "cut_seam"],
+    scissors_test_crosscut: ["execution_cut", "cross_cut"],
     scissors_test_finale: ["execution_cut", "closing_finale"],
     scissors_test_finale_boss_bonus: ["execution_cut", "boss_conversion"],
     scissors_test_execution: ["execution_cut", "execute"],
     scissors_test_shelter: ["protective_field", "low_health_shelter"],
     scissors_test_shelter_block: ["protective_field", "projectile_block"],
+    scissors_test_defeat: ["radial_blast", "cut_confirmed"],
+
+    correction_test_lock: ["error_mark", "target_lock"],
+    correction_test_spray: ["correction_spray", "white_jet"],
+    correction_test_error_apply: ["error_mark", "stack_apply"],
+    correction_test_error_overload: ["error_mark", "overload_glitch"],
+    correction_test_error_expire: ["error_mark", "glitch_fade"],
+    correction_test_error_area: ["error_field", "white_contamination"],
+    correction_test_area_merge: ["error_field", "neon_merge"],
+    correction_test_rollback: ["error_burst", "cascading_rollback"],
+    correction_test_system_crash: ["error_burst", "system_crash"],
+    correction_test_final: ["correction_execute", "final_overwrite"],
+    correction_test_final_blast: ["error_burst", "death_error_blast"],
+    correction_test_defeat: ["error_burst", "error_confirmed"],
 
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],
@@ -408,10 +468,18 @@
     support_marker: ["support_line", "borrowed_marker"],
     support_thermos_wave: ["support_ring", "borrowed_thermos"],
     support_sticky_trap: ["support_trap", "borrowed_sticky"],
-    support_sticky_trigger: ["radial_blast", "support_trigger"]
+    support_sticky_trigger: ["radial_blast", "support_trigger"],
+
+    boss_test_lane_warning: ["piercing_line", "locked_danger_lane"],
+    boss_test_lane_release: ["piercing_line", "lane_release"],
+    boss_test_burst_warning: ["target_mark", "radial_warning"],
+    boss_test_safe_gap: ["residual_line", "safe_gap_edges"],
+    boss_test_burst_release: ["radial_blast", "radial_release"]
   };
 
   function visualFamily(source) {
+    if (/boss_test/.test(source)) return "boss";
+    if (/correction/.test(source)) return "correction_fluid";
     if (/scissors/.test(source)) return "scissors";
     if (/thermos/.test(source)) return "thermos";
     if (/sticky/.test(source)) return "sticky_note";

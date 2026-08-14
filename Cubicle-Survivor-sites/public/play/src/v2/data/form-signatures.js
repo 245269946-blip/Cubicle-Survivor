@@ -13,14 +13,14 @@
       process: "拉直线穿队列",
       visualCue: "细长蓝光束贯穿多个敌人",
       focus: ["贯穿", "走位", "队列"],
-      sources: ["marker_main"]
+      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_retrieval", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive", "marker_test_defeat"]
     },
     line_split: {
       topology: "线性分裂",
       process: "主光束按距离贯穿；命中点锁定附近新目标，支线沿目标方向继续贯穿",
       visualCue: "蓝白主束串起命中点，青色支线只连接真实目标",
       focus: ["主束贯穿", "命中点锁敌", "支线贯穿", "二次锁敌"],
-      sources: ["marker_main", "marker_split", "marker_split_origin", "marker_secondary_split", "marker_fullscreen"]
+      sources: ["marker_main", "marker_split", "marker_split_origin", "marker_secondary_split", "marker_fullscreen", "marker_module_copy", "marker_module_archive", "marker_module_forward", "marker_module_expedite", "marker_module_merge", "marker_module_overdraft"]
     },
     mark_detonate: {
       topology: "标记引爆",
@@ -69,7 +69,28 @@
       process: "弱蒸汽蓄热，过热提高释放倍率；沸点喷出强蒸汽柱后进入空窗",
       visualCue: "蓝白蒸汽柱从细到粗爆开",
       focus: ["蓄力", "沸点", "空窗"],
-      sources: ["thermos_charge", "thermos_warmup", "thermos_release"]
+      sources: ["thermos_charge", "thermos_warmup", "thermos_release", "thermos_module_archive", "thermos_module_expedite", "thermos_module_merge", "thermos_module_overdraft", "thermos_module_heatwave"]
+    },
+    thermos_fixed_fan: {
+      topology: "近距蒸汽扇面",
+      process: "基础喷汽只覆盖前方近距离扇面；冷凝沿扇面分段留场，聚焦喷汽锁定低血量目标并在击杀后产生一次不连锁热浪。",
+      visualCue: "青白蒸汽形成宽钝扇面，冷凝区柔和铺开；金色聚焦汽流和橙色死亡热浪形成清晰的第二路线。",
+      focus: ["近距转向", "前向扇面", "分段冷凝", "聚焦击杀", "死亡热浪"],
+      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_thermal_exchange", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition", "thermos_test_defeat"]
+    },
+    scissors_fixed_melee: {
+      topology: "贴身剪切时间线",
+      process: "轻步先完成无伤害位移；整轮锁定一个方向，依次完成合刃窄线突刺与张刃短宽连剪。",
+      visualCue: "红柄钢刃贴身闪过，青色轻步残影与白橙剪切弧分离；裁断和合剪终结拥有独立重击反馈。",
+      focus: ["纯近战", "轻步进场", "锁向动作轮", "合刃突刺", "张刃连剪", "处决"],
+      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_cut_seam", "scissors_test_crosscut", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block", "scissors_test_defeat"]
+    },
+    correction_fluid_fixed: {
+      topology: "错误状态循环",
+      process: "喷射制造三层错误；过载死亡可污染战场，或被最终纠错集中清除并处决。",
+      visualCue: "白色修正痕迹说明状态层数，青/品红故障扫描提示过载，橙红错误码只用于系统崩溃与处决。",
+      focus: ["错误层数", "过载目标", "污染区域", "区域融合", "系统崩溃", "最终纠错"],
+      sources: ["correction_test_lock", "correction_test_spray", "correction_test_error_apply", "correction_test_error_overload", "correction_test_error_expire", "correction_test_error_area", "correction_test_area_merge", "correction_test_rollback", "correction_test_system_crash", "correction_test_final", "correction_test_final_blast", "correction_test_defeat"]
     },
     shield_break_pulse: {
       topology: "破盾热浪",
@@ -132,7 +153,14 @@
       process: "多张贴纸连线，三点围成控制区",
       visualCue: "蓝金贴纸拉线围成规则区",
       focus: ["连线", "围区", "控制"],
-      sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "secondary_sticky_link", "secondary_sticky_notice"]
+      sources: ["sticky_notice_trap", "sticky_arm", "sticky_notice_pin", "sticky_notice_align", "sticky_link_line", "sticky_notice_zone", "sticky_notice_relay", "sticky_module_archive", "sticky_module_expedite", "sticky_module_merge", "sticky_module_overdraft", "secondary_sticky_link", "secondary_sticky_notice"]
+    },
+    boss_pressure: {
+      topology: "Boss读招压力",
+      process: "先显示真实危险方向与安全缺口，再释放可躲避的高威胁攻击",
+      visualCue: "品红锁定走廊与琥珀弹幕预警严格对应随后出现的伤害轨迹",
+      focus: ["预警", "走位", "锁定走廊", "安全缺口"],
+      sources: ["boss_test_lane_warning", "boss_test_lane_release", "boss_test_burst_warning", "boss_test_safe_gap", "boss_test_burst_release"]
     }
   };
 
@@ -160,6 +188,20 @@
     marker_wave_return: "expand",
     marker_grid_line: "linger",
     marker_grid_field: "field",
+    marker_module_copy: "cast",
+    marker_module_archive: "linger",
+    marker_module_forward: "branch",
+    marker_module_expedite: "cast",
+    marker_module_merge: "detonate",
+    marker_module_overdraft: "ultimate",
+    marker_test_base: "cast",
+    marker_test_copy: "cast",
+    marker_test_second_round: "cast",
+    marker_test_archive: "linger",
+    marker_test_retrieval: "detonate",
+    marker_test_fullscreen_copy: "ultimate",
+    marker_test_fullscreen_archive: "ultimate",
+    marker_test_defeat: "detonate",
     thermos_warmup: "charge",
     thermos_charge: "charge",
     thermos_release: "release",
@@ -180,6 +222,44 @@
     secondary_thermos_shield_break: "counter",
     secondary_thermos_tea_wave: "expand",
     secondary_thermos_station: "deploy",
+    thermos_module_archive: "linger",
+    thermos_module_expedite: "cast",
+    thermos_module_merge: "expand",
+    thermos_module_overdraft: "expand",
+    thermos_module_heatwave: "expand",
+    thermos_test_base: "release",
+    thermos_test_condensation: "linger",
+    thermos_test_focus: "cast",
+    thermos_test_kill_heatwave: "expand",
+    thermos_test_thermal_exchange: "detonate",
+    thermos_test_fullscreen_condensation: "ultimate",
+    thermos_test_fullscreen_ignition: "ultimate",
+    thermos_test_defeat: "detonate",
+    scissors_test_base: "cast",
+    scissors_test_dash: "release",
+    scissors_test_thrust: "cast",
+    scissors_test_sever: "ultimate",
+    scissors_test_open: "cast",
+    scissors_test_cut_seam: "mark",
+    scissors_test_crosscut: "detonate",
+    scissors_test_finale: "detonate",
+    scissors_test_finale_boss_bonus: "impact",
+    scissors_test_execution: "detonate",
+    scissors_test_shelter: "shield",
+    scissors_test_shelter_block: "counter",
+    scissors_test_defeat: "detonate",
+    correction_test_lock: "mark",
+    correction_test_spray: "cast",
+    correction_test_error_apply: "mark",
+    correction_test_error_overload: "mark",
+    correction_test_error_expire: "expire",
+    correction_test_error_area: "linger",
+    correction_test_area_merge: "field",
+    correction_test_rollback: "detonate",
+    correction_test_system_crash: "ultimate",
+    correction_test_final: "detonate",
+    correction_test_final_blast: "detonate",
+    correction_test_defeat: "detonate",
     sticky_base: "deploy",
     sticky_arm: "arm",
     sticky_base_trigger: "detonate",
@@ -202,12 +282,22 @@
     sticky_notice_align: "link",
     sticky_link_line: "link",
     sticky_notice_zone: "field",
+    sticky_notice_relay: "deploy",
+    sticky_module_archive: "deploy",
+    sticky_module_expedite: "control",
+    sticky_module_merge: "detonate",
+    sticky_module_overdraft: "detonate",
     secondary_sticky_link: "link",
     secondary_sticky_notice: "field",
     support_marker: "cast",
     support_thermos_wave: "expand",
     support_sticky_trap: "deploy",
-    support_sticky_trigger: "detonate"
+    support_sticky_trigger: "detonate",
+    boss_test_lane_warning: "charge",
+    boss_test_lane_release: "release",
+    boss_test_burst_warning: "charge",
+    boss_test_safe_gap: "charge",
+    boss_test_burst_release: "detonate"
   };
 
   const PHASE_TIMELINES = {
@@ -239,7 +329,10 @@
   const FAMILY_PALETTES = {
     marker: { core: "#9ffcff", accent: "#d8ffff", warning: "#ffb067" },
     thermos: { core: "#bdf5ff", accent: "#8fffe7", warning: "#ffb067" },
-    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" }
+    scissors: { core: "#f1f5f6", accent: "#ff7b5f", warning: "#ffe58f" },
+    correction_fluid: { core: "#f4ffff", accent: "#61f5ff", warning: "#ff3f7d" },
+    sticky_note: { core: "#8df7ff", accent: "#e8db92", warning: "#ffb067" },
+    boss: { core: "#ff3f9f", accent: "#ffd36a", warning: "#ff5c57" }
   };
 
   const SOURCE_VISUAL_RULES = {
@@ -266,6 +359,20 @@
     secondary_counter: ["counter_line", "secondary_counter"],
     secondary_marker_wave: ["traveling_ring", "secondary_wave"],
     secondary_marker_grid: ["residual_line", "secondary_grid"],
+    marker_module_copy: ["piercing_line", "parallel_copy"],
+    marker_module_archive: ["residual_line", "archived_ink"],
+    marker_module_forward: ["branch_line", "second_generation"],
+    marker_module_expedite: ["scan_line", "rush_redraw"],
+    marker_module_merge: ["radial_blast", "summary_burst"],
+    marker_module_overdraft: ["scan_line", "overdraft_fan"],
+    marker_test_base: ["piercing_line", "fixed_test_base"],
+    marker_test_copy: ["piercing_line", "parallel_copy"],
+    marker_test_second_round: ["scan_line", "reacquired_second_round"],
+    marker_test_archive: ["residual_line", "persistent_ink"],
+    marker_test_retrieval: ["retrieval_line", "archive_reactivation"],
+    marker_test_fullscreen_copy: ["scan_line", "fullscreen_copy"],
+    marker_test_fullscreen_archive: ["residual_line", "fullscreen_archive"],
+    marker_test_defeat: ["radial_blast", "path_confirmed"],
 
     thermos_warmup: ["steam_line", "heat_buildup"],
     thermos_charge: ["heat_orb", "boil_meter"],
@@ -287,6 +394,46 @@
     secondary_thermos_shield_break: ["traveling_ring", "secondary_break"],
     secondary_thermos_tea_wave: ["aroma_ring", "secondary_wave"],
     secondary_thermos_station: ["deployable_field", "secondary_station"],
+    thermos_module_archive: ["deployable_field", "condensation_archive"],
+    thermos_module_expedite: ["steam_line", "rush_outlet"],
+    thermos_module_merge: ["traveling_ring", "pressure_merge"],
+    thermos_module_overdraft: ["traveling_ring", "reverse_overpressure"],
+    thermos_module_heatwave: ["aroma_ring", "kill_forward"],
+    thermos_test_base: ["steam_fan", "fixed_front_fan"],
+    thermos_test_condensation: ["deployable_field", "segmented_condensation"],
+    thermos_test_focus: ["steam_line", "low_health_focus"],
+    thermos_test_kill_heatwave: ["traveling_ring", "single_kill_heatwave"],
+    thermos_test_thermal_exchange: ["traveling_ring", "thermal_exchange"],
+    thermos_test_fullscreen_condensation: ["deployable_field", "fullscreen_condensation"],
+    thermos_test_fullscreen_ignition: ["target_barrage", "key_target_ignition"],
+    thermos_test_defeat: ["radial_blast", "pressure_confirmed"],
+
+    scissors_test_base: ["melee_arc", "base_snip"],
+    scissors_test_dash: ["dash_trail", "light_step"],
+    scissors_test_thrust: ["melee_thrust", "closed_blade"],
+    scissors_test_sever: ["melee_thrust", "sever_slow"],
+    scissors_test_open: ["melee_arc", "open_blade_chain"],
+    scissors_test_cut_seam: ["error_mark", "cut_seam"],
+    scissors_test_crosscut: ["execution_cut", "cross_cut"],
+    scissors_test_finale: ["execution_cut", "closing_finale"],
+    scissors_test_finale_boss_bonus: ["execution_cut", "boss_conversion"],
+    scissors_test_execution: ["execution_cut", "execute"],
+    scissors_test_shelter: ["protective_field", "low_health_shelter"],
+    scissors_test_shelter_block: ["protective_field", "projectile_block"],
+    scissors_test_defeat: ["radial_blast", "cut_confirmed"],
+
+    correction_test_lock: ["error_mark", "target_lock"],
+    correction_test_spray: ["correction_spray", "white_jet"],
+    correction_test_error_apply: ["error_mark", "stack_apply"],
+    correction_test_error_overload: ["error_mark", "overload_glitch"],
+    correction_test_error_expire: ["error_mark", "glitch_fade"],
+    correction_test_error_area: ["error_field", "white_contamination"],
+    correction_test_area_merge: ["error_field", "neon_merge"],
+    correction_test_rollback: ["error_burst", "cascading_rollback"],
+    correction_test_system_crash: ["error_burst", "system_crash"],
+    correction_test_final: ["correction_execute", "final_overwrite"],
+    correction_test_final_blast: ["error_burst", "death_error_blast"],
+    correction_test_defeat: ["error_burst", "error_confirmed"],
 
     sticky_base: ["placed_trap", "placement"],
     sticky_arm: ["placed_trap", "armed_tick"],
@@ -312,14 +459,28 @@
     sticky_notice_zone: ["polygon_field", "closed_zone"],
     secondary_sticky_link: ["link_line", "secondary_link"],
     secondary_sticky_notice: ["polygon_field", "secondary_zone"],
+    sticky_notice_relay: ["placed_trap", "relay_node"],
+    sticky_module_archive: ["placed_trap", "archive_echo"],
+    sticky_module_expedite: ["control_mark", "rush_annotation"],
+    sticky_module_merge: ["radial_blast", "summary_pulse"],
+    sticky_module_overdraft: ["radial_blast", "expiry_overdraft"],
 
     support_marker: ["support_line", "borrowed_marker"],
     support_thermos_wave: ["support_ring", "borrowed_thermos"],
     support_sticky_trap: ["support_trap", "borrowed_sticky"],
-    support_sticky_trigger: ["radial_blast", "support_trigger"]
+    support_sticky_trigger: ["radial_blast", "support_trigger"],
+
+    boss_test_lane_warning: ["piercing_line", "locked_danger_lane"],
+    boss_test_lane_release: ["piercing_line", "lane_release"],
+    boss_test_burst_warning: ["target_mark", "radial_warning"],
+    boss_test_safe_gap: ["residual_line", "safe_gap_edges"],
+    boss_test_burst_release: ["radial_blast", "radial_release"]
   };
 
   function visualFamily(source) {
+    if (/boss_test/.test(source)) return "boss";
+    if (/correction/.test(source)) return "correction_fluid";
+    if (/scissors/.test(source)) return "scissors";
     if (/thermos/.test(source)) return "thermos";
     if (/sticky/.test(source)) return "sticky_note";
     return "marker";

@@ -8,23 +8,21 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = headerList.get("x-forwarded-proto") ?? "https";
   const origin = host
     ? `${protocol}://${host}`
-    : "https://cubicle-survivor-play-v1.hazy-corgi-0850.chatgpt.site";
+    : "https://245269946-blip.github.io/Cubicle-Survivor";
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V1",
-    description: "选择马克笔、保温杯或即时贴，在浏览器中完成 16 关办公室生存挑战。",
+    title: "工位幸存者 Demo V3.14",
+    description: "四武器战斗与成长保持不变，购买和选择页面改为简短、结果导向的轻量决策。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V1",
-      description: "三种办公武器、五阶段构筑成长、16 关在线试玩。",
-      images: [`${origin}/og.png`],
+      title: "工位幸存者 Demo V3.14",
+      description: "轻量决策版：少读说明，先看结果，选完立即回到战斗。",
     },
     twitter: {
-      card: "summary_large_image",
-      title: "工位幸存者 Demo V1",
-      description: "三种办公武器、五阶段构筑成长、16 关在线试玩。",
-      images: [`${origin}/og.png`],
+      card: "summary",
+      title: "工位幸存者 Demo V3.14",
+      description: "武器、模块、经验与组件选择只保留当前决策需要的信息。",
     },
   };
 }

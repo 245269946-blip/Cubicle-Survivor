@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050713" />
+    <title>工位幸存者 · 马克笔三分钟欲望闭环实验</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="marker-desire-loop.css?v=3" />
+  </head>
+  <body>
+    <main class="experiment-shell" aria-label="马克笔三分钟欲望闭环实验">
+      <canvas id="gameCanvas" width="1280" height="720" aria-label="马克笔战斗区域"></canvas>
+
+      <section id="introPanel" class="screen-panel intro-panel">
+        <div class="intro-copy">
+          <p class="eyebrow">CUBICLE SURVIVOR · ISOLATED DESIRE LOOP</p>
+          <h1>把普通马克笔<br /><span>长成工作流怪物</span></h1>
+          <p class="intro-lead">三分钟只验证一件事：你的选择，能不能在武器身体、攻击路径和战场结果上同时留下痕迹。</p>
+          <div class="desire-steps" aria-label="实验节奏">
+            <span><b>25s</b> 第一次异化</span>
+            <span><b>60s</b> 装上实体组件</span>
+            <span><b>100s</b> 路线交叉</span>
+            <span><b>155s</b> 纯路线终极化</span>
+            <span><b>180s</b> 查看成长归因</span>
+          </div>
+          <button id="startButton" class="primary-action">开始三分钟实验</button>
+          <p class="control-note">WASD / 方向键移动 · 马克笔自动寻找最近目标 · 选择时战斗暂停</p>
+        </div>
+        <div class="intro-weapon" aria-hidden="true">
+          <div class="weapon-orbit orbit-a"></div>
+          <div class="weapon-orbit orbit-b"></div>
+          <div class="weapon-preview marker-person-preview">
+            <i class="preview-rigged-worker"></i>
+            <i class="preview-weapon"></i>
+          </div>
+          <div class="preview-label label-copy">复写打印墨盒</div>
+          <div class="preview-label label-archive">留档供墨墨盒</div>
+          <div class="preview-label label-fusion">八方向攻击锚点</div>
+        </div>
+        <nav class="variant-switch" aria-label="实验对照版本">
+          <button data-variant="A">A · 压缩基线</button>
+          <button data-variant="B">B · 实体成长</button>
+          <button data-variant="C">C · 成长与融合</button>
+        </nav>
+      </section>
+
+      <header id="hud" class="hud hidden">
+        <div class="hud-brand"><small>MARKER DESIRE LOOP</small><b id="phaseLabel">普通马克笔</b></div>
+        <div class="hud-timer"><small>本轮剩余</small><b id="timerLabel">03:00</b></div>
+        <div class="hud-kills"><small>已处理工作项</small><b id="killLabel">0</b></div>
+        <div class="hud-health"><small>容错</small><div class="health-track"><i id="healthFill"></i></div><b id="healthLabel">72 / 72</b></div>
+      </header>
+
+      <aside id="buildRail" class="build-rail hidden" aria-label="当前马克笔成长">
+        <div class="route-state route-copy"><small>即时动作</small><b>复写 <span id="copyLevel">Lv.0</span></b><i id="copyPips"></i></div>
+        <div class="weapon-body-readout">
+          <span id="bodyReadout">标准笔身</span>
+          <b id="componentReadout">未装组件</b>
+        </div>
+        <div class="route-state route-archive"><small>留场状态</small><b>留档 <span id="archiveLevel">Lv.0</span></b><i id="archivePips"></i></div>
+        <div id="fusionReadout" class="fusion-readout"><small>交叉流程</small><b>调阅未建立</b><span>黄线 × 青墨 → 洋红回读</span></div>
+      </aside>
+
+      <section id="decisionPanel" class="decision-panel hidden" role="dialog" aria-modal="true" aria-labelledby="decisionTitle">
+        <div class="decision-head">
+          <p id="decisionEyebrow" class="eyebrow">WORKFLOW MUTATION</p>
+          <h2 id="decisionTitle">选择下一条工作流程</h2>
+          <p id="decisionNote">选择后，下一次攻击必须立刻看得出变化。</p>
+        </div>
+        <div id="decisionChoices" class="decision-choices"></div>
+      </section>
+
+      <div id="growthCallout" class="growth-callout hidden" aria-live="polite">
+        <small id="growthEyebrow">WORKFLOW INSTALLED</small>
+        <b id="growthTitle">复写导轨已装配</b>
+        <span id="growthDetail">下一轮攻击将生成平行复写线。</span>
+      </div>
+
+      <section id="recapPanel" class="screen-panel recap-panel hidden">
+        <div class="recap-head">
+          <p class="eyebrow">THREE-MINUTE GROWTH TRACE</p>
+          <h2>这不是数值变大，<span>是工作流长成了武器。</span></h2>
+        </div>
+        <div id="evolutionChain" class="evolution-chain"></div>
+        <div class="recap-grid">
+          <div class="recap-card damage-card"><small>伤害归因</small><div id="damageBreakdown"></div></div>
+          <div class="recap-card replay-card"><small>本局形成</small><b id="buildName">调阅线网</b><p id="buildSummary"></p><button id="replayButton" class="primary-action">换一种组合再来</button></div>
+          <div class="recap-card unchosen-card"><small>另一种可能</small><div id="unchosenRoutes"></div></div>
+        </div>
+      </section>
+    </main>
+    <script src="marker-desire-loop.js?v=3"></script>
+  </body>
+</html>

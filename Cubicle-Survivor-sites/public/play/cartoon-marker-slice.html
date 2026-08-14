@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3eee3" />
+    <title>工位幸存者｜马克笔卡通切片</title>
+    <link rel="stylesheet" href="cartoon-marker-slice.css" />
+  </head>
+  <body>
+    <main class="slice-shell" aria-label="工位幸存者马克笔卡通完成感切片">
+      <section class="game-frame">
+        <canvas id="game" width="1280" height="720" aria-label="马克笔清空积压战斗画面"></canvas>
+
+        <header class="hud" aria-live="polite">
+          <div class="hud-task">
+            <span class="hud-kicker">今日工单</span>
+            <strong id="taskLabel">清空 30 份积压</strong>
+          </div>
+          <div class="hud-progress">
+            <div class="progress-copy">
+              <span id="progressState">待处理</span>
+              <strong><span id="remaining">30</span> / 30</strong>
+            </div>
+            <div class="progress-track" aria-hidden="true"><i id="progressFill"></i></div>
+          </div>
+          <div class="hud-status">
+            <span>生命</span>
+            <strong id="health">100</strong>
+          </div>
+        </header>
+
+        <div class="build-chip" id="buildChip">
+          <span class="chip-dot"></span>
+          <div><small>马克笔</small><strong id="buildName">单线贯穿</strong></div>
+        </div>
+
+        <div class="start-panel panel" id="startPanel">
+          <span class="paper-tab">P0 卡通切片</span>
+          <h1>清空积压</h1>
+          <p>移动躲开邮件，马克笔会自动画线。</p>
+          <div class="start-goal">
+            <span>目标</span>
+            <strong>处理 30 份待办</strong>
+          </div>
+          <button id="startButton" type="button">开始处理</button>
+          <small>WASD / 方向键移动 · 也可拖动屏幕</small>
+        </div>
+
+        <div class="upgrade-panel panel" id="upgradePanel" hidden>
+          <span class="paper-tab yellow">工作方法升级</span>
+          <h2>复写</h2>
+          <div class="upgrade-demo" aria-hidden="true">
+            <i></i><i></i>
+          </div>
+          <p>多画一条</p>
+          <button id="upgradeButton" type="button">装上复写墨盒</button>
+        </div>
+
+        <div class="complete-panel" id="completePanel" hidden>
+          <div class="stamp">已归档</div>
+          <strong>30 份积压已处理</strong>
+          <button id="restartButton" type="button">再处理一轮</button>
+        </div>
+
+        <footer class="controls" id="controls">WASD 移动 · 自动画线</footer>
+      </section>
+    </main>
+    <script src="src/cartoon-marker-slice.js"></script>
+  </body>
+</html>

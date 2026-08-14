@@ -47,6 +47,7 @@
 
   function stagePhase(state) {
     const stage = state.stage || {};
+    const suiteVersion = state.demoV2 && state.demoV2.suiteVersion;
     if (stage.demoV2Phase === "phase-a") {
       return {
         id: "demo-v2-phase-a",
@@ -77,39 +78,52 @@
       return {
         id: "demo-v2-marker-fixed",
         key: "demo-v2-marker-fixed",
-        label: "Demo V2.1 马克笔固定测试",
+        label: (suiteVersion || "Demo V2.1") + " 马克笔",
         weaponStage: "模块机制 × 组件属性",
-        weaponStageShort: "三线验证",
-        playerGoal: "验证经验稳定成长、模块机制变化与材料组件取舍能否同时成立。",
-        rewardTiming: "八个战斗阶段；指定阶段先选模块，再进入四格组件商店。",
-        status: "prototype",
-        note: "只有马克笔；无工牌、卡牌、协同和其他武器"
+        weaponStageShort: "路径异化",
+        playerGoal: "用复写增加即时切割，或用留档把经过的路径变成持续战场。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "远程路径武器；复写强化即时切割，留档强化持续铺场。"
       };
     }
     if (stage.demoV2Phase === "thermos-fixed") {
       return {
         id: "demo-v2-thermos-fixed",
         key: "demo-v2-thermos-fixed",
-        label: "Demo V2.2 保温杯固定测试",
+        label: (suiteVersion || "Demo V2.2") + " 保温杯",
         weaponStage: "冷凝铺场 × 聚焦击杀热浪",
         weaponStageShort: "近距双路线",
-        playerGoal: "验证短距扇面是否要求站位，以及群体铺场与单体击杀能否形成两条清晰路线。",
-        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
-        status: "prototype",
-        note: "只有保温杯；无工牌、卡牌、协同和其他武器"
+        playerGoal: "贴近敌群调整短距扇面，用冷凝控制空间，或把聚焦击杀转成热浪。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "近距空间武器；冷凝负责控场，聚焦击杀负责热浪转化。"
       };
     }
     if (stage.demoV2Phase === "scissors-fixed") {
       return {
         id: "demo-v2-scissors-fixed",
         key: "demo-v2-scissors-fixed",
-        label: "Demo V2.3 剪刀固定测试",
+        label: (suiteVersion || "Demo V2.3") + " 剪刀",
         weaponStage: "轻步进场 × 双段近战时间线",
         weaponStageShort: "贴身双路线",
-        playerGoal: "验证纯近战风险、自动闪身进场，以及合刃/张刃两段动作能否形成清晰取舍。",
-        rewardTiming: "5 阶段 17 关；四次模块与六次组件商店沿用固定节奏。",
-        status: "prototype",
-        note: "只有剪刀；固定携带低血安全区；无随机道具池"
+        playerGoal: "以轻步调整进场角度，再用合刃/张刃完成近战动作轮。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "纯近战位移武器；轻步调整进场角度，低血安全区阻挡外部射弹。"
+      };
+    }
+    if (stage.demoV2Phase === "correction-fluid-fixed") {
+      return {
+        id: "demo-v2-correction-fluid-fixed",
+        key: "demo-v2-correction-fluid-fixed",
+        label: (suiteVersion || "Demo V2.5") + " 修正液",
+        weaponStage: "错误状态 × 污染/纠错双路线",
+        weaponStageShort: "错误双路线",
+        playerGoal: "先制造三层错误，再让过载目标污染战场，或集中纠错关键目标。",
+        rewardTiming: "5 阶段 17 关；五次模块选择与六次组件商店。",
+        status: "playable",
+        note: "中距状态武器；制造错误后选择污染扩散或集中纠错。"
       };
     }
     const phase = V2.getPhaseMeta ? V2.getPhaseMeta(stage.phaseKey) : {};
@@ -161,9 +175,9 @@
   function weaponList(state) {
     const weapons = CS.weapons || {};
     const config = fixedTestConfig(state);
-    const order = config && config.weaponCard ? [config.weaponId] : WEAPON_ORDER;
+    const order = config && config.weaponCards ? config.weaponCards.map(function (item) { return item.id; }) : config && config.weaponCard ? [config.weaponId] : WEAPON_ORDER;
     return order.map(function (id) {
-      const w = weapons[id] || config && config.weaponCard;
+      const w = config && config.weaponCards ? config.weaponCards.find(function (item) { return item.id === id; }) : weapons[id] || config && config.weaponCard;
       if (!w) return null;
       const topology = w.formTopology || w.topology || "";
       const theme = THEME_BY_TOPOLOGY.find(item => item.test.test(topology)) || { id: "generic", label: "基础形态" };
@@ -244,6 +258,16 @@
 
   function paramSummary(params, theme) {
     const topology = theme.topology || "";
+    if (params.correctionFluidFixedTest) {
+      return [
+        { label: "喷射", value: Math.round(params.damage || 0) },
+        { label: "目标", value: params.correctionTargetCount || 1 },
+        { label: "攻速", value: (params.cooldown || 0).toFixed(2) + "s" },
+        { label: "错误", value: "0—3 层" },
+        { label: "污染区", value: Math.round(params.correctionAreaRadius || 0) },
+        { label: "状态", value: (params.correctionErrorDuration || 0).toFixed(1) + "s" }
+      ];
+    }
     if (params.scissorsFixedTest) {
       return [
         { label: "伤害", value: Math.round(params.damage || 0) },
@@ -315,7 +339,8 @@
   }
 
   function buildSummary(state) {
-    const weapon = state.selectedWeaponId ? V2.compat.weaponName(state.selectedWeaponId) : "未选择武器";
+    const currentFixedConfig = fixedTestConfig(state);
+    const weapon = state.selectedWeaponId ? (currentFixedConfig ? currentFixedConfig.weaponName : V2.compat.weaponName(state.selectedWeaponId)) : "未选择武器";
     const form = state.activeForm;
     const params = state.activeFormParams || {};
     const theme = pageTheme(state);
@@ -324,7 +349,7 @@
     const fixedRuntime = fixedTestRuntime(state, fixedConfig);
     const markerComponents = fixedConfig && fixedRuntime
       ? Object.keys(fixedConfig.parts).map(function (id) {
-          return markerComponentPartView(fixedConfig, fixedRuntime, id);
+          return markerComponentPartView(fixedConfig, fixedRuntime, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass)));
         })
       : [];
     return {
@@ -366,12 +391,29 @@
     const mechanic = form.mechanicType || "";
     const zones = state.damageZones || [];
     const enemies = state.enemies || [];
+    if (p.correctionFluidFixedTest && state.demoV2 && state.demoV2.correctionFluid) {
+      const test = state.demoV2.correctionFluid;
+      const overloaded = enemies.filter(function (enemy) { return (enemy.correctionErrorStacks || 0) >= 3; }).length;
+      const highest = enemies.reduce(function (max, enemy) { return Math.max(max, enemy.correctionErrorStacks || 0); }, 0);
+      const elapsed = V2.demoV2.correctionFluidFixed.totalElapsed(state);
+      function readyText(unlocked, readyAt) {
+        if (!unlocked) return "未解锁";
+        const remaining = Math.max(0, (readyAt || 0) - elapsed);
+        return remaining > 0 ? "冷却 " + remaining.toFixed(1) + "s" : "可触发";
+      }
+      return {
+        label: state.demoV2.allWeaponDesireLoopPass ? "修正液欲望链" : "修正液错误系统",
+        value: "最高错误 " + highest + "/3 · 过载 " + overloaded + " · 污染区 " + (test.activeErrorAreas || 0) + (p.correctionCascadingRollback ? " · 回滚 " + (test.totalRollbacks || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "错误扩散 Lv." + test.modules.copy + " / 致命纠错 Lv." + test.modules.archive + (p.correctionCascadingRollback ? " · 级联命中 " + (test.totalRollbackHits || 0) : "") + " · 系统崩溃 " + readyText(p.correctionCrashEnabled, test.crashReadyAt) + " / 最终纠错 " + readyText(p.correctionFinalEnabled, test.finalReadyAt),
+        tone: "correction"
+      };
+    }
     if (p.scissorsFixedTest && state.demoV2 && state.demoV2.scissors) {
       const test = state.demoV2.scissors;
       return {
-        label: "剪刀近战流程",
-        value: "轻步 " + (test.dashReady ? "已就绪" : Math.round((test.dashCharge || 0) * 100) + "%") + " · 合刃 " + (p.scissorsThrustCount || 0) + " · 张刃 " + (p.scissorsCutCount || 0),
-        hint: "合刃 Lv." + test.modules.copy + " / 张刃 Lv." + test.modules.archive + " · 当前动作轮 " + (test.activeRound ? "进行中" : "待机") + " · 裁断 " + (p.scissorsSever ? "已解锁" : "未解锁") + " / 合剪 " + (p.scissorsFinale ? "已解锁" : "未解锁") + " · 安全区 " + (test.shelterActive ? test.shelterTime.toFixed(1) + "s" : test.shelterCooldown > 0 ? "冷却 " + test.shelterCooldown.toFixed(1) + "s" : "可触发"),
+        label: state.demoV2.allWeaponDesireLoopPass ? "剪刀欲望链" : "剪刀近战流程",
+        value: "轻步 " + (test.dashReady ? "已就绪" : Math.round((test.dashCharge || 0) * 100) + "%") + " · 合刃 " + (p.scissorsThrustCount || 0) + " · 张刃 " + (p.scissorsCutCount || 0) + (p.scissorsCrossCut ? " · 交叉裁切 " + (test.totalCrossCuts || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "合刃 Lv." + test.modules.copy + " / 张刃 Lv." + test.modules.archive + (p.scissorsCrossCut ? " · X 形重剪命中 " + (test.totalCrossCutHits || 0) : "") + " · 当前动作轮 " + (test.activeRound ? "进行中" : "待机") + " · 裁断 " + (p.scissorsSever ? "已解锁" : "未解锁") + " / 合剪 " + (p.scissorsFinale ? "已解锁" : "未解锁") + " · 安全区 " + (test.shelterActive ? test.shelterTime.toFixed(1) + "s" : test.shelterCooldown > 0 ? "冷却 " + test.shelterCooldown.toFixed(1) + "s" : "可触发"),
         tone: "scissors"
       };
     }
@@ -386,9 +428,9 @@
       }
       const condensationCount = zones.filter(function (zone) { return zone.condensationZone; }).length;
       return {
-        label: "保温杯近距流程",
-        value: "喷射组 " + (p.amount || 1) + " · 冷凝在场 " + condensationCount + " · 聚焦/轮 " + (p.thermosFixedFocusHits || 0),
-        hint: "冷凝 Lv." + test.modules.copy + " / 击杀热浪 Lv." + test.modules.archive + " · 本关聚焦击杀 " + test.stageFocusKills + " · 热浪 " + test.stageHeatwaveTriggers + " · 全屏冷凝 " + readyText(p.thermosFixedFullscreenCondensation, test.fullscreenCondensationReadyAt) + " / 全场点杀 " + readyText(p.thermosFixedFullscreenIgnition, test.fullscreenIgnitionReadyAt),
+        label: state.demoV2.allWeaponDesireLoopPass ? "保温杯欲望链" : "保温杯近距流程",
+        value: "喷射组 " + (p.amount || 1) + " · 冷凝在场 " + condensationCount + " · 聚焦/轮 " + (p.thermosFixedFocusHits || 0) + (p.thermosFixedThermalExchange ? " · 热交换 " + (test.totalThermalExchanges || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "冷凝 Lv." + test.modules.copy + " / 击杀热浪 Lv." + test.modules.archive + (p.thermosFixedThermalExchange ? " · 温差命中 " + (test.totalThermalExchangeHits || 0) : "") + " · 本关聚焦击杀 " + test.stageFocusKills + " · 热浪 " + test.stageHeatwaveTriggers + " · 全屏冷凝 " + readyText(p.thermosFixedFullscreenCondensation, test.fullscreenCondensationReadyAt) + " / 全场点杀 " + readyText(p.thermosFixedFullscreenIgnition, test.fullscreenIgnitionReadyAt),
         tone: "thermos"
       };
     }
@@ -405,10 +447,16 @@
         const remaining = Math.max(0, (readyAt || 0) - elapsed);
         return remaining > 0 ? "冷却 " + remaining.toFixed(1) + "s" : "可触发";
       }
+      const desireLoop = !!(state.demoV2 && state.demoV2.markerDesireLoopPass);
+      const relationStatus = p.markerFixedRetrieval
+        ? " · 调阅 " + (test.retrievalTriggers || 0)
+        : test.pureRouteCommitted
+          ? " · " + (test.pureRouteCommitted === "copy" ? "全页批注专精" : "整页归档专精")
+          : "";
       return {
-        label: "马克笔三线成长",
-        value: "激光 " + instant + " · 墨迹 " + trails,
-        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 基础属性 " + markerExperienceSummary(test) + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
+        label: desireLoop ? "马克笔欲望链" : "马克笔三线成长",
+        value: "激光 " + instant + " · 墨迹 " + trails + relationStatus,
+        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 基础属性 " + markerExperienceSummary(test) + (p.markerFixedRetrieval ? " · 洋红调阅命中 " + (test.retrievalHits || 0) : "") + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
         tone: "marker"
       };
     }
@@ -487,7 +535,7 @@
         eyebrow: "第 " + encounter.id + "/" + config.encounterCount + " 关完成 · 10 秒收集窗口",
         title: "资源回收进行中",
         hint: "自由移动拾取经验与材料；倒计时结束会自动吸取遗漏资源。",
-        tags: ["经验靠近拾取", "材料靠近拾取", "结束自动吸取"],
+        tags: ["经验靠近拾取", "材料靠近拾取", "结束自动吸取", "回收结束恢复少量生命"],
         rule: "战斗已暂停生成，不会出现新敌人",
         next: "下一步：" + (markerTest.pendingExperiencePoints > 0 || (state.pickups || []).some(function (pickup) { return pickup.type === "xp"; }) ? "经验结算 → " + scheduledRoute : nextRoute),
         duration: config.collectionDuration
@@ -543,7 +591,7 @@
     }
     const transition = transitionView(state, markerTest, fixedConfig);
     return {
-      stageMeta: phaseA || phaseB || markerFixed ? (markerFixed ? fixedConfig.version + " · 阶段 " + (markerTest.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
+      stageMeta: phaseA || phaseB || markerFixed ? (markerFixed ? ((state.demoV2 && state.demoV2.suiteVersion) || fixedConfig.version) + " · 阶段 " + (markerTest.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
       phaseMeta: form.theme.phase.label + " · " + form.theme.phase.weaponStageShort,
       stageName: state.stage ? state.stage.name : "热身工位",
       stageNote: state.stage ? [state.stage.note, markerFixed && state.warmupTime > 0 && !(markerTest && markerTest.collecting) ? state.stage.enemyPreview : state.stage.threatHint].filter(Boolean).join(" · ") : "",
@@ -607,13 +655,11 @@
       return {
         theme: pageTheme(state),
         identity: fixedConfig.weaponName + "模块路线",
-        totalRounds: 4,
+        totalRounds: fixedConfig.moduleEncounters ? fixedConfig.moduleEncounters.length : 5,
         round: (test.moduleChoiceIndex || 0) + 1,
-        owned: fixedConfig.weaponId === "scissors"
-          ? ["合刃 Lv." + test.modules.copy, "张刃 Lv." + test.modules.archive]
-          : fixedConfig.weaponId === "thermos"
-            ? ["冷凝 Lv." + test.modules.copy, "击杀热浪 Lv." + test.modules.archive]
-            : ["复写 Lv." + test.modules.copy, "留档 Lv." + test.modules.archive],
+        owned: (fixedConfig.moduleLabels || (fixedConfig.weaponId === "scissors" ? ["合刃", "张刃"] : fixedConfig.weaponId === "thermos" ? ["冷凝", "击杀热浪"] : ["复写", "留档"])).map(function (label, index) {
+          return label + " Lv." + (index === 0 ? test.modules.copy : test.modules.archive);
+        }),
         choices: fixedConfig.makeModuleChoices(state)
       };
     }
@@ -628,7 +674,16 @@
     };
   }
 
-  function markerComponentPartView(config, test, partId) {
+  function markerComponentMountText(partId, statId) {
+    if (!statId) return "";
+    if (partId === "tip") return "每支真实发射笔的笔尖";
+    if (partId === "body" && statId === "amount") return "人物近身外圈的真实发射笔";
+    if (partId === "body") return "主发射笔的笔身控制器";
+    if (statId === "duration") return "背部打印坞与留档供墨结构";
+    return "每支真实发射笔的笔尾扩幅件";
+  }
+
+  function markerComponentPartView(config, test, partId, showMount) {
     const part = config.parts[partId];
     const state = test.parts[partId];
     const quality = config.qualities[config.qualityIndex(state.copies)];
@@ -642,6 +697,9 @@
       activeStatName,
       quality,
       progress: state.copies >= 8 ? "已达红色" : state.copies + " / " + next,
+      mountText: showMount
+        ? (config.componentMountView ? config.componentMountView(partId, state.activeStat) : markerComponentMountText(partId, state.activeStat))
+        : "",
       allocationText: state.activeStat
         ? activeStatName + "专精 · 强化 " + state.allocations[state.activeStat] + " 次"
         : part.stats.map(function (stat) { return part.statNames[stat]; }).join(" / ") + " · 二选一互斥"
@@ -653,7 +711,7 @@
     const test = fixedTestRuntime(state, config);
     return {
       weaponName: config.weaponName,
-      version: config.version,
+      version: (state.demoV2 && state.demoV2.suiteVersion) || config.version,
       materials: state.materials,
       refreshCost: test.refreshCost,
       shopRound: test.shopIndex,
@@ -663,7 +721,7 @@
       shopIncome: test.lastShopIncome,
       rerolls: test.rerolls,
       lockedCount: test.offers.filter(function (offer) { return offer.locked && !offer.sold; }).length,
-      parts: Object.keys(config.parts).map(function (id) { return markerComponentPartView(config, test, id); }),
+      parts: Object.keys(config.parts).map(function (id) { return markerComponentPartView(config, test, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass))); }),
       offers: test.offers || []
     };
   }
@@ -696,12 +754,13 @@
       marker_module_overdraft: "马克笔模块 · 透支划线",
       secondary_split: "马克笔 · 二次分裂",
       marker_fullscreen: "马克笔 · 全屏贯穿",
-      marker_test_base: "马克笔测试 · 基础激光",
-      marker_test_copy: "马克笔测试 · 平行复写",
-      marker_test_second_round: "马克笔测试 · 第二轮复写",
-      marker_test_archive: "马克笔测试 · 路径墨迹",
-      marker_test_fullscreen_copy: "马克笔测试 · 全屏复写",
-      marker_test_fullscreen_archive: "马克笔测试 · 全屏留档",
+      marker_test_base: "马克笔 · 基础激光",
+      marker_test_copy: "马克笔 · 平行复写",
+      marker_test_second_round: "马克笔 · 第二轮复写",
+      marker_test_archive: "马克笔 · 路径墨迹",
+      marker_test_retrieval: "马克笔 · 调阅回读",
+      marker_test_fullscreen_copy: "马克笔 · 全屏复写",
+      marker_test_fullscreen_archive: "马克笔 · 全屏留档",
       thermos_intern_release: "保温杯 · 沸点释放",
       thermos_release: "保温杯 · 蓄热释放",
       thermos_drone_steam: "保温杯 · 蒸汽无人机",
@@ -710,19 +769,28 @@
       thermos_module_merge: "保温杯模块 · 高压汇流",
       thermos_module_overdraft: "保温杯模块 · 反向过压",
       thermos_module_heatwave: "保温杯模块 · 转发热浪",
-      thermos_test_base: "保温杯测试 · 近距蒸汽扇面",
-      thermos_test_condensation: "保温杯测试 · 分段冷凝",
-      thermos_test_focus: "保温杯测试 · 聚焦喷汽",
-      thermos_test_kill_heatwave: "保温杯测试 · 击杀热浪",
-      thermos_test_fullscreen_condensation: "保温杯测试 · 全屏冷凝",
-      thermos_test_fullscreen_ignition: "保温杯测试 · 全场点杀",
-      scissors_test_base: "剪刀测试 · 基础剪击",
-      scissors_test_thrust: "剪刀测试 · 合刃突刺",
-      scissors_test_sever: "剪刀测试 · 贯穿裁断",
-      scissors_test_open: "剪刀测试 · 张刃连剪",
-      scissors_test_finale: "剪刀测试 · 合剪终结",
-      scissors_test_finale_boss_bonus: "剪刀测试 · Boss 终剪转化",
-      scissors_test_execution: "剪刀测试 · 裁决处决",
+      thermos_test_base: "保温杯 · 近距蒸汽扇面",
+      thermos_test_condensation: "保温杯 · 分段冷凝",
+      thermos_test_focus: "保温杯 · 聚焦喷汽",
+      thermos_test_kill_heatwave: "保温杯 · 击杀热浪",
+      thermos_test_thermal_exchange: "保温杯 · 热交换",
+      thermos_test_fullscreen_condensation: "保温杯 · 全屏冷凝",
+      thermos_test_fullscreen_ignition: "保温杯 · 全场点杀",
+      scissors_test_base: "剪刀 · 基础剪击",
+      scissors_test_thrust: "剪刀 · 合刃突刺",
+      scissors_test_sever: "剪刀 · 贯穿裁断",
+      scissors_test_open: "剪刀 · 张刃连剪",
+      scissors_test_crosscut: "剪刀 · 交叉裁切",
+      scissors_test_finale: "剪刀 · 合剪终结",
+      scissors_test_finale_boss_bonus: "剪刀 · Boss 终剪转化",
+      scissors_test_execution: "剪刀 · 裁决处决",
+      correction_test_spray: "修正液 · 错误喷射",
+      correction_test_error_area: "修正液 · 错误区域",
+      correction_test_area_merge: "修正液 · 污染融合",
+      correction_test_rollback: "修正液 · 级联回滚",
+      correction_test_system_crash: "修正液 · 系统崩溃",
+      correction_test_final: "修正液 · 最终纠错",
+      correction_test_final_blast: "修正液 · 纠错爆炸",
       sticky_attach: "即时贴 · 附着伤害",
       sticky_spread: "即时贴 · 传播伤害",
       sticky_notice_pin: "即时贴 · 公告钉扎",
@@ -764,8 +832,9 @@
     const moduleNames = phaseB && config ? (state.demoV2.moduleOrder || []).map(function (id) { return config.modules[id].name; }) : [];
     const isThermos = markerFixed && fixedConfig.weaponId === "thermos";
     const isScissors = markerFixed && fixedConfig.weaponId === "scissors";
+    const isCorrection = markerFixed && fixedConfig.weaponId === "correction_fluid";
     return {
-      title: markerFixed ? fixedConfig.weaponName + (state.flags.won ? " 5 阶段 17 关测试完成" : " 固定测试中止") : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
+      title: markerFixed ? fixedConfig.weaponName + (state.flags.won ? " · 5 阶段 17 关完成" : " · 本局结束") : phaseB ? "阶段 B 身份膨胀测试完成" : phaseA ? "阶段 A 武器测试完成" : state.flags.won ? "完成终局转正" : "本轮结束",
       theme: pageTheme(state),
       build: buildSummary(state),
       kills: state.kills,
@@ -779,11 +848,15 @@
         wavesSeen: seen,
         peakEnemies: peak,
         modules: Object.assign({}, fixedRuntime.modules),
-        moduleLabels: isScissors ? ["合刃", "张刃"] : isThermos ? ["冷凝", "击杀热浪"] : ["复写", "留档"],
-        parts: Object.keys(fixedConfig.parts).map(function (id) { return markerComponentPartView(fixedConfig, fixedRuntime, id); }),
-        fullscreenLabels: isScissors ? ["裁断", "合剪终结"] : isThermos ? ["全屏冷凝", "全场点杀"] : ["全屏复写", "全屏留档"],
-        fullscreenCopyTriggers: isScissors ? fixedRuntime.totalSevers : isThermos ? fixedRuntime.fullscreenCondensationTriggers : fixedRuntime.fullscreenCopyTriggers,
-        fullscreenArchiveTriggers: isScissors ? fixedRuntime.totalFinales : isThermos ? fixedRuntime.fullscreenIgnitionTriggers : fixedRuntime.fullscreenArchiveTriggers,
+        moduleLabels: fixedConfig.moduleLabels || (isScissors ? ["合刃", "张刃"] : isThermos ? ["冷凝", "击杀热浪"] : ["复写", "留档"]),
+        parts: Object.keys(fixedConfig.parts).map(function (id) { return markerComponentPartView(fixedConfig, fixedRuntime, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass))); }),
+        fullscreenLabels: fixedConfig.resultEventLabels || (isScissors ? ["裁断", "合剪终结"] : isThermos ? ["全屏冷凝", "全场点杀"] : ["全屏复写", "全屏留档"]),
+        fullscreenCopyTriggers: isCorrection ? fixedRuntime.totalSystemCrashes : isScissors ? fixedRuntime.totalSevers : isThermos ? fixedRuntime.fullscreenCondensationTriggers : fixedRuntime.fullscreenCopyTriggers,
+        fullscreenArchiveTriggers: isCorrection ? fixedRuntime.totalFinalCorrections : isScissors ? fixedRuntime.totalFinales : isThermos ? fixedRuntime.fullscreenIgnitionTriggers : fixedRuntime.fullscreenArchiveTriggers,
+        retrievalTriggers: !isCorrection && !isScissors && !isThermos ? fixedRuntime.retrievalTriggers || 0 : 0,
+        retrievalHits: !isCorrection && !isScissors && !isThermos ? fixedRuntime.retrievalHits || 0 : 0,
+        pureRouteCommitted: fixedRuntime.pureRouteCommitted || "",
+        relationTriggers: isCorrection ? fixedRuntime.totalRollbacks || 0 : isScissors ? fixedRuntime.totalCrossCuts || 0 : isThermos ? fixedRuntime.totalThermalExchanges || 0 : fixedRuntime.retrievalTriggers || 0,
         focusKills: isThermos ? fixedRuntime.totalFocusKills : 0,
         heatwaveTriggers: isThermos ? fixedRuntime.totalHeatwaveTriggers : 0,
         dashes: isScissors ? fixedRuntime.totalDashes : 0,
@@ -793,6 +866,11 @@
         executions: isScissors ? fixedRuntime.totalExecutions : 0,
         shelterTriggers: isScissors ? fixedRuntime.totalShelterTriggers : 0,
         blockedShots: isScissors ? fixedRuntime.totalBlockedShots : 0,
+        errorsApplied: isCorrection ? fixedRuntime.totalErrorsApplied : 0,
+        overloads: isCorrection ? fixedRuntime.totalOverloads : 0,
+        errorAreas: isCorrection ? fixedRuntime.totalAreasCreated : 0,
+        areaMerges: isCorrection ? fixedRuntime.totalAreaMerges : 0,
+        finalKills: isCorrection ? fixedRuntime.totalFinalKills : 0,
         completedEncounters: fixedRuntime.completedEncounters,
         shopsVisited: fixedRuntime.completedStages,
         experienceLevels: fixedRuntime.experienceLevels,
@@ -806,11 +884,13 @@
       } : null,
       damage,
       note: markerFixed
-        ? (isScissors
-          ? "只复盘三件事：贴身风险是否真实；轻步是否帮助进场而非代替走位；合刃、张刃与混合路线是否形成不同动作节奏和组件判断。"
+        ? (isCorrection
+          ? "本局轨迹：三层错误制造过载；错误扩散负责群体污染，致命纠错负责集中处理关键目标。"
+          : isScissors
+          ? "本局轨迹：轻步调整进场角度；合刃负责窄线突刺，张刃负责短宽连剪与终结。"
           : isThermos
-          ? "只复盘三件事：近距扇面是否真的要求靠近和转向；冷凝与击杀热浪是否形成不同购买判断；混合路线是否以适应性而非数值碾压成立。"
-          : "只复盘三件事：复写与留档是否形成不同攻击结构；混合加点是否值得；模块 Lv3 后组件刷新是否仍有期待。")
+          ? "本局轨迹：近距扇面负责贴身覆盖；冷凝控制空间，聚焦击杀把单体优势转成热浪。"
+          : "本局轨迹：复写增加即时激光结构，留档把攻击路径变成持续墨迹；组件强化两者依赖的基础属性。")
         : phaseB
         ? "代表工牌：" + (state.badgeDept ? V2.compat.deptName(state.badgeDept) : "未定型") + "；模块：" + (moduleNames.join(" → ") || "无") + "。现在只回答：每次选择是否立刻改变画面，以及能否说清为什么前一个模块让后一个更有用。"
         : phaseA

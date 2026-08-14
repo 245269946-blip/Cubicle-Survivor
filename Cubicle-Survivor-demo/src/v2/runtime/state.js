@@ -113,7 +113,8 @@
         waveIndex: -1,
         waveTimer: 0,
         wavesSeen: [],
-        peakEnemies: 0
+        peakEnemies: 0,
+        growthFeedback: null
       },
       activeForm: null,
       activeFormParams: {},
@@ -300,6 +301,16 @@
     }
   }
 
+  function centerFixedTestPlayer(state) {
+    if (!state || !state.world || !state.camera) return;
+    state.player.x = state.world.width / 2;
+    state.player.y = state.world.height / 2;
+    state.player.vx = 0;
+    state.player.vy = 0;
+    state.camera.x = Math.max(0, state.player.x - state.camera.width / 2);
+    state.camera.y = Math.max(0, state.player.y - state.camera.height / 2);
+  }
+
   function startDemoV2PhaseA(state) {
     const config = V2.demoV2 && V2.demoV2.phaseA;
     if (!config) {
@@ -389,7 +400,7 @@
     return activeConfig && state.demoV2 ? state.demoV2[activeConfig.runtimeKey] : null;
   }
 
-  function startDemoV2FixedTest(state, phase) {
+  function startDemoV2FixedTest(state, phase, coordinatorConfig) {
     const config = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(phase) : null;
     if (!config) {
       startStage(state, 0);
@@ -426,20 +437,71 @@
       peakEnemies: 0,
       moduleChoices: []
     };
+    if (coordinatorConfig && coordinatorConfig.coordinator) {
+      state.demoV2.suiteVersion = coordinatorConfig.version;
+      state.demoV2.suiteLabel = coordinatorConfig.title;
+      state.demoV2.cyberNeonSuite = true;
+      state.demoV2.combatExperiencePass = !!coordinatorConfig.combatExperiencePass;
+      state.demoV2.neonCityTheme = !!coordinatorConfig.neonCityTheme;
+      state.demoV2.combatDensityPass = !!coordinatorConfig.combatDensityPass;
+      state.demoV2.skillSilhouettePass = !!coordinatorConfig.skillSilhouettePass;
+      state.demoV2.combatTrianglePass = !!coordinatorConfig.combatTrianglePass;
+      state.demoV2.neonBloomPass = !!coordinatorConfig.neonBloomPass;
+      state.demoV2.correctionOpeningPass = !!coordinatorConfig.correctionOpeningPass;
+      state.demoV2.centeredRunStart = !!coordinatorConfig.centeredRunStart;
+      state.demoV2.randomizedPerimeterSpawns = !!coordinatorConfig.randomizedPerimeterSpawns;
+      state.demoV2.bossPatternPass = !!coordinatorConfig.bossPatternPass;
+      state.demoV2.sustainedPressurePass = !!coordinatorConfig.sustainedPressurePass;
+      state.demoV2.bossPressurePass = !!coordinatorConfig.bossPressurePass;
+      state.demoV2.attributeImpactPass = !!coordinatorConfig.attributeImpactPass;
+      state.demoV2.weaponEmbodimentPass = !!coordinatorConfig.weaponEmbodimentPass;
+      state.demoV2.thermosEmbodimentPass = !!coordinatorConfig.thermosEmbodimentPass;
+      state.demoV2.thermosBackPressurePass = !!coordinatorConfig.thermosBackPressurePass;
+      state.demoV2.scissorsEmbodimentPass = !!coordinatorConfig.scissorsEmbodimentPass;
+      state.demoV2.correctionEmbodimentPass = !!coordinatorConfig.correctionEmbodimentPass;
+      state.demoV2.combatScaleOrbitPass = !!coordinatorConfig.combatScaleOrbitPass;
+      state.demoV2.openingComfortPass = !!coordinatorConfig.openingComfortPass;
+      state.demoV2.weaponParityPass = !!coordinatorConfig.weaponParityPass;
+      state.demoV2.markerDesireLoopPass = !!coordinatorConfig.markerDesireLoopPass;
+      state.demoV2.allWeaponDesireLoopPass = !!coordinatorConfig.allWeaponDesireLoopPass;
+      state.demoV2.decisionCompressionPass = !!coordinatorConfig.decisionCompressionPass;
+      state.demoV2.coordinatorPhase = coordinatorConfig.id;
+    }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
     config.rebuildParams(state);
     config.startEncounter(state, 0);
+    // The encounter owns entity cleanup and may gain more initialization work
+    // over time. Apply the authoritative spawn anchor after that work so a
+    // legacy encounter reset can never silently move a new run back into the
+    // top-left viewport.
+    if (state.demoV2.centeredRunStart) centerFixedTestPlayer(state);
   }
 
   function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
   function startDemoV2ThermosFixed(state) { startDemoV2FixedTest(state, "thermos-fixed"); }
   function startDemoV2ScissorsFixed(state) { startDemoV2FixedTest(state, "scissors-fixed"); }
+  function startDemoV2CorrectionFluidFixed(state) { startDemoV2FixedTest(state, "correction-fluid-fixed"); }
 
   function openArmory(state, reason) {
     state.mode = "armory";
     state.lastRewardReason = reason || "阶段完成";
     state.shopRerolls = 0;
     if (V2.progression) state.shopOffers = V2.progression.makeShopOffers(state);
+  }
+
+  function queueGrowthFeedback(state, kind, title, detail) {
+    if (!state.demoV2 || !state.demoV2.combatExperiencePass) return;
+    const family = state.selectedWeaponId === "correction_fluid" ? "correction"
+      : state.selectedWeaponId === "thermos" ? "thermos"
+        : state.selectedWeaponId === "scissors" ? "scissors" : "marker";
+    state.demoV2.growthFeedback = {
+      kind: kind || "growth",
+      family,
+      title: title || "工作流已更新",
+      detail: detail || "下一轮攻击会直接展示变化。",
+      time: 2.2,
+      maxTime: 2.2
+    };
   }
 
   function selectWeapon(state, weaponId) {
@@ -453,8 +515,13 @@
     state.loop = previousLoop;
     state.demoV2.phase = previousDemoV2Phase;
     const requestedFixedConfig = V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(previousDemoV2Phase) : null;
-    state.selectedWeaponId = requestedFixedConfig
-      ? requestedFixedConfig.weaponId
+    const selectedPhase = requestedFixedConfig && requestedFixedConfig.coordinator
+      ? requestedFixedConfig.childPhaseByWeapon[weaponId]
+      : previousDemoV2Phase;
+    const selectedFixedConfig = selectedPhase && V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(selectedPhase) : requestedFixedConfig;
+    if (selectedFixedConfig) state.demoV2.phase = selectedFixedConfig.id;
+    state.selectedWeaponId = selectedFixedConfig
+      ? selectedFixedConfig.weaponId
       : (V2.compat && V2.compat.normalizeWeaponId(weaponId)) || weaponId || "marker";
     state.maxHp = 124;
     state.hp = state.maxHp;
@@ -465,7 +532,39 @@
     }
     if (previousDemoV2Phase === "phase-a") startDemoV2PhaseA(state);
     else if (previousDemoV2Phase === "phase-b") startDemoV2PhaseB(state);
-    else if (requestedFixedConfig) startDemoV2FixedTest(state, previousDemoV2Phase);
+    else if (selectedFixedConfig) {
+      startDemoV2FixedTest(state, selectedFixedConfig.id, requestedFixedConfig && requestedFixedConfig.coordinator ? requestedFixedConfig : null);
+      if (requestedFixedConfig && requestedFixedConfig.coordinator) {
+        state.demoV2.suiteVersion = requestedFixedConfig.version;
+        state.demoV2.suiteLabel = requestedFixedConfig.title;
+        state.demoV2.cyberNeonSuite = true;
+        state.demoV2.combatExperiencePass = !!requestedFixedConfig.combatExperiencePass;
+        state.demoV2.neonCityTheme = !!requestedFixedConfig.neonCityTheme;
+        state.demoV2.combatDensityPass = !!requestedFixedConfig.combatDensityPass;
+        state.demoV2.skillSilhouettePass = !!requestedFixedConfig.skillSilhouettePass;
+        state.demoV2.combatTrianglePass = !!requestedFixedConfig.combatTrianglePass;
+        state.demoV2.neonBloomPass = !!requestedFixedConfig.neonBloomPass;
+        state.demoV2.correctionOpeningPass = !!requestedFixedConfig.correctionOpeningPass;
+        state.demoV2.centeredRunStart = !!requestedFixedConfig.centeredRunStart;
+        state.demoV2.randomizedPerimeterSpawns = !!requestedFixedConfig.randomizedPerimeterSpawns;
+        state.demoV2.bossPatternPass = !!requestedFixedConfig.bossPatternPass;
+        state.demoV2.sustainedPressurePass = !!requestedFixedConfig.sustainedPressurePass;
+        state.demoV2.bossPressurePass = !!requestedFixedConfig.bossPressurePass;
+        state.demoV2.attributeImpactPass = !!requestedFixedConfig.attributeImpactPass;
+        state.demoV2.weaponEmbodimentPass = !!requestedFixedConfig.weaponEmbodimentPass;
+        state.demoV2.thermosEmbodimentPass = !!requestedFixedConfig.thermosEmbodimentPass;
+        state.demoV2.thermosBackPressurePass = !!requestedFixedConfig.thermosBackPressurePass;
+        state.demoV2.scissorsEmbodimentPass = !!requestedFixedConfig.scissorsEmbodimentPass;
+        state.demoV2.correctionEmbodimentPass = !!requestedFixedConfig.correctionEmbodimentPass;
+        state.demoV2.combatScaleOrbitPass = !!requestedFixedConfig.combatScaleOrbitPass;
+        state.demoV2.openingComfortPass = !!requestedFixedConfig.openingComfortPass;
+        state.demoV2.weaponParityPass = !!requestedFixedConfig.weaponParityPass;
+        state.demoV2.markerDesireLoopPass = !!requestedFixedConfig.markerDesireLoopPass;
+        state.demoV2.allWeaponDesireLoopPass = !!requestedFixedConfig.allWeaponDesireLoopPass;
+        state.demoV2.decisionCompressionPass = !!requestedFixedConfig.decisionCompressionPass;
+        state.demoV2.coordinatorPhase = requestedFixedConfig.id;
+      }
+    }
     else startStage(state, 0);
   }
 
@@ -637,20 +736,43 @@
           break;
         case "SELECT_UPGRADE":
           if (fixedTestConfig(state)) {
+            const experienceChoice = (state.upgradeChoices || []).find(function (choice) { return choice.id === action.upgradeId; });
             fixedTestConfig(state).chooseExperienceStat(state, action.upgradeId);
+            if (experienceChoice) queueGrowthFeedback(state, "attribute", experienceChoice.title + " 已提升", experienceChoice.effect);
           } else {
             applyUpgrade(state, action.upgradeId);
           }
           break;
         case "SELECT_DEMO_V2_MODULE":
           if (fixedTestConfig(state)) {
-            fixedTestConfig(state).applyModule(state, action.moduleId);
+            const moduleConfig = fixedTestConfig(state);
+            const moduleChoice = moduleConfig.makeModuleChoices(state).find(function (choice) { return choice.id === action.moduleId; });
+            moduleConfig.applyModule(state, action.moduleId);
+            if (moduleChoice) queueGrowthFeedback(
+              state,
+              "module",
+              moduleChoice.name + " · " + (moduleChoice.levelLabel || ("Lv." + (moduleChoice.level + 1))),
+              moduleChoice.confirmation || moduleChoice.effect
+            );
           } else if (V2.demoV2 && V2.demoV2.phaseB) {
             V2.demoV2.phaseB.applyModule(state, action.moduleId);
           }
           break;
         case "BUY_MARKER_COMPONENT":
-          if (fixedTestConfig(state)) fixedTestConfig(state).buyComponent(state, action.offerId);
+          if (fixedTestConfig(state)) {
+            const componentConfig = fixedTestConfig(state);
+            const componentRuntime = state.demoV2 && state.demoV2[componentConfig.runtimeKey];
+            const componentOffer = componentRuntime && componentRuntime.offers.find(function (offer) { return offer.id === action.offerId; });
+            const wasSold = componentOffer && componentOffer.sold;
+            componentConfig.buyComponent(state, action.offerId);
+            if (componentOffer && !wasSold && componentOffer.sold) {
+              const actionName = componentOffer.action === "replace" ? "替换" : componentOffer.action === "upgrade" ? "升级" : "装入";
+              const mounting = componentOffer.mountText
+                ? componentOffer.mountText + "；" + componentOffer.visualPromise
+                : "基础属性已写入当前武器；下一轮攻击按新参数运行。";
+              queueGrowthFeedback(state, "component", componentOffer.name + " · " + actionName, mounting);
+            }
+          }
           break;
         case "SELECT_MARKER_COMPONENT_STAT":
           if (fixedTestConfig(state)) fixedTestConfig(state).chooseComponentStat(state, action.statId);
@@ -703,10 +825,13 @@
             const previousLoop = state.loop;
             const previousDebug = state.flags.debug;
             const previousDemoV2Phase = state.demoV2 && state.demoV2.phase || "";
+            const previousCoordinatorPhase = state.demoV2 && state.demoV2.coordinatorPhase || "";
             Object.assign(state, makeInitialState());
             state.loop = previousLoop;
             state.flags.debug = previousDebug;
-            state.demoV2.phase = previousDemoV2Phase;
+            // Restarting a four-weapon suite returns to its coordinator, not
+            // the last selected child test. The chooser must expose all four.
+            state.demoV2.phase = previousCoordinatorPhase || previousDemoV2Phase;
           }
           break;
         default:
@@ -748,6 +873,8 @@
     startDemoV2MarkerFixed,
     startDemoV2ThermosFixed,
     startDemoV2ScissorsFixed,
-    applyActiveForm
+    startDemoV2CorrectionFluidFixed,
+    applyActiveForm,
+    centerFixedTestPlayer
   });
 })();

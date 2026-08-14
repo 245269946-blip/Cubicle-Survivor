@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">
+  <defs>
+    <linearGradient id="graphite" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#3b4250"/><stop offset=".45" stop-color="#171c27"/><stop offset="1" stop-color="#080b12"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" x2="1"><stop stop-color="#fff9db"/><stop offset="1" stop-color="#b7ad8b"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffbd0"/><stop offset=".3" stop-color="#ffe15b"/><stop offset="1" stop-color="#f18a18"/></linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ecffff"/><stop offset=".32" stop-color="#62efff"/><stop offset="1" stop-color="#1689d9"/></linearGradient>
+    <filter id="g1"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="g2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="g3"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="g4"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- Row 0: copy / laser-toner cartridges Lv1-Lv4. Connector faces down toward the wearer. -->
+  <g transform="translate(12 10)" filter="url(#g1)">
+    <path d="M32 20h40l14 15v42L72 92H32L18 77V35Z" fill="url(#graphite)" stroke="#8b6b24" stroke-width="3"/>
+    <path d="M28 31h48v42H28Z" fill="#493b12" stroke="#ffd75f" stroke-width="2"/>
+    <path d="M35 38h34v8H35Z" fill="url(#gold)"/><path d="M35 53h20v8H35Z" fill="#fff4a0" opacity=".65"/>
+    <path d="M43 92h18v19H43Z" fill="#10151e" stroke="#ffd75f" stroke-width="2"/><circle cx="52" cy="105" r="4" fill="#ffd75f"/>
+  </g>
+  <g transform="translate(140 10)" filter="url(#g2)">
+    <path d="M32 20h40l14 15v42L72 92H32L18 77V35Z" fill="url(#graphite)" stroke="#c99a27" stroke-width="3"/>
+    <path d="M28 31h48v42H28Z" fill="#5d4911" stroke="#ffe26a" stroke-width="2"/>
+    <path d="M34 37h36v8H34Zm0 14h36v8H34Z" fill="url(#gold)"/><path d="M34 65h25v6H34Z" fill="#fff9c7" opacity=".72"/>
+    <path d="M43 92h18v19H43Z" fill="#10151e" stroke="#ffe26a" stroke-width="2"/><circle cx="52" cy="105" r="5" fill="#ffe26a"/>
+  </g>
+  <g transform="translate(268 10)" filter="url(#g3)">
+    <path d="M30 17h44l16 16v46L74 95H30L14 79V33Z" fill="url(#graphite)" stroke="#e4b82d" stroke-width="3"/>
+    <path d="M25 29h54v48H25Z" fill="#6b5210" stroke="#ffeb79" stroke-width="2"/>
+    <path d="M31 35h42v8H31Zm0 14h42v8H31Zm0 14h42v8H31Z" fill="url(#gold)"/>
+    <path d="M41 95h22v17H41Z" fill="#10151e" stroke="#ffeb79" stroke-width="2"/><circle cx="52" cy="106" r="6" fill="#fff19a"/>
+  </g>
+  <g transform="translate(396 8)" filter="url(#g4)">
+    <path d="M28 15h48l18 18v48L76 99H28L10 81V33Z" fill="url(#graphite)" stroke="#ffd75f" stroke-width="4"/>
+    <path d="M22 27h60v52H22Z" fill="#765a0d" stroke="#fff2a0" stroke-width="3"/>
+    <path d="M28 33h48v8H28Zm0 12h48v8H28Zm0 12h48v8H28Zm0 12h48v8H28Z" fill="url(#gold)"/>
+    <path d="M39 99h26v15H39Z" fill="#10151e" stroke="#fff2a0" stroke-width="2"/><circle cx="52" cy="107" r="7" fill="#fffbd0"/>
+  </g>
+
+  <!-- Row 1: archive / liquid-ink cartridges Lv1-Lv4. -->
+  <g transform="translate(12 138)" filter="url(#g1)">
+    <path d="M32 20h40l14 15v42L72 92H32L18 77V35Z" fill="url(#graphite)" stroke="#227b94" stroke-width="3"/>
+    <path d="M28 31h48v42H28Z" fill="#0b3449" stroke="#68efff" stroke-width="2"/>
+    <path d="M34 58h36v13H34Z" fill="url(#cyan)" opacity=".72"/><path d="M34 38h36v16H34Z" fill="#dfffff" opacity=".16"/>
+    <path d="M43 92h18v19H43Z" fill="#10151e" stroke="#68efff" stroke-width="2"/><circle cx="52" cy="105" r="4" fill="#68efff"/>
+  </g>
+  <g transform="translate(140 138)" filter="url(#g2)">
+    <path d="M32 20h40l14 15v42L72 92H32L18 77V35Z" fill="url(#graphite)" stroke="#29a2bd" stroke-width="3"/>
+    <path d="M28 31h48v42H28Z" fill="#0b4055" stroke="#74f5ff" stroke-width="2"/>
+    <path d="M34 50h36v21H34Z" fill="url(#cyan)" opacity=".78"/><path d="M34 38h36v9H34Z" fill="#e9ffff" opacity=".22"/>
+    <path d="M43 92h18v19H43Z" fill="#10151e" stroke="#74f5ff" stroke-width="2"/><circle cx="52" cy="105" r="5" fill="#74f5ff"/>
+  </g>
+  <g transform="translate(268 138)" filter="url(#g3)">
+    <path d="M30 17h44l16 16v46L74 95H30L14 79V33Z" fill="url(#graphite)" stroke="#35c7db" stroke-width="3"/>
+    <path d="M25 29h54v48H25Z" fill="#0a4960" stroke="#82f8ff" stroke-width="2"/>
+    <path d="M31 43h42v29H31Z" fill="url(#cyan)" opacity=".82"/><path d="M37 48h9v18h-9Z" fill="#efffff" opacity=".4"/>
+    <path d="M41 95h22v17H41Z" fill="#10151e" stroke="#82f8ff" stroke-width="2"/><circle cx="52" cy="106" r="6" fill="#9cffff"/>
+  </g>
+  <g transform="translate(396 136)" filter="url(#g4)">
+    <path d="M28 15h48l18 18v48L76 99H28L10 81V33Z" fill="url(#graphite)" stroke="#68efff" stroke-width="4"/>
+    <path d="M22 27h60v52H22Z" fill="#09536b" stroke="#b5ffff" stroke-width="3"/>
+    <path d="M28 34h48v41H28Z" fill="url(#cyan)" opacity=".88"/><path d="M35 39h10v30H35Z" fill="#f2ffff" opacity=".48"/>
+    <path d="M39 99h26v15H39Z" fill="#10151e" stroke="#b5ffff" stroke-width="2"/><circle cx="52" cy="107" r="7" fill="#d7ffff"/>
+  </g>
+
+  <!-- Row 2: shared printer dock, compact and expanded. -->
+  <g transform="translate(12 266)">
+    <path d="M30 25h44l19 17v38L74 97H30L11 80V42Z" fill="url(#graphite)" stroke="#8e96a5" stroke-width="3"/>
+    <path d="M23 47h58v27H23Z" fill="#151b27" stroke="#d1c9a8" stroke-width="2"/>
+    <path d="M31 53h42v6H31Zm0 10h27v5H31Z" fill="url(#paper)" opacity=".76"/>
+    <circle cx="52" cy="87" r="8" fill="#151922" stroke="#ffd75f" stroke-width="3"/>
+    <path d="M43 105h18" stroke="#565f6d" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(130 266)">
+    <path d="M18 27h68l22 18v34L86 97H18L-4 79V45Z" fill="url(#graphite)" stroke="#9ba4b2" stroke-width="3"/>
+    <path d="M8 47h88v26H8Z" fill="#151b27" stroke="#d1c9a8" stroke-width="2"/>
+    <path d="M17 53h27v6H17Zm43 0h27v6H60Z" fill="url(#paper)" opacity=".76"/>
+    <circle cx="28" cy="86" r="7" fill="#151922" stroke="#68efff" stroke-width="3"/>
+    <circle cx="76" cy="86" r="7" fill="#151922" stroke="#ffd75f" stroke-width="3"/>
+    <path d="M43 105h18" stroke="#565f6d" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(268 266)" filter="url(#g2)">
+    <path d="M20 38h64l17 14-17 14H20L3 52Z" fill="url(#graphite)" stroke="#ff65dc" stroke-width="3"/>
+    <path d="M29 47h46v10H29Z" fill="#ff65dc" opacity=".55"/><circle cx="52" cy="52" r="6" fill="#fff0ff"/>
+  </g>
+  <g transform="translate(396 266)" filter="url(#g3)">
+    <path d="M17 28h70l21 21v25L87 95H17L-4 74V49Z" fill="url(#graphite)" stroke="#f5f0df" stroke-width="3"/>
+    <path d="M8 43h88v34H8Z" fill="#101722" stroke="#ff65dc" stroke-width="2"/>
+    <path d="M17 52h27v15H17Z" fill="#68efff" opacity=".7"/><path d="M60 52h27v15H60Z" fill="#ffd75f" opacity=".7"/>
+    <path d="M44 55h16v9H44Z" fill="#fff" opacity=".9"/>
+  </g>
+</svg>
