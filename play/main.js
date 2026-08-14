@@ -84,7 +84,7 @@
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" || requestedDemoV2Phase === "four-weapon-v3-12" || requestedDemoV2Phase === "four-weapon-v3-13" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -510,6 +510,50 @@
           guideCards[3].querySelector("span:last-child").textContent = "马克笔和保温杯只小幅降低开火预算，不削掉路径贯穿与近距控场的核心优势。";
         }
         if (startButton) startButton.textContent = "进入 Demo V3.11 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-12") {
+        document.title = "工位幸存者 Demo V3.12 · 马克笔欲望链实验版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.12 · 马克笔欲望链实验版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.12 马克笔欲望链实验版");
+        if (subtitle) subtitle.textContent = "继承 V3.11 战斗与难度；本轮只验证马克笔能否用模块承诺、实体安装、调阅协同和纯路线专精持续制造下一步期待。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "选择同时展示现在和未来";
+          guideCards[0].querySelector("span:last-child").textContent = "模块卡先说明下一场立刻增加什么，再预告 Lv4 会异化成什么，不靠隐藏倍率制造期待。";
+          guideCards[1].querySelector("strong").textContent = "组件真实安装";
+          guideCards[1].querySelector("span:last-child").textContent = "笔头、笔身与笔尾品质成长继续对应真实发射笔或背负供墨结构，购买后战斗轮廓立即改变。";
+          guideCards[2].querySelector("strong").textContent = "混合路线建立调阅";
+          guideCards[2].querySelector("span:last-child").textContent = "复写线穿过旧墨迹时沿档案回读，洋红调阅反馈把两次选择连接成新的攻击事件。";
+          guideCards[3].querySelector("strong").textContent = "纯 Lv4 可以保持专精";
+          guideCards[3].querySelector("span:last-child").textContent = "第五次选择不再强制混合；可以接入另一模块，也可以锁定纯路线，让终局技能保持更强统治感。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.12 实战";
+      }
+      if (demoV2Phase === "four-weapon-v3-13") {
+        document.title = "工位幸存者 Demo V3.13 · 四武器欲望链扩展版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.13 · 四武器欲望链扩展版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.13 四武器欲望链扩展版");
+        if (subtitle) subtitle.textContent = "继承 V3.12 数值与关卡；四把武器都拥有可预期模块承诺、实体组件安装、混合因果与纯 Lv4 终局专精。";
+        if (guideCards.length >= 4) {
+          guideCards[0].querySelector("strong").textContent = "保温杯 · 热交换";
+          guideCards[0].querySelector("span:last-child").textContent = "击杀热浪触碰冷凝区时产生白紫温差冲击，让空间经营与点杀转化成为一条因果链。";
+          guideCards[1].querySelector("strong").textContent = "剪刀 · 交叉裁切";
+          guideCards[1].querySelector("span:last-child").textContent = "张刃先留下裁缝，合刃再以紫青 X 形重剪兑现，两个动作不再只是同时播放。";
+          guideCards[2].querySelector("strong").textContent = "修正液 · 级联回滚";
+          guideCards[2].querySelector("span:last-child").textContent = "过载目标死亡会让既有污染区同步闪回，把单体培养反向连接到整张污染网络。";
+          guideCards[3].querySelector("strong").textContent = "纯终局仍有统治力";
+          guideCards[3].querySelector("span:last-child").textContent = "第五次选择可保持纯路线，强化既有 Lv4；组件则明确安装到真实杯体、剪刀或供液装置。";
+        }
+        if (startButton) startButton.textContent = "进入 Demo V3.13 实战";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {

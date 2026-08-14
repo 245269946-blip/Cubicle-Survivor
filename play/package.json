@@ -1,8 +1,0 @@
-{
-  "type": "commonjs",
-  "scripts": {
-    "test": "node test-runner.js",
-    "qa": "node test-runner.js && node demo-qa.js",
-    "release:verify": "node ../scripts/verify-demo-v2-release.mjs"
-  }
-}

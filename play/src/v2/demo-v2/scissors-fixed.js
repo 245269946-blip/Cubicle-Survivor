@@ -30,6 +30,50 @@
     }
   };
 
+  const MODULE_PROMISES = {
+    closed: {
+      now: [
+        "每轮新增 1 次合刃突刺，第一条可主动对齐的窄线裁切成立。",
+        "合刃扩为连续 2 次突刺，开始稳定穿过同一列目标。",
+        "合刃扩为连续 3 次突刺，贴身进场后形成完整贯穿节奏。",
+        "解锁大型裁断：三次突刺后追加长宽重剪，并留下明确减速窗口。"
+      ],
+      playstyle: "沿敌群纵深方向进场，让完整剪刀的尖端贯穿更多目标。",
+      terminal: "Lv4 · 大型裁断：用长宽重剪收束突刺时间线并控制整列敌人。"
+    },
+    open: {
+      now: [
+        "每轮新增 2 次张刃连剪，近身扇面第一次形成连续裁切。",
+        "张刃扩为 4 次连剪，短宽覆盖明显增厚。",
+        "张刃扩为 6 次连剪，中心目标会积累完整剪切层数。",
+        "解锁合剪终结：按本轮命中层数执行终幕裁决。"
+      ],
+      playstyle: "主动贴入敌群侧面，让扇面连剪覆盖多个目标并培养处决层数。",
+      terminal: "Lv4 · 合剪终结：梦幻连剪积累裁切层数，最终一剪兑现处决。"
+    }
+  };
+
+  function desireLoopEnabled(state) {
+    return !!(state.demoV2 && state.demoV2.allWeaponDesireLoopPass);
+  }
+
+  function componentMountView(partId, statId) {
+    if (!statId) return "";
+    if (partId === "tip") return "完整剪刀两侧的真实剪刃";
+    if (partId === "body") return statId === "attackSpeed"
+      ? "双刃中央的霓虹铰链驱动器"
+      : "腰侧与剪柄相连的平衡配重";
+    return statId === "range"
+      ? "完整剪刃的外延光刃"
+      : "剪柄连接腿部的轻步牵引带";
+  }
+
+  function componentVisualPromise(partId, statId) {
+    if (partId === "tip") return "品质提高时完整双刃的刃口更长、更亮，剪切边缘与判定同步扩大";
+    if (partId === "body" && statId === "attackSpeed") return "品质提高时铰链脉冲更快，每次开合都有可见蓄光";
+    return "品质提高时对应穿戴结构更清晰，并同步改变动作轮的可见幅度";
+  }
+
   // Keep the proven component/economy engine's stable internal ids. Player-
   // facing meanings are scissors-specific and remain mutually exclusive.
   const PARTS = {
@@ -77,6 +121,8 @@
       offer.name = offer.statName + part.name;
       offer.activeStatName = offer.activeStat ? part.statNames[offer.activeStat] : "空槽";
       offer.id = String(offer.id || "component").replace(/^marker-part-/, "scissors-part-");
+      offer.mountText = componentMountView(offer.partId, offer.statId);
+      offer.visualPromise = componentVisualPromise(offer.partId, offer.statId);
     });
   }
 
@@ -111,6 +157,9 @@
     const experience = test.experienceAllocations;
     const closedLevel = test.modules.copy;
     const openLevel = test.modules.archive;
+    const desireLoop = desireLoopEnabled(state);
+    const pureMastery = desireLoop ? test.pureRouteCommitted || "" : "";
+    const crossCut = desireLoop && closedLevel > 0 && openLevel > 0;
     // V3.1 redistributes melee output across more visible cuts. V3.0 and the
     // isolated historical entry retain their previous values.
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
@@ -170,14 +219,21 @@
       scissorsFanRange: Math.min(attributeImpact ? 245 : 205, (140 + openLevel * 7) * rangeScale),
       scissorsFanHalfAngle: Math.min(attributeImpact ? 0.92 : 0.78, 0.54 + openLevel * 0.045 + (rangeScale - 1) * (attributeImpact ? 0.18 : 0.08)),
       scissorsFanDamage: damage * 0.5,
-      scissorsSeverRange: Math.min(attributeImpact ? 350 : 305, 246 * rangeScale),
-      scissorsSeverWidth: Math.min(attributeImpact ? 110 : 92, 64 * rangeScale),
-      scissorsSeverDamage: damage * 1.7,
+      scissorsSeverRange: Math.min(attributeImpact ? 390 : 338, 246 * rangeScale * (pureMastery === "copy" ? 1.14 : 1)),
+      scissorsSeverWidth: Math.min(attributeImpact ? 126 : 108, 64 * rangeScale * (pureMastery === "copy" ? 1.22 : 1)),
+      scissorsSeverDamage: damage * 1.7 * (pureMastery === "copy" ? 1.28 : 1),
       scissorsSeverSlow: 0.35,
       scissorsSeverSlowDuration: 1.75,
-      scissorsFinaleDamage: damage * 1.35,
-      scissorsExecuteBase: 0.05,
-      scissorsExecutePerHit: 0.02,
+      scissorsFinaleDamage: damage * 1.35 * (pureMastery === "archive" ? 1.3 : 1),
+      scissorsExecuteBase: pureMastery === "archive" ? 0.075 : 0.05,
+      scissorsExecutePerHit: pureMastery === "archive" ? 0.025 : 0.02,
+      scissorsFinaleRangeScale: pureMastery === "archive" ? 1.2 : 1.08,
+      scissorsFinaleAngleScale: pureMastery === "archive" ? 1.22 : 1.12,
+      scissorsCrossCut: crossCut,
+      scissorsCrossCutDamage: Math.max(3.2, damage * (0.38 + 0.035 * Math.min(8, closedLevel + openLevel))),
+      scissorsCrossCutMarkDuration: 1.7,
+      scissorsPureClosedMastery: pureMastery === "copy",
+      scissorsPureOpenMastery: pureMastery === "archive",
       scissorsDashDistance: 82,
       scissorsDashDuration: 0.18,
       scissorsDashWindow: 0.22,
@@ -235,6 +291,8 @@
     test.totalExecutions = 0;
     test.totalShelterTriggers = 0;
     test.totalBlockedShots = 0;
+    test.totalCrossCuts = 0;
+    test.totalCrossCutHits = 0;
     return test;
   }
 
@@ -256,15 +314,46 @@
   function makeModuleChoices(state) {
     const test = runtime(state);
     if (!test) return [];
+    const desireLoop = desireLoopEnabled(state);
     return ["closed", "open"].map(function (id) {
       const module = MODULES[id];
       const internalId = id === "closed" ? "copy" : "archive";
       const level = test.modules[internalId];
+      if (!desireLoop) {
+        return {
+          id, name: module.name, family: module.family, level,
+          effect: module.levels[Math.min(3, level)],
+          intent: id === "closed" ? "增加窄线突刺次数，Lv4 以裁断减速收尾。" : "增加短宽扇面剪切次数，Lv4 以合剪处决收尾。",
+          disabled: level >= 4
+        };
+      }
+      const otherId = internalId === "copy" ? "archive" : "copy";
+      const otherLevel = test.modules[otherId];
+      const mastery = level >= 4 && otherLevel === 0 && !test.pureRouteCommitted;
+      const willFuse = level === 0 && otherLevel > 0;
+      const promise = MODULE_PROMISES[id];
+      const nextLevel = Math.min(4, level + 1);
       return {
         id, name: module.name, family: module.family, level,
-        effect: module.levels[Math.min(3, level)],
+        effect: mastery
+          ? (id === "closed" ? "锁定纯合刃终局：大型裁断更长、更宽、更重。" : "锁定纯张刃终局：终幕剪切范围、处决阈值与爆发提高。")
+          : module.levels[Math.min(3, level)],
         intent: id === "closed" ? "增加窄线突刺次数，Lv4 以裁断减速收尾。" : "增加短宽扇面剪切次数，Lv4 以合剪处决收尾。",
-        disabled: level >= 4
+        immediate: mastery ? "立刻强化已经解锁的 Lv4 终局技能，不增加 Lv5。" : promise.now[nextLevel - 1],
+        playstyle: promise.playstyle,
+        terminalPromise: promise.terminal,
+        relationPromise: willFuse
+          ? "选择后接通“交叉裁切”：张刃先在敌人身上留下紫青裁缝，合刃命中时以 X 形重剪兑现。"
+          : otherLevel > 0
+            ? "交叉裁切已接通；张刃负责留缝，合刃负责沿缝裁开。"
+            : "后续接入另一模块时，两条动作会形成先留缝、再裁开的因果。",
+        confirmation: mastery
+          ? (id === "closed" ? "纯合刃终局已锁定；大型裁断获得更强正面统治。" : "纯张刃终局已锁定；合剪终结获得更强处决能力。")
+          : willFuse ? "交叉裁切已接通；下一场张刃标记后，合刃会触发紫青 X 形重剪。" : promise.now[nextLevel - 1],
+        combo: willFuse || otherLevel > 0 ? (willFuse ? "本次选择建立新关系：交叉裁切" : "当前混合关系：交叉裁切") : mastery ? "保持纯路线，不接入另一模块" : "",
+        levelLabel: mastery ? "终局专精" : "Lv." + nextLevel,
+        mastery,
+        disabled: level >= 4 && !mastery
       };
     });
   }
@@ -278,6 +367,7 @@
   function makeShopOffers(state, preserved, firstOpen) {
     const offers = callBase(state, "makeShopOffers", [state, preserved, firstOpen]) || [];
     normalizeOffers(runtime(state));
+    normalizeOffers({ offers });
     return offers;
   }
 
@@ -379,6 +469,7 @@
     stage: Object.assign({}, base.stage, { demoV2Phase: "scissors-fixed" }),
     modules: MODULES,
     parts: PARTS,
+    componentMountView,
     experienceStats: base.experienceStats,
     qualities: base.qualities,
     qualityIndex: base.qualityIndex,

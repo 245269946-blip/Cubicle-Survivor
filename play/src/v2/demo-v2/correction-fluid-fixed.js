@@ -30,6 +30,52 @@
     }
   };
 
+  const MODULE_PROMISES = {
+    spread: {
+      now: [
+        "错误过载目标死亡会留下第一块错误区域，死亡第一次变成新的状态源。",
+        "错误区域扩大并延长，开始稳定感染后续进入的敌人。",
+        "相邻错误区域可以融合，污染会从散点长成大型故障空间。",
+        "解锁系统崩溃：集中回收多个错误区域并按错误层数爆发。"
+      ],
+      playstyle: "优先处理处于团块中的过载目标，用死亡位置决定污染网络的形状。",
+      terminal: "Lv4 · 系统崩溃：先经营污染战场，再把所有错误区域一次性兑现。"
+    },
+    correction: {
+      now: [
+        "每轮同时培养 2 个错误目标，状态制造速度立刻提高。",
+        "每轮同时培养 3 个目标，并继续追踪已有错误与高生命敌人。",
+        "每轮同时培养 4 个目标；过载目标进入更稳定的待修正窗口。",
+        "解锁最终纠错：定期锁定最高错误目标，清空状态并集中爆发。"
+      ],
+      playstyle: "保留一个高错误核心目标，靠高频喷射把它培养成可主动兑现的处决资源。",
+      terminal: "Lv4 · 最终纠错：多目标制造错误，周期性集中清算最高错误目标。"
+    }
+  };
+
+  function desireLoopEnabled(state) {
+    return !!(state.demoV2 && state.demoV2.allWeaponDesireLoopPass);
+  }
+
+  function componentMountView(partId, statId) {
+    if (!statId) return "";
+    if (partId === "tip") return statId === "damage"
+      ? "人物外圈的真实修正液喷头"
+      : "喷头根部的高频挤压泵";
+    if (partId === "body") return statId === "attackSpeed"
+      ? "肩背分配器上的故障扫描核心"
+      : "肩背分配器两侧的广域喷口";
+    return statId === "range"
+      ? "背部修正液储液囊"
+      : "储液囊与腰部相连的移动供液软管";
+  }
+
+  function componentVisualPromise(partId, statId) {
+    if (partId === "tip") return "品质提高时真实喷头数量与喷射脉冲更清晰，白色介质仍从喷头出发";
+    if (partId === "tail" && statId === "range") return "品质提高时储液囊液位和残留时间辉光逐级提升";
+    return "品质提高时对应实体结构更大、更亮，并和错误状态反馈同步";
+  }
+
   // Stable shop ids are inherited from the proven component engine. Their
   // player-facing meanings are correction-fluid-specific and mutually exclusive.
   const PARTS = {
@@ -77,6 +123,8 @@
       offer.name = offer.statName + part.name;
       offer.activeStatName = offer.activeStat ? part.statNames[offer.activeStat] : "空槽";
       offer.id = String(offer.id || "component").replace(/^marker-part-/, "correction-fluid-part-");
+      offer.mountText = componentMountView(offer.partId, offer.statId);
+      offer.visualPromise = componentVisualPromise(offer.partId, offer.statId);
     });
   }
 
@@ -111,6 +159,9 @@
     const experience = test.experienceAllocations;
     const spreadLevel = test.modules.copy;
     const correctionLevel = test.modules.archive;
+    const desireLoop = desireLoopEnabled(state);
+    const pureMastery = desireLoop ? test.pureRouteCommitted || "" : "";
+    const cascadingRollback = desireLoop && spreadLevel > 0 && correctionLevel > 0;
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const openingPass = !!(state.demoV2 && state.demoV2.correctionOpeningPass);
@@ -152,15 +203,20 @@
       correctionAreaTick: spreadLevel >= 3 ? 0.58 : 0.72,
       correctionAreaMerge: spreadLevel >= 3,
       correctionCrashEnabled: spreadLevel >= 4,
-      correctionCrashAreaThreshold: 3,
-      correctionCrashCooldown: 5.4,
-      correctionCrashDamage: damage * 3.25,
+      correctionCrashAreaThreshold: pureMastery === "copy" ? 2 : 3,
+      correctionCrashCooldown: pureMastery === "copy" ? 4.2 : 5.4,
+      correctionCrashDamage: damage * (pureMastery === "copy" ? 4.15 : 3.25),
       correctionFinalEnabled: correctionLevel >= 4,
-      correctionFinalCooldown: 3.8,
-      correctionFinalDamage: damage * 2.3,
-      correctionFinalPercentPerStack: 0.025,
-      correctionFinalBlastRadius: 72 * rangeScale,
-      correctionFinalBlastDamage: damage * 1.05
+      correctionFinalCooldown: pureMastery === "archive" ? 3 : 3.8,
+      correctionFinalDamage: damage * (pureMastery === "archive" ? 2.9 : 2.3),
+      correctionFinalPercentPerStack: pureMastery === "archive" ? 0.035 : 0.025,
+      correctionFinalBlastRadius: 72 * rangeScale * (pureMastery === "archive" ? 1.2 : 1),
+      correctionFinalBlastDamage: damage * (pureMastery === "archive" ? 1.4 : 1.05),
+      correctionCascadingRollback: cascadingRollback,
+      correctionRollbackDamage: Math.max(1.8, damage * (0.26 + 0.035 * Math.min(8, spreadLevel + correctionLevel))),
+      correctionRollbackCooldown: 0.82,
+      correctionPureSpreadMastery: pureMastery === "copy",
+      correctionPureFatalMastery: pureMastery === "archive"
     };
     state.maxHp = 64 + (experience.maxHp || 0) * 12;
     state.hp = Math.min(state.hp, state.maxHp);
@@ -194,6 +250,9 @@
     test.facingAngle = 0;
     test.weaponVisualTime = 0;
     test.weaponVisualAngles = [];
+    test.rollbackReadyAt = 0;
+    test.totalRollbacks = 0;
+    test.totalRollbackHits = 0;
     return test;
   }
 
@@ -215,15 +274,46 @@
   function makeModuleChoices(state) {
     const test = runtime(state);
     if (!test) return [];
+    const desireLoop = desireLoopEnabled(state);
     return ["spread", "correction"].map(function (id) {
       const module = MODULES[id];
       const internalId = id === "spread" ? "copy" : "archive";
       const level = test.modules[internalId];
+      if (!desireLoop) {
+        return {
+          id, name: module.name, family: module.family, level,
+          effect: module.levels[Math.min(3, level)],
+          intent: id === "spread" ? "把错误过载目标的死亡变成新的污染源，Lv4 以系统崩溃回收场上区域。" : "增加同时培养的错误目标，Lv4 以最终纠错集中处理最高错误目标。",
+          disabled: level >= 4
+        };
+      }
+      const otherId = internalId === "copy" ? "archive" : "copy";
+      const otherLevel = test.modules[otherId];
+      const mastery = level >= 4 && otherLevel === 0 && !test.pureRouteCommitted;
+      const willFuse = level === 0 && otherLevel > 0;
+      const promise = MODULE_PROMISES[id];
+      const nextLevel = Math.min(4, level + 1);
       return {
         id, name: module.name, family: module.family, level,
-        effect: module.levels[Math.min(3, level)],
+        effect: mastery
+          ? (id === "spread" ? "锁定纯扩散终局：系统崩溃更快、更广、爆发更高。" : "锁定纯纠错终局：最终纠错更频繁、百分比清算与爆炸更强。")
+          : module.levels[Math.min(3, level)],
         intent: id === "spread" ? "把错误过载目标的死亡变成新的污染源，Lv4 以系统崩溃回收场上区域。" : "增加同时培养的错误目标，Lv4 以最终纠错集中处理最高错误目标。",
-        disabled: level >= 4
+        immediate: mastery ? "立刻强化已经解锁的 Lv4 终局技能，不增加 Lv5。" : promise.now[nextLevel - 1],
+        playstyle: promise.playstyle,
+        terminalPromise: promise.terminal,
+        relationPromise: willFuse
+          ? "选择后接通“级联回滚”：过载目标死亡时，既有污染区会同步闪回、伤害并追加错误。"
+          : otherLevel > 0
+            ? "级联回滚已接通；单体错误培养会反向驱动整张污染网络。"
+            : "后续接入另一模块时，过载死亡会让既有污染区同步回滚。",
+        confirmation: mastery
+          ? (id === "spread" ? "纯扩散终局已锁定；系统崩溃获得更强战场回收能力。" : "纯纠错终局已锁定；最终纠错获得更强关键目标清算。")
+          : willFuse ? "级联回滚已接通；下一次过载死亡会让旧污染区同步闪回。" : promise.now[nextLevel - 1],
+        combo: willFuse || otherLevel > 0 ? (willFuse ? "本次选择建立新关系：级联回滚" : "当前混合关系：级联回滚") : mastery ? "保持纯路线，不接入另一模块" : "",
+        levelLabel: mastery ? "终局专精" : "Lv." + nextLevel,
+        mastery,
+        disabled: level >= 4 && !mastery
       };
     });
   }
@@ -237,6 +327,7 @@
   function makeShopOffers(state, preserved, firstOpen) {
     const offers = callBase(state, "makeShopOffers", [state, preserved, firstOpen]) || [];
     normalizeOffers(runtime(state));
+    normalizeOffers({ offers });
     return offers;
   }
   function buyComponent(state, offerId) { callBase(state, "buyComponent", [state, offerId]); rebuildParams(state); }
@@ -285,6 +376,7 @@
     stage: Object.assign({}, base.stage, { demoV2Phase: "correction-fluid-fixed" }),
     modules: MODULES,
     parts: PARTS,
+    componentMountView,
     experienceStats: base.experienceStats,
     qualities: base.qualities,
     qualityIndex: base.qualityIndex,

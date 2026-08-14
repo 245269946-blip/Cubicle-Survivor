@@ -160,6 +160,68 @@
     }
   };
 
+  const MODULE_PROMISES = {
+    copy: {
+      now: [
+        "新增一条独立平行激光；下一场立即看见双线切割。",
+        "平行激光扩为双侧三线，正面覆盖明显变宽。",
+        "每次攻击追加重新瞄准的第二轮三线复写。",
+        "解锁全页批注：正面聚焦线束配合外围全屏清扫。"
+      ],
+      playstyle: "主动调整朝向，把成群敌人压进同一条正面批注带。",
+      terminal: "Lv4 · 全页批注：高频局部切割，间歇接管整张战场。"
+    },
+    archive: {
+      now: [
+        "激光路径留下第一条宽墨迹，进入者持续受伤并减速。",
+        "每次划线留下两条平行墨迹，开始封锁移动通道。",
+        "每次划线留下三条平行墨迹，更快铺满交战路径。",
+        "解锁整页归档：短时间让可视战场进入持续墨迹覆盖。"
+      ],
+      playstyle: "围绕旧路径走位，引导敌人反复穿过持续减速墨迹。",
+      terminal: "Lv4 · 整页归档：局部铺场持续复利，间歇覆盖整张战场。"
+    }
+  };
+
+  function markerDesireLoopEnabled(state) {
+    return !!(state.demoV2 && state.demoV2.markerDesireLoopPass);
+  }
+
+  function otherModuleId(id) {
+    return id === "copy" ? "archive" : "copy";
+  }
+
+  function componentMountPromise(partId, statId) {
+    if (partId === "tip") {
+      return {
+        mount: "安装到每一支真实发射笔的笔尖",
+        visual: statId === "damage" ? "品质提高时笔尖核心增亮、冲击更重" : "品质提高时笔尖导轨加长、贯穿层数增加"
+      };
+    }
+    if (partId === "body" && statId === "amount") {
+      return {
+        mount: "在人物近身外圈新增真实发射笔",
+        visual: "数量提升会直接增加可见笔体，不使用悬空属性图标代替"
+      };
+    }
+    if (partId === "body") {
+      return {
+        mount: "安装到主发射笔的笔身控制器",
+        visual: "品质提高时控制器亮度和脉冲频率同步提升"
+      };
+    }
+    if (statId === "duration") {
+      return {
+        mount: "接入背部打印坞与留档供墨结构",
+        visual: "品质提高时背负墨结液位与冷青辉光逐级提升"
+      };
+    }
+    return {
+      mount: "安装到每支真实发射笔的笔尾",
+      visual: "品质提高时笔尾扩幅件变大，真实激光和墨迹宽度同步增长"
+    };
+  }
+
   function makeWaves() {
     let start = 0;
     return ENCOUNTERS.map(function (encounter) {
@@ -377,6 +439,10 @@
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
     const parity = !!(state.demoV2 && state.demoV2.weaponParityPass);
+    const desireLoop = markerDesireLoopEnabled(state);
+    test.desireLoopPass = desireLoop;
+    const retrievalEnabled = desireLoop && copyLevel > 0 && archiveLevel > 0;
+    const pureMastery = desireLoop ? test.pureRouteCommitted || "" : "";
     const damage = (deepTriangle ? (parity ? 8 : 8.5) : highFrequency ? 11 : 21) * Math.pow(1.05, experience.damage || 0) * Math.pow(attributeImpact ? 1.18 : 1.15, tip.damage);
     const componentRangeScale = Math.pow(attributeImpact ? 1.16 : 1.1, tail.range);
     const experienceRangeScale = Math.pow(1.05, experience.range || 0);
@@ -410,7 +476,13 @@
       markerFixedTrailDuration: 2 * Math.pow(1.25, tail.duration),
       markerFixedTrailDamage: Math.max(1.6, damage * 0.1),
       markerFixedFullscreenChance: 0.15,
-      markerFixedFullscreenCooldown: 4.5
+      markerFixedFullscreenCooldown: 4.5,
+      markerFixedRetrieval: retrievalEnabled,
+      markerFixedRetrievalDamage: Math.max(2.5, damage * (0.22 + 0.03 * Math.min(8, copyLevel + archiveLevel))),
+      markerFixedRetrievalExtend: 0.28 + archiveLevel * 0.08,
+      markerFixedRetrievalMaxPerAttack: 2,
+      markerFixedPureCopyMastery: pureMastery === "copy",
+      markerFixedPureArchiveMastery: pureMastery === "archive"
     });
     const expectedMaxHp = 70 + (experience.maxHp || 0) * 12;
     if (state.maxHp !== expectedMaxHp) state.maxHp = expectedMaxHp;
@@ -424,7 +496,7 @@
     }
   }
 
-  function makeModuleChoices(state) {
+  function makeLegacyModuleChoices(state) {
     const test = runtime(state);
     return ["copy", "archive"].map(function (id) {
       const module = MODULES[id];
@@ -438,6 +510,58 @@
     });
   }
 
+  function makeModuleChoices(state) {
+    if (!markerDesireLoopEnabled(state)) return makeLegacyModuleChoices(state);
+    const test = runtime(state);
+    return ["copy", "archive"].map(function (id) {
+      const module = MODULES[id];
+      const level = test.modules[id];
+      const otherId = otherModuleId(id);
+      const otherLevel = test.modules[otherId];
+      const mastery = level >= 4 && otherLevel === 0 && !test.pureRouteCommitted;
+      const nextLevel = Math.min(4, level + 1);
+      const promise = MODULE_PROMISES[id];
+      const willFuse = level === 0 && otherLevel > 0;
+      return {
+        id,
+        name: module.name,
+        family: module.family,
+        level,
+        effect: mastery
+          ? (id === "copy"
+            ? "锁定纯复写终局：提高全页批注触发率、伤害与聚焦覆盖。"
+            : "锁定纯留档终局：提高整页归档触发率、持续时间与墨迹伤害。")
+          : module.levels[Math.min(3, level)],
+        intent: id === "copy"
+          ? "强化即时激光数量、攻击轮次与正面覆盖。"
+          : "强化墨迹条数、持续覆盖与铺场速度。",
+        immediate: mastery
+          ? "立刻强化已经解锁的 Lv4 终局技能，不增加 Lv5。"
+          : promise.now[nextLevel - 1],
+        playstyle: promise.playstyle,
+        terminalPromise: promise.terminal,
+        relationPromise: willFuse
+          ? "选择后立即接通“调阅”：暖黄复写线穿过冷青旧墨迹时，沿档案触发洋红回读。"
+          : otherLevel > 0
+            ? "调阅已接通；继续投资会放大各自事件数量和触发机会。"
+            : "后续接入另一模块时，不会只并排生效，而会建立“调阅”协同。",
+        confirmation: mastery
+          ? (id === "copy"
+            ? "纯复写终局已锁定；全页批注获得更高触发率和更强聚焦清扫。"
+            : "纯留档终局已锁定；整页归档获得更长覆盖和更高持续伤害。")
+          : willFuse
+            ? "调阅回路已接通；下一场复写线穿过旧墨迹时会出现洋红回读。"
+            : promise.now[nextLevel - 1],
+        combo: willFuse || otherLevel > 0
+          ? (willFuse ? "本次选择建立新关系：调阅" : "当前混合关系：调阅")
+          : mastery ? "保持纯路线，不接入另一模块" : "",
+        levelLabel: mastery ? "终局专精" : "Lv." + nextLevel,
+        mastery,
+        disabled: level >= 4 && !mastery
+      };
+    });
+  }
+
   function openModuleChoice(state) {
     const test = runtime(state);
     if (!test || test.moduleChoiceIndex >= MODULE_TIMES.length) return;
@@ -446,11 +570,42 @@
     state.mode = "module_select";
   }
 
-  function applyModule(state, moduleId, stayInEncounter) {
+  function applyLegacyModule(state, moduleId, stayInEncounter) {
     const test = runtime(state);
     if (!test || !MODULES[moduleId] || test.modules[moduleId] >= 4) return;
     test.modules[moduleId] += 1;
     test.moduleOrder.push(moduleId);
+    test.lastModule = moduleId;
+    test.moduleChoiceIndex += 1;
+    state.demoV2.moduleChoices = [];
+    rebuildParams(state);
+    if (stayInEncounter) state.mode = "combat";
+    else advanceToNextEncounter(state);
+  }
+
+  function applyModule(state, moduleId, stayInEncounter) {
+    if (!markerDesireLoopEnabled(state)) {
+      applyLegacyModule(state, moduleId, stayInEncounter);
+      return;
+    }
+    const test = runtime(state);
+    if (!test || !MODULES[moduleId]) return;
+    const otherId = otherModuleId(moduleId);
+    const mastery = test.modules[moduleId] >= 4
+      && test.modules[otherId] === 0
+      && !test.pureRouteCommitted;
+    if (test.modules[moduleId] >= 4 && !mastery) return;
+    if (mastery) {
+      test.pureRouteCommitted = moduleId;
+      test.moduleOrder.push(moduleId + "-mastery");
+    } else {
+      test.modules[moduleId] += 1;
+      test.moduleOrder.push(moduleId);
+      if (test.modules.copy > 0 && test.modules.archive > 0) {
+        test.retrievalUnlocked = true;
+        test.pureRouteCommitted = "";
+      }
+    }
     test.lastModule = moduleId;
     test.moduleChoiceIndex += 1;
     state.demoV2.moduleChoices = [];
@@ -497,6 +652,7 @@
     const sameType = partState.activeStat === statId;
     const replacing = !!partState.activeStat && !sameType;
     const owned = sameType ? partState.copies : 0;
+    const mountPromise = test.desireLoopPass ? componentMountPromise(partId, statId) : null;
     return {
       id: "marker-part-" + test.shopIndex + "-" + test.rerolls + "-" + slot,
       partId,
@@ -516,7 +672,9 @@
       quality: QUALITY[qualityIndex(owned)],
       purchaseQuality: QUALITY[qualityIndex(replacing || !partState.activeStat ? 1 : Math.min(8, owned + 1))],
       nextQuality: QUALITY[Math.min(4, qualityIndex(owned) + 1)],
-      nextThreshold: nextThreshold(owned)
+      nextThreshold: nextThreshold(owned),
+      mountText: mountPromise ? mountPromise.mount : "",
+      visualPromise: mountPromise ? mountPromise.visual : ""
     };
   }
 
@@ -869,6 +1027,8 @@
         eliteCandidateSerial: 0,
         pendingRounds: [], fullscreenCopyReadyAt: 0, fullscreenArchiveReadyAt: 0,
         fullscreenCopyTriggers: 0, fullscreenArchiveTriggers: 0,
+        desireLoopPass: false, retrievalUnlocked: false, retrievalTriggers: 0, retrievalHits: 0,
+        attackSerial: 0, pureRouteCommitted: "",
         bodyFacing: 0, weaponVisualAngle: 0, weaponVisualTime: 0
       };
     },

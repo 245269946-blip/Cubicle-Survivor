@@ -375,4 +375,53 @@
 
   V2.demoV2.fourWeaponV311 = fourWeaponV311;
   V2.demoV2.fixedTests["four-weapon-v3-11"] = fourWeaponV311;
+
+  // Demo V3.12 preserves the complete V3.11 combat snapshot. It changes only
+  // the Marker desire chain: module cards expose immediate/future consequences,
+  // physical component growth is named at purchase time, mixed Copy + Archive
+  // creates Retrieval, and the fifth choice may preserve a pure Lv4 mastery.
+  const fourWeaponV312 = Object.assign({}, fourWeaponV311, {
+    id: "four-weapon-v3-12",
+    version: "Demo V3.12",
+    visualVersion: "马克笔欲望链实验版",
+    title: "马克笔欲望链实验版",
+    subtitle: "完整继承 V3.11 的战斗与难度；马克笔现在把模块承诺、实体组件安装、调阅协同和纯路线终局专精串成一条可见成长链。",
+    markerDesireLoopPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV311.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.12 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV312 = fourWeaponV312;
+  V2.demoV2.fixedTests["four-weapon-v3-12"] = fourWeaponV312;
+
+  // Demo V3.13 keeps the complete V3.12 opening numbers, encounter pressure
+  // and Marker experiment. It extends the same readable desire-chain contract
+  // to the remaining weapons without homogenising their causal verbs.
+  const fourWeaponV313 = Object.assign({}, fourWeaponV312, {
+    id: "four-weapon-v3-13",
+    version: "Demo V3.13",
+    visualVersion: "四武器欲望链扩展版",
+    title: "四武器欲望链扩展版",
+    subtitle: "完整继承 V3.12 数值与关卡；保温杯用热交换连接空间与击杀，剪刀用交叉裁切连接留缝与重剪，修正液用级联回滚连接单体过载与污染网络。",
+    allWeaponDesireLoopPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV312.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.13 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV313 = fourWeaponV313;
+  V2.demoV2.fixedTests["four-weapon-v3-13"] = fourWeaponV313;
 })();

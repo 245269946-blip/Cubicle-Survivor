@@ -1362,8 +1362,9 @@
       const family = profile.family || (/thermos/.test(source) ? "thermos" : /scissors/.test(source) ? "scissors" : /correction/.test(source) ? "correction" : "marker");
       const palette = profile.palette || {};
       const isCorrection = family === "correction" || family === "correction_fluid";
-      const fixedMarkerLaser = /^marker_test_(base|copy|second_round)$/.test(source);
-      const color = fixedMarkerLaser ? (source === "marker_test_copy" ? "#ffb84f" : "#ffe77d")
+      const fixedMarkerLaser = /^marker_test_(base|copy|second_round|retrieval)$/.test(source);
+      const color = source === "marker_test_retrieval" ? "#ff65dc"
+        : fixedMarkerLaser ? (source === "marker_test_copy" ? "#ffb84f" : "#ffe77d")
         : palette.core || (isCorrection ? "#ff4fd8" : family === "scissors" ? "#ffd36b" : "#55f7ff");
       const size = clamp((item.width || 8) * (family === "scissors" ? 5.2 : 3.8), 38, isCorrection ? 82 : 68);
       const sprite = family === "thermos" ? "thermos_release_art"
@@ -2035,6 +2036,32 @@
     return { x: a.x1 + adx * ta, y: a.y1 + ady * ta };
   }
 
+  function pointToSegmentDistance(point, line) {
+    const dx = line.x2 - line.x1;
+    const dy = line.y2 - line.y1;
+    const lengthSq = dx * dx + dy * dy || 1;
+    const t = clamp(((point.x - line.x1) * dx + (point.y - line.y1) * dy) / lengthSq, 0, 1);
+    const x = line.x1 + dx * t;
+    const y = line.y1 + dy * t;
+    return { distance: Math.hypot(point.x - x, point.y - y), x, y };
+  }
+
+  function markerLinesTouch(a, b, padding) {
+    const crossing = segmentIntersection(a, b);
+    if (crossing) return crossing;
+    const samples = [
+      { x: a.x1, y: a.y1 },
+      { x: a.x2, y: a.y2 },
+      { x: (a.x1 + a.x2) * 0.5, y: (a.y1 + a.y2) * 0.5 }
+    ];
+    let nearest = null;
+    samples.forEach(function (point) {
+      const candidate = pointToSegmentDistance(point, b);
+      if (!nearest || candidate.distance < nearest.distance) nearest = candidate;
+    });
+    return nearest && nearest.distance <= padding ? { x: nearest.x, y: nearest.y } : null;
+  }
+
   function triggerMarkerCounter(state) {
     const p = state.activeFormParams || {};
     const primaryCounter = !!(state.activeForm && state.activeForm.mechanicType === "shield_counter_line");
@@ -2540,11 +2567,42 @@
     const p = state.activeFormParams || {};
     if (!test || !enemy) return;
     const stacks = enemy.correctionErrorStacks || 0;
+    if (source !== "correction_test_rollback" && stacks >= 3) triggerCorrectionCascadingRollback(state, test, p, enemy);
     if (source !== "correction_test_system_crash" && stacks >= 3 && (p.correctionSpreadLevel || 0) >= 1) createCorrectionArea(state, enemy.x, enemy.y);
     if (source === "correction_test_final") {
       test.totalFinalKills += 1;
       triggerCorrectionFinalBlast(state, enemy);
     }
+  }
+
+  function triggerCorrectionCascadingRollback(state, test, p, triggerEnemy) {
+    if (!p.correctionCascadingRollback || !test) return false;
+    const elapsed = correctionElapsed(state);
+    if (elapsed < (test.rollbackReadyAt || 0)) return false;
+    const areas = state.damageZones.filter(function (zone) {
+      return zone.correctionArea && zone.life > 0;
+    }).slice(0, 5);
+    if (!areas.length) return false;
+    let hitCount = 0;
+    areas.forEach(function (area, index) {
+      addCircleEvent(state, area.x, area.y, area.radius * 1.02, index % 2 ? "#ff65dc" : "#75f8ff", 0.44, "detonate", false, "correction_test_rollback", {
+        areaId: area.correctionAreaId,
+        triggerEnemyId: triggerEnemy && triggerEnemy.id,
+        rollbackIndex: index
+      });
+      state.enemies.slice().forEach(function (enemy) {
+        if (enemy.dead || Math.hypot(enemy.x - area.x, enemy.y - area.y) > area.radius + enemy.r) return;
+        applyCorrectionError(state, enemy, 1, "correction_test_rollback");
+        correctionDamageEnemy(state, enemy, p.correctionRollbackDamage || 2, "correction_test_rollback");
+        hitCount += 1;
+      });
+      area.life = Math.min(area.maxLife || area.life, area.life + 0.28);
+    });
+    addTextEvent(state, triggerEnemy.x, triggerEnemy.y - triggerEnemy.r - 22, "级联回滚", "#ff8fe7", 0.62);
+    test.rollbackReadyAt = elapsed + (p.correctionRollbackCooldown || 0.82);
+    test.totalRollbacks += 1;
+    test.totalRollbackHits += hitCount;
+    return true;
   }
 
   function triggerCorrectionSystemCrash(state, test, p, elapsed) {
@@ -2708,14 +2766,79 @@
         damage: (p.markerFixedTrailDamage || 5) * ([1, 0.75, 0.58, 0.44, 0.38][p.markerFixedArchiveLevel || 0] || 0.38),
         life: duration, maxLife: duration, tickEvery: 0.44,
         color: "#77b9d8", slow: 0.24, visual: "marker_grid_line",
-        inkTrail: true, inkSeed: baseIndex * 7 + trailIndex * 13, noKnockback: true
+        inkTrail: true, inkSeed: baseIndex * 7 + trailIndex * 13, noKnockback: true,
+        markerAttackSerial: markerFixedRuntime(state) ? markerFixedRuntime(state).attackSerial : 0,
+        retrievalReadyAt: 0
       });
     });
   }
 
+  function triggerMarkerFixedRetrieval(state, p, test, copyLine) {
+    if (!p.markerFixedRetrieval || !test || !copyLine) return;
+    const now = state.totalTime || 0;
+    const maxPerAttack = Math.max(1, p.markerFixedRetrievalMaxPerAttack || 2);
+    if (test.retrievalAttackSerial !== test.attackSerial) {
+      test.retrievalAttackSerial = test.attackSerial;
+      test.retrievalTriggersThisAttack = 0;
+    }
+    if ((test.retrievalTriggersThisAttack || 0) >= maxPerAttack) return;
+    let triggered = 0;
+    const oldArchives = state.damageZones.filter(function (zone) {
+      return zone.inkTrail
+        && zone.source === "marker_test_archive"
+        && zone.life > 0
+        && (zone.markerAttackSerial || 0) < test.attackSerial
+        && now >= (zone.retrievalReadyAt || 0);
+    });
+    for (const zone of oldArchives) {
+      if ((test.retrievalTriggersThisAttack || 0) + triggered >= maxPerAttack) break;
+      const contact = markerLinesTouch(copyLine, zone, Math.max(26, copyLine.width * 0.5 + zone.width * 0.5 + 8));
+      if (!contact) continue;
+      const hits = lineHitEnemies(
+        state,
+        zone.x1, zone.y1, zone.x2, zone.y2,
+        Math.max(12, zone.width * 0.52),
+        p.markerFixedRetrievalDamage || 3,
+        999,
+        "marker_test_retrieval",
+        { noKnockback: true }
+      );
+      addBeamEvent(
+        state,
+        zone.x1, zone.y1, zone.x2, zone.y2,
+        "#ff65dc",
+        Math.max(9, zone.width * 0.34),
+        0.34,
+        "grid",
+        false,
+        "marker_test_retrieval",
+        {
+          archiveSerial: zone.markerAttackSerial,
+          attackSerial: test.attackSerial,
+          contactX: contact.x,
+          contactY: contact.y,
+          hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
+          actualHitCount: hits.length
+        }
+      );
+      addCircleEvent(state, contact.x, contact.y, Math.max(22, zone.width * 0.7), "#ff65dc", 0.3, "mark", false, "marker_test_retrieval", {
+        archiveSerial: zone.markerAttackSerial,
+        attackSerial: test.attackSerial
+      });
+      addTextEvent(state, contact.x, contact.y - 18, "调阅", "#ff8fe7", 0.55);
+      zone.life = Math.min(zone.maxLife * 1.3, zone.life + (p.markerFixedRetrievalExtend || 0.4));
+      zone.retrievalReadyAt = now + 0.78;
+      test.retrievalTriggers = (test.retrievalTriggers || 0) + 1;
+      test.retrievalHits = (test.retrievalHits || 0) + hits.length;
+      triggered += 1;
+    }
+    test.retrievalTriggersThisAttack = (test.retrievalTriggersThisAttack || 0) + triggered;
+  }
+
   function triggerMarkerFixedFullscreenCopy(state, p, test, elapsed) {
     if (!p.markerFixedFullscreenCopy || elapsed < (test.fullscreenCopyReadyAt || 0)) return;
-    if (Math.random() >= (p.markerFixedFullscreenChance || 0.15)) return;
+    const mastery = !!p.markerFixedPureCopyMastery;
+    if (Math.random() >= (mastery ? 0.23 : (p.markerFixedFullscreenChance || 0.15))) return;
     const camera = state.camera || { x: 0, y: 0, width: W, height: H };
     const lines = [
       [camera.x - 24, camera.y + camera.height * 0.22, camera.x + camera.width + 24, camera.y + camera.height * 0.22],
@@ -2725,22 +2848,24 @@
       [camera.x + camera.width * 0.92, camera.y - 24, camera.x + camera.width * 0.08, camera.y + camera.height + 24]
     ];
     lines.forEach(function (line, lineIndex) {
-      const hits = lineHitEnemies(state, line[0], line[1], line[2], line[3], Math.max(8, (p.width || 8) * 1.25), (p.damage || 18) * 0.46, p.pierce || 4, "marker_test_fullscreen_copy", { noKnockback: true });
-      addBeamEvent(state, line[0], line[1], line[2], line[3], "#e9ffff", Math.max(8, (p.width || 8) * 1.25), 0.42, "beam", false, "marker_test_fullscreen_copy", {
+      const lineWidth = Math.max(8, (p.width || 8) * (mastery ? 1.65 : 1.25));
+      const hits = lineHitEnemies(state, line[0], line[1], line[2], line[3], lineWidth, (p.damage || 18) * (mastery ? 0.64 : 0.46), p.pierce || 4, "marker_test_fullscreen_copy", { noKnockback: true });
+      addBeamEvent(state, line[0], line[1], line[2], line[3], "#e9ffff", lineWidth, 0.42, "beam", false, "marker_test_fullscreen_copy", {
         lineIndex,
         hitEnemyIds: hits.map(function (hit) { return hit.enemy.id; }),
         actualHitCount: hits.length
       });
     });
-    test.fullscreenCopyReadyAt = elapsed + (p.markerFixedFullscreenCooldown || 4.5);
+    test.fullscreenCopyReadyAt = elapsed + (mastery ? 3.5 : (p.markerFixedFullscreenCooldown || 4.5));
     test.fullscreenCopyTriggers += 1;
   }
 
   function triggerMarkerFixedFullscreenArchive(state, p, test, elapsed) {
     if (!p.markerFixedFullscreenArchive || elapsed < (test.fullscreenArchiveReadyAt || 0)) return;
-    if (Math.random() >= (p.markerFixedFullscreenChance || 0.15)) return;
+    const mastery = !!p.markerFixedPureArchiveMastery;
+    if (Math.random() >= (mastery ? 0.23 : (p.markerFixedFullscreenChance || 0.15))) return;
     const camera = state.camera || { x: 0, y: 0, width: W, height: H };
-    const duration = Math.max(1.25, (p.markerFixedTrailDuration || 2) * 0.72);
+    const duration = Math.max(1.25, (p.markerFixedTrailDuration || 2) * (mastery ? 1.02 : 0.72));
     const bands = 5;
     const rangeScale = clamp((p.range || 720) / 720, 1, 1.6);
     for (let index = 0; index < bands; index++) {
@@ -2750,12 +2875,12 @@
         type: "line", source: "marker_test_fullscreen_archive",
         x1: camera.x - 24, y1: y, x2: camera.x + camera.width + 24, y2: y,
         width: camera.height / bands * 0.56 * rangeScale,
-        damage: (p.markerFixedTrailDamage || 5) * 0.48,
+        damage: (p.markerFixedTrailDamage || 5) * (mastery ? 0.66 : 0.48),
         life: duration, maxLife: duration, tickEvery: 0.42,
         color: "#6eaee7", slow: 0.26, visual: "marker_grid_line", inkTrail: true, inkSeed: index * 11, noKnockback: true
       });
     }
-    test.fullscreenArchiveReadyAt = elapsed + (p.markerFixedFullscreenCooldown || 4.5);
+    test.fullscreenArchiveReadyAt = elapsed + (mastery ? 3.5 : (p.markerFixedFullscreenCooldown || 4.5));
     test.fullscreenArchiveTriggers += 1;
   }
 
@@ -2773,6 +2898,7 @@
         && Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) <= range + enemy.r;
     }) || nearestEnemy(state, range);
     if (!target) return;
+    test.attackSerial = (test.attackSerial || 0) + 1;
     const baseAngle = Math.atan2(target.y - state.player.y, target.x - state.player.x);
     test.weaponVisualAngle = baseAngle;
     test.weaponVisualTime = 0.38;
@@ -2789,10 +2915,15 @@
       const baseLine = markerFixedLine(state, p, angle, 0, delayedRound ? "marker_test_second_round" : "marker_test_base", baseScale * roundScale, baseIndex, 0);
       addMarkerFixedArchive(state, p, baseLine, baseIndex);
       const parallel = p.markerFixedParallelLines || 0;
-      if (parallel === 1) markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
+      if (parallel === 1) {
+        const copyLine = markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
+        triggerMarkerFixedRetrieval(state, p, test, copyLine);
+      }
       if (parallel >= 2) {
-        markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
-        markerFixedLine(state, p, angle, -copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 2);
+        const positiveCopy = markerFixedLine(state, p, angle, copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 1);
+        const negativeCopy = markerFixedLine(state, p, angle, -copySpacing, "marker_test_copy", copyScale * roundScale, baseIndex, 2);
+        triggerMarkerFixedRetrieval(state, p, test, positiveCopy);
+        triggerMarkerFixedRetrieval(state, p, test, negativeCopy);
       }
     }
     if (delayedRound) return;
@@ -2844,6 +2975,37 @@
       actualHitCount: hits.length
     });
     recordScissorsTargets(scissorsFixedRuntime(state), hits);
+    if (p.scissorsCrossCut && (source === "scissors_test_thrust" || source === "scissors_test_sever")) {
+      const test = scissorsFixedRuntime(state);
+      hits.forEach(function (hit) {
+        const enemy = hit.enemy;
+        if (!enemy || enemy.dead || (enemy.scissorsCutSeamTime || 0) <= 0) return;
+        enemy.scissorsCutSeamTime = 0;
+        const radius = enemy.r + 34;
+        const diagonal = Math.PI / 4;
+        [diagonal, -diagonal].forEach(function (offset, index) {
+          const cutAngle = angle + offset;
+          addBeamEvent(
+            state,
+            enemy.x - Math.cos(cutAngle) * radius,
+            enemy.y - Math.sin(cutAngle) * radius,
+            enemy.x + Math.cos(cutAngle) * radius,
+            enemy.y + Math.sin(cutAngle) * radius,
+            index ? "#77f7ff" : "#ff66db",
+            12,
+            0.36,
+            "beam",
+            false,
+            "scissors_test_crosscut",
+            { targetEnemyId: enemy.id, lockedAngle: angle, crossIndex: index }
+          );
+        });
+        damageEnemy(state, enemy, p.scissorsCrossCutDamage || 4, "scissors_test_crosscut");
+        test.totalCrossCuts += 1;
+        test.totalCrossCutHits += 1;
+        addTextEvent(state, enemy.x, enemy.y - enemy.r - 20, "交叉裁切", "#ff8fe7", 0.52);
+      });
+    }
     return hits;
   }
 
@@ -2862,6 +3024,13 @@
       if (source === "scissors_test_open") {
         test.openHitsByEnemy[enemy.id] = (test.openHitsByEnemy[enemy.id] || 0) + 1;
         test.totalOpenHits += 1;
+        if (p.scissorsCrossCut && !enemy.dead) {
+          enemy.scissorsCutSeamTime = p.scissorsCrossCutMarkDuration || 1.7;
+          addCircleEvent(state, enemy.x, enemy.y, enemy.r + 18, "#b86cff", 0.24, "mark", false, "scissors_test_cut_seam", {
+            targetEnemyId: enemy.id,
+            cutIndex
+          });
+        }
       }
     });
     const left = angle - halfAngle;
@@ -2906,7 +3075,7 @@
       return;
     }
     if (action.kind === "finale") {
-      const hits = scissorsFan(state, p, action.angle, (p.scissorsFanRange || 112) * 1.08, (p.scissorsFanHalfAngle || 0.55) * 1.12, p.scissorsFinaleDamage || p.damage * 1.35, "scissors_test_finale", 99);
+      const hits = scissorsFan(state, p, action.angle, (p.scissorsFanRange || 112) * (p.scissorsFinaleRangeScale || 1.08), (p.scissorsFanHalfAngle || 0.55) * (p.scissorsFinaleAngleScale || 1.12), p.scissorsFinaleDamage || p.damage * 1.35, "scissors_test_finale", 99);
       hits.forEach(function (hit) {
         const enemy = hit.enemy;
         if (!enemy || enemy.dead) return;
@@ -3594,6 +3763,41 @@
     if (silhouettePass) addTextEvent(state, x, y - 30, "热浪转发", "#ffd06f", 0.62);
     test.stageHeatwaveTriggers += 1;
     test.totalHeatwaveTriggers += 1;
+    triggerThermosFixedThermalExchange(state, p, x, y, radius, test);
+  }
+
+  function triggerThermosFixedThermalExchange(state, p, x, y, waveRadius, test) {
+    if (!p.thermosFixedThermalExchange || !test) return false;
+    const now = state.totalTime || 0;
+    let triggered = 0;
+    let hitCount = 0;
+    state.damageZones.filter(function (zone) {
+      return zone.condensationZone && zone.life > 0
+        && Math.hypot(zone.x - x, zone.y - y) <= waveRadius + zone.radius;
+    }).forEach(function (zone) {
+      if (triggered >= 2 || now < (zone.thermalExchangeReadyAt || 0)) return;
+      zone.thermalExchangeReadyAt = now + (p.thermosFixedThermalExchangeCooldown || 0.7);
+      zone.life = Math.max(0.18, zone.life - 0.32);
+      addCircleEvent(state, zone.x, zone.y, zone.radius * 1.08, triggered % 2 ? "#ff72dc" : "#eafcff", 0.48, "detonate", false, "thermos_test_thermal_exchange", {
+        condensationGroup: zone.groupIndex,
+        condensationIndex: zone.zoneIndex,
+        heatwaveX: x,
+        heatwaveY: y
+      });
+      state.enemies.slice().forEach(function (enemy) {
+        if (enemy.dead || Math.hypot(enemy.x - zone.x, enemy.y - zone.y) > zone.radius + enemy.r) return;
+        damageEnemy(state, enemy, p.thermosFixedThermalExchangeDamage || 3, "thermos_test_thermal_exchange");
+        enemy.thermosFixedSlowTime = Math.max(enemy.thermosFixedSlowTime || 0, 0.9);
+        enemy.thermosFixedSlow = Math.max(enemy.thermosFixedSlow || 0, 0.32);
+        hitCount += 1;
+      });
+      addTextEvent(state, zone.x, zone.y - zone.radius * 0.45, "热交换", "#f2c4ff", 0.56);
+      triggered += 1;
+    });
+    if (!triggered) return false;
+    test.totalThermalExchanges += triggered;
+    test.totalThermalExchangeHits += hitCount;
+    return true;
   }
 
   function performThermosFixedFocus(state, pending) {
@@ -3618,7 +3822,7 @@
 
   function triggerThermosFixedFullscreenCondensation(state, p, test, elapsed) {
     if (!p.thermosFixedFullscreenCondensation || elapsed < (test.fullscreenCondensationReadyAt || 0)) return;
-    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenCondensationChance || p.thermosFixedFullscreenChance || 0.15)) return;
     const camera = state.camera || { x: 0, y: 0, width: W, height: H };
     const x = camera.x + camera.width / 2;
     const y = camera.y + camera.height / 2;
@@ -3632,7 +3836,7 @@
 
   function triggerThermosFixedFullscreenIgnition(state, p, test, elapsed) {
     if (!p.thermosFixedFullscreenIgnition || elapsed < (test.fullscreenIgnitionReadyAt || 0)) return;
-    if (Math.random() >= (p.thermosFixedFullscreenChance || 0.15)) return;
+    if (Math.random() >= (p.thermosFixedFullscreenIgnitionChance || p.thermosFixedFullscreenChance || 0.15)) return;
     const targets = state.enemies.filter(function (enemy) { return !enemy.dead; }).sort(function (a, b) {
       const priorityA = a.boss ? 3 : a.markerFixedElite || a.behavior === "tank" || a.behavior === "shield" ? 2 : 1;
       const priorityB = b.boss ? 3 : b.markerFixedElite || b.behavior === "tank" || b.behavior === "shield" ? 2 : 1;
@@ -4899,6 +5103,7 @@
       if ((enemy.correctionErrorStacks || 0) >= 1) moveSpeed *= state.activeFormParams.correctionSlowMultiplier || 0.82;
       enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
       if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
+      enemy.scissorsCutSeamTime = Math.max(0, (enemy.scissorsCutSeamTime || 0) - dt);
       if (!enemy.bossPatternKind && enemy.chargeTime > 0) {
         enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
         mx = enemy.chargeVx || mx;
@@ -5855,17 +6060,93 @@
     }
   }
 
+  function normalizeCanvasContext(targetCtx) {
+    // A failed sprite/VFX draw can exit after an inner save(), leaving a
+    // translated or filtered context on the stack. Pop generously: restore()
+    // is a no-op once the stack is empty.
+    for (let index = 0; index < 24; index++) targetCtx.restore();
+    targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+    targetCtx.globalAlpha = 1;
+    targetCtx.globalCompositeOperation = "source-over";
+    targetCtx.filter = "none";
+    targetCtx.shadowBlur = 0;
+    targetCtx.shadowColor = "transparent";
+    targetCtx.imageSmoothingEnabled = false;
+  }
+
+  function reportDrawLayerError(state, layerName, err) {
+    const message = err && err.message ? err.message : String(err);
+    state.loop.drawLayerErrors = state.loop.drawLayerErrors || {};
+    const key = layerName + ":" + message;
+    if (state.loop.drawLayerErrors[key]) return;
+    state.loop.drawLayerErrors[key] = true;
+    V2.reportError(new Error("Combat render layer " + layerName + " failed: " + message));
+  }
+
+  function drawFallbackPlayer(targetCtx, state) {
+    drawAtlasCell(
+      targetCtx,
+      "office_atlas",
+      0,
+      0,
+      state.player.x,
+      state.player.y - 5,
+      70,
+      70,
+      1,
+      0
+    );
+    drawCombatProgress(
+      targetCtx,
+      state.player.x,
+      state.player.y + 36,
+      82,
+      11,
+      state.hp / Math.max(1, state.maxHp)
+    );
+  }
+
+  function drawIsolatedLayers(targetCtx, state, layers, onError) {
+    const errors = [];
+    layers.forEach(function (layer) {
+      normalizeCanvasContext(targetCtx);
+      if (layer.world) targetCtx.translate(-state.camera.x, -state.camera.y);
+      try {
+        layer.draw();
+      } catch (err) {
+        errors.push({ layer: layer.name, error: err });
+        (onError || reportDrawLayerError)(state, layer.name, err);
+        if (layer.fallback) {
+          normalizeCanvasContext(targetCtx);
+          if (layer.world) targetCtx.translate(-state.camera.x, -state.camera.y);
+          try {
+            layer.fallback();
+          } catch (fallbackErr) {
+            errors.push({ layer: layer.name + "_fallback", error: fallbackErr });
+            (onError || reportDrawLayerError)(state, layer.name + "_fallback", fallbackErr);
+          }
+        }
+      }
+    });
+    normalizeCanvasContext(targetCtx);
+    return errors;
+  }
+
   function draw() {
     if (!ctx) return;
     const state = V2.getState();
     updateCamera(state);
-    drawBackground(ctx, state);
-    ctx.save();
-    ctx.translate(-state.camera.x, -state.camera.y);
-    drawGeneratedEffects(ctx, state);
-    drawEnemies(ctx, state);
-    drawPlayer(ctx, state);
-    ctx.restore();
+    drawIsolatedLayers(ctx, state, [
+      { name: "background", world: false, draw: function () { drawBackground(ctx, state); } },
+      { name: "effects", world: true, draw: function () { drawGeneratedEffects(ctx, state); } },
+      { name: "enemies", world: true, draw: function () { drawEnemies(ctx, state); } },
+      {
+        name: "player",
+        world: true,
+        draw: function () { drawPlayer(ctx, state); },
+        fallback: function () { drawFallbackPlayer(ctx, state); }
+      }
+    ]);
   }
 
   function frame(now) {
@@ -5887,9 +6168,14 @@
       guard += 1;
     }
     state.loop.frameCount += 1;
-    draw();
-    if (V2.ui && state.loop.frameCount % 6 === 0) V2.ui.render();
-    state.loop.raf = window.requestAnimationFrame(frame);
+    try {
+      draw();
+      if (V2.ui && state.loop.frameCount % 6 === 0) V2.ui.render();
+    } catch (err) {
+      V2.reportError(err);
+    } finally {
+      if (state.loop.running) state.loop.raf = window.requestAnimationFrame(frame);
+    }
   }
 
   function fallbackTick() {
@@ -5912,8 +6198,12 @@
       dt -= step;
       guard += 1;
     }
-    draw();
-    if (V2.ui) V2.ui.render();
+    try {
+      draw();
+      if (V2.ui) V2.ui.render();
+    } catch (err) {
+      V2.reportError(err);
+    }
   }
 
   function bindInput() {
@@ -6393,6 +6683,7 @@
       updateScissorsFixedActions,
       updateInput,
       updateEnemies,
+      drawIsolatedLayers,
       beginBossPattern,
       releaseBossPattern,
       updateBossPatternIntent,
@@ -6406,6 +6697,10 @@
       scissorsEmbodimentVisualState,
       correctionEmbodimentVisualState,
       triggerThermosBackPressure,
+      triggerThermosFixedThermalExchange,
+      triggerCorrectionCascadingRollback,
+      scissorsLine,
+      fireMarkerFixedTest,
       fireScissorsFixedTest,
       fireSupportSkill
     }

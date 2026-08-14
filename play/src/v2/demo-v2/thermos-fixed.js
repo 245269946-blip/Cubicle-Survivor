@@ -30,6 +30,52 @@
     }
   };
 
+  const MODULE_PROMISES = {
+    condensation: {
+      now: [
+        "蒸汽末端新增 1 个冷凝区；下一场开始拥有第一块可反复利用的减速空间。",
+        "冷凝区扩为前后 2 段，开始沿喷射方向铺出安全通道。",
+        "冷凝区扩为连续 3 段，单次喷射能够改写整条近战路径。",
+        "解锁全屏冷凝：局部铺场之外，间歇冻结整个可视战场。"
+      ],
+      playstyle: "围绕冷凝区调整站位，让高速敌人进入减速带后再贴近喷射。",
+      terminal: "Lv4 · 全屏冷凝：持续经营局部安全区，间歇接管全场节奏。"
+    },
+    heatwave: {
+      now: [
+        "每轮追加 1 次聚焦高温；聚焦击杀会从死亡点转发热浪。",
+        "聚焦提高到 2 次，并会在击杀后重新寻找低生命目标。",
+        "聚焦提高到 3 次，形成稳定的点杀—热浪转发链。",
+        "解锁全场点杀：间歇处理关键目标并把死亡继续转成热浪。"
+      ],
+      playstyle: "把低生命敌人留在团块中心，用聚焦击杀启动范围热浪。",
+      terminal: "Lv4 · 全场点杀：局部点杀持续点火，间歇引爆整张战场的关键目标。"
+    }
+  };
+
+  function desireLoopEnabled(state) {
+    return !!(state.demoV2 && state.demoV2.allWeaponDesireLoopPass);
+  }
+
+  function componentMountView(partId, statId) {
+    if (!statId) return "";
+    if (partId === "tip") return statId === "damage"
+      ? "杯口外圈的高压喷汽冠"
+      : "杯盖顶部的过热校准阀";
+    if (partId === "body") return statId === "amount"
+      ? "背部压力装置两侧的真实喷汽口"
+      : "背部压力装置中央的脉冲调压器";
+    return statId === "duration"
+      ? "背部冷凝/储热双罐"
+      : "杯口外围的宽幅导流环";
+  }
+
+  function componentVisualPromise(partId, statId) {
+    if (partId === "body" && statId === "amount") return "数量提升会增加可见喷汽口，并让每组蒸汽拥有独立出口";
+    if (partId === "tail" && statId === "duration") return "品质提高时双罐液位、冰雾或热汽余辉逐级增强";
+    return "品质提高时对应实体的尺寸、亮度与攻击脉冲同步增强";
+  }
+
   // The inherited shop engine keeps stable internal slot/stat ids. V2.2
   // changes their player-facing meaning instead of duplicating the economy.
   const PARTS = {
@@ -66,6 +112,8 @@
       offer.name = offer.statName + part.name;
       offer.activeStatName = offer.activeStat ? part.statNames[offer.activeStat] : "空槽";
       offer.id = String(offer.id || "component").replace(/^marker-part-/, "thermos-part-");
+      offer.mountText = componentMountView(offer.partId, offer.statId);
+      offer.visualPromise = componentVisualPromise(offer.partId, offer.statId);
     });
   }
 
@@ -100,6 +148,9 @@
     const experience = test.experienceAllocations;
     const condensationLevel = test.modules.copy;
     const heatwaveLevel = test.modules.archive;
+    const desireLoop = desireLoopEnabled(state);
+    const pureMastery = desireLoop ? test.pureRouteCommitted || "" : "";
+    const thermalExchange = desireLoop && condensationLevel > 0 && heatwaveLevel > 0;
     const highFrequency = !!(state.demoV2 && state.demoV2.combatDensityPass);
     const deepTriangle = !!(state.demoV2 && state.demoV2.combatTrianglePass);
     const attributeImpact = !!(state.demoV2 && state.demoV2.attributeImpactPass);
@@ -127,15 +178,22 @@
       thermosFixedBaseSteamDuration: 0.68 * Math.pow(1.16, cupBase.duration || 0),
       thermosFixedBaseSteamDamage: Math.max(1, damage * 0.09),
       thermosFixedBaseSteamSlow: 0.3,
-      thermosFixedCondensationDuration: 1.65 * Math.pow(1.27, cupBase.duration || 0),
-      thermosFixedCondensationDamage: Math.max(1.3, damage * (condensationLevel >= 4 ? 0.105 : 0.125)),
+      thermosFixedCondensationDuration: 1.65 * Math.pow(1.27, cupBase.duration || 0) * (pureMastery === "copy" ? 1.32 : 1),
+      thermosFixedCondensationDamage: Math.max(1.3, damage * (condensationLevel >= 4 ? 0.105 : 0.125) * (pureMastery === "copy" ? 1.34 : 1)),
       thermosFixedFocusHits: Math.min(3, heatwaveLevel),
       thermosFixedFocusDamage: damage * (heatwaveLevel >= 4 ? 1.32 : 1.55),
-      thermosFixedHeatwaveDamage: damage * 0.52,
+      thermosFixedHeatwaveDamage: damage * 0.52 * (pureMastery === "archive" ? 1.38 : 1),
       thermosFixedFullscreenCondensation: condensationLevel >= 4,
       thermosFixedFullscreenIgnition: heatwaveLevel >= 4,
       thermosFixedFullscreenChance: 0.15,
+      thermosFixedFullscreenCondensationChance: pureMastery === "copy" ? 0.24 : desireLoop ? 0.15 : 0,
+      thermosFixedFullscreenIgnitionChance: pureMastery === "archive" ? 0.24 : desireLoop ? 0.15 : 0,
       thermosFixedFullscreenCooldown: 4.8,
+      thermosFixedPureCondensationMastery: pureMastery === "copy",
+      thermosFixedPureHeatwaveMastery: pureMastery === "archive",
+      thermosFixedThermalExchange: thermalExchange,
+      thermosFixedThermalExchangeDamage: Math.max(2.4, damage * (0.34 + 0.04 * Math.min(8, condensationLevel + heatwaveLevel))),
+      thermosFixedThermalExchangeCooldown: 0.7,
       thermosFixedKnockback: 15
     });
     const expectedMaxHp = 74 + (experience.maxHp || 0) * 12;
@@ -165,6 +223,9 @@
     test.facingAngle = 0;
     test.condensationRecoil = 0;
     test.heatwaveRecoil = 0;
+    test.thermalExchangeReadyAt = 0;
+    test.totalThermalExchanges = 0;
+    test.totalThermalExchangeHits = 0;
     return test;
   }
 
@@ -185,15 +246,48 @@
   function makeModuleChoices(state) {
     const test = runtime(state);
     if (!test) return [];
+    const desireLoop = desireLoopEnabled(state);
     return ["condensation", "heatwave"].map(function (id) {
       const module = MODULES[id];
       const internalId = id === "condensation" ? "copy" : "archive";
       const level = test.modules[internalId];
+      if (!desireLoop) {
+        return {
+          id, name: module.name, family: module.family, level,
+          effect: module.levels[Math.min(3, level)],
+          intent: id === "condensation" ? "增加持续区域数量、覆盖路径与留场时间。" : "增加聚焦攻击事件，并把真实击杀转化成非连锁范围热浪。",
+          disabled: level >= 4
+        };
+      }
+      const otherId = internalId === "copy" ? "archive" : "copy";
+      const otherLevel = test.modules[otherId];
+      const mastery = level >= 4 && otherLevel === 0 && !test.pureRouteCommitted;
+      const willFuse = level === 0 && otherLevel > 0;
+      const promise = MODULE_PROMISES[id];
+      const nextLevel = Math.min(4, level + 1);
       return {
         id, name: module.name, family: module.family, level,
-        effect: module.levels[Math.min(3, level)],
+        effect: mastery
+          ? (id === "condensation"
+            ? "锁定纯冷凝终局：全屏冷凝更常触发、持续更久且覆盖伤害提高。"
+            : "锁定纯热浪终局：全场点杀更常触发、处理目标更多且热浪更强。")
+          : module.levels[Math.min(3, level)],
         intent: id === "condensation" ? "增加持续区域数量、覆盖路径与留场时间。" : "增加聚焦攻击事件，并把真实击杀转化成非连锁范围热浪。",
-        disabled: level >= 4
+        immediate: mastery ? "立刻强化已经解锁的 Lv4 终局技能，不增加 Lv5。" : promise.now[nextLevel - 1],
+        playstyle: promise.playstyle,
+        terminalPromise: promise.terminal,
+        relationPromise: willFuse
+          ? "选择后接通“热交换”：橙色击杀热浪碰到冷青冷凝区时，会爆出白紫温差冲击。"
+          : otherLevel > 0
+            ? "热交换已接通；冷凝负责储存空间，热浪负责把空间瞬间兑现。"
+            : "后续接入另一模块时，两条路线会建立热交换，而不是只并排生效。",
+        confirmation: mastery
+          ? (id === "condensation" ? "纯冷凝终局已锁定；全屏冷凝获得更强统治力。" : "纯热浪终局已锁定；全场点杀与死亡热浪获得强化。")
+          : willFuse ? "热交换已接通；下一场热浪触碰冷凝区时会出现白紫温差冲击。" : promise.now[nextLevel - 1],
+        combo: willFuse || otherLevel > 0 ? (willFuse ? "本次选择建立新关系：热交换" : "当前混合关系：热交换") : mastery ? "保持纯路线，不接入另一模块" : "",
+        levelLabel: mastery ? "终局专精" : "Lv." + nextLevel,
+        mastery,
+        disabled: level >= 4 && !mastery
       };
     });
   }
@@ -207,6 +301,7 @@
   function makeShopOffers(state, preserved, firstOpen) {
     const offers = callBase(state, "makeShopOffers", [state, preserved, firstOpen]) || [];
     normalizeOffers(runtime(state));
+    normalizeOffers({ offers });
     return offers;
   }
 
@@ -261,6 +356,7 @@
     stage: Object.assign({}, base.stage, { demoV2Phase: "thermos-fixed" }),
     modules: MODULES,
     parts: PARTS,
+    componentMountView,
     experienceStats: base.experienceStats,
     qualities: base.qualities,
     qualityIndex: base.qualityIndex,
