@@ -187,10 +187,34 @@
     return V2.getDemoV2FixedTestConfig ? V2.getDemoV2FixedTestConfig(state) : null;
   }
 
+  function compactDecisionEnabled(state, config) {
+    return !!((config && config.decisionCompressionPass) || (state && state.demoV2 && state.demoV2.decisionCompressionPass));
+  }
+
   function fixedComponentIconHtml(config, id, label) {
     return config && (config.weaponId === "scissors" || config.weaponId === "correction_fluid")
       ? weaponIconHtml(config.weaponId, label)
       : markerGrowthIconHtml("build", "component-" + id, label);
+  }
+
+  function quickWeaponCopy(id, fallback) {
+    const copy = {
+      marker: "远程画线，贯穿成排敌人。",
+      thermos: "贴近喷汽，用冷凝控场、热浪清群。",
+      scissors: "轻步贴身，用突刺与连剪打完整动作轮。",
+      correction_fluid: "叠加错误，在污染扩散与集中纠错间取舍。"
+    };
+    return copy[id] || fallback;
+  }
+
+  function quickWeaponLabel(id, fallback) {
+    const label = {
+      marker: "远程贯穿",
+      thermos: "近距控场",
+      scissors: "贴身连剪",
+      correction_fluid: "中距叠错"
+    };
+    return label[id] || fallback;
   }
 
   function applyShellState(state) {
@@ -207,6 +231,7 @@
     wrap.dataset.experiencePass = experiencePass ? "true" : "";
     wrap.dataset.neonCity = neonCity ? "true" : "";
     wrap.dataset.neonBloom = state.demoV2 && state.demoV2.neonBloomPass ? "true" : "";
+    wrap.dataset.decisionDensity = compactDecisionEnabled(state, fixedConfig) ? "compact" : "";
     const versionStamp = el("titleVersionStamp");
     if (versionStamp) versionStamp.textContent = (state.demoV2 && state.demoV2.suiteVersion) || (fixedConfig && fixedConfig.version) || "Demo V1";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
@@ -329,21 +354,22 @@
     const suitePlayable = !!(markerFixed && (fixedConfig.coordinator || (state.demoV2 && state.demoV2.suiteVersion)));
     const publicVersion = suitePlayable ? (state.demoV2 && state.demoV2.suiteVersion || fixedConfig.version) : fixedConfig && fixedConfig.version;
     const framework = fixedConfig && fixedConfig.uiFramework;
+    const compactDecision = compactDecisionEnabled(state, fixedConfig);
     let items = V2.getViewModel(supportMode ? "support_weapon_select" : "weapon_select");
     if (framework && framework.weaponSelection) {
       items = items.filter(function (item) { return framework.weaponSelection.activeIds.indexOf(item.id) >= 0; });
     }
     setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : suitePlayable ? publicVersion + " · 可玩版本" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
     const coordinator = !!(fixedConfig && fixedConfig.coordinator);
-    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : coordinator ? "选择一种异化关系" : markerFixed ? "选择" + fixedConfig.weaponName + "开始本局" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
-    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
-    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : compactDecision ? "选一种打法" : coordinator ? "选择一种异化关系" : markerFixed ? "选择" + fixedConfig.weaponName + "开始本局" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
+    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : compactDecision ? "看攻击方式，选你想玩的。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
+    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : compactDecision ? "点击武器开始" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
     setHtml("weaponSelectFlow", markerFixed
       ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
       : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
     const rosterMeta = el("weaponRosterMeta");
     if (rosterMeta) {
-      const showFramework = !!(framework && framework.weaponSelection);
+      const showFramework = !!(framework && framework.weaponSelection && !compactDecision);
       rosterMeta.classList.toggle("hidden", !showFramework);
       if (showFramework) {
         rosterMeta.innerHTML = '<strong>' + escapeHtml(framework.weaponSelection.registryLabel) + ' · ' + items.length + ' 把</strong><span>' + (coordinator ? '每把武器拥有独立攻击关系与双路线成长。' : '当前武器：' + escapeHtml(fixedConfig.weaponName) + '。') + '</span>';
@@ -353,11 +379,10 @@
       return '<button class="weapon-card theme-' + escapeHtml(w.themeId) + ' ' + previewClass(w.topology) + '" type="button" data-weapon="' + escapeHtml(w.id) + '">' +
         weaponIconHtml(w.id, w.name) +
         '<strong>' + escapeHtml(w.name) + '</strong>' +
-        '<em>' + escapeHtml(w.motif) + '</em>' +
+        '<em>' + escapeHtml(compactDecision ? quickWeaponLabel(w.id, w.tagDescription || w.motif) : w.motif) + '</em>' +
         vfxPreviewHtml(w.id, w.topology, "weapon-vfx-preview") +
-        '<p>' + escapeHtml(w.description) + '</p>' +
-        '<small>' + escapeHtml(w.signatureLabel) + ' · ' + escapeHtml(w.signatureProcess) + '</small>' +
-        signatureTags(w.signatureFocus) +
+        '<p>' + escapeHtml(compactDecision ? quickWeaponCopy(w.id, w.description) : w.description) + '</p>' +
+        (compactDecision ? '' : '<small>' + escapeHtml(w.signatureLabel) + ' · ' + escapeHtml(w.signatureProcess) + '</small>' + signatureTags(w.signatureFocus)) +
       '</button>';
     }).join(""));
     document.querySelectorAll("[data-weapon]").forEach(function (button) {
@@ -398,6 +423,9 @@
 
   function renderUpgrade() {
     const vm = V2.getViewModel("level_up");
+    const upgradeState = V2.getState && V2.getState();
+    const fixedConfig = upgradeState && fixedTestConfig(upgradeState);
+    const compactDecision = compactDecisionEnabled(upgradeState, fixedConfig);
     const choices = el("upgradeChoices");
     if (choices) {
       choices.classList.toggle("marker-experience-grid", !!vm.markerFixed);
@@ -409,11 +437,12 @@
       if (skip.parentElement) skip.parentElement.classList.toggle("hidden", !!vm.markerFixed);
     }
     setHtml("upgradeFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "经验分配", "继续流程"], 2));
-    setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
+    if (compactDecision) setText("upgradeContext", "剩余 " + vm.pendingPoints + " 点 · 选一项，立即生效");
+    else setHtml("upgradeContext", themeBrief(vm.theme, vm.markerFixed ? "经验升级属性商店" : "经验成长", vm.markerFixed ? "还有 " + vm.pendingPoints + " 点待分配。每点从 12 项基础属性中随机出现 4 项。" : "只选一个通用成长，但它会直接作用在当前主形态上。"));
     setHtml("upgradeChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-upgrade="' + escapeHtml(choice.id) + '">' +
         (vm.markerFixed ? markerGrowthIconHtml("experience", choice.id, choice.title) : atlasIconHtml("ui", "upgrade", choice.title)) +
-        '<span class="tag route-tag">' + escapeHtml(choice.formLine) + '</span>' +
+        (compactDecision ? '' : '<span class="tag route-tag">' + escapeHtml(choice.formLine) + '</span>') +
         '<strong>' + escapeHtml(choice.title) + '</strong>' +
         '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
       '</button>';
@@ -429,19 +458,39 @@
     const vm = V2.getViewModel("module_select");
     const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
     const markerFixed = !!fixedConfig;
+    const moduleState = V2.getState ? V2.getState() : null;
+    const simpleDesireChain = !!(markerFixed && moduleState && moduleState.demoV2 && moduleState.demoV2.allWeaponDesireLoopPass);
+    const compactDecision = compactDecisionEnabled(moduleState, fixedConfig);
+    const ownedModules = (vm.owned || []).filter(function (item) { return item.indexOf("Lv.0") < 0; });
     const choices = el("moduleChoices");
     if (choices) choices.classList.toggle("marker-module-grid", !!markerFixed);
-    setText("moduleContext", "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
-    setText("modulePanelFooter", markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
+    setText("moduleContext", compactDecision
+      ? "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次 · " + (ownedModules.length ? "已有 " + ownedModules.join("、") : "选第一条路线")
+      : "第 " + vm.round + "/" + (vm.totalRounds || 3) + " 次追加 · 当前身份：" + vm.identity + (vm.owned.length ? " · 已接入：" + vm.owned.join("、") : ""));
+    setText("modulePanelFooter", compactDecision
+      ? "看本次变化，选完立即开打"
+      : simpleDesireChain
+      ? "先看“立刻”和“怎么用”即可决定；混搭与 Lv4 只负责预告未来。"
+      : markerFixed ? "选定后直接回到战斗；每条路线最高 Lv4。" : "三秒内能读懂，选完立即回到战斗。");
     setHtml("moduleFlow", decisionFlowHtml(["关卡完成", "10秒回收", "模块选择", "下一关"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
+      const compactSecondaryLabel = choice.mastery ? "专精" : choice.combo ? "协同" : "终局";
+      const compactSecondaryText = choice.mastery ? choice.effect : choice.combo ? choice.relationPromise : choice.terminalPromise;
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
         (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
-        '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · Lv.' + (choice.level + 1) + '</span>' +
+        '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · ' + escapeHtml(choice.levelLabel || ("Lv." + (choice.level + 1))) + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
-        '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
-        '<small>' + escapeHtml(choice.intent) + '</small>' +
-        (choice.combo ? '<em class="module-combo">' + escapeHtml(choice.combo) + '</em>' : '') +
+        (simpleDesireChain ? "" : '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
+          '<small>' + escapeHtml(choice.intent) + '</small>') +
+        (choice.immediate ? '<div class="module-promise-grid">' +
+          '<span class="module-promise-line promise-now"><b>' + (simpleDesireChain ? "立刻" : "现在改变") + '</b>' + escapeHtml(choice.immediate) + '</span>' +
+          (compactDecision
+            ? '<span class="module-promise-line ' + (choice.combo ? 'promise-relation' : 'promise-terminal') + '"><b>' + compactSecondaryLabel + '</b>' + escapeHtml(compactSecondaryText) + '</span>'
+            : '<span class="module-promise-line promise-play"><b>' + (simpleDesireChain ? "怎么用" : "玩法要求") + '</b>' + escapeHtml(choice.playstyle) + '</span>' +
+              '<span class="module-promise-line promise-relation"><b>' + (simpleDesireChain ? "混搭" : "组合关系") + '</b>' + escapeHtml(choice.relationPromise) + '</span>' +
+              '<span class="module-promise-line promise-terminal"><b>' + (simpleDesireChain ? "Lv4" : "终局承诺") + '</b>' + escapeHtml(choice.terminalPromise) + '</span>') +
+        '</div>' : '') +
+        (!compactDecision && choice.combo ? '<em class="module-combo">' + escapeHtml(choice.combo) + '</em>' : '') +
       '</button>';
     }).join(""));
     document.querySelectorAll("[data-module]").forEach(function (button) {
@@ -453,19 +502,24 @@
 
   function renderComponentShop() {
     const vm = V2.getViewModel("component_shop");
-    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
+    const componentState = V2.getState && V2.getState();
+    const fixedConfig = componentState && fixedTestConfig(componentState);
+    const compactDecision = compactDecisionEnabled(componentState, fixedConfig);
     setText("componentShopEyebrow", vm.version + " · " + vm.weaponName + "组件商店");
-    setText("componentShopTitle", "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
+    setText("componentShopTitle", compactDecision ? "选组件，强化当前武器" : "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
     setText("componentCreditsText", vm.materials);
     setHtml("componentShopFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "组件商店", vm.shopRound >= vm.shopCount ? "最终 Boss" : "下一关"], 2));
-    setText("componentShopNote", "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
+    setText("componentShopNote", compactDecision
+      ? "同名 2/4/8 件升级；换属性重置进度" + (vm.lockedCount ? " · 已锁 " + vm.lockedCount + " 件" : "")
+      : "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
         (part.activeStat ? fixedComponentIconHtml(fixedConfig, part.activeStat, part.activeStatName + part.name) : "") +
         '<div class="marker-component-slot-copy">' +
         '<strong>' + escapeHtml(part.name) + ' · ' + escapeHtml(part.quality.name) + '</strong>' +
-        '<span>' + escapeHtml(part.allocationText) + '</span>' +
-        '<small>品质进度：' + escapeHtml(part.progress) + '</small>' +
+        '<span>' + escapeHtml(compactDecision ? part.allocationText.replace(" · 二选一互斥", "") : part.allocationText) + '</span>' +
+        '<small>' + (compactDecision ? '进度 ' : '品质进度：') + escapeHtml(part.progress) + '</small>' +
+        (!compactDecision && part.mountText ? '<small class="component-mount-state">实体位置：' + escapeHtml(part.mountText) + '</small>' : '') +
         '</div>' +
       '</div>';
     }).join(""));
@@ -474,7 +528,15 @@
       const nextCount = Math.min(8, offer.owned + 1);
       const willUpgrade = nextCount === offer.nextThreshold;
       const actionLabel = offer.action === "install" ? "装入" : offer.action === "upgrade" ? "同类升级" : "替换并重置";
-      const resultLine = offer.action === "replace"
+      const resultLine = compactDecision
+        ? offer.action === "replace"
+          ? "换成“" + offer.statName + "”（原进度清零）"
+          : offer.action === "install"
+            ? "获得白色“" + offer.statName + "”"
+            : willUpgrade
+              ? "升级为" + offer.nextQuality.name
+              : "同名 +1 · " + nextCount + "/" + offer.nextThreshold
+        : offer.action === "replace"
         ? "当前" + offer.partName + "为“" + offer.activeStatName + "”累计 " + offer.slotCopies + " 件；购买后重置为白色“" + offer.statName + "”"
         : offer.action === "install"
           ? "空槽装入后获得白色“" + offer.statName + "”组件"
@@ -486,11 +548,12 @@
           fixedComponentIconHtml(fixedConfig, offer.statId, offer.statName + offer.partName) +
           '<div class="marker-component-heading-copy">' +
             '<span class="tag route-tag quality-name">' + escapeHtml(offer.partName + " · " + actionLabel) + '</span>' +
-            '<strong>' + (offer.sold ? "已购买" : escapeHtml(offer.name)) + '</strong>' +
+            '<strong>' + (offer.sold ? "已购买" : escapeHtml(compactDecision ? offer.statName : offer.name)) + '</strong>' +
           '</div>' +
         '</div>' +
         '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
-        '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>' +
+        (offer.mountText ? '<span class="component-install-promise"><b>' + (compactDecision ? '位置' : '实体位置') + '</b>' + escapeHtml(offer.mountText) + (compactDecision ? '' : '；' + escapeHtml(offer.visualPromise)) + '</span>' : '') +
+        (compactDecision ? '' : '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>') +
         '<span class="cost">材料 ' + offer.cost + '</span>' +
         '<div class="marker-component-actions">' +
           '<button class="slot-button" type="button" data-marker-offer="' + escapeHtml(offer.id) + '"' + (offer.sold || !affordable ? " disabled" : "") + '>' + (offer.sold ? "已购买" : actionLabel) + '</button>' +
@@ -518,15 +581,17 @@
 
   function renderComponentStat() {
     const vm = V2.getViewModel("component_stat_select");
-    const fixedConfig = V2.getState && fixedTestConfig(V2.getState());
-    setText("componentStatTitle", vm.partName + "提升为" + vm.quality.name + " · 选择一次属性");
-    setText("componentStatNote", "本次强化只作用于当前部位的基础参数；品质不会解锁模块等级。");
+    const componentState = V2.getState && V2.getState();
+    const fixedConfig = componentState && fixedTestConfig(componentState);
+    const compactDecision = compactDecisionEnabled(componentState, fixedConfig);
+    setText("componentStatTitle", compactDecision ? "强化" + vm.partName : vm.partName + "提升为" + vm.quality.name + " · 选择一次属性");
+    setText("componentStatNote", compactDecision ? "选一项，立即生效" : "本次强化只作用于当前部位的基础参数；品质不会解锁模块等级。");
     setHtml("componentStatChoices", vm.choices.map(function (choice) {
       return '<button class="choice learning-card theme-card" type="button" data-marker-stat="' + escapeHtml(choice.id) + '">' +
         fixedComponentIconHtml(fixedConfig, choice.id, choice.name) +
         '<span class="tag route-tag">当前投入 ' + choice.current + '</span>' +
         '<strong>' + escapeHtml(choice.name) + '</strong>' +
-        '<span class="card-desc">选择后立即提高' + escapeHtml(choice.name) + '，并返回本次组件商店。</span>' +
+        (compactDecision ? '' : '<span class="card-desc">选择后立即提高' + escapeHtml(choice.name) + '，并返回本次组件商店。</span>') +
       '</button>';
     }).join(""));
     document.querySelectorAll("[data-marker-stat]").forEach(function (button) {

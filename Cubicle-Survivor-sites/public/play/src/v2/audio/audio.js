@@ -65,6 +65,7 @@
     scan_line: { voice: "marker_scan", triggers: { beam: "release", hit: "impact" }, cooldown: 0.16, hitCooldown: 0.09 },
     support_line: { voice: "marker_stroke", triggers: { beam: "release", hit: "impact" }, cooldown: 0.18, hitCooldown: 0.14 },
     residual_line: { voice: "marker_stroke", triggers: { beam: "residual" }, cooldown: 0.16 },
+    retrieval_line: { voice: "transfer_chirp", triggers: { beam: "release", circle: "impact", hit: "impact" }, cooldown: 0.14, hitCooldown: 0.1 },
     link_line: { voice: "link_snap", triggers: { beam: "release" }, cooldown: 0.11 },
     junction: { voice: "impact_click", triggers: { circle: "impact" }, cooldown: 0.09 },
     target_mark: { voice: "marker_mark", triggers: { circle: "impact" }, cooldown: 0.14 },

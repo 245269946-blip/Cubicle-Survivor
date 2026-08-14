@@ -13,7 +13,7 @@
       process: "拉直线穿队列",
       visualCue: "细长蓝光束贯穿多个敌人",
       focus: ["贯穿", "走位", "队列"],
-      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive", "marker_test_defeat"]
+      sources: ["marker_main", "marker_test_base", "marker_test_copy", "marker_test_second_round", "marker_test_archive", "marker_test_retrieval", "marker_test_fullscreen_copy", "marker_test_fullscreen_archive", "marker_test_defeat"]
     },
     line_split: {
       topology: "线性分裂",
@@ -76,21 +76,21 @@
       process: "基础喷汽只覆盖前方近距离扇面；冷凝沿扇面分段留场，聚焦喷汽锁定低血量目标并在击杀后产生一次不连锁热浪。",
       visualCue: "青白蒸汽形成宽钝扇面，冷凝区柔和铺开；金色聚焦汽流和橙色死亡热浪形成清晰的第二路线。",
       focus: ["近距转向", "前向扇面", "分段冷凝", "聚焦击杀", "死亡热浪"],
-      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition", "thermos_test_defeat"]
+      sources: ["thermos_test_base", "thermos_test_condensation", "thermos_test_focus", "thermos_test_kill_heatwave", "thermos_test_thermal_exchange", "thermos_test_fullscreen_condensation", "thermos_test_fullscreen_ignition", "thermos_test_defeat"]
     },
     scissors_fixed_melee: {
       topology: "贴身剪切时间线",
       process: "轻步先完成无伤害位移；整轮锁定一个方向，依次完成合刃窄线突刺与张刃短宽连剪。",
       visualCue: "红柄钢刃贴身闪过，青色轻步残影与白橙剪切弧分离；裁断和合剪终结拥有独立重击反馈。",
       focus: ["纯近战", "轻步进场", "锁向动作轮", "合刃突刺", "张刃连剪", "处决"],
-      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block", "scissors_test_defeat"]
+      sources: ["scissors_test_base", "scissors_test_dash", "scissors_test_thrust", "scissors_test_sever", "scissors_test_open", "scissors_test_cut_seam", "scissors_test_crosscut", "scissors_test_finale", "scissors_test_finale_boss_bonus", "scissors_test_execution", "scissors_test_shelter", "scissors_test_shelter_block", "scissors_test_defeat"]
     },
     correction_fluid_fixed: {
       topology: "错误状态循环",
       process: "喷射制造三层错误；过载死亡可污染战场，或被最终纠错集中清除并处决。",
       visualCue: "白色修正痕迹说明状态层数，青/品红故障扫描提示过载，橙红错误码只用于系统崩溃与处决。",
       focus: ["错误层数", "过载目标", "污染区域", "区域融合", "系统崩溃", "最终纠错"],
-      sources: ["correction_test_lock", "correction_test_spray", "correction_test_error_apply", "correction_test_error_overload", "correction_test_error_expire", "correction_test_error_area", "correction_test_area_merge", "correction_test_system_crash", "correction_test_final", "correction_test_final_blast", "correction_test_defeat"]
+      sources: ["correction_test_lock", "correction_test_spray", "correction_test_error_apply", "correction_test_error_overload", "correction_test_error_expire", "correction_test_error_area", "correction_test_area_merge", "correction_test_rollback", "correction_test_system_crash", "correction_test_final", "correction_test_final_blast", "correction_test_defeat"]
     },
     shield_break_pulse: {
       topology: "破盾热浪",
@@ -198,6 +198,7 @@
     marker_test_copy: "cast",
     marker_test_second_round: "cast",
     marker_test_archive: "linger",
+    marker_test_retrieval: "detonate",
     marker_test_fullscreen_copy: "ultimate",
     marker_test_fullscreen_archive: "ultimate",
     marker_test_defeat: "detonate",
@@ -230,6 +231,7 @@
     thermos_test_condensation: "linger",
     thermos_test_focus: "cast",
     thermos_test_kill_heatwave: "expand",
+    thermos_test_thermal_exchange: "detonate",
     thermos_test_fullscreen_condensation: "ultimate",
     thermos_test_fullscreen_ignition: "ultimate",
     thermos_test_defeat: "detonate",
@@ -238,6 +240,8 @@
     scissors_test_thrust: "cast",
     scissors_test_sever: "ultimate",
     scissors_test_open: "cast",
+    scissors_test_cut_seam: "mark",
+    scissors_test_crosscut: "detonate",
     scissors_test_finale: "detonate",
     scissors_test_finale_boss_bonus: "impact",
     scissors_test_execution: "detonate",
@@ -251,6 +255,7 @@
     correction_test_error_expire: "expire",
     correction_test_error_area: "linger",
     correction_test_area_merge: "field",
+    correction_test_rollback: "detonate",
     correction_test_system_crash: "ultimate",
     correction_test_final: "detonate",
     correction_test_final_blast: "detonate",
@@ -364,6 +369,7 @@
     marker_test_copy: ["piercing_line", "parallel_copy"],
     marker_test_second_round: ["scan_line", "reacquired_second_round"],
     marker_test_archive: ["residual_line", "persistent_ink"],
+    marker_test_retrieval: ["retrieval_line", "archive_reactivation"],
     marker_test_fullscreen_copy: ["scan_line", "fullscreen_copy"],
     marker_test_fullscreen_archive: ["residual_line", "fullscreen_archive"],
     marker_test_defeat: ["radial_blast", "path_confirmed"],
@@ -397,6 +403,7 @@
     thermos_test_condensation: ["deployable_field", "segmented_condensation"],
     thermos_test_focus: ["steam_line", "low_health_focus"],
     thermos_test_kill_heatwave: ["traveling_ring", "single_kill_heatwave"],
+    thermos_test_thermal_exchange: ["traveling_ring", "thermal_exchange"],
     thermos_test_fullscreen_condensation: ["deployable_field", "fullscreen_condensation"],
     thermos_test_fullscreen_ignition: ["target_barrage", "key_target_ignition"],
     thermos_test_defeat: ["radial_blast", "pressure_confirmed"],
@@ -406,6 +413,8 @@
     scissors_test_thrust: ["melee_thrust", "closed_blade"],
     scissors_test_sever: ["melee_thrust", "sever_slow"],
     scissors_test_open: ["melee_arc", "open_blade_chain"],
+    scissors_test_cut_seam: ["error_mark", "cut_seam"],
+    scissors_test_crosscut: ["execution_cut", "cross_cut"],
     scissors_test_finale: ["execution_cut", "closing_finale"],
     scissors_test_finale_boss_bonus: ["execution_cut", "boss_conversion"],
     scissors_test_execution: ["execution_cut", "execute"],
@@ -420,6 +429,7 @@
     correction_test_error_expire: ["error_mark", "glitch_fade"],
     correction_test_error_area: ["error_field", "white_contamination"],
     correction_test_area_merge: ["error_field", "neon_merge"],
+    correction_test_rollback: ["error_burst", "cascading_rollback"],
     correction_test_system_crash: ["error_burst", "system_crash"],
     correction_test_final: ["correction_execute", "final_overwrite"],
     correction_test_final_blast: ["error_burst", "death_error_blast"],

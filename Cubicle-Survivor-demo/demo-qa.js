@@ -292,6 +292,18 @@ function assertPackageAssets() {
   const missingOfficeMarkerSprites = requiredOfficeMarkerSprites.filter(file => !fs.existsSync(path.join(baseDir, "assets/generated-vfx/sprites", file)));
   if (missingOfficeMarkerSprites.length) fail("Required lightweight office marker sprites missing", missingOfficeMarkerSprites);
   const uiRender = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.js"), "utf8");
+  const decisionDensityContracts = [
+    'wrap.dataset.decisionDensity = compactDecisionEnabled(state, fixedConfig) ? "compact" : ""',
+    'compactDecision ? "看攻击方式，选你想玩的。"',
+    '? "看本次变化，选完立即开打"',
+    'const compactSecondaryLabel = choice.mastery ? "专精" : choice.combo ? "协同" : "终局"',
+    'compactDecision ? "选组件，强化当前武器"',
+    'compactDecision ? "选一项，立即生效"'
+  ];
+  const missingDecisionDensityContracts = decisionDensityContracts.filter(contract => !uiRender.includes(contract));
+  if (missingDecisionDensityContracts.length) {
+    fail("Demo V3.14 decision pages must stay result-led and text-light", missingDecisionDensityContracts);
+  }
   const requiredBadgeCopyMechanics = [
     "line_split", "mark_detonate", "shield_counter_line", "line_to_wave", "line_grid_field",
     "patrol_summon_steam", "charge_release_beam", "shield_break_pulse", "periodic_wave_spread", "deployable_safe_station",

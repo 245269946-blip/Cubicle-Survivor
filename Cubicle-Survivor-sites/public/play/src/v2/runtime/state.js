@@ -301,6 +301,16 @@
     }
   }
 
+  function centerFixedTestPlayer(state) {
+    if (!state || !state.world || !state.camera) return;
+    state.player.x = state.world.width / 2;
+    state.player.y = state.world.height / 2;
+    state.player.vx = 0;
+    state.player.vy = 0;
+    state.camera.x = Math.max(0, state.player.x - state.camera.width / 2);
+    state.camera.y = Math.max(0, state.player.y - state.camera.height / 2);
+  }
+
   function startDemoV2PhaseA(state) {
     const config = V2.demoV2 && V2.demoV2.phaseA;
     if (!config) {
@@ -444,17 +454,27 @@
       state.demoV2.sustainedPressurePass = !!coordinatorConfig.sustainedPressurePass;
       state.demoV2.bossPressurePass = !!coordinatorConfig.bossPressurePass;
       state.demoV2.attributeImpactPass = !!coordinatorConfig.attributeImpactPass;
+      state.demoV2.weaponEmbodimentPass = !!coordinatorConfig.weaponEmbodimentPass;
+      state.demoV2.thermosEmbodimentPass = !!coordinatorConfig.thermosEmbodimentPass;
+      state.demoV2.thermosBackPressurePass = !!coordinatorConfig.thermosBackPressurePass;
+      state.demoV2.scissorsEmbodimentPass = !!coordinatorConfig.scissorsEmbodimentPass;
+      state.demoV2.correctionEmbodimentPass = !!coordinatorConfig.correctionEmbodimentPass;
+      state.demoV2.combatScaleOrbitPass = !!coordinatorConfig.combatScaleOrbitPass;
+      state.demoV2.openingComfortPass = !!coordinatorConfig.openingComfortPass;
+      state.demoV2.weaponParityPass = !!coordinatorConfig.weaponParityPass;
+      state.demoV2.markerDesireLoopPass = !!coordinatorConfig.markerDesireLoopPass;
+      state.demoV2.allWeaponDesireLoopPass = !!coordinatorConfig.allWeaponDesireLoopPass;
+      state.demoV2.decisionCompressionPass = !!coordinatorConfig.decisionCompressionPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
-    }
-    if (state.demoV2.centeredRunStart) {
-      state.player.x = state.world.width / 2;
-      state.player.y = state.world.height / 2;
-      state.camera.x = Math.max(0, state.player.x - state.camera.width / 2);
-      state.camera.y = Math.max(0, state.player.y - state.camera.height / 2);
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
     config.rebuildParams(state);
     config.startEncounter(state, 0);
+    // The encounter owns entity cleanup and may gain more initialization work
+    // over time. Apply the authoritative spawn anchor after that work so a
+    // legacy encounter reset can never silently move a new run back into the
+    // top-left viewport.
+    if (state.demoV2.centeredRunStart) centerFixedTestPlayer(state);
   }
 
   function startDemoV2MarkerFixed(state) { startDemoV2FixedTest(state, "marker-fixed"); }
@@ -531,6 +551,17 @@
         state.demoV2.sustainedPressurePass = !!requestedFixedConfig.sustainedPressurePass;
         state.demoV2.bossPressurePass = !!requestedFixedConfig.bossPressurePass;
         state.demoV2.attributeImpactPass = !!requestedFixedConfig.attributeImpactPass;
+        state.demoV2.weaponEmbodimentPass = !!requestedFixedConfig.weaponEmbodimentPass;
+        state.demoV2.thermosEmbodimentPass = !!requestedFixedConfig.thermosEmbodimentPass;
+        state.demoV2.thermosBackPressurePass = !!requestedFixedConfig.thermosBackPressurePass;
+        state.demoV2.scissorsEmbodimentPass = !!requestedFixedConfig.scissorsEmbodimentPass;
+        state.demoV2.correctionEmbodimentPass = !!requestedFixedConfig.correctionEmbodimentPass;
+        state.demoV2.combatScaleOrbitPass = !!requestedFixedConfig.combatScaleOrbitPass;
+        state.demoV2.openingComfortPass = !!requestedFixedConfig.openingComfortPass;
+        state.demoV2.weaponParityPass = !!requestedFixedConfig.weaponParityPass;
+        state.demoV2.markerDesireLoopPass = !!requestedFixedConfig.markerDesireLoopPass;
+        state.demoV2.allWeaponDesireLoopPass = !!requestedFixedConfig.allWeaponDesireLoopPass;
+        state.demoV2.decisionCompressionPass = !!requestedFixedConfig.decisionCompressionPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }
@@ -717,7 +748,12 @@
             const moduleConfig = fixedTestConfig(state);
             const moduleChoice = moduleConfig.makeModuleChoices(state).find(function (choice) { return choice.id === action.moduleId; });
             moduleConfig.applyModule(state, action.moduleId);
-            if (moduleChoice) queueGrowthFeedback(state, "module", moduleChoice.name + " Lv." + (moduleChoice.level + 1), moduleChoice.effect);
+            if (moduleChoice) queueGrowthFeedback(
+              state,
+              "module",
+              moduleChoice.name + " · " + (moduleChoice.levelLabel || ("Lv." + (moduleChoice.level + 1))),
+              moduleChoice.confirmation || moduleChoice.effect
+            );
           } else if (V2.demoV2 && V2.demoV2.phaseB) {
             V2.demoV2.phaseB.applyModule(state, action.moduleId);
           }
@@ -731,7 +767,10 @@
             componentConfig.buyComponent(state, action.offerId);
             if (componentOffer && !wasSold && componentOffer.sold) {
               const actionName = componentOffer.action === "replace" ? "替换" : componentOffer.action === "upgrade" ? "升级" : "装入";
-              queueGrowthFeedback(state, "component", componentOffer.name + " · " + actionName, "基础属性已写入当前武器；下一轮攻击按新参数运行。");
+              const mounting = componentOffer.mountText
+                ? componentOffer.mountText + "；" + componentOffer.visualPromise
+                : "基础属性已写入当前武器；下一轮攻击按新参数运行。";
+              queueGrowthFeedback(state, "component", componentOffer.name + " · " + actionName, mounting);
             }
           }
           break;
@@ -835,6 +874,7 @@
     startDemoV2ThermosFixed,
     startDemoV2ScissorsFixed,
     startDemoV2CorrectionFluidFixed,
-    applyActiveForm
+    applyActiveForm,
+    centerFixedTestPlayer
   });
 })();

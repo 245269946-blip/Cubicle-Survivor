@@ -349,7 +349,7 @@
     const fixedRuntime = fixedTestRuntime(state, fixedConfig);
     const markerComponents = fixedConfig && fixedRuntime
       ? Object.keys(fixedConfig.parts).map(function (id) {
-          return markerComponentPartView(fixedConfig, fixedRuntime, id);
+          return markerComponentPartView(fixedConfig, fixedRuntime, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass)));
         })
       : [];
     return {
@@ -402,18 +402,18 @@
         return remaining > 0 ? "冷却 " + remaining.toFixed(1) + "s" : "可触发";
       }
       return {
-        label: "修正液错误系统",
-        value: "最高错误 " + highest + "/3 · 过载 " + overloaded + " · 污染区 " + (test.activeErrorAreas || 0),
-        hint: "错误扩散 Lv." + test.modules.copy + " / 致命纠错 Lv." + test.modules.archive + " · 系统崩溃 " + readyText(p.correctionCrashEnabled, test.crashReadyAt) + " / 最终纠错 " + readyText(p.correctionFinalEnabled, test.finalReadyAt),
+        label: state.demoV2.allWeaponDesireLoopPass ? "修正液欲望链" : "修正液错误系统",
+        value: "最高错误 " + highest + "/3 · 过载 " + overloaded + " · 污染区 " + (test.activeErrorAreas || 0) + (p.correctionCascadingRollback ? " · 回滚 " + (test.totalRollbacks || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "错误扩散 Lv." + test.modules.copy + " / 致命纠错 Lv." + test.modules.archive + (p.correctionCascadingRollback ? " · 级联命中 " + (test.totalRollbackHits || 0) : "") + " · 系统崩溃 " + readyText(p.correctionCrashEnabled, test.crashReadyAt) + " / 最终纠错 " + readyText(p.correctionFinalEnabled, test.finalReadyAt),
         tone: "correction"
       };
     }
     if (p.scissorsFixedTest && state.demoV2 && state.demoV2.scissors) {
       const test = state.demoV2.scissors;
       return {
-        label: "剪刀近战流程",
-        value: "轻步 " + (test.dashReady ? "已就绪" : Math.round((test.dashCharge || 0) * 100) + "%") + " · 合刃 " + (p.scissorsThrustCount || 0) + " · 张刃 " + (p.scissorsCutCount || 0),
-        hint: "合刃 Lv." + test.modules.copy + " / 张刃 Lv." + test.modules.archive + " · 当前动作轮 " + (test.activeRound ? "进行中" : "待机") + " · 裁断 " + (p.scissorsSever ? "已解锁" : "未解锁") + " / 合剪 " + (p.scissorsFinale ? "已解锁" : "未解锁") + " · 安全区 " + (test.shelterActive ? test.shelterTime.toFixed(1) + "s" : test.shelterCooldown > 0 ? "冷却 " + test.shelterCooldown.toFixed(1) + "s" : "可触发"),
+        label: state.demoV2.allWeaponDesireLoopPass ? "剪刀欲望链" : "剪刀近战流程",
+        value: "轻步 " + (test.dashReady ? "已就绪" : Math.round((test.dashCharge || 0) * 100) + "%") + " · 合刃 " + (p.scissorsThrustCount || 0) + " · 张刃 " + (p.scissorsCutCount || 0) + (p.scissorsCrossCut ? " · 交叉裁切 " + (test.totalCrossCuts || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "合刃 Lv." + test.modules.copy + " / 张刃 Lv." + test.modules.archive + (p.scissorsCrossCut ? " · X 形重剪命中 " + (test.totalCrossCutHits || 0) : "") + " · 当前动作轮 " + (test.activeRound ? "进行中" : "待机") + " · 裁断 " + (p.scissorsSever ? "已解锁" : "未解锁") + " / 合剪 " + (p.scissorsFinale ? "已解锁" : "未解锁") + " · 安全区 " + (test.shelterActive ? test.shelterTime.toFixed(1) + "s" : test.shelterCooldown > 0 ? "冷却 " + test.shelterCooldown.toFixed(1) + "s" : "可触发"),
         tone: "scissors"
       };
     }
@@ -428,9 +428,9 @@
       }
       const condensationCount = zones.filter(function (zone) { return zone.condensationZone; }).length;
       return {
-        label: "保温杯近距流程",
-        value: "喷射组 " + (p.amount || 1) + " · 冷凝在场 " + condensationCount + " · 聚焦/轮 " + (p.thermosFixedFocusHits || 0),
-        hint: "冷凝 Lv." + test.modules.copy + " / 击杀热浪 Lv." + test.modules.archive + " · 本关聚焦击杀 " + test.stageFocusKills + " · 热浪 " + test.stageHeatwaveTriggers + " · 全屏冷凝 " + readyText(p.thermosFixedFullscreenCondensation, test.fullscreenCondensationReadyAt) + " / 全场点杀 " + readyText(p.thermosFixedFullscreenIgnition, test.fullscreenIgnitionReadyAt),
+        label: state.demoV2.allWeaponDesireLoopPass ? "保温杯欲望链" : "保温杯近距流程",
+        value: "喷射组 " + (p.amount || 1) + " · 冷凝在场 " + condensationCount + " · 聚焦/轮 " + (p.thermosFixedFocusHits || 0) + (p.thermosFixedThermalExchange ? " · 热交换 " + (test.totalThermalExchanges || 0) : test.pureRouteCommitted ? " · 纯路线专精" : ""),
+        hint: "冷凝 Lv." + test.modules.copy + " / 击杀热浪 Lv." + test.modules.archive + (p.thermosFixedThermalExchange ? " · 温差命中 " + (test.totalThermalExchangeHits || 0) : "") + " · 本关聚焦击杀 " + test.stageFocusKills + " · 热浪 " + test.stageHeatwaveTriggers + " · 全屏冷凝 " + readyText(p.thermosFixedFullscreenCondensation, test.fullscreenCondensationReadyAt) + " / 全场点杀 " + readyText(p.thermosFixedFullscreenIgnition, test.fullscreenIgnitionReadyAt),
         tone: "thermos"
       };
     }
@@ -447,10 +447,16 @@
         const remaining = Math.max(0, (readyAt || 0) - elapsed);
         return remaining > 0 ? "冷却 " + remaining.toFixed(1) + "s" : "可触发";
       }
+      const desireLoop = !!(state.demoV2 && state.demoV2.markerDesireLoopPass);
+      const relationStatus = p.markerFixedRetrieval
+        ? " · 调阅 " + (test.retrievalTriggers || 0)
+        : test.pureRouteCommitted
+          ? " · " + (test.pureRouteCommitted === "copy" ? "全页批注专精" : "整页归档专精")
+          : "";
       return {
-        label: "马克笔三线成长",
-        value: "激光 " + instant + " · 墨迹 " + trails,
-        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 基础属性 " + markerExperienceSummary(test) + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
+        label: desireLoop ? "马克笔欲望链" : "马克笔三线成长",
+        value: "激光 " + instant + " · 墨迹 " + trails + relationStatus,
+        hint: "复写 Lv." + test.modules.copy + " / 留档 Lv." + test.modules.archive + " · 基础属性 " + markerExperienceSummary(test) + (p.markerFixedRetrieval ? " · 洋红调阅命中 " + (test.retrievalHits || 0) : "") + " · 全屏复写 " + readyText(p.markerFixedFullscreenCopy, test.fullscreenCopyReadyAt) + " / 全屏留档 " + readyText(p.markerFixedFullscreenArchive, test.fullscreenArchiveReadyAt),
         tone: "marker"
       };
     }
@@ -668,7 +674,16 @@
     };
   }
 
-  function markerComponentPartView(config, test, partId) {
+  function markerComponentMountText(partId, statId) {
+    if (!statId) return "";
+    if (partId === "tip") return "每支真实发射笔的笔尖";
+    if (partId === "body" && statId === "amount") return "人物近身外圈的真实发射笔";
+    if (partId === "body") return "主发射笔的笔身控制器";
+    if (statId === "duration") return "背部打印坞与留档供墨结构";
+    return "每支真实发射笔的笔尾扩幅件";
+  }
+
+  function markerComponentPartView(config, test, partId, showMount) {
     const part = config.parts[partId];
     const state = test.parts[partId];
     const quality = config.qualities[config.qualityIndex(state.copies)];
@@ -682,6 +697,9 @@
       activeStatName,
       quality,
       progress: state.copies >= 8 ? "已达红色" : state.copies + " / " + next,
+      mountText: showMount
+        ? (config.componentMountView ? config.componentMountView(partId, state.activeStat) : markerComponentMountText(partId, state.activeStat))
+        : "",
       allocationText: state.activeStat
         ? activeStatName + "专精 · 强化 " + state.allocations[state.activeStat] + " 次"
         : part.stats.map(function (stat) { return part.statNames[stat]; }).join(" / ") + " · 二选一互斥"
@@ -703,7 +721,7 @@
       shopIncome: test.lastShopIncome,
       rerolls: test.rerolls,
       lockedCount: test.offers.filter(function (offer) { return offer.locked && !offer.sold; }).length,
-      parts: Object.keys(config.parts).map(function (id) { return markerComponentPartView(config, test, id); }),
+      parts: Object.keys(config.parts).map(function (id) { return markerComponentPartView(config, test, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass))); }),
       offers: test.offers || []
     };
   }
@@ -740,6 +758,7 @@
       marker_test_copy: "马克笔 · 平行复写",
       marker_test_second_round: "马克笔 · 第二轮复写",
       marker_test_archive: "马克笔 · 路径墨迹",
+      marker_test_retrieval: "马克笔 · 调阅回读",
       marker_test_fullscreen_copy: "马克笔 · 全屏复写",
       marker_test_fullscreen_archive: "马克笔 · 全屏留档",
       thermos_intern_release: "保温杯 · 沸点释放",
@@ -754,18 +773,21 @@
       thermos_test_condensation: "保温杯 · 分段冷凝",
       thermos_test_focus: "保温杯 · 聚焦喷汽",
       thermos_test_kill_heatwave: "保温杯 · 击杀热浪",
+      thermos_test_thermal_exchange: "保温杯 · 热交换",
       thermos_test_fullscreen_condensation: "保温杯 · 全屏冷凝",
       thermos_test_fullscreen_ignition: "保温杯 · 全场点杀",
       scissors_test_base: "剪刀 · 基础剪击",
       scissors_test_thrust: "剪刀 · 合刃突刺",
       scissors_test_sever: "剪刀 · 贯穿裁断",
       scissors_test_open: "剪刀 · 张刃连剪",
+      scissors_test_crosscut: "剪刀 · 交叉裁切",
       scissors_test_finale: "剪刀 · 合剪终结",
       scissors_test_finale_boss_bonus: "剪刀 · Boss 终剪转化",
       scissors_test_execution: "剪刀 · 裁决处决",
       correction_test_spray: "修正液 · 错误喷射",
       correction_test_error_area: "修正液 · 错误区域",
       correction_test_area_merge: "修正液 · 污染融合",
+      correction_test_rollback: "修正液 · 级联回滚",
       correction_test_system_crash: "修正液 · 系统崩溃",
       correction_test_final: "修正液 · 最终纠错",
       correction_test_final_blast: "修正液 · 纠错爆炸",
@@ -827,10 +849,14 @@
         peakEnemies: peak,
         modules: Object.assign({}, fixedRuntime.modules),
         moduleLabels: fixedConfig.moduleLabels || (isScissors ? ["合刃", "张刃"] : isThermos ? ["冷凝", "击杀热浪"] : ["复写", "留档"]),
-        parts: Object.keys(fixedConfig.parts).map(function (id) { return markerComponentPartView(fixedConfig, fixedRuntime, id); }),
+        parts: Object.keys(fixedConfig.parts).map(function (id) { return markerComponentPartView(fixedConfig, fixedRuntime, id, !!(state.demoV2 && (state.demoV2.markerDesireLoopPass || state.demoV2.allWeaponDesireLoopPass))); }),
         fullscreenLabels: fixedConfig.resultEventLabels || (isScissors ? ["裁断", "合剪终结"] : isThermos ? ["全屏冷凝", "全场点杀"] : ["全屏复写", "全屏留档"]),
         fullscreenCopyTriggers: isCorrection ? fixedRuntime.totalSystemCrashes : isScissors ? fixedRuntime.totalSevers : isThermos ? fixedRuntime.fullscreenCondensationTriggers : fixedRuntime.fullscreenCopyTriggers,
         fullscreenArchiveTriggers: isCorrection ? fixedRuntime.totalFinalCorrections : isScissors ? fixedRuntime.totalFinales : isThermos ? fixedRuntime.fullscreenIgnitionTriggers : fixedRuntime.fullscreenArchiveTriggers,
+        retrievalTriggers: !isCorrection && !isScissors && !isThermos ? fixedRuntime.retrievalTriggers || 0 : 0,
+        retrievalHits: !isCorrection && !isScissors && !isThermos ? fixedRuntime.retrievalHits || 0 : 0,
+        pureRouteCommitted: fixedRuntime.pureRouteCommitted || "",
+        relationTriggers: isCorrection ? fixedRuntime.totalRollbacks || 0 : isScissors ? fixedRuntime.totalCrossCuts || 0 : isThermos ? fixedRuntime.totalThermalExchanges || 0 : fixedRuntime.retrievalTriggers || 0,
         focusKills: isThermos ? fixedRuntime.totalFocusKills : 0,
         heatwaveTriggers: isThermos ? fixedRuntime.totalHeatwaveTriggers : 0,
         dashes: isScissors ? fixedRuntime.totalDashes : 0,

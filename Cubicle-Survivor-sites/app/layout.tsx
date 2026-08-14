@@ -8,21 +8,21 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = headerList.get("x-forwarded-proto") ?? "https";
   const origin = host
     ? `${protocol}://${host}`
-    : "https://cubicle-survivor-play-v1.hazy-corgi-0850.chatgpt.site";
+    : "https://245269946-blip.github.io/Cubicle-Survivor";
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V3.5",
-    description: "选择马克笔、保温杯、剪刀或修正液，在整关持续来敌中兑现攻击形态成长，并迎战更主动、更高频的Boss。",
+    title: "工位幸存者 Demo V3.14",
+    description: "四武器战斗与成长保持不变，购买和选择页面改为简短、结果导向的轻量决策。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V3.5",
-      description: "持续放量的环形来敌、连续进攻的Boss，以及能够直接改变攻击形态的属性成长。",
+      title: "工位幸存者 Demo V3.14",
+      description: "轻量决策版：少读说明，先看结果，选完立即回到战斗。",
     },
     twitter: {
       card: "summary",
-      title: "工位幸存者 Demo V3.5",
-      description: "整关持续接敌，读取Boss预警，并让范围与攻速真实改变武器形态。",
+      title: "工位幸存者 Demo V3.14",
+      description: "武器、模块、经验与组件选择只保留当前决策需要的信息。",
     },
   };
 }
