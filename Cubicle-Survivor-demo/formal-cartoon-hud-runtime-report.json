@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "entry": "demo-v3-15.html",
+  "phase": "four-weapon-v3-15",
+  "status": "passed",
+  "viewport": [1280, 720],
+  "contract": {
+    "persistent": ["level", "materials", "stage", "task", "time", "pending", "health", "mechanism", "xp", "collapsed-build"],
+    "hiddenRedundancy": ["completed-counter", "stage-paragraph", "mechanism-hint"],
+    "growthFeedback": "kind + result + one immediate-effect line",
+    "transition": "label + title + enemy tags + countdown; hides build and mechanism status",
+    "visualGrammar": ["paper", "folder", "sticky-note", "paperclip", "stamp", "first-aid-slip"],
+    "combatProgressionEconomyChanged": false
+  },
+  "cases": [
+    {
+      "name": "normal",
+      "sha256": "fe7c642de8971708da3de570b046714c5f5b68813b9e5ab28a7434a40b3c5663",
+      "formalHud": true,
+      "healthState": "normal",
+      "objective": "阶段 1/5 · 1/17 | 基础队列 | 时间 00:30 | 待办 82",
+      "objectiveWidth": 350,
+      "xpVisible": true,
+      "topOverlap": false,
+      "runtimeErrors": 0
+    },
+    {
+      "name": "danger",
+      "sha256": "e0696d4d2e518fb4070cf948c75fd8ca4450e76b2bbb717f031046065142c491",
+      "formalHud": true,
+      "healthState": "critical",
+      "health": "16 / 74",
+      "objectiveWidth": 350,
+      "topOverlap": false,
+      "runtimeErrors": 0
+    },
+    {
+      "name": "boss",
+      "sha256": "8faf8d45878f0285cc2fe05130ccd0e615d3df2155355f41cc239beedfbcf1a1",
+      "formalHud": true,
+      "objective": "阶段 1/5 · 3/17 | 实习导师 | 时间 00:50 | 待办 1",
+      "objectiveWidth": 350,
+      "topOverlap": false,
+      "runtimeErrors": 0
+    },
+    {
+      "name": "growth",
+      "sha256": "405f150d81232feae282c9bba28d0c7f6d8d2a0a739387ebd62a7c4cb4fcac45",
+      "formalHud": true,
+      "feedback": "组件 | 笔尖组件已装 | 下一轮攻击更宽。",
+      "feedbackSize": [340, 70],
+      "topOverlap": false,
+      "runtimeErrors": 0
+    },
+    {
+      "name": "warmup",
+      "sha256": "ac6ede8ded4114c017ca70643c4b40e5e7e2216c3a8212978e3d45a61ac162ce",
+      "formalHud": true,
+      "countdown": "3s",
+      "warmupSize": [760, 88.3984375],
+      "warmupBottom": 679,
+      "statusDisplay": "none",
+      "buildDisplay": "none",
+      "topOverlap": false,
+      "runtimeErrors": 0
+    },
+    {
+      "name": "build",
+      "sha256": "9ce1ab060c93a88874c5d1ddc34c36339b9f4ba55231acc65e241ccd14434748",
+      "formalHud": true,
+      "buildSize": [350, 316.046875],
+      "centerStatusVisible": true,
+      "topOverlap": false,
+      "runtimeErrors": 0
+    }
+  ],
+  "domProbe": {
+    "formalCartoonHud": "true",
+    "healthState": "normal",
+    "completedCounterDisplay": "none",
+    "xpDisplay": "block",
+    "xpRect": [49, 681, 1182, 9],
+    "runtimeErrors": 0
+  },
+  "safeAreaProbe": {
+    "topHudBottoms": { "levelMaterials": 90, "objective": 94, "pause": 69.50367736816406, "health": 91 },
+    "bottomHudStarts": { "mechanism": 637, "collapsedBuild": 641, "xp": 681 },
+    "objectiveSize": [350, 58],
+    "mechanismSize": [390, 42],
+    "collapsedBuildSize": [198, 38]
+  },
+  "bossCacheRegression": {
+    "pose": "boss-lead-move-0",
+    "sha256": "483235640ded95b48278fac9d31522000aa32d2390317b24cc805b891c11be77",
+    "assetQuery": "v=315-formal-2",
+    "coherentSingleCharacter": true,
+    "runtimeErrors": 0
+  },
+  "v314Isolation": {
+    "formalCartoonHud": false,
+    "stageMeta": "Demo V3.14 · 阶段 1/5 · 第 1/17 关",
+    "runtimeErrors": 0
+  },
+  "sourceHashes": {
+    "generated-skin.css": "17aff8ad7398361061f53df05c651d1fbe2ce6a73d3d633283ed472890049191",
+    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
+    "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
+    "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
+    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/ui/view-model.js": "1630700841d60572abadacf4afb8fc095f2f944ebd802eab2482702e8358b185",
+    "src/v2/ui/render.js": "949c36cfd0ef889e2fac0de36f394b25bf3ebcf706170322de277be7fbf7034f"
+  },
+  "assertions": {
+    "v314Unchanged": true,
+    "v315GateOnly": true,
+    "persistentInformationReduced": true,
+    "completedCounterHidden": true,
+    "longExplanationsHidden": true,
+    "growthFeedbackImmediate": true,
+    "warmupActuallyTriggered": true,
+    "warmupHidesCompetingPanels": true,
+    "lowHealthReadable": true,
+    "buildDrawerOptional": true,
+    "displaySpaceHardContract": true,
+    "bossAssetCacheBusted": true,
+    "runtimeErrorsZero": true
+  },
+  "remainingBlockers": []
+}

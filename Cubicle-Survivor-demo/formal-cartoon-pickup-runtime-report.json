@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "entry": "demo-v3-15.html",
+  "phase": "four-weapon-v3-15",
+  "status": "passed",
+  "viewport": [1280, 720],
+  "pickupTypes": ["xp", "material", "heal"],
+  "frameOrder": ["rest", "lift", "glint", "settle"],
+  "cases": [
+    { "type": "xp", "frame": 0, "collected": false, "asset": "formal_pickup_xp_v1", "sha256": "9b141108611307ee42dd4d7f33f1e739b055d046c4c22bdfcd8912692fc18272", "hudVisible": true, "runtimeError": false },
+    { "type": "xp", "frame": 2, "collected": false, "asset": "formal_pickup_xp_v1", "sha256": "764a972d6fee2d59c60426fb86c229c4f2a22c406497279bc92bce5b9050282c", "hudVisible": true, "runtimeError": false },
+    { "type": "material", "frame": 0, "collected": false, "asset": "formal_pickup_material_v1", "sha256": "02daa00e5be7f9c8dc2d8dd80ae35907ec9acd0bb039d91d9beea89a3e2c4b11", "hudVisible": true, "runtimeError": false },
+    { "type": "material", "frame": 2, "collected": false, "asset": "formal_pickup_material_v1", "sha256": "37aaf64a961d36e1f6e4363164a9f6a90246ad362a317d927f92d04ad91bf2ae", "hudVisible": true, "runtimeError": false },
+    { "type": "heal", "frame": 0, "collected": false, "asset": "formal_pickup_heal_v1", "sha256": "d30fba664b2e5a4f242c65d8c5b731c32507e3f2214113e4296c0e8bb9c98991", "hudVisible": true, "runtimeError": false },
+    { "type": "heal", "frame": 2, "collected": false, "asset": "formal_pickup_heal_v1", "sha256": "4afd9011260e6a83482503a74473e778268e93d789933add7fee79bab7542333", "hudVisible": true, "runtimeError": false },
+    { "type": "all", "frame": 3, "collected": false, "asset": "formal_pickup_family_v1", "sha256": "6b7d6bcc0e2c8a1456d57a030e0c5d1891802d4ea8e38cce601f179ccca9d7de", "hudVisible": true, "runtimeError": false },
+    { "type": "heal", "frame": 2, "collected": true, "asset": "formal_pickup_heal_v1", "sha256": "b83279b4d3703cc4b653d84b751f1c198c918bac6c0384c5df3a26c080af24fd", "hudVisible": true, "runtimeError": false }
+  ],
+  "assetFiles": {
+    "assets/cartoon-office-pickups/xp-pickup-idle-v1.png": { "width": 1280, "height": 320, "sha256": "91df6c7a51b6937deb00fe309510e40fe6ac12519d3f2b4738f6422fa0621853" },
+    "assets/cartoon-office-pickups/material-pickup-idle-v1.png": { "width": 1280, "height": 320, "sha256": "a127b69cd44d3f630ab0f5befab8556a1090672d7092e2dcecee926b46cfe393" },
+    "assets/cartoon-office-pickups/heal-pickup-idle-v1.png": { "width": 1280, "height": 320, "sha256": "c223ee5620fc0d3803cf1efd5ed21ecb311105ba2350f1450191b2bb0709be15" }
+  },
+  "sourceHashes": {
+    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
+    "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
+    "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
+    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "../scripts/build-cartoon-office-pickup-atlases.py": "aee505923a512c7944dd07ccec7b83f658678c2eb814f00e7af01068ee7ad79a",
+    "assets/cartoon-office-pickups/cartoon-office-pickup-contract.json": "9f9765353206a27d1fb03b253337f86531af9f1791907ffdcec191ac2bb24b29"
+  },
+  "assertions": {
+    "v314Unchanged": true,
+    "v315GateOnly": true,
+    "threeIdentitiesReadable": true,
+    "fourFramesDistinct": true,
+    "transparentRuntimeAtlases": true,
+    "visibleGreenPixelsZero": true,
+    "realMagnetPathPreserved": true,
+    "xpRewardPreserved": true,
+    "materialRewardPreserved": true,
+    "healRewardPreserved": true,
+    "rasterCollectFeedbackVisible": true,
+    "runtimeErrorsZero": true
+  },
+  "remainingBlockers": []
+}

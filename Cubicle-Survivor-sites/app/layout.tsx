@@ -12,17 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    title: "工位幸存者 Demo V3.14",
-    description: "四武器战斗与成长保持不变，购买和选择页面改为简短、结果导向的轻量决策。",
+    title: "工位幸存者 Demo V3.15 正式版",
+    description: "统一卡通角色、敌人、场景、特效与音频，并保留简短、结果导向的四武器成长选择。",
     openGraph: {
       type: "website",
-      title: "工位幸存者 Demo V3.14",
-      description: "轻量决策版：少读说明，先看结果，选完立即回到战斗。",
+      title: "工位幸存者 Demo V3.15 正式版",
+      description: "统一卡通正式版：看清结果，选完立即回到战斗。",
     },
     twitter: {
       card: "summary",
-      title: "工位幸存者 Demo V3.14",
-      description: "武器、模块、经验与组件选择只保留当前决策需要的信息。",
+      title: "工位幸存者 Demo V3.15 正式版",
+      description: "四武器、敌人与场景统一为可直接游玩的卡通帧动画版本。",
     },
   };
 }

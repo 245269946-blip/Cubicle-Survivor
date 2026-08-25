@@ -1,71 +1,41 @@
-# Handoff: Foundation Stability Pass
+# Handoff: Demo V3.15 Formal Release
 
-This branch is the continuation point for the foundation fix.
+The authoritative runnable package is this directory. Demo V3.15 is the public recommendation; Demo V3.14 remains an immutable compact-decision regression snapshot.
 
-Remote branch:
+## Current state
 
-```bash
-git fetch origin codex/foundation-stability-source
-git switch codex/foundation-stability-source
-```
+- `demo-v3-14.html`: compact-decision regression snapshot.
+- `demo-v3-15.html`: recommended entry; inherits V3.14 combat, 17 encounters, progression and economy, then enables only gated formal assets.
+- Formal asset production is complete: 8 normal enemies, 5 Bosses, 5 office scenes, 3 pickups, compact combat HUD, four weapon-VFX atlases and 21 formal WAV cues.
+- Formal audio covers four weapon families, every enemy/Boss action identity, normal/Boss defeat, encounter completion and final completion. It remains on the shared unlock, mute, cooldown, voice-budget and master-mix path.
 
-PR:
+## Non-negotiable boundaries
 
-```text
-https://github.com/245269946-blip/Cubicle-Survivor/pull/2
-```
+- Do not change combat, progression, drops, rewards or economy while tuning formal presentation.
+- Choice and purchase surfaces stay concise: name, immediate result, and at most one future/relationship cue.
+- Concept art, raw generated strips and files that merely exist in the repository are not production assets. Follow `../docs/visual-qa-checklist.md` and the runtime evidence contracts.
+- Keep V3.14 gates off for all `formalCartoon*Pass` features.
 
-## What This Version Fixes
+## Verify
 
-- UI choice panels no longer rebuild identical HTML every frame, which fixes card jitter and unstable clicks.
-- Combat now has a larger world plus a camera that follows the player instead of locking movement inside a fixed viewport.
-- Combat effects now share explicit primitives: `beam`, `circleEvent`, `zone`, and `projectile`.
-- QA now checks the foundation contracts for UI caching, camera movement, world-bound spawns, and primitive exports.
-
-## What This Version Does Not Claim
-
-- Marker split laser is not finished as a real split-beam mechanic yet.
-- Thermos and sticky-note final combat identities are not fully rewritten yet.
-- This pass does not add pressure, employee identity, card pools, or more stage content.
-- This pass does not replace the existing pixel/neon visual direction.
-
-## How To Run
-
-Open the local file directly:
-
-```text
-Cubicle-Survivor-demo/index.html
-```
-
-No build step is required for the current HTML demo.
-
-## How To Verify
-
-Use the bundled Node runtime if available, or any modern Node.js runtime:
+Run from this directory:
 
 ```bash
-node --check demo-qa.js
-node --check src/v2/combat/systems.js
-node --check src/v2/runtime/state.js
-node --check src/v2/ui/render.js
-node test-runner.js
-node demo-qa.js
+npm run qa
 ```
 
-Expected result:
+The audio-specific evidence is:
 
-```text
-ALL TESTS PASSED
-DEMO QA PASSED
-```
+- `assets/cartoon-office-audio/cartoon-office-audio-contract.json`
+- `formal-cartoon-audio-runtime-report.json`
+- `formal-cartoon-audio-qa.js`
+- `../scripts/build-formal-cartoon-audio.py`
 
-## Next Safe Work Order
+## Next safe work
 
-1. Rebuild marker split laser as true multi-beam behavior using `CombatPrimitives.beam`.
-2. Add QA that asserts split beams are separate beam events with distinct paths, not one larger damage area.
-3. Rework thermos heat/release and sticky-note entity behavior against the same primitive contracts.
-4. Only after the three weapon identities are mechanically reliable, continue adding stages or new visual polish.
+1. Use fresh player sessions to tune weapon loudness, enemy anticipation readability and late-run balance; these are polish checks, not a reason to reopen the formal asset gate without evidence.
+2. Keep choice and purchase surfaces result-led and short; never shrink text to preserve explanatory prose.
+3. Tune cue mix and cooldown before adding systems to solve an audio-balance problem.
+4. Preserve the shared character identity, complete scissors silhouette, real enemy action frames and text-free completion feedback in every follow-up.
 
-## Important Local Note
-
-The full zip package was kept local because `git push` over `github.com` was unstable in this environment. The uploaded PR branch contains the source and assets needed to continue development.
+Authoritative status and full evidence index: `../docs/CURRENT_BASELINE.md` and `../docs/DEMO_V3_15_CARTOON_ASSET_PRODUCTION.md`.

@@ -14,9 +14,23 @@
   let attackTimer = 0;
   let spawnTimer = 0;
   let pickupMagnetTimer = 0;
+  let formalDebugPoseRunKey = "";
   const RUNTIME_SPRITES = {
     office_atlas: "assets/office-rogue-atlas.png",
     office_arena_night: "assets/generated-backgrounds/office-arena-night.png",
+    formal_office_phase_1_v1: "assets/cartoon-office-scenes/office-phase-1-morning-v1.webp",
+    formal_office_phase_2_v1: "assets/cartoon-office-scenes/office-phase-2-midday-v1.webp",
+    formal_office_phase_3_v1: "assets/cartoon-office-scenes/office-phase-3-afternoon-v1.webp",
+    formal_office_phase_4_v1: "assets/cartoon-office-scenes/office-phase-4-evening-v1.webp",
+    formal_office_phase_5_v1: "assets/cartoon-office-scenes/office-phase-5-night-v1.webp",
+    formal_completion_check_v1: "assets/cartoon-office-scenes/completion-check-v1.png",
+    formal_pickup_xp_v1: "assets/cartoon-office-pickups/xp-pickup-idle-v1.png",
+    formal_pickup_material_v1: "assets/cartoon-office-pickups/material-pickup-idle-v1.png",
+    formal_pickup_heal_v1: "assets/cartoon-office-pickups/heal-pickup-idle-v1.png",
+    formal_marker_vfx_v2: "assets/cartoon-office-vfx/marker-vfx-v2.png",
+    formal_thermos_vfx_v2: "assets/cartoon-office-vfx/thermos-vfx-v2.png",
+    formal_scissors_vfx_v3: "assets/cartoon-office-vfx/scissors-vfx-v3.png",
+    formal_correction_vfx_v2: "assets/cartoon-office-vfx/correction-vfx-v2.png",
     combat_health_track_office: "assets/generated-ui-v2/combat-health-track-office.png",
     combat_health_fill_office: "assets/generated-ui-v2/combat-health-fill-office.png",
     marker_beam_art: "assets/generated-vfx/sprites/marker-line-office-v2.png",
@@ -61,6 +75,63 @@
     correction_nozzle_directions_v39: "assets/generated-vfx/sprites/correction-nozzle-directions-v39.png",
     correction_route_mutations_v39: "assets/generated-vfx/sprites/correction-route-mutations-v39.png",
     correction_spray_error_v39: "assets/generated-vfx/sprites/correction-spray-error-v39.png",
+    cartoon_worker_walk_v1: "assets/cartoon-character-system/neutral-worker-walk-v1.png",
+    cartoon_marker_rig_back_v1: "assets/cartoon-character-system/marker-rig-back-v1.png",
+    cartoon_marker_rig_front_v1: "assets/cartoon-character-system/marker-rig-front-v1.png",
+    cartoon_thermos_rig_back_v1: "assets/cartoon-character-system/thermos-rig-back-v1.png",
+    cartoon_thermos_rig_front_v1: "assets/cartoon-character-system/thermos-rig-front-v1.png",
+    cartoon_scissors_rig_back_v1: "assets/cartoon-character-system/scissors-rig-back-v1.png",
+    cartoon_scissors_rig_front_v1: "assets/cartoon-character-system/scissors-rig-front-v1.png",
+    cartoon_correction_rig_back_v1: "assets/cartoon-character-system/correction-rig-back-v1.png",
+    cartoon_correction_rig_front_v1: "assets/cartoon-character-system/correction-rig-front-v1.png",
+    formal_todo_actions_v1: "assets/cartoon-marker-slice/backlog-enemy-actions-v2.png",
+    formal_todo_walk_v1: "assets/cartoon-marker-slice/backlog-enemy-walk-v3.png",
+    formal_todo_slam_v1: "assets/cartoon-marker-slice/backlog-enemy-slam-v3.png",
+    formal_email_actions_v1: "assets/cartoon-marker-slice/urgent-email-enemy-actions-v2.png",
+    formal_email_run_v1: "assets/cartoon-marker-slice/urgent-email-run-v3.png",
+    formal_email_dash_v1: "assets/cartoon-marker-slice/urgent-email-dash-v3.png",
+    formal_meeting_actions_v1: "assets/cartoon-marker-slice/meeting-enemy-actions-v3.png",
+    formal_meeting_walk_v1: "assets/cartoon-marker-slice/meeting-enemy-walk-v3.png",
+    formal_meeting_slam_v1: "assets/cartoon-marker-slice/meeting-enemy-slam-v3.png",
+    formal_ping_actions_v1: "assets/cartoon-marker-slice/ping-enemy-actions-v3.png",
+    formal_ping_float_v1: "assets/cartoon-marker-slice/ping-enemy-float-v3.png",
+    formal_ping_send_v1: "assets/cartoon-marker-slice/ping-enemy-send-v3.png",
+    formal_deadline_actions_v1: "assets/cartoon-marker-slice/deadline-enemy-actions-v3.png",
+    formal_deadline_run_v1: "assets/cartoon-marker-slice/deadline-enemy-run-v3.png",
+    formal_deadline_charge_v1: "assets/cartoon-marker-slice/deadline-enemy-charge-v3.png",
+    formal_scope_actions_v1: "assets/cartoon-marker-slice/scope-enemy-actions-v3.png",
+    formal_scope_run_v1: "assets/cartoon-marker-slice/scope-enemy-run-v3.png",
+    formal_scope_split_v1: "assets/cartoon-marker-slice/scope-enemy-split-v3.png",
+    formal_approval_actions_v1: "assets/cartoon-marker-slice/approval-enemy-actions-v3.png",
+    formal_approval_walk_v1: "assets/cartoon-marker-slice/approval-enemy-walk-v3.png",
+    formal_approval_guard_v1: "assets/cartoon-marker-slice/approval-enemy-guard-v3.png",
+    formal_client_actions_v1: "assets/cartoon-marker-slice/client-enemy-actions-v3.png",
+    formal_client_run_v1: "assets/cartoon-marker-slice/client-enemy-run-v3.png",
+    formal_client_call_v1: "assets/cartoon-marker-slice/client-enemy-call-v3.png",
+    formal_lead_actions_v1: "assets/cartoon-marker-slice/lead-boss-actions-v1.png",
+    formal_lead_walk_v1: "assets/cartoon-marker-slice/lead-boss-walk-v1.png",
+    formal_lead_lane_v1: "assets/cartoon-marker-slice/lead-boss-lane-v1.png",
+    formal_lead_burst_v1: "assets/cartoon-marker-slice/lead-boss-burst-v1.png",
+    formal_director_actions_v1: "assets/cartoon-marker-slice/director-boss-actions-v1.png",
+    formal_director_walk_v1: "assets/cartoon-marker-slice/director-boss-walk-v1.png",
+    formal_director_lane_v1: "assets/cartoon-marker-slice/director-boss-lane-v1.png",
+    formal_director_burst_v1: "assets/cartoon-marker-slice/director-boss-burst-v1.png",
+    formal_delivery_actions_v1: "assets/cartoon-marker-slice/delivery-boss-actions-v1.png",
+    formal_delivery_walk_v1: "assets/cartoon-marker-slice/delivery-boss-walk-v1.png",
+    formal_delivery_charge_v1: "assets/cartoon-marker-slice/delivery-boss-charge-v1.png",
+    formal_delivery_lane_v1: "assets/cartoon-marker-slice/delivery-boss-lane-v1.png",
+    formal_delivery_burst_v1: "assets/cartoon-marker-slice/delivery-boss-burst-v1.png",
+    formal_client_boss_actions_v1: "assets/cartoon-marker-slice/client-boss-actions-v1.png",
+    formal_client_boss_walk_v1: "assets/cartoon-marker-slice/client-boss-walk-v1.png",
+    formal_client_boss_call_v1: "assets/cartoon-marker-slice/client-boss-call-v1.png",
+    formal_client_boss_lane_v1: "assets/cartoon-marker-slice/client-boss-lane-v1.png",
+    formal_client_boss_burst_v1: "assets/cartoon-marker-slice/client-boss-burst-v1.png",
+    formal_ceo_boss_actions_v1: "assets/cartoon-marker-slice/ceo-boss-actions-v1.png",
+    formal_ceo_boss_walk_v1: "assets/cartoon-marker-slice/ceo-boss-walk-v1.png",
+    formal_ceo_boss_stamp_v1: "assets/cartoon-marker-slice/ceo-boss-stamp-v1.png",
+    formal_ceo_boss_charge_v1: "assets/cartoon-marker-slice/ceo-boss-charge-v1.png",
+    formal_ceo_boss_lane_v1: "assets/cartoon-marker-slice/ceo-boss-lane-v1.png",
+    formal_ceo_boss_burst_v1: "assets/cartoon-marker-slice/ceo-boss-burst-v1.png",
     marker_person_printer_rig_v5: "assets/generated-vfx/sprites/marker-person-printer-rig-directions-v5.png",
     marker_weapon_directions_v4: "assets/generated-vfx/sprites/marker-weapon-directions-v4.png",
     marker_growth_parts: "assets/generated-vfx/sprites/marker-growth-parts.svg",
@@ -114,6 +185,15 @@
     nozzleCells: [],
     routeCells: []
   };
+  const cartoonCharacterAssets = {
+    bodyCells: [],
+    rigSets: {
+      marker: { back: [], front: [] },
+      thermos: { back: [], front: [] },
+      scissors: { back: [], front: [] },
+      correction: { back: [], front: [] }
+    }
+  };
   const ENEMY_ATLAS_CELLS = {
     todo: [2, 0],
     email: [1, 0],
@@ -145,6 +225,129 @@
     client: { name: "大客户追问", behavior: "boss_shooter", color: "#e05a98", accent: "#ffc2df", shootEvery: 1.75, projectileSpeed: 285 },
     ceo: { name: "老板最终确认", behavior: "boss_final", color: "#ff5d3d", accent: "#ffe28a", armor: 0.18, shootEvery: 1.8, chargeEvery: 4.2, chargeSpeed: 250 }
   };
+  const FORMAL_CARTOON_ENEMY_DEFS = {
+    todo: {
+      move: "formal_todo_walk_v1", attack: "formal_todo_slam_v1", actions: "formal_todo_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 260, attackReferenceHeight: 260,
+      actionReferenceHeight: 260, attackDuration: 0.68, impactAt: 0.62, triggerPadding: 24, launchScale: 1.35
+    },
+    email: {
+      move: "formal_email_run_v1", attack: "formal_email_dash_v1", actions: "formal_email_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 170,
+      actionReferenceHeight: 247, attackDuration: 0.52, impactAt: 0.58, triggerPadding: 34, launchScale: 2.2,
+      moveCadence: 0.09, visibleScale: 1.04
+    },
+    meeting: {
+      move: "formal_meeting_walk_v1", attack: "formal_meeting_slam_v1", actions: "formal_meeting_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 200, attackReferenceHeight: 196,
+      actionReferenceHeight: 215, attackDuration: 0.82, impactAt: 0.7, triggerPadding: 30, launchScale: 0.78,
+      moveCadence: 0.16, visibleScale: 1.18
+    },
+    ping: {
+      move: "formal_ping_float_v1", attack: "formal_ping_send_v1", actions: "formal_ping_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 247,
+      actionReferenceHeight: 260, attackDuration: 0.68, impactAt: 0.68, attackKind: "ranged",
+      moveCadence: 0.14, visibleScale: 1.02
+    },
+    deadline: {
+      move: "formal_deadline_run_v1", attack: "formal_deadline_charge_v1", actions: "formal_deadline_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 262,
+      actionReferenceHeight: 260, attackDuration: 0.78, attackKind: "charge",
+      launchAt: 0.38, recoverAt: 0.84, moveCadence: 0.1, visibleScale: 1.08
+    },
+    scope: {
+      move: "formal_scope_run_v1", attack: "formal_scope_split_v1", actions: "formal_scope_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 169,
+      actionReferenceHeight: 260, attackDuration: 0.72, attackKind: "split", releaseAt: 0.64,
+      moveCadence: 0.12, visibleScale: 1.06
+    },
+    approval: {
+      move: "formal_approval_walk_v1", attack: "formal_approval_guard_v1", actions: "formal_approval_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 262,
+      actionReferenceHeight: 260, attackDuration: 0.64, attackKind: "guard", breakAt: 0.6,
+      armorPoolRatio: 0.14, brokenDuration: 1.3, moveCadence: 0.15, visibleScale: 1.08
+    },
+    client: {
+      move: "formal_client_run_v1", attack: "formal_client_call_v1", actions: "formal_client_actions_v1",
+      moveFrames: 4, attackFrames: 5, moveReferenceHeight: 262, attackReferenceHeight: 262,
+      actionReferenceHeight: 243, attackDuration: 0.7, impactAt: 0.66, attackKind: "ranged",
+      burstCount: 2, burstSpread: 0.14, muzzleOffset: 29, kiteDistance: 215,
+      moveCadence: 0.11, visibleScale: 1.06
+    }
+  };
+  const FORMAL_CARTOON_BOSS_DEFS = {
+    lead: {
+      move: "formal_lead_walk_v1", actions: "formal_lead_actions_v1",
+      lane: "formal_lead_lane_v1", burst: "formal_lead_burst_v1",
+      moveFrames: 4, patternFrames: 5, moveReferenceHeight: 270, actionReferenceHeight: 270,
+      laneReferenceHeight: 270, burstReferenceHeight: 211, moveCadence: 0.15, visibleScale: 1.08
+    },
+    director: {
+      move: "formal_director_walk_v1", actions: "formal_director_actions_v1",
+      lane: "formal_director_lane_v1", burst: "formal_director_burst_v1",
+      moveFrames: 4, patternFrames: 5, moveReferenceHeight: 270, actionReferenceHeight: 270,
+      laneReferenceHeight: 270, burstReferenceHeight: 270, moveCadence: 0.13, visibleScale: 1.1
+    },
+    delivery: {
+      move: "formal_delivery_walk_v1", actions: "formal_delivery_actions_v1",
+      charge: "formal_delivery_charge_v1", lane: "formal_delivery_lane_v1", burst: "formal_delivery_burst_v1",
+      moveFrames: 4, chargeFrames: 5, patternFrames: 5,
+      moveReferenceHeight: 259, actionReferenceHeight: 251, chargeReferenceHeight: 214,
+      laneReferenceHeight: 240, burstReferenceHeight: 219,
+      attackKind: "charge", chargeDuration: 1.05, launchAt: 0.35, recoverAt: 0.94,
+      moveCadence: 0.11, visibleScale: 1.14
+    },
+    client: {
+      move: "formal_client_boss_walk_v1", actions: "formal_client_boss_actions_v1",
+      attack: "formal_client_boss_call_v1", lane: "formal_client_boss_lane_v1", burst: "formal_client_boss_burst_v1",
+      moveFrames: 4, attackFrames: 5, patternFrames: 5,
+      moveReferenceHeight: 270, actionReferenceHeight: 270, attackReferenceHeight: 270,
+      laneReferenceHeight: 238, burstReferenceHeight: 252,
+      attackKind: "ranged", attackDuration: 0.82, impactAt: 0.68, muzzleOffset: 43,
+      moveCadence: 0.12, visibleScale: 1.13
+    },
+    ceo: {
+      move: "formal_ceo_boss_walk_v1", actions: "formal_ceo_boss_actions_v1",
+      attack: "formal_ceo_boss_stamp_v1", charge: "formal_ceo_boss_charge_v1",
+      lane: "formal_ceo_boss_lane_v1", burst: "formal_ceo_boss_burst_v1",
+      moveFrames: 4, attackFrames: 5, chargeFrames: 5, patternFrames: 5,
+      moveReferenceHeight: 251, actionReferenceHeight: 225, attackReferenceHeight: 248,
+      chargeReferenceHeight: 229, laneReferenceHeight: 224, burstReferenceHeight: 217,
+      rangedAttack: true, chargeAttack: true,
+      attackDuration: 0.88, impactAt: 0.68, muzzleOffset: 51,
+      chargeDuration: 1.15, launchAt: 0.36, recoverAt: 0.9,
+      moveCadence: 0.13, visibleScale: 1.16
+    }
+  };
+  const FORMAL_CARTOON_PICKUP_DEFS = {
+    xp: {
+      sprite: "formal_pickup_xp_v1", frames: 4, referenceHeight: 228,
+      runtimeHeight: 34, cadence: 0.145, collectHeight: 42
+    },
+    material: {
+      sprite: "formal_pickup_material_v1", frames: 4, referenceHeight: 228,
+      runtimeHeight: 36, cadence: 0.16, collectHeight: 44
+    },
+    heal: {
+      sprite: "formal_pickup_heal_v1", frames: 4, referenceHeight: 228,
+      runtimeHeight: 38, cadence: 0.175, collectHeight: 46
+    }
+  };
+
+  function formalCartoonEnemyDef(state, enemy) {
+    if (!state || !state.demoV2 || !state.demoV2.formalCartoonAssetPass || !enemy || enemy.boss) return null;
+    return FORMAL_CARTOON_ENEMY_DEFS[enemy.typeId] || null;
+  }
+
+  function formalCartoonBossDef(state, enemy) {
+    if (!state || !state.demoV2 || !state.demoV2.formalCartoonAssetPass || !enemy || !enemy.boss) return null;
+    return FORMAL_CARTOON_BOSS_DEFS[enemy.typeId] || null;
+  }
+
+  function formalCartoonPickupDef(state, type) {
+    if (!state || !state.demoV2 || !state.demoV2.formalCartoonPickupPass) return null;
+    return FORMAL_CARTOON_PICKUP_DEFS[type] || null;
+  }
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -226,10 +429,13 @@
         if (id === "correction_person_reservoir_v39" || id === "correction_nozzle_directions_v39" || id === "correction_route_mutations_v39") {
           prepareCorrectionEmbodimentAssets();
         }
+        if (id.indexOf("cartoon_") === 0) prepareCartoonCharacterAssets();
         const state = V2.getState();
         if (state && state.loop && !state.loop.running) draw();
       };
-      img.src = RUNTIME_SPRITES[id];
+      const formalCache = /_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"
+        : id.indexOf("formal_") === 0 ? "?v=315-formal-2" : "";
+      img.src = RUNTIME_SPRITES[id] + formalCache;
       runtimeImages[id] = img;
     });
   }
@@ -288,6 +494,99 @@
       if (cropped) cells.push(cropped);
     }
     return cells;
+  }
+
+  function sliceGridAtlas(image, columns, rows) {
+    if (!image || !image.naturalWidth) return [];
+    const sourceWidth = Math.floor(image.naturalWidth / columns);
+    const sourceHeight = Math.floor(image.naturalHeight / rows);
+    const cells = [];
+    for (let index = 0; index < columns * rows; index++) {
+      const cell = document.createElement("canvas");
+      cell.width = sourceWidth;
+      cell.height = sourceHeight;
+      cell.getContext("2d").drawImage(
+        image,
+        index % columns * sourceWidth,
+        Math.floor(index / columns) * sourceHeight,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        sourceWidth,
+        sourceHeight
+      );
+      cells.push(cell);
+    }
+    return cells;
+  }
+
+  function cartoonRoutePixelFamily(weapon, red, green, blue) {
+    const cyan = green > 105 && blue > 112 && red < Math.min(green, blue) * 0.78;
+    const pink = red > 145 && blue > 105 && green < Math.min(red, blue) * 0.78;
+    const yellow = red > 160 && green > 105 && blue < green * 0.55;
+    const orange = red > 160 && green > 58 && green < red * 0.78 && blue < green * 0.7;
+    if (weapon === "marker") return yellow ? "a" : cyan ? "b" : null;
+    if (weapon === "thermos") return cyan ? "a" : orange ? "b" : null;
+    if (weapon === "scissors") return cyan ? "a" : pink ? "b" : null;
+    return pink ? "a" : cyan ? "b" : null;
+  }
+
+  function makeCartoonRigRouteVisuals(image, weapon) {
+    if (!image) return null;
+    const base = document.createElement("canvas");
+    const routeA = document.createElement("canvas");
+    const routeB = document.createElement("canvas");
+    [base, routeA, routeB].forEach(function (surface) {
+      surface.width = image.width;
+      surface.height = image.height;
+    });
+    const baseCtx = base.getContext("2d", { willReadFrequently: true });
+    baseCtx.drawImage(image, 0, 0);
+    const basePixels = baseCtx.getImageData(0, 0, base.width, base.height);
+    const routeAPixels = routeA.getContext("2d").createImageData(base.width, base.height);
+    const routeBPixels = routeB.getContext("2d").createImageData(base.width, base.height);
+    for (let offset = 0; offset < basePixels.data.length; offset += 4) {
+      const alpha = basePixels.data[offset + 3];
+      if (!alpha) continue;
+      const family = cartoonRoutePixelFamily(
+        weapon,
+        basePixels.data[offset],
+        basePixels.data[offset + 1],
+        basePixels.data[offset + 2]
+      );
+      if (!family) continue;
+      const target = family === "a" ? routeAPixels.data : routeBPixels.data;
+      target[offset] = basePixels.data[offset];
+      target[offset + 1] = basePixels.data[offset + 1];
+      target[offset + 2] = basePixels.data[offset + 2];
+      target[offset + 3] = alpha;
+      basePixels.data[offset] = Math.round(basePixels.data[offset] * 0.28);
+      basePixels.data[offset + 1] = Math.round(basePixels.data[offset + 1] * 0.28);
+      basePixels.data[offset + 2] = Math.round(basePixels.data[offset + 2] * 0.28);
+    }
+    baseCtx.putImageData(basePixels, 0, 0);
+    routeA.getContext("2d").putImageData(routeAPixels, 0, 0);
+    routeB.getContext("2d").putImageData(routeBPixels, 0, 0);
+    return { base, routeA, routeB };
+  }
+
+  function prepareCartoonCharacterAssets() {
+    const body = runtimeImages.cartoon_worker_walk_v1;
+    if (body && body.complete && body.naturalWidth > 0 && !cartoonCharacterAssets.bodyCells.length) {
+      cartoonCharacterAssets.bodyCells = sliceGridAtlas(body, 3, 4);
+    }
+    ["marker", "thermos", "scissors", "correction"].forEach(function (weapon) {
+      ["back", "front"].forEach(function (layer) {
+        const target = cartoonCharacterAssets.rigSets[weapon][layer];
+        if (target.length) return;
+        const image = runtimeImages["cartoon_" + weapon + "_rig_" + layer + "_v1"];
+        if (!image || !image.complete || !image.naturalWidth) return;
+        cartoonCharacterAssets.rigSets[weapon][layer] = sliceGridAtlas(image, 3, 4).map(function (cell) {
+          return makeCartoonRigRouteVisuals(cell, weapon);
+        });
+      });
+    });
   }
 
   function markerRouteRegionAllows(family, facing, x, width) {
@@ -657,6 +956,31 @@
         correctionRouteScale: 1
       };
     }
+    if (state.demoV2 && state.demoV2.formalCartoonAssetPass) {
+      return {
+        compact: true,
+        bodyHeight: 96,
+        bodyY: -5,
+        markerOrbit: 66,
+        markerWeaponHeight: 30,
+        markerBaseSpacing: 9,
+        markerCopySpacingOne: 18,
+        markerCopySpacingTwo: 23,
+        markerAttachmentScale: 0.9,
+        thermosOrbit: 58,
+        thermosWeaponHeight: 41,
+        thermosSpacingScale: 0.86,
+        thermosRouteScale: 0.9,
+        scissorsOrbit: 61,
+        scissorsWeaponHeight: 59,
+        scissorsWeaponGrowth: 1.8,
+        correctionOrbit: 63,
+        correctionWeaponHeight: 27,
+        correctionActiveWeaponHeight: 31,
+        correctionLaneSpacing: 9,
+        correctionRouteScale: 0.9
+      };
+    }
     return {
       compact: true,
       bodyHeight: 78,
@@ -744,6 +1068,73 @@
       "brightness(" + (1.06 + level * 0.11) + ") saturate(" + (1.1 + level * 0.08) + ") drop-shadow(0 0 " + (3 + level * 1.3) + "px " + color + ")",
       "screen"
     );
+  }
+
+  function drawSmoothCanvasSprite(ctx, image, x, y, width, height, alpha, filter, composite) {
+    if (!image || !image.width) return false;
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.globalCompositeOperation = composite || "source-over";
+    ctx.filter = filter || "none";
+    ctx.translate(x, y);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(image, -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
+  function cartoonWalkPhase(state) {
+    if (!state.player || !state.player.walkMoving) return 0;
+    return Math.floor((state.player.walkClock || 0) / 0.115) % 2 === 0 ? 1 : 2;
+  }
+
+  function cartoonRigRouteColors(weapon) {
+    if (weapon === "marker") return ["#ffd75f", "#68efff"];
+    if (weapon === "thermos") return ["#66efff", "#ffb343"];
+    if (weapon === "scissors") return ["#66efff", "#ff56df"];
+    return ["#ff49d0", "#62efff"];
+  }
+
+  function drawCartoonRigLayer(ctx, layer, levelA, levelB, width, height, bodyY, colors) {
+    if (!layer || !layer.base) return;
+    drawSmoothCanvasSprite(ctx, layer.base, 0, bodyY, width, height, 1, "none", "source-over");
+    drawMarkerRouteGlow(ctx, layer.routeA, levelA, 0, bodyY, width, height, colors[0]);
+    drawMarkerRouteGlow(ctx, layer.routeB, levelB, 0, bodyY, width, height, colors[1]);
+  }
+
+  function cartoonLayeredPlayerFrame(state, weapon, facing) {
+    prepareCartoonCharacterAssets();
+    const phase = cartoonWalkPhase(state);
+    const index = clamp(facing || 0, 0, 3) * 3 + phase;
+    const body = cartoonCharacterAssets.bodyCells[index];
+    const rigSet = cartoonCharacterAssets.rigSets[weapon];
+    const back = rigSet && rigSet.back[index];
+    const front = rigSet && rigSet.front[index];
+    return body && back && front ? { body, back, front } : null;
+  }
+
+  function drawCartoonLayeredPlayer(ctx, state, weapon, facing, levelA, levelB, layout) {
+    const frame = cartoonLayeredPlayerFrame(state, weapon, facing);
+    if (!frame) return false;
+    const height = layout.bodyHeight * 620 / 560;
+    const width = height * 420 / 620;
+    const bodyY = layout.bodyY;
+    const colors = cartoonRigRouteColors(weapon);
+    drawCartoonRigLayer(ctx, frame.back, levelA, levelB, width, height, bodyY, colors);
+    drawSmoothCanvasSprite(
+      ctx,
+      frame.body,
+      0,
+      bodyY,
+      width,
+      height,
+      1,
+      "drop-shadow(0 5px 4px rgba(0,0,0,.62))",
+      "source-over"
+    );
+    drawCartoonRigLayer(ctx, frame.front, levelA, levelB, width, height, bodyY, colors);
+    return true;
   }
 
   function markerPenNodes(visual) {
@@ -872,20 +1263,27 @@
     const visual = markerEmbodimentVisualState(state);
     if (!visual.enabled) return false;
     prepareMarkerEmbodimentAssets();
+    prepareCartoonCharacterAssets();
     const rig = markerEmbodimentAssets.riggedPersonVisuals[visual.facing];
     const pen = markerEmbodimentAssets.weaponCells[markerDirectionFrame(visual.aimAngle)];
-    if (!rig || !rig.base || !pen) return false;
-    const height = visual.layout.bodyHeight;
-    const width = height * rig.base.width / Math.max(1, rig.base.height);
+    if (!pen) return false;
     const bodyY = visual.layout.bodyY;
     const penNodes = markerPenNodes(visual);
     penNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
       drawMarkerPen(ctx, pen, node, visual.copyLevel);
       drawMarkerPenComponents(ctx, visual, node);
     });
-    drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
-    drawMarkerRouteGlow(ctx, rig.copy, visual.copyLevel, 0, bodyY, width, height, "#ffd75f");
-    drawMarkerRouteGlow(ctx, rig.archive, visual.archiveLevel, 0, bodyY, width, height, "#68efff");
+    const cartoonDrawn = drawCartoonLayeredPlayer(
+      ctx, state, "marker", visual.facing, visual.copyLevel, visual.archiveLevel, visual.layout
+    );
+    if (!cartoonDrawn) {
+      if (!rig || !rig.base) return false;
+      const height = visual.layout.bodyHeight;
+      const width = height * rig.base.width / Math.max(1, rig.base.height);
+      drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
+      drawMarkerRouteGlow(ctx, rig.copy, visual.copyLevel, 0, bodyY, width, height, "#ffd75f");
+      drawMarkerRouteGlow(ctx, rig.archive, visual.archiveLevel, 0, bodyY, width, height, "#68efff");
+    }
     drawMarkerWornComponents(ctx, visual);
     penNodes.filter(function (node) { return node.y >= bodyY; }).forEach(function (node) {
       drawMarkerPen(ctx, pen, node, visual.copyLevel);
@@ -977,7 +1375,7 @@
     ctx.restore();
   }
 
-  function thermosRoutePackNodes(visual, family) {
+  function thermosRoutePackNodes(visual, family, embeddedBasePack) {
     const level = family === "condensation" ? visual.condensationLevel : visual.heatwaveLevel;
     if (level <= 0) return [];
     const basis = markerBodyBasis(visual.facing);
@@ -987,7 +1385,9 @@
     const recoilKick = recoil > 0 ? Math.sin(recoilProgress * Math.PI) * (2.2 + level * 0.7) : 0;
     const exhaustX = -basis.forwardX * 0.82 + basis.rightX * side * 0.58;
     const exhaustY = -basis.forwardY * 0.82 + basis.rightY * side * 0.58;
-    const count = Math.min(3, level);
+    // The cartoon rig already carries one attached pack for each route. Keep
+    // the legacy detachable pack sprites only as Lv2/Lv3 growth extensions.
+    const count = Math.max(0, Math.min(3, level) - (embeddedBasePack ? 1 : 0));
     const rowOffset = family === "condensation" ? 0 : 4;
     const cell = thermosEmbodimentAssets.routeCells[rowOffset + visual.facing];
     if (!cell) return [];
@@ -1044,9 +1444,9 @@
     );
   }
 
-  function drawThermosRoutePacks(ctx, visual, foreground) {
+  function drawThermosRoutePacks(ctx, visual, foreground, embeddedBasePack) {
     ["condensation", "heatwave"].forEach(function (family) {
-      thermosRoutePackNodes(visual, family).forEach(function (node) {
+      thermosRoutePackNodes(visual, family, embeddedBasePack).forEach(function (node) {
         if ((node.y >= visual.layout.bodyY) !== foreground) return;
         drawThermosRoutePack(ctx, node);
       });
@@ -1057,10 +1457,10 @@
     const visual = thermosEmbodimentVisualState(state);
     if (!visual.enabled) return false;
     prepareThermosEmbodimentAssets();
+    prepareCartoonCharacterAssets();
     const rig = thermosEmbodimentAssets.riggedPersonVisuals[visual.facing];
-    if (!rig || !rig.base || !thermosWeaponVisual(visual.aimAngle).cell) return false;
-    const height = visual.layout.bodyHeight;
-    const width = height * rig.base.width / Math.max(1, rig.base.height);
+    if (!thermosWeaponVisual(visual.aimAngle).cell) return false;
+    const cartoonFrameReady = !!cartoonLayeredPlayerFrame(state, "thermos", visual.facing);
     const bodyY = visual.layout.bodyY;
     const cupNodes = thermosCupNodes(visual);
     state.formEvents.filter(function (event) {
@@ -1079,11 +1479,19 @@
     cupNodes.filter(function (node) { return node.y < bodyY; }).forEach(function (node) {
       drawThermosCup(ctx, visual, node);
     });
-    drawThermosRoutePacks(ctx, visual, false);
-    drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
-    drawMarkerRouteGlow(ctx, rig.condensation, visual.condensationLevel, 0, bodyY, width, height, "#66efff");
-    drawMarkerRouteGlow(ctx, rig.heatwave, visual.heatwaveLevel, 0, bodyY, width, height, "#ffb343");
-    drawThermosRoutePacks(ctx, visual, true);
+    drawThermosRoutePacks(ctx, visual, false, cartoonFrameReady);
+    const cartoonDrawn = drawCartoonLayeredPlayer(
+      ctx, state, "thermos", visual.facing, visual.condensationLevel, visual.heatwaveLevel, visual.layout
+    );
+    if (!cartoonDrawn) {
+      if (!rig || !rig.base) return false;
+      const height = visual.layout.bodyHeight;
+      const width = height * rig.base.width / Math.max(1, rig.base.height);
+      drawCanvasSprite(ctx, rig.base, 0, bodyY, width, height, 1, 0, "drop-shadow(0 5px 4px rgba(0,0,0,.62))", "source-over");
+      drawMarkerRouteGlow(ctx, rig.condensation, visual.condensationLevel, 0, bodyY, width, height, "#66efff");
+      drawMarkerRouteGlow(ctx, rig.heatwave, visual.heatwaveLevel, 0, bodyY, width, height, "#ffb343");
+    }
+    drawThermosRoutePacks(ctx, visual, true, cartoonFrameReady);
     cupNodes.filter(function (node) { return node.y >= bodyY; }).forEach(function (node) {
       drawThermosCup(ctx, visual, node);
     });
@@ -1125,20 +1533,27 @@
     const visual = scissorsEmbodimentVisualState(state);
     if (!visual.enabled) return false;
     prepareScissorsEmbodimentAssets();
+    prepareCartoonCharacterAssets();
     const person = scissorsEmbodimentAssets.personCells[visual.facing];
-    if (!person || scissorsEmbodimentAssets.weaponCells.length < 8) return false;
+    if (scissorsEmbodimentAssets.weaponCells.length < 8) return false;
     const bodyY = visual.layout.bodyY;
     const bodyHeight = visual.layout.bodyHeight;
-    const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
     const orbit = visual.layout.scissorsOrbit;
     const nodeX = Math.cos(visual.aimAngle) * orbit;
     const nodeY = Math.sin(visual.aimAngle) * orbit;
     if (!visual.attacking && nodeY < bodyY) drawScissorsComplete(ctx, visual, nodeX, nodeY);
-    const routeLevel = Math.max(visual.closedLevel, visual.openLevel);
-    const bodyFilter = routeLevel > 0
-      ? "brightness(" + (1.02 + routeLevel * 0.035) + ") saturate(" + (1.04 + routeLevel * 0.05) + ") drop-shadow(0 0 " + (3 + routeLevel) + "px " + (visual.openLevel >= visual.closedLevel ? "#ff56df" : "#66efff") + ")"
-      : "drop-shadow(0 5px 4px rgba(0,0,0,.62))";
-    drawCanvasSprite(ctx, person, 0, bodyY, bodyWidth, bodyHeight, 1, 0, bodyFilter, "source-over");
+    const cartoonDrawn = drawCartoonLayeredPlayer(
+      ctx, state, "scissors", visual.facing, visual.closedLevel, visual.openLevel, visual.layout
+    );
+    if (!cartoonDrawn) {
+      if (!person) return false;
+      const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
+      const routeLevel = Math.max(visual.closedLevel, visual.openLevel);
+      const bodyFilter = routeLevel > 0
+        ? "brightness(" + (1.02 + routeLevel * 0.035) + ") saturate(" + (1.04 + routeLevel * 0.05) + ") drop-shadow(0 0 " + (3 + routeLevel) + "px " + (visual.openLevel >= visual.closedLevel ? "#ff56df" : "#66efff") + ")"
+        : "drop-shadow(0 5px 4px rgba(0,0,0,.62))";
+      drawCanvasSprite(ctx, person, 0, bodyY, bodyWidth, bodyHeight, 1, 0, bodyFilter, "source-over");
+    }
     if (!visual.attacking && nodeY >= bodyY) drawScissorsComplete(ctx, visual, nodeX, nodeY);
     return true;
   }
@@ -1204,22 +1619,29 @@
     const visual = correctionEmbodimentVisualState(state);
     if (!visual.enabled) return false;
     prepareCorrectionEmbodimentAssets();
+    prepareCartoonCharacterAssets();
     const person = correctionEmbodimentAssets.personCells[visual.facing];
-    if (!person || correctionEmbodimentAssets.nozzleCells.length < 8) return false;
+    if (correctionEmbodimentAssets.nozzleCells.length < 8) return false;
     const bodyY = visual.layout.bodyY;
     const bodyHeight = visual.layout.bodyHeight;
     const squeezeKick = Math.sin((1 - visual.squeeze) * Math.PI) * visual.squeeze;
-    const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
     const angles = visual.sprayAngles || [visual.aimAngle];
     const backAngles = angles.filter(function (angle) { return Math.sin(angle) < -0.1; });
     const frontAngles = angles.filter(function (angle) { return Math.sin(angle) >= -0.1; });
     backAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, visual, angle, index, backAngles.length, !!visual.sprayAngles); });
     drawCorrectionRouteMutation(ctx, visual, "spread", false);
     drawCorrectionRouteMutation(ctx, visual, "fatal", false);
-    drawCanvasSprite(ctx, person, 0, bodyY + squeezeKick * 2.2,
-      bodyWidth * (1 + squeezeKick * 0.045), bodyHeight * (1 - squeezeKick * 0.025), 1, 0,
-      "brightness(" + (1.02 + squeezeKick * 0.14) + ") saturate(" + (1.04 + squeezeKick * 0.16) + ") drop-shadow(0 0 " + (4 + squeezeKick * 8) + "px rgba(116,244,255,.82))",
-      "source-over");
+    const cartoonDrawn = drawCartoonLayeredPlayer(
+      ctx, state, "correction", visual.facing, visual.spreadLevel, visual.fatalLevel, visual.layout
+    );
+    if (!cartoonDrawn) {
+      if (!person) return false;
+      const bodyWidth = bodyHeight * person.width / Math.max(1, person.height);
+      drawCanvasSprite(ctx, person, 0, bodyY + squeezeKick * 2.2,
+        bodyWidth * (1 + squeezeKick * 0.045), bodyHeight * (1 - squeezeKick * 0.025), 1, 0,
+        "brightness(" + (1.02 + squeezeKick * 0.14) + ") saturate(" + (1.04 + squeezeKick * 0.16) + ") drop-shadow(0 0 " + (4 + squeezeKick * 8) + "px rgba(116,244,255,.82))",
+        "source-over");
+    }
     drawCorrectionRouteMutation(ctx, visual, "spread", true);
     drawCorrectionRouteMutation(ctx, visual, "fatal", true);
     frontAngles.forEach(function (angle, index) { drawCorrectionNozzle(ctx, visual, angle, index, frontAngles.length, !!visual.sprayAngles); });
@@ -1349,8 +1771,102 @@
     return true;
   }
 
+  function drawHorizontalSpriteFrame(ctx, id, frames, frame, x, y, visibleHeight, referenceHeight, alpha, facing) {
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const frameCount = Math.max(1, frames || 1);
+    const index = clamp(Math.floor(frame || 0), 0, frameCount - 1);
+    const sourceWidth = Math.floor(img.naturalWidth / frameCount);
+    const sourceHeight = img.naturalHeight;
+    const drawSize = visibleHeight * sourceHeight / Math.max(1, referenceHeight || sourceHeight);
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    ctx.scale(facing < 0 ? -1 : 1, 1);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, index * sourceWidth, 0, sourceWidth, sourceHeight,
+      -drawSize / 2, -drawSize / 2, drawSize, drawSize);
+    ctx.restore();
+    return true;
+  }
+
   function v24Frame(progress) {
     return clamp(Math.floor(clamp(progress || 0, 0, 0.999) * 4), 0, 3);
+  }
+
+  function formalCartoonVfxFamily(state, source) {
+    if (!state || !state.demoV2 || !state.demoV2.formalCartoonVfxPass || !/_test_/.test(String(source || ""))) return "";
+    const profile = eventVisual(source);
+    const family = profile && profile.family || "";
+    if (family === "correction") return "correction_fluid";
+    return ["marker", "thermos", "scissors", "correction_fluid"].indexOf(family) >= 0 ? family : "";
+  }
+
+  function formalCartoonVfxRow(family, source) {
+    const id = String(source || "");
+    if (family === "marker") return /archive|retrieval|grid|wave/.test(id) ? 1 : 0;
+    if (family === "thermos") return /heatwave|ignition|thermal_exchange|defeat/.test(id) ? 1 : 0;
+    if (family === "scissors") return /base|open|crosscut|finale|execution|shelter|defeat/.test(id) ? 1 : 0;
+    return /error|area|rollback|crash|final|overload|defeat/.test(id) ? 1 : 0;
+  }
+
+  function formalCartoonVfxAsset(family) {
+    if (family === "correction_fluid") return "formal_correction_vfx_v2";
+    if (family === "scissors") return "formal_scissors_vfx_v3";
+    return "formal_" + family + "_vfx_v2";
+  }
+
+  function drawFormalCartoonLinearVfx(ctx, state, item, alpha, progress) {
+    const source = item && item.source || "";
+    const family = formalCartoonVfxFamily(state, source);
+    if (!family || item.x1 == null || item.x2 == null) return false;
+    const dx = item.x2 - item.x1;
+    const dy = item.y2 - item.y1;
+    const length = Math.hypot(dx, dy) || 1;
+    const angle = Math.atan2(dy, dx);
+    const row = formalCartoonVfxRow(family, source);
+    const frame = row * 4 + v24Frame(progress);
+    let height = Math.max(42, (item.width || 8) * 3.2);
+    let width = length * 1.12;
+    let anchor = 0.5;
+    if (family === "thermos") {
+      height = source === "thermos_test_base"
+        ? Math.max(120, item.meta && item.meta.fanWidth || (item.width || 10) * 16)
+        : Math.max(62, (item.width || 10) * 6.6);
+      width = length * 1.16;
+    }
+    if (family === "scissors") {
+      const open = row === 1;
+      height = open ? Math.max(112, length * 0.92) : Math.max(72, (item.width || 18) * 3.2);
+      width = open ? Math.max(length * 1.34, height) : length * 1.22;
+      anchor = open ? 0.48 : 0.5;
+    }
+    if (family === "correction_fluid") height = Math.max(58, (item.width || 18) * 3.35);
+    const filter = "drop-shadow(0 2px 1px rgba(64,56,47,.28))";
+    return drawGridSpriteFrame(ctx, formalCartoonVfxAsset(family), 4, 2, frame,
+      item.x1 + dx * anchor, item.y1 + dy * anchor, width, height,
+      Math.min(1, (alpha || 0.5) + 0.12), angle, filter, "source-over");
+  }
+
+  function drawFormalCartoonAreaVfx(ctx, state, item, alpha, progress, radius) {
+    const source = item && item.source || "";
+    const family = formalCartoonVfxFamily(state, source);
+    if (!family || item.x == null) return false;
+    const row = formalCartoonVfxRow(family, source);
+    let localFrame = v24Frame(progress);
+    if (family === "correction_fluid" && row === 1 && /error_apply|error_overload/.test(source)) {
+      localFrame = source.indexOf("overload") >= 0 ? 2 : clamp((item.errorStacks || 1) - 1, 0, 2);
+    }
+    const frame = row * 4 + localFrame;
+    const r = Math.max(20, radius || item.radius || 40);
+    let size = r * 2.12;
+    if (family === "thermos" && row === 1) size = r * 2.3;
+    if (family === "scissors") size = r * 2.25;
+    if (family === "correction_fluid") size = r * 2.15;
+    return drawGridSpriteFrame(ctx, formalCartoonVfxAsset(family), 4, 2, frame,
+      item.x, item.y, size, size, Math.min(0.94, (alpha || 0.5) + 0.08),
+      item.areaRotation || progress * 0.04,
+      "drop-shadow(0 2px 1px rgba(64,56,47,.28))", "source-over");
   }
 
   function drawSuiteNeonLine(ctx, state, item, alpha, progress) {
@@ -1741,6 +2257,17 @@
     }
   }
 
+  function traceFormalAudioEvent(state, kind, enemy, stage, extra) {
+    if (!V2.audio || !V2.audio.handleFormalEvent) return false;
+    return V2.audio.handleFormalEvent(Object.assign({
+      kind,
+      source: enemy ? "enemy_" + (enemy.typeId || "unknown") + "_" + kind : kind,
+      enemyType: enemy && enemy.typeId || "",
+      boss: !!(enemy && enemy.boss),
+      stage: stage || "anticipation"
+    }, extra || {}), state);
+  }
+
   function addBeamEvent(state, x1, y1, x2, y2, color, width, life, kind, sprite, source, meta) {
     const eventSource = source || kind || "beam";
     const visualProfile = eventVisual(eventSource);
@@ -1793,6 +2320,20 @@
     state.formEvents.push({ kind: "text", x, y, text, color: color || "#d8ffff", life: life || 0.6, maxLife: life || 0.6 });
   }
 
+  function addFormalPickupCollectEvent(state, pickup) {
+    const def = formalCartoonPickupDef(state, pickup.type);
+    if (!def) return;
+    state.formEvents.push({
+      kind: "formal_pickup_collect",
+      pickupType: pickup.type,
+      x: pickup.x,
+      y: pickup.y,
+      life: 0.22,
+      maxLife: 0.22,
+      duration: 0.22
+    });
+  }
+
   function addDamageZone(state, zone) {
     const z = CombatPrimitives.zone(zone);
     z.vfxPhase = z.vfxPhase || eventPhase(z.source || z.visual || z.type);
@@ -1822,8 +2363,23 @@
       amount *= 2;
       addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, "暴击", "#ffd86b", 0.42);
     }
-    if (enemy.armor) {
+    const formalGuardDef = formalCartoonEnemyDef(state, enemy);
+    const formalGuardActive = formalGuardDef && formalGuardDef.attackKind === "guard" && (enemy.armorBrokenTime || 0) <= 0;
+    if (enemy.armor && (!formalGuardDef || formalGuardActive)) {
+      const rawAmount = amount;
       amount *= 1 - Math.min(0.6, enemy.armor);
+      if (formalGuardActive) {
+        const guardWasIdle = (enemy.armorGuardTime || 0) <= 0;
+        enemy.armorGuardHp = Math.max(0, (enemy.armorGuardHp || enemy.armorGuardMax || 1) - (rawAmount - amount));
+        enemy.armorGuardTime = formalGuardDef.attackDuration;
+        enemy.armorGuardMaxTime = formalGuardDef.attackDuration;
+        enemy.armorGuardStartProgress = 0;
+        if (guardWasIdle) traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation");
+        if (enemy.armorGuardHp <= 0) {
+          enemy.armorBrokenTime = formalGuardDef.brokenDuration;
+          enemy.armorGuardStartProgress = formalGuardDef.breakAt;
+        }
+      }
       addCircleEvent(state, enemy.x, enemy.y, enemy.r + 10, enemy.accent || "#d9e6ff", 0.16, "shield");
     }
     if (enemy.boss && enemy.bossHitCap) {
@@ -1852,6 +2408,15 @@
     }
     if (enemy.hp <= 0) {
       enemy.dead = true;
+      const formalDeathDef = formalCartoonEnemyDef(state, enemy);
+      if (formalDeathDef && formalDeathDef.attackKind === "split" && enemy.splitType && !enemy.fragment) {
+        traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation");
+        enemy.splitAttackMax = formalDeathDef.attackDuration;
+        enemy.splitAttackTime = formalDeathDef.attackDuration;
+        enemy.splitReleased = false;
+        enemy.deathTime = formalDeathDef.attackDuration + 0.22;
+      } else if (formalDeathDef) enemy.deathTime = 0.34;
+      traceFormalAudioEvent(state, "enemy_defeat", enemy, "impact", { source: source || "enemy_defeat" });
       handleCorrectionEnemyDeath(state, enemy, source);
       if (enemy.boss) state.stageBossDefeated = true;
       state.kills += 1;
@@ -1924,7 +2489,7 @@
           });
         }
       }
-      if (enemy.splitType && !enemy.fragment && state.enemies.length < 90) {
+      if (enemy.splitType && !enemy.fragment && !(formalDeathDef && formalDeathDef.attackKind === "split") && state.enemies.length < 90) {
         spawnChildEnemy(state, enemy, enemy.splitType, -1);
         spawnChildEnemy(state, enemy, enemy.splitType, 1);
       }
@@ -4431,12 +4996,14 @@
   function fireWeapon(state) {
     if (!state.selectedWeaponId) return;
     const id = state.selectedWeaponId;
+    const shotsBefore = state.stats.shots || 0;
     if (id === "marker") fireMarker(state);
     else if (id === "thermos") fireThermos(state);
     else if (id === "sticky_note") fireSticky(state);
     else if (id === "scissors") fireScissorsFixedTest(state);
     else if (id === "correction_fluid") fireCorrectionFluidFixedTest(state);
     else fireGeneric(state);
+    if ((state.stats.shots || 0) > shotsBefore) state.player.attackReactionTime = 0.16;
   }
 
   function recordEnemySpawn(state, typeId) {
@@ -4475,6 +5042,9 @@
     const projectileSpeedScale = (bossPressure ? 1.18 : sustainedPressure ? 1.2 : 1) * openingProjectileScale;
     const damagePressureScale = bossPressure ? 1.14 : 1;
     const encounterDamageScale = stage.enemyDamageScale || 1;
+    const formalApprovalDef = !boss && typeId === "approval" && state.demoV2 && state.demoV2.formalCartoonAssetPass
+      ? FORMAL_CARTOON_ENEMY_DEFS.approval : null;
+    const armorGuardMax = formalApprovalDef ? hp * formalApprovalDef.armorPoolRatio : 0;
     return {
       id: "e" + Date.now() + "_" + Math.random().toString(16).slice(2),
       typeId: boss ? (stage.bossType || "boss") : typeId,
@@ -4491,13 +5061,35 @@
       boss,
       fragment,
       dead: false,
+      deathTime: 0,
       hitCooldown: 0,
+      visualFacing: 1,
+      contactAttackTime: 0,
+      contactAttackMax: 0,
+      contactAttackCooldown: 0,
+      contactAttackHit: false,
+      contactAttackVx: 0,
+      contactAttackVy: 0,
+      rangedAttackTime: 0,
+      rangedAttackMax: 0,
+      rangedAttackFired: false,
+      rangedAttackVx: 0,
+      rangedAttackVy: 0,
+      splitAttackTime: 0,
+      splitAttackMax: 0,
+      splitReleased: false,
       p0Marked: false,
       phase: Math.random() * Math.PI * 2,
       age: 0,
       color: def.color || "#c82345",
       accent: def.accent || "#ff6b8a",
       armor: def.armor || 0,
+      armorGuardHp: armorGuardMax,
+      armorGuardMax,
+      armorGuardTime: 0,
+      armorGuardMaxTime: 0,
+      armorGuardStartProgress: 0,
+      armorBrokenTime: 0,
       bossHitCap: boss ? (stage.bossHitCap || 0) : 0,
       shootEvery: (def.shootEvery || (bossPressure ? 2.25 : 0)) * actionRateScale,
       projectileSpeed: (def.projectileSpeed || 245) * projectileSpeedScale,
@@ -4506,15 +5098,273 @@
       chargeSpeed: (def.chargeSpeed || 240) * (bossPressure ? 1.12 : sustainedPressure ? 1.16 : 1),
       chargeCooldown: (def.chargeEvery || 2.8) * actionRateScale * (0.42 + Math.random() * 0.5),
       chargeTime: 0,
+      chargeMax: 0,
+      chargeHit: false,
       chargeVx: 0,
       chargeVy: 0,
       splitType: def.splitType || "",
       bossPatternCooldown: boss ? (bossPressure ? 0.82 : 1.25) : 0,
       bossPatternKind: "",
       bossPatternTimer: 0,
+      bossPatternMax: 0,
+      bossPatternReleaseKind: "",
+      bossPatternReleaseTime: 0,
+      bossPatternReleaseMax: 0,
       bossPatternAngle: 0,
       bossPatternIndex: 0
     };
+  }
+
+  function applyFormalEnemyDebugPose(state, pose) {
+    const bossMatch = /^boss-(lead|director|delivery|client|ceo)-(move|attack|charge|lane|burst|hit|defeat)(?:-(\d+))?$/.exec(String(pose || ""));
+    if (bossMatch && state && state.demoV2 && state.demoV2.formalCartoonAssetPass) {
+      const typeId = bossMatch[1];
+      const action = bossMatch[2];
+      const visualDef = FORMAL_CARTOON_BOSS_DEFS[typeId];
+      const frameLimit = action === "move" ? visualDef.moveFrames : action === "attack" ? visualDef.attackFrames
+        : action === "charge" ? visualDef.chargeFrames
+        : action === "lane" || action === "burst" ? visualDef.patternFrames : 1;
+      const frame = clamp(Number(bossMatch[3] || 0), 0, frameLimit - 1);
+      const playerX = worldWidth(state) / 2;
+      const playerY = worldHeight(state) / 2;
+      state.mode = "combat";
+      state.warmupTime = 0;
+      state.stageTime = Math.max(30, Number(state.stage && state.stage.duration) || 0);
+      state.player.x = playerX;
+      state.player.y = playerY;
+      state.stage.bossType = typeId;
+      state.projectiles = [];
+      state.damageZones = [];
+      state.formEvents = [];
+      state.particles = [];
+      state.pickups = [];
+      const boss = makeEnemy(state, typeId, playerX + 190, playerY, { boss: true });
+      boss.id = "formal-debug-boss-" + typeId;
+      boss.phase = 0;
+      boss.speed = 0;
+      boss.visualFacing = -1;
+      boss.formalBossDebugFrame = frame;
+      boss.formalBossDebugAction = action;
+      if (action === "move") boss.age = frame * visualDef.moveCadence + 0.001;
+      if (action === "charge") {
+        boss.chargeTime = 1;
+        boss.chargeMax = 1;
+      }
+      if (action === "attack") {
+        const progress = (frame + 0.5) / visualDef.attackFrames;
+        boss.rangedAttackMax = visualDef.attackDuration;
+        boss.rangedAttackTime = visualDef.attackDuration * (1 - progress);
+        boss.rangedAttackFired = progress >= visualDef.impactAt;
+        boss.rangedAttackVx = -1;
+        boss.rangedAttackVy = 0;
+      }
+      if (action === "lane" || action === "burst") {
+        boss.bossPatternKind = action;
+        boss.bossPatternMax = 1;
+        boss.bossPatternTimer = 1;
+      } else if (action === "hit") {
+        boss.hitFlash = 0.16;
+        boss.hitFamily = "marker";
+      } else if (action === "defeat") {
+        boss.dead = true;
+        boss.hp = 0;
+        boss.deathTime = 0.24;
+      }
+      state.enemies = [boss];
+      updateCamera(state);
+      if (document.body) {
+        document.body.dataset.formalEnemyPose = ["boss", typeId, action, frame].join("-");
+        document.body.dataset.formalEnemyAsset = action === "move" ? visualDef.move : action === "attack" ? visualDef.attack
+          : action === "charge" ? visualDef.charge
+          : action === "lane" ? visualDef.lane : action === "burst" ? visualDef.burst : visualDef.actions;
+      }
+      return boss;
+    }
+    const match = /^(todo|email|meeting|ping|deadline|scope|approval|client)-(move|attack|hit|defeat)(?:-(\d+))?$/.exec(String(pose || ""));
+    if (!match || !state || !state.demoV2 || !state.demoV2.formalCartoonAssetPass) return null;
+    const typeId = match[1];
+    const action = match[2];
+    const requestedFrame = Number(match[3] || 0);
+    const visualDef = FORMAL_CARTOON_ENEMY_DEFS[typeId];
+    const moveFrames = visualDef.moveFrames || 4;
+    const attackFrames = visualDef.attackFrames || 5;
+    const frameLimit = action === "attack" ? attackFrames : action === "move" ? moveFrames : 1;
+    const frame = clamp(requestedFrame, 0, frameLimit - 1);
+    const playerX = worldWidth(state) / 2;
+    const playerY = worldHeight(state) / 2;
+    state.mode = "combat";
+    state.warmupTime = 0;
+    state.stageTime = Math.max(30, Number(state.stage && state.stage.duration) || 0);
+    state.player.x = playerX;
+    state.player.y = playerY;
+    state.projectiles = [];
+    state.damageZones = [];
+    state.formEvents = [];
+    state.particles = [];
+    state.pickups = [];
+    const enemy = makeEnemy(state, typeId, playerX + 150, playerY, { boss: false });
+    enemy.id = "formal-debug-" + typeId;
+    enemy.phase = 0;
+    enemy.speed = 0;
+    enemy.visualFacing = -1;
+    enemy.hp = enemy.maxHp;
+    if (action === "move") {
+      const cadence = visualDef.moveCadence || (typeId === "email" ? 0.09 : 0.115);
+      enemy.age = frame * cadence + 0.001;
+    } else if (action === "attack") {
+      const progress = (frame + 0.5) / attackFrames;
+      if (visualDef.attackKind === "ranged") {
+        enemy.rangedAttackMax = visualDef.attackDuration;
+        enemy.rangedAttackTime = visualDef.attackDuration * (1 - progress);
+        enemy.rangedAttackFired = progress >= visualDef.impactAt;
+        enemy.rangedAttackVx = -1;
+        enemy.rangedAttackVy = 0;
+      } else if (visualDef.attackKind === "charge") {
+        enemy.chargeMax = visualDef.attackDuration;
+        enemy.chargeTime = visualDef.attackDuration * (1 - progress);
+        enemy.chargeHit = false;
+        enemy.chargeVx = -1;
+        enemy.chargeVy = 0;
+      } else if (visualDef.attackKind === "split") {
+        enemy.splitAttackMax = visualDef.attackDuration;
+        enemy.splitAttackTime = visualDef.attackDuration * (1 - progress);
+        enemy.splitReleased = progress >= visualDef.releaseAt;
+      } else if (visualDef.attackKind === "guard") {
+        enemy.armorGuardMaxTime = visualDef.attackDuration;
+        enemy.armorGuardTime = visualDef.attackDuration * (1 - progress);
+        enemy.armorGuardStartProgress = 0;
+        enemy.armorBrokenTime = progress >= visualDef.breakAt ? visualDef.brokenDuration : 0;
+      } else {
+        enemy.contactAttackMax = visualDef.attackDuration;
+        enemy.contactAttackTime = visualDef.attackDuration * (1 - progress);
+        enemy.contactAttackHit = progress >= visualDef.impactAt;
+        enemy.contactAttackVx = -1;
+        enemy.contactAttackVy = 0;
+      }
+    } else if (action === "hit") {
+      enemy.hitFlash = 0.12;
+      enemy.hitFamily = "marker";
+    } else if (action === "defeat") {
+      enemy.dead = true;
+      enemy.hp = 0;
+      enemy.deathTime = 0.24;
+    }
+    state.enemies = [enemy];
+    updateCamera(state);
+    if (document.body) {
+      document.body.dataset.formalEnemyPose = [typeId, action, frame].join("-");
+      document.body.dataset.formalEnemyAsset = action === "move" ? visualDef.move
+        : action === "attack" ? visualDef.attack : visualDef.actions;
+    }
+    return enemy;
+  }
+
+  function applyFormalPickupDebugPose(state, type, requestedFrame, collected) {
+    const pickupType = String(type || "");
+    if (!/^(xp|material|heal|all)$/.test(pickupType)
+      || !state || !state.demoV2 || !state.demoV2.formalCartoonPickupPass) return null;
+    const frame = clamp(Number(requestedFrame || 0), 0, 3);
+    const playerX = worldWidth(state) / 2;
+    const playerY = worldHeight(state) / 2;
+    const types = pickupType === "all" ? ["xp", "material", "heal"] : [pickupType];
+    state.mode = "combat";
+    state.warmupTime = 0;
+    state.stageTime = Math.max(999, state.stageTime || 0);
+    state.player.x = playerX;
+    state.player.y = playerY;
+    state.enemies = [];
+    state.projectiles = [];
+    state.damageZones = [];
+    state.formEvents = [];
+    state.particles = [];
+    state.pickups = types.map(function (pickupKind, index) {
+      const offset = (index - (types.length - 1) / 2) * 105;
+      return {
+        type: pickupKind,
+        x: playerX + offset,
+        y: playerY + 108,
+        amount: pickupKind === "material" ? 1 : pickupKind === "heal" ? 14 : 5,
+        radius: pickupKind === "material" ? 6 : pickupKind === "heal" ? 8 : 7,
+        visualAge: frame * FORMAL_CARTOON_PICKUP_DEFS[pickupKind].cadence + 0.001,
+        visualSeed: 0,
+        magnetRatio: 0,
+        magnetAngle: -Math.PI / 2,
+        formalDebugFrame: frame
+      };
+    });
+    if (collected) {
+      state.pickups.forEach(function (pickup) {
+        addFormalPickupCollectEvent(state, pickup);
+      });
+      state.formEvents.forEach(function (event) {
+        event.debugHold = true;
+        event.debugProgress = 0.46;
+      });
+      state.pickups = [];
+    }
+    updateCamera(state);
+    if (document.body) {
+      document.body.dataset.formalPickupType = pickupType;
+      document.body.dataset.formalPickupFrame = String(frame);
+      document.body.dataset.formalPickupAsset = pickupType === "all"
+        ? "formal-pickup-family-v1" : FORMAL_CARTOON_PICKUP_DEFS[pickupType].sprite;
+      document.body.dataset.formalPickupCollected = collected ? "1" : "0";
+    }
+    return collected ? state.formEvents : state.pickups;
+  }
+
+  function applyFormalVfxDebugPose(state, pose, requestedFrame) {
+    const definitions = {
+      "marker-line": { weapon: "marker", source: "marker_test_copy", asset: "formal_marker_vfx_v2", shape: "line", width: 34 },
+      "marker-archive": { weapon: "marker", source: "marker_test_archive", asset: "formal_marker_vfx_v2", shape: "line", width: 46 },
+      "thermos-steam": { weapon: "thermos", source: "thermos_test_base", asset: "formal_thermos_vfx_v2", shape: "line", width: 34, fanWidth: 150 },
+      "thermos-heat": { weapon: "thermos", source: "thermos_test_kill_heatwave", asset: "formal_thermos_vfx_v2", shape: "area", radius: 108 },
+      "scissors-closed": { weapon: "scissors", source: "scissors_test_thrust", asset: "formal_scissors_vfx_v3", shape: "line", width: 38 },
+      "scissors-open": { weapon: "scissors", source: "scissors_test_open", asset: "formal_scissors_vfx_v3", shape: "line", width: 48 },
+      "correction-spray": { weapon: "correction_fluid", source: "correction_test_spray", asset: "formal_correction_vfx_v2", shape: "line", width: 38 },
+      "correction-error": { weapon: "correction_fluid", source: "correction_test_system_crash", asset: "formal_correction_vfx_v2", shape: "area", radius: 104 }
+    };
+    const id = String(pose || "");
+    const def = definitions[id];
+    if (!def || !state || !state.demoV2 || !state.demoV2.formalCartoonVfxPass) return null;
+    const frame = clamp(Number(requestedFrame || 0), 0, 3);
+    const playerX = worldWidth(state) / 2;
+    const playerY = worldHeight(state) / 2;
+    state.mode = "combat";
+    state.warmupTime = 0;
+    state.stageTime = Math.max(999, state.stageTime || 0);
+    state.player.x = playerX;
+    state.player.y = playerY;
+    state.enemies = [];
+    state.projectiles = [];
+    state.damageZones = [];
+    state.formEvents = [];
+    state.particles = [];
+    state.pickups = [];
+    if (def.shape === "line") {
+      addBeamEvent(state, playerX + 42, playerY + 8, playerX + 250, playerY - 50,
+        "#fff4d6", def.width, 0.5, "formal_vfx_debug", false, def.source,
+        def.fanWidth ? { fanWidth: def.fanWidth } : null);
+    } else {
+      addCircleEvent(state, playerX + 154, playerY - 12, def.radius,
+        "#fff4d6", 0.5, "formal_vfx_debug", false, def.source,
+        def.source === "correction_test_system_crash" ? { errorStacks: 3 } : null);
+    }
+    const event = state.formEvents[state.formEvents.length - 1];
+    if (event) {
+      event.debugHold = true;
+      event.debugProgress = (frame + 0.5) / 4;
+      if (def.source === "correction_test_system_crash") event.errorStacks = 3;
+    }
+    updateCamera(state);
+    if (document.body) {
+      document.body.dataset.formalVfxPose = id;
+      document.body.dataset.formalVfxFrame = String(frame);
+      document.body.dataset.formalVfxAsset = def.asset;
+      document.body.dataset.formalVfxSource = def.source;
+      document.body.dataset.formalVfxGeometry = def.shape;
+    }
+    return event;
   }
 
   function markerFixedQuotaAllowsSpawn(state) {
@@ -4815,6 +5665,9 @@
     if (input.down) y += 1;
     const len = Math.hypot(x, y) || 1;
     const scissors = scissorsFixedRuntime(state);
+    const walking = !!(x || y) || !!(scissors && scissors.dashMotionTime > 0);
+    state.player.walkMoving = walking;
+    state.player.walkClock = walking ? (state.player.walkClock || 0) + dt : 0;
     if (scissors && (x || y)) {
       scissors.facingAngle = Math.atan2(y, x);
       scissors.bodyFacing = markerBodyFacingFromVector(x, y);
@@ -4864,6 +5717,7 @@
     state.hp -= incoming;
     state.stats.damageTaken += incoming;
     state.player.invuln = 0.55;
+    state.player.hitReactionTime = 0.22;
     addParticle(state, state.player.x, state.player.y, color || "#ff6b4a", 8);
     const config = fixedTestConfig(state);
     if (config && config.onPlayerDamaged && config.onPlayerDamaged(state)) {
@@ -4875,12 +5729,19 @@
 
   function fireEnemyShot(state, enemy, dx, dy, len) {
     const speed = enemy.projectileSpeed || (enemy.boss ? 285 : 245);
+    const directionX = dx / Math.max(0.001, len);
+    const directionY = dy / Math.max(0.001, len);
+    const formalRangedDef = formalCartoonEnemyDef(state, enemy) || formalCartoonBossDef(state, enemy);
+    const muzzleOffset = formalRangedDef && (formalRangedDef.attackKind === "ranged" || formalRangedDef.rangedAttack)
+      ? (formalRangedDef.muzzleOffset || enemy.r + 13) : 0;
+    const originX = enemy.x + directionX * muzzleOffset;
+    const originY = enemy.y + directionY * muzzleOffset;
       state.projectiles.push(CombatPrimitives.projectile({
         hostile: true,
-      x: enemy.x,
-      y: enemy.y,
-      vx: dx / len * speed,
-      vy: dy / len * speed,
+      x: originX,
+      y: originY,
+      vx: directionX * speed,
+      vy: directionY * speed,
       // V3.0 raises only telegraphed projectile pressure. Basic contact chip
       // remains unchanged so early melee keeps a learnable survival window.
       damage: enemy.damage * (enemy.boss ? 0.76 : 0.68),
@@ -4888,11 +5749,11 @@
       life: enemy.boss ? 3.6 : 2.8,
       source: "enemy_" + (enemy.typeId || "shot"),
         color: enemy.accent || "#ff8aff",
-        originX: enemy.x,
-        originY: enemy.y
+        originX,
+        originY
       }));
     state.stats.enemyShots = (state.stats.enemyShots || 0) + 1;
-    addCircleEvent(state, enemy.x, enemy.y, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
+    addCircleEvent(state, originX, originY, enemy.r + 12, enemy.accent || "#ff8aff", 0.18, "mark");
   }
 
   function bossPatternSequence(enemy) {
@@ -4931,9 +5792,11 @@
     const warningTime = kind === "lane" ? 0.86 : 0.96;
     enemy.bossPatternKind = kind;
     enemy.bossPatternTimer = warningTime;
+    enemy.bossPatternMax = warningTime;
     enemy.bossPatternAngle = angle;
     enemy.bossPatternIndex = (enemy.bossPatternIndex || 0) + 1;
     recordBossPattern(state, enemy, kind, "warning");
+    traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation", { source: "boss_" + kind + "_warning" });
 
     if (kind === "lane") {
       const distance = 1120;
@@ -5018,6 +5881,11 @@
       addCircleEvent(state, enemy.x, enemy.y, 188, "#ff5c57", 0.28, "blast", false, "boss_test_burst_release", { safeAngle: angle });
     }
     recordBossPattern(state, enemy, kind, "release");
+    if (formalCartoonBossDef(state, enemy)) {
+      enemy.bossPatternReleaseKind = kind;
+      enemy.bossPatternReleaseTime = 0.28;
+      enemy.bossPatternReleaseMax = 0.28;
+    }
     enemy.bossPatternKind = "";
     enemy.bossPatternTimer = 0;
     const cadence = pressure ? Math.max(1.72, 3.65 - phase * 0.27) : Math.max(2.55, 4.85 - phase * 0.34);
@@ -5043,25 +5911,105 @@
 
   function updateEnemyIntent(state, enemy, dt, dx, dy, len) {
     const pressure = !!(state.demoV2 && state.demoV2.bossPressurePass);
+    const visualDef = formalCartoonEnemyDef(state, enemy);
+    const bossVisualDef = formalCartoonBossDef(state, enemy);
+    const rangedVisualDef = visualDef && visualDef.attackKind === "ranged" ? visualDef
+      : bossVisualDef && (bossVisualDef.attackKind === "ranged" || bossVisualDef.rangedAttack) ? bossVisualDef : null;
     const ranged = enemy.behavior === "shooter" || enemy.behavior === "boss_shooter" || enemy.behavior === "boss_shield" || enemy.behavior === "boss_final" || (pressure && enemy.behavior === "boss");
     if (ranged) {
+      if (rangedVisualDef) {
+        enemy.shootCooldown = Math.max(0, enemy.shootCooldown - dt);
+        if (enemy.rangedAttackTime <= 0 && enemy.chargeTime <= 0
+          && enemy.shootCooldown <= 0 && len < (enemy.boss ? 760 : 620)) {
+          enemy.rangedAttackTime = rangedVisualDef.attackDuration;
+          enemy.rangedAttackMax = rangedVisualDef.attackDuration;
+          enemy.rangedAttackFired = false;
+          enemy.rangedAttackVx = dx / len;
+          enemy.rangedAttackVy = dy / len;
+          traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation", { source: "enemy_ranged_warning" });
+        }
+        if (enemy.rangedAttackTime > 0) {
+          enemy.rangedAttackTime = Math.max(0, enemy.rangedAttackTime - dt);
+          const duration = Math.max(0.01, enemy.rangedAttackMax || rangedVisualDef.attackDuration);
+          const progress = 1 - enemy.rangedAttackTime / duration;
+          if (!enemy.rangedAttackFired && progress >= rangedVisualDef.impactAt) {
+            enemy.rangedAttackFired = true;
+            const aimX = enemy.rangedAttackVx || dx / len;
+            const aimY = enemy.rangedAttackVy || dy / len;
+            const burstCount = rangedVisualDef.burstCount || 1;
+            const burstSpread = rangedVisualDef.burstSpread || 0;
+            for (let shotIndex = 0; shotIndex < burstCount; shotIndex++) {
+              const angleOffset = (shotIndex - (burstCount - 1) / 2) * burstSpread;
+              const cos = Math.cos(angleOffset);
+              const sin = Math.sin(angleOffset);
+              fireEnemyShot(state, enemy, aimX * cos - aimY * sin, aimX * sin + aimY * cos, 1);
+            }
+            enemy.shootCooldown = Math.max(0.8, (enemy.shootEvery || 2.2) * (0.82 + Math.random() * 0.32));
+          }
+        }
+      } else {
       enemy.shootCooldown = Math.max(0, enemy.shootCooldown - dt);
       if (enemy.shootCooldown <= 0 && len < (enemy.boss ? 760 : 620)) {
         fireEnemyShot(state, enemy, dx, dy, len);
         enemy.shootCooldown = Math.max(pressure && enemy.boss ? 0.52 : 0.8, (enemy.shootEvery || 2.2) * (0.82 + Math.random() * 0.32));
       }
-    }
-    const charger = enemy.behavior === "charger" || enemy.behavior === "boss_charger" || enemy.behavior === "boss_final";
-    if (charger && enemy.chargeTime <= 0) {
-      enemy.chargeCooldown = Math.max(0, enemy.chargeCooldown - dt);
-      if (enemy.chargeCooldown <= 0 && len < (enemy.boss ? 720 : 520)) {
-        enemy.chargeTime = enemy.boss ? 0.62 : 0.48;
-        enemy.chargeVx = dx / len;
-        enemy.chargeVy = dy / len;
-        enemy.chargeCooldown = Math.max(pressure && enemy.boss ? 0.88 : 1.25, (enemy.chargeEvery || 2.7) * (0.82 + Math.random() * 0.42));
-        addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, enemy.boss ? "冲刺评审" : "DDL", enemy.accent || "#ffd36a", 0.42);
       }
     }
+    const charger = enemy.behavior === "charger" || enemy.behavior === "boss_charger" || enemy.behavior === "boss_final";
+    if (charger && enemy.chargeTime <= 0 && !(rangedVisualDef && enemy.rangedAttackTime > 0)) {
+      enemy.chargeCooldown = Math.max(0, enemy.chargeCooldown - dt);
+      if (enemy.chargeCooldown <= 0 && len < (enemy.boss ? 720 : 520)) {
+        const chargeDef = visualDef && visualDef.attackKind === "charge" ? visualDef
+          : bossVisualDef && (bossVisualDef.attackKind === "charge" || bossVisualDef.chargeAttack) ? bossVisualDef : null;
+        enemy.chargeTime = chargeDef
+          ? chargeDef.chargeDuration || chargeDef.attackDuration : enemy.boss ? 0.62 : 0.48;
+        enemy.chargeMax = enemy.chargeTime;
+        enemy.chargeHit = false;
+        enemy.chargeVx = dx / len;
+        enemy.chargeVy = dy / len;
+        if (chargeDef) traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation", { source: "enemy_charge_warning" });
+        enemy.chargeCooldown = Math.max(pressure && enemy.boss ? 0.88 : 1.25, (enemy.chargeEvery || 2.7) * (0.82 + Math.random() * 0.42));
+        if (!chargeDef) {
+          addTextEvent(state, enemy.x, enemy.y - enemy.r - 8, enemy.boss ? "冲刺评审" : "DDL", enemy.accent || "#ffd36a", 0.42);
+        }
+      }
+    }
+  }
+
+  function updateFormalContactAttack(state, enemy, dt, dx, dy, len) {
+    const visualDef = formalCartoonEnemyDef(state, enemy);
+    if (!visualDef || visualDef.attackKind) return null;
+    enemy.contactAttackCooldown = Math.max(0, (enemy.contactAttackCooldown || 0) - dt);
+    if (enemy.contactAttackTime <= 0 && enemy.contactAttackCooldown <= 0
+      && len < state.player.radius + enemy.r + visualDef.triggerPadding) {
+      enemy.contactAttackTime = visualDef.attackDuration;
+      enemy.contactAttackMax = visualDef.attackDuration;
+      enemy.contactAttackHit = false;
+      enemy.contactAttackVx = dx / len;
+      enemy.contactAttackVy = dy / len;
+      traceFormalAudioEvent(state, "enemy_action", enemy, "anticipation", { source: "enemy_contact_warning" });
+    }
+    if (enemy.contactAttackTime <= 0) return null;
+    enemy.contactAttackTime = Math.max(0, enemy.contactAttackTime - dt);
+    const duration = Math.max(0.01, enemy.contactAttackMax || visualDef.attackDuration);
+    const progress = 1 - enemy.contactAttackTime / duration;
+    if (!enemy.contactAttackHit && progress >= visualDef.impactAt) {
+      enemy.contactAttackHit = true;
+      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r + 10
+        && state.player.invuln <= 0) {
+        damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
+        addCircleEvent(state, enemy.x, enemy.y, enemy.r + 15,
+          enemy.typeId === "email" ? "#ff6b78" : "#f4ca4c", 0.22, "blast");
+      }
+    }
+    if (enemy.contactAttackTime <= 0) enemy.contactAttackCooldown = 0.24;
+    const launching = progress >= 0.32 && progress < Math.min(0.82, visualDef.impactAt + 0.16);
+    return {
+      progress,
+      mx: enemy.contactAttackVx || dx / len,
+      my: enemy.contactAttackVy || dy / len,
+      moveSpeed: launching ? enemy.speed * visualDef.launchScale : 0
+    };
   }
 
   function updateEnemies(state, dt) {
@@ -5071,9 +6019,33 @@
     const markerEncounter = fixedConfig && demoConfig && demoConfig.currentEncounter ? demoConfig.currentEncounter(state) : null;
     const cap = markerEncounter ? markerEncounter.cap : demoConfig ? demoConfig.enemyCap : state.stage.id >= 4 ? 95 : 75;
     for (const enemy of state.enemies) {
-      if (enemy.dead) continue;
+      if (enemy.dead) {
+        const deadVisualDef = formalCartoonEnemyDef(state, enemy);
+        if (deadVisualDef && deadVisualDef.attackKind === "split" && enemy.splitAttackTime > 0) {
+          enemy.splitAttackTime = Math.max(0, enemy.splitAttackTime - dt);
+          const splitProgress = 1 - enemy.splitAttackTime / Math.max(0.01, enemy.splitAttackMax || deadVisualDef.attackDuration);
+          if (!enemy.splitReleased && splitProgress >= deadVisualDef.releaseAt) {
+            enemy.splitReleased = true;
+            if (state.enemies.length < 90) {
+              spawnChildEnemy(state, enemy, enemy.splitType, -1);
+              spawnChildEnemy(state, enemy, enemy.splitType, 1);
+            }
+          }
+        }
+        enemy.deathTime = Math.max(0, (enemy.deathTime || 0) - dt);
+        continue;
+      }
       enemy.age = (enemy.age || 0) + dt;
       enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
+      enemy.bossPatternReleaseTime = Math.max(0, (enemy.bossPatternReleaseTime || 0) - dt);
+      if (enemy.bossPatternReleaseTime <= 0) enemy.bossPatternReleaseKind = "";
+      enemy.armorGuardTime = Math.max(0, (enemy.armorGuardTime || 0) - dt);
+      const armorWasBroken = (enemy.armorBrokenTime || 0) > 0;
+      enemy.armorBrokenTime = Math.max(0, (enemy.armorBrokenTime || 0) - dt);
+      if (armorWasBroken && enemy.armorBrokenTime <= 0 && enemy.armorGuardMax > 0) {
+        enemy.armorGuardHp = enemy.armorGuardMax;
+        enemy.armorGuardStartProgress = 0;
+      }
       if (enemy.p0Marked) {
         enemy.p0MarkTime = Math.max(0, (enemy.p0MarkTime || 0) - dt);
         if (enemy.p0MarkTime <= 0) {
@@ -5097,6 +6069,7 @@
       let mx = dx / len;
       let my = dy / len;
       let moveSpeed = enemy.speed;
+      const formalContactAttack = updateFormalContactAttack(state, enemy, dt, dx, dy, len);
       // Keep the Boss origin fixed while a V3.4 warning is visible so the
       // displayed corridor/gap and the eventual projectile origin agree.
       if (enemy.boss && enemy.bossPatternKind) moveSpeed = 0;
@@ -5104,11 +6077,23 @@
       enemy.scissorsSlowTime = Math.max(0, (enemy.scissorsSlowTime || 0) - dt);
       if (enemy.scissorsSlowTime > 0) moveSpeed *= Math.max(0.2, 1 - (enemy.scissorsSlow || 0));
       enemy.scissorsCutSeamTime = Math.max(0, (enemy.scissorsCutSeamTime || 0) - dt);
-      if (!enemy.bossPatternKind && enemy.chargeTime > 0) {
+      if (formalContactAttack) {
+        mx = formalContactAttack.mx;
+        my = formalContactAttack.my;
+        moveSpeed = formalContactAttack.moveSpeed;
+      } else if (!enemy.bossPatternKind && enemy.chargeTime > 0) {
+        const chargeVisualDef = formalCartoonEnemyDef(state, enemy) || formalCartoonBossDef(state, enemy);
+        const chargeDuration = Math.max(0.01, enemy.chargeMax || enemy.chargeTime);
         enemy.chargeTime = Math.max(0, enemy.chargeTime - dt);
         mx = enemy.chargeVx || mx;
         my = enemy.chargeVy || my;
-        moveSpeed = enemy.chargeSpeed || enemy.speed * 2.8;
+        if (chargeVisualDef && (chargeVisualDef.attackKind === "charge" || chargeVisualDef.chargeAttack)) {
+          const chargeProgress = 1 - enemy.chargeTime / chargeDuration;
+          const activeDash = chargeProgress >= chargeVisualDef.launchAt && chargeProgress < chargeVisualDef.recoverAt;
+          moveSpeed = activeDash ? (enemy.chargeSpeed || enemy.speed * 2.8) : 0;
+        } else {
+          moveSpeed = enemy.chargeSpeed || enemy.speed * 2.8;
+        }
       } else if (enemy.behavior === "zigzag") {
         const wobble = Math.sin(enemy.age * 4.2 + enemy.phase) * 0.58;
         const px = -dy / len;
@@ -5119,7 +6104,9 @@
         // A short-range build must be able to contest a ranged Boss. Bosses
         // hold a dangerous mid-range orbit instead of permanently kiting just
         // outside Thermos coverage; V3.5 moves that orbit slightly closer.
-        const desired = enemy.boss ? (state.demoV2 && state.demoV2.bossPressurePass ? 185 : 205) : 250;
+        const movementVisualDef = formalCartoonEnemyDef(state, enemy);
+        const desired = enemy.boss ? (state.demoV2 && state.demoV2.bossPressurePass ? 185 : 205)
+          : movementVisualDef && movementVisualDef.kiteDistance ? movementVisualDef.kiteDistance : 250;
         const strafe = Math.sin(enemy.age * 2.2 + enemy.phase) * 0.5;
         const px = -dy / len;
         const py = dx / len;
@@ -5130,13 +6117,33 @@
       } else if (enemy.behavior === "tank" || enemy.behavior === "shield") {
         moveSpeed *= 0.86;
       }
+      if (enemy.armorGuardTime > 0) moveSpeed *= 0.12;
+      if (enemy.rangedAttackTime > 0) moveSpeed *= 0.28;
       const mLen = Math.hypot(mx, my) || 1;
+      if (Math.abs(mx) > 0.04) enemy.visualFacing = mx < 0 ? -1 : 1;
+      if (enemy.rangedAttackTime > 0 && Math.abs(enemy.rangedAttackVx) > 0.04) {
+        enemy.visualFacing = enemy.rangedAttackVx < 0 ? -1 : 1;
+      }
       if (enemy.rooted <= 0) {
         enemy.x = clamp(enemy.x + mx / mLen * moveSpeed * dt, -44, worldWidth(state) + 44);
         enemy.y = clamp(enemy.y + my / mLen * moveSpeed * dt, -44, worldHeight(state) + 44);
       }
       enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt);
-      if (Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r) {
+      const formalVisualDef = formalCartoonEnemyDef(state, enemy);
+      const formalBossVisualDef = formalCartoonBossDef(state, enemy);
+      const formalChargeVisualDef = formalVisualDef && formalVisualDef.attackKind === "charge" ? formalVisualDef
+        : formalBossVisualDef && (formalBossVisualDef.attackKind === "charge" || formalBossVisualDef.chargeAttack) ? formalBossVisualDef : null;
+      if (formalChargeVisualDef && enemy.chargeTime > 0 && !enemy.chargeHit) {
+        const chargeProgress = 1 - enemy.chargeTime / Math.max(0.01,
+          enemy.chargeMax || formalChargeVisualDef.attackDuration || formalChargeVisualDef.chargeDuration);
+        const activeDash = chargeProgress >= formalChargeVisualDef.launchAt && chargeProgress < formalChargeVisualDef.recoverAt;
+        if (activeDash && Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r + 4) {
+          enemy.chargeHit = true;
+          if (state.player.invuln <= 0) damagePlayer(state, enemy.damage, enemy.accent || "#ffd36a");
+        }
+      }
+      if (!formalVisualDef && !(formalBossVisualDef && (formalBossVisualDef.attackKind === "charge" || formalBossVisualDef.chargeAttack))
+        && Math.hypot(state.player.x - enemy.x, state.player.y - enemy.y) < state.player.radius + enemy.r) {
         if (state.player.invuln <= 0) {
           damagePlayer(state, enemy.damage, enemy.accent || "#ff6b4a");
         } else {
@@ -5148,7 +6155,7 @@
         }
       }
     }
-    state.enemies = state.enemies.filter(function (enemy) { return !enemy.dead; }).slice(-cap);
+    state.enemies = state.enemies.filter(function (enemy) { return !enemy.dead || enemy.deathTime > 0; }).slice(-cap);
   }
 
   function updateProjectiles(state, dt) {
@@ -5469,13 +6476,18 @@
     const magnetRadius = markerTest && markerTest.collecting ? 520 : 150;
     const magnetSpeed = markerTest && markerTest.collecting ? 8.5 : 5;
     for (const p of state.pickups) {
+      p.visualAge = (p.visualAge || 0) + dt;
+      if (p.visualSeed == null) p.visualSeed = Math.abs(Math.sin(p.x * 0.013 + p.y * 0.017)) * 0.42;
       const d = Math.hypot(state.player.x - p.x, state.player.y - p.y);
+      p.magnetRatio = d < magnetRadius ? clamp(1 - d / magnetRadius, 0, 1) : 0;
+      p.magnetAngle = Math.atan2(state.player.y - p.y, state.player.x - p.x);
       if (d < magnetRadius) {
         p.x += (state.player.x - p.x) * dt * magnetSpeed;
         p.y += (state.player.y - p.y) * dt * magnetSpeed;
       }
       if (d < state.player.radius + p.radius + 6) {
         p.dead = true;
+        addFormalPickupCollectEvent(state, p);
         if (p.type === "xp") V2.dispatch({ type: "GAIN_XP", amount: p.amount });
         if (p.type === "material") {
           state.materials += p.amount;
@@ -5497,6 +6509,9 @@
   }
 
   function updateEffects(state, dt) {
+    state.player.attackReactionTime = Math.max(0, (state.player.attackReactionTime || 0) - dt);
+    state.player.hitReactionTime = Math.max(0, (state.player.hitReactionTime || 0) - dt);
+    state.player.completionTime = Math.max(0, (state.player.completionTime || 0) - dt);
     const marker = markerFixedRuntime(state);
     if (marker) marker.weaponVisualTime = Math.max(0, (marker.weaponVisualTime || 0) - dt);
     const thermos = fixedTestRuntime(state);
@@ -5604,18 +6619,91 @@
   function drawBackground(ctx, state) {
     const camera = state.camera || { x: 0, y: 0 };
     ctx.clearRect(0, 0, W, H);
-    if (!isSpriteReady("office_arena_night")) return;
-    const img = runtimeImages.office_arena_night;
+    const runtime = fixedTestRuntime(state);
+    const search = typeof window !== "undefined" && window.location ? new URLSearchParams(window.location.search || "") : null;
+    const queryPhase = search && search.get("debug") === "1" ? Number(search.get("formalScene") || 0) : 0;
+    const debugPhase = queryPhase || state.demoV2 && Number(state.demoV2.formalSceneDebugPhase || 0);
+    const phase = clamp(debugPhase || runtime && runtime.currentPhase || 1, 1, 5);
+    const formalAsset = "formal_office_phase_" + phase + "_v1";
+    const asset = state.demoV2 && state.demoV2.formalCartoonScenePass && isSpriteReady(formalAsset)
+      ? formalAsset : "office_arena_night";
+    if (!isSpriteReady(asset)) return;
+    const img = runtimeImages[asset];
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state));
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    if (state.demoV2 && state.demoV2.formalCartoonScenePass) {
+      const sceneScale = Math.max(W / img.width, H / img.height) * 1.08;
+      const drawWidth = img.width * sceneScale;
+      const drawHeight = img.height * sceneScale;
+      const cameraRangeX = Math.max(1, worldWidth(state) - W);
+      const cameraRangeY = Math.max(1, worldHeight(state) - H);
+      const sceneX = -(drawWidth - W) * clamp(camera.x / cameraRangeX, 0, 1);
+      const sceneY = -(drawHeight - H) * clamp(camera.y / cameraRangeY, 0, 1);
+      ctx.drawImage(img, sceneX, sceneY, drawWidth, drawHeight);
+    } else {
+      ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state));
+    }
     ctx.restore();
+    if (document.body) {
+      document.body.dataset.formalScenePhase = state.demoV2 && state.demoV2.formalCartoonScenePass ? String(phase) : "legacy";
+      document.body.dataset.formalSceneAsset = asset;
+    }
+  }
+
+  function drawFormalSceneCompletion(ctx, state) {
+    if (!state.demoV2 || !state.demoV2.formalCartoonScenePass) return;
+    const search = typeof window !== "undefined" && window.location ? new URLSearchParams(window.location.search || "") : null;
+    const debugCompletion = search && search.get("debug") === "1" && search.get("formalSceneComplete") === "1";
+    const remaining = debugCompletion ? 0.41 : Math.max(0, state.player && state.player.completionTime || 0);
+    if (remaining <= 0) return;
+    const progress = clamp(1 - remaining / 0.82, 0, 1);
+    const pulse = Math.sin(progress * Math.PI);
+    const camera = state.camera || { x: 0, y: 0 };
+    const x = state.player.x - camera.x;
+    const y = state.player.y - camera.y;
+
+    drawSprite(ctx, "formal_completion_check_v1", x, y - 62 - Math.sin(progress * Math.PI) * 12,
+      48 + pulse * 12, 48 + pulse * 12, clamp(pulse * 1.35, 0, 1), (progress - 0.5) * 0.08);
+
+    if (document.body) document.body.dataset.formalSceneCompletion = progress.toFixed(2);
+  }
+
+  function applyPlayerActionTransform(ctx, state) {
+    const player = state.player || {};
+    const hitTime = Math.max(0, player.hitReactionTime || 0);
+    const completionTime = Math.max(0, player.completionTime || 0);
+    const attackTime = Math.max(0, player.attackReactionTime || 0);
+    if (hitTime > 0) {
+      const strength = clamp(hitTime / 0.22, 0, 1);
+      ctx.translate(Math.sin(hitTime * 96) * 2.4 * strength, 1.4 * (1 - strength));
+      ctx.rotate(Math.sin(hitTime * 68) * 0.035 * strength);
+      ctx.scale(1 + 0.035 * strength, 1 - 0.045 * strength);
+      return "hit";
+    }
+    if (completionTime > 0) {
+      const progress = clamp(1 - completionTime / 0.82, 0, 1);
+      const lift = Math.sin(progress * Math.PI);
+      ctx.translate(0, -lift * 7);
+      ctx.rotate(Math.sin(progress * Math.PI * 2) * 0.035);
+      ctx.scale(1 + lift * 0.045, 1 - lift * 0.025);
+      return "complete";
+    }
+    if (attackTime > 0) {
+      const strength = Math.sin(clamp(1 - attackTime / 0.16, 0, 1) * Math.PI);
+      ctx.translate(0, strength * 1.6);
+      ctx.scale(1 + strength * 0.035, 1 - strength * 0.045);
+      return "attack";
+    }
+    return "neutral";
   }
 
   function drawPlayer(ctx, state) {
     const p = state.player;
     ctx.save();
     ctx.translate(p.x, p.y);
+    ctx.save();
+    applyPlayerActionTransform(ctx, state);
     ctx.globalAlpha = p.invuln > 0 && Math.floor(p.invuln * 18) % 2 ? 0.54 : 1;
     const markerEmbodied = drawMarkerEmbodiedPlayer(ctx, state);
     const thermosEmbodied = markerEmbodied ? false : drawThermosEmbodiedPlayer(ctx, state);
@@ -5624,6 +6712,7 @@
     if (!markerEmbodied && !thermosEmbodied && !scissorsEmbodied && !correctionEmbodied) {
       drawAtlasCell(ctx, "office_atlas", 0, 0, 0, -5, 70, 70, 1, 0);
     }
+    ctx.restore();
     const thermos = state.demoV2 && state.demoV2.phase === "thermos-fixed" ? fixedTestRuntime(state) : null;
     if (thermos && !thermosEmbodied) {
       drawSprite(ctx, "thermos_body_v24", 28, -3, 50, 50, 0.96, 0);
@@ -5682,12 +6771,123 @@
     ctx.restore();
   }
 
+  function drawFormalCartoonEnemy(ctx, state, enemy, bodySize, hitRatio) {
+    const visualDef = formalCartoonEnemyDef(state, enemy);
+    if (!visualDef) return false;
+    const visibleHeight = bodySize * (visualDef.visibleScale || (enemy.typeId === "todo" ? 1.08 : 1.04)) * (1 + hitRatio * 0.08);
+    const facing = enemy.visualFacing || 1;
+    if (enemy.splitAttackTime > 0) {
+      const duration = Math.max(0.01, enemy.splitAttackMax || visualDef.attackDuration);
+      const progress = clamp(1 - enemy.splitAttackTime / duration, 0, 0.999);
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        Math.floor(progress * visualDef.attackFrames), 0, 0,
+        visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    if (enemy.dead) {
+      return drawHorizontalSpriteFrame(ctx, visualDef.actions, 4, 3, 0, 0,
+        visibleHeight, visualDef.actionReferenceHeight, Math.min(1, (enemy.deathTime || 0) / 0.12), facing);
+    }
+    if (enemy.armorGuardTime > 0) {
+      const duration = Math.max(0.01, enemy.armorGuardMaxTime || visualDef.attackDuration);
+      const localProgress = clamp(1 - enemy.armorGuardTime / duration, 0, 0.999);
+      const progress = clamp((enemy.armorGuardStartProgress || 0) + localProgress * (1 - (enemy.armorGuardStartProgress || 0)), 0, 0.999);
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        Math.floor(progress * visualDef.attackFrames), 0, 0,
+        visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    if (hitRatio > 0) {
+      return drawHorizontalSpriteFrame(ctx, visualDef.actions, 4, 2, 0, 0,
+        visibleHeight, visualDef.actionReferenceHeight, 0.78 + hitRatio * 0.22, facing);
+    }
+    if (enemy.rangedAttackTime > 0) {
+      const duration = Math.max(0.01, enemy.rangedAttackMax || visualDef.attackDuration);
+      const progress = clamp(1 - enemy.rangedAttackTime / duration, 0, 0.999);
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        Math.floor(progress * visualDef.attackFrames), 0, 0,
+        visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    if (visualDef.attackKind === "charge" && enemy.chargeTime > 0) {
+      const duration = Math.max(0.01, enemy.chargeMax || visualDef.attackDuration);
+      const progress = clamp(1 - enemy.chargeTime / duration, 0, 0.999);
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        Math.floor(progress * visualDef.attackFrames), 0, 0,
+        visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    if (enemy.contactAttackTime > 0) {
+      const duration = Math.max(0.01, enemy.contactAttackMax || visualDef.attackDuration);
+      const progress = clamp(1 - enemy.contactAttackTime / duration, 0, 0.999);
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        Math.floor(progress * visualDef.attackFrames), 0, 0,
+        visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    const cadence = visualDef.moveCadence || (enemy.typeId === "email" ? 0.09 : 0.115);
+    return drawHorizontalSpriteFrame(ctx, visualDef.move, visualDef.moveFrames,
+      Math.floor((enemy.age || 0) / cadence + (enemy.phase || 0)) % visualDef.moveFrames,
+      0, 0, visibleHeight, visualDef.moveReferenceHeight, enemy.fragment ? 0.86 : 1, facing);
+  }
+
+  function drawFormalCartoonBoss(ctx, state, enemy, bodySize, hitRatio) {
+    const visualDef = formalCartoonBossDef(state, enemy);
+    if (!visualDef) return false;
+    const visibleHeight = bodySize * visualDef.visibleScale * (1 + hitRatio * 0.06);
+    const facing = enemy.visualFacing || 1;
+    if (enemy.dead) {
+      return drawHorizontalSpriteFrame(ctx, visualDef.actions, 4, 3, 0, 0,
+        visibleHeight, visualDef.actionReferenceHeight, Math.min(1, (enemy.deathTime || 0) / 0.12), facing);
+    }
+    if (hitRatio > 0 || enemy.formalBossDebugAction === "hit") {
+      return drawHorizontalSpriteFrame(ctx, visualDef.actions, 4, 2, 0, 0,
+        visibleHeight, visualDef.actionReferenceHeight, 0.8 + hitRatio * 0.2, facing);
+    }
+    if ((enemy.formalBossDebugAction === "charge" || enemy.chargeTime > 0) && visualDef.charge) {
+      let frame = enemy.formalBossDebugAction === "charge" ? enemy.formalBossDebugFrame || 0 : 0;
+      if (enemy.formalBossDebugAction !== "charge") {
+        const duration = Math.max(0.01, enemy.chargeMax || visualDef.chargeDuration || 1);
+        const progress = clamp(1 - enemy.chargeTime / duration, 0, 0.999);
+        frame = Math.min(visualDef.chargeFrames - 1, Math.floor(progress * visualDef.chargeFrames));
+      }
+      return drawHorizontalSpriteFrame(ctx, visualDef.charge, visualDef.chargeFrames,
+        frame, 0, 0, visibleHeight, visualDef.chargeReferenceHeight, 1, facing);
+    }
+    const patternKind = enemy.formalBossDebugAction === "lane" || enemy.formalBossDebugAction === "burst"
+      ? enemy.formalBossDebugAction : enemy.bossPatternKind || enemy.bossPatternReleaseKind;
+    if (patternKind === "lane" || patternKind === "burst") {
+      let frame = enemy.formalBossDebugAction ? enemy.formalBossDebugFrame || 0 : 0;
+      if (!enemy.formalBossDebugAction) {
+        if (enemy.bossPatternReleaseKind) {
+          frame = enemy.bossPatternReleaseTime > enemy.bossPatternReleaseMax * 0.48 ? 3 : 4;
+        } else {
+          const progress = clamp(1 - enemy.bossPatternTimer / Math.max(0.01, enemy.bossPatternMax || 1), 0, 0.999);
+          frame = Math.min(2, Math.floor(progress * 3));
+        }
+      }
+      const referenceHeight = patternKind === "lane" ? visualDef.laneReferenceHeight : visualDef.burstReferenceHeight;
+      return drawHorizontalSpriteFrame(ctx, visualDef[patternKind], visualDef.patternFrames,
+        frame, 0, 0, visibleHeight, referenceHeight, 1, facing);
+    }
+    if ((enemy.formalBossDebugAction === "attack" || enemy.rangedAttackTime > 0) && visualDef.attack) {
+      let frame = enemy.formalBossDebugAction === "attack" ? enemy.formalBossDebugFrame || 0 : 0;
+      if (enemy.formalBossDebugAction !== "attack") {
+        const duration = Math.max(0.01, enemy.rangedAttackMax || visualDef.attackDuration);
+        const progress = clamp(1 - enemy.rangedAttackTime / duration, 0, 0.999);
+        frame = Math.min(visualDef.attackFrames - 1, Math.floor(progress * visualDef.attackFrames));
+      }
+      return drawHorizontalSpriteFrame(ctx, visualDef.attack, visualDef.attackFrames,
+        frame, 0, 0, visibleHeight, visualDef.attackReferenceHeight, 1, facing);
+    }
+    const cadence = visualDef.moveCadence;
+    return drawHorizontalSpriteFrame(ctx, visualDef.move, visualDef.moveFrames,
+      Math.floor((enemy.age || 0) / cadence + (enemy.phase || 0)) % visualDef.moveFrames,
+      0, 0, visibleHeight, visualDef.moveReferenceHeight, 1, facing);
+  }
+
   function drawEnemies(ctx, state) {
     for (const e of state.enemies) {
       ctx.save();
       ctx.translate(e.x, e.y);
       const cell = ENEMY_ATLAS_CELLS[e.typeId] || ENEMY_ATLAS_CELLS.todo;
-      const bodySize = e.boss ? 96 : Math.max(48, e.r * 3.6);
+      const formalScale = state.demoV2 && state.demoV2.formalCartoonAssetPass ? 1.25 : 1;
+      const bodySize = e.boss ? 96 * formalScale : Math.max(48, e.r * 3.6) * formalScale;
       const hitRatio = clamp((e.hitFlash || 0) / (e.boss ? 0.16 : 0.12), 0, 1);
       const hitColor = e.hitFamily === "thermos" ? "#ffb45e"
         : e.hitFamily === "scissors" ? "#ff5f72"
@@ -5697,12 +6897,18 @@
         ctx.shadowColor = hitColor;
         ctx.shadowBlur = 10 + hitRatio * 18;
       }
-      drawAtlasCell(ctx, "office_atlas", cell[0], cell[1], 0, 0,
-        bodySize * (1 + hitRatio * 0.08), bodySize * (1 - hitRatio * 0.06),
-        e.fragment ? 0.86 : 1, hitRatio * 0.035);
+      const formalDrawn = drawFormalCartoonBoss(ctx, state, e, bodySize, hitRatio)
+        || drawFormalCartoonEnemy(ctx, state, e, bodySize, hitRatio);
+      if (!formalDrawn) {
+        drawAtlasCell(ctx, "office_atlas", cell[0], cell[1], 0, 0,
+          bodySize * (1 + hitRatio * 0.08), bodySize * (1 - hitRatio * 0.06),
+          e.fragment ? 0.86 : 1, hitRatio * 0.035);
+      }
       ctx.restore();
       const ranged = e.behavior === "shooter" || e.behavior === "boss_shooter" || e.behavior === "boss_shield" || e.behavior === "boss_final";
-      if (ranged && e.shootCooldown > 0 && e.shootCooldown < 0.42) {
+      const formalRanged = formalCartoonEnemyDef(state, e) && formalCartoonEnemyDef(state, e).attackKind === "ranged"
+        || formalCartoonBossDef(state, e) && (formalCartoonBossDef(state, e).attackKind === "ranged" || formalCartoonBossDef(state, e).rangedAttack);
+      if (ranged && !formalRanged && e.shootCooldown > 0 && e.shootCooldown < 0.42) {
         const warning = 1 - clamp(e.shootCooldown / 0.42, 0, 1);
         drawSpriteFrame(ctx, "correction_fluid_glitch_v25", Math.min(3, Math.floor(warning * 4)),
           0, 0, bodySize + 22 + warning * 18, bodySize + 22 + warning * 18,
@@ -5710,10 +6916,12 @@
         drawSprite(ctx, "enemy_projectile_art", 0, -bodySize * 0.62,
           36 + warning * 18, 13 + warning * 6, 0.48 + warning * 0.48, -Math.PI / 2);
       }
-      if (e.chargeTime > 0) {
+      const formalCharge = formalCartoonEnemyDef(state, e) && formalCartoonEnemyDef(state, e).attackKind === "charge"
+        || formalCartoonBossDef(state, e) && (formalCartoonBossDef(state, e).attackKind === "charge" || formalCartoonBossDef(state, e).chargeAttack);
+      if (e.chargeTime > 0 && !formalCharge) {
         drawSprite(ctx, "thermos_charge_art", 0, 0, bodySize + 26, bodySize + 26, 0.72, e.age * 0.9);
       }
-      if (e.armor) {
+      if (e.armor && !formalCartoonBossDef(state, e)) {
         drawSprite(ctx, "status_shield_art", 0, 0, bodySize + 24, bodySize + 24, 0.68, 0);
       }
       if (e.markerFixedElite) {
@@ -5750,7 +6958,7 @@
         const rootWidth = bodySize + 18;
         drawSprite(ctx, "status_root_art", 0, bodySize * 0.34, rootWidth, rootWidth * 0.441, 0.86, 0);
       }
-      drawCombatProgress(ctx, 0, -bodySize / 2 - 12, e.boss ? 104 : 70, e.boss ? 17 : 12, e.hp / e.maxHp);
+      if (!e.dead) drawCombatProgress(ctx, 0, -bodySize / 2 - 12, e.boss ? 104 : 70, e.boss ? 17 : 12, e.hp / e.maxHp);
       ctx.restore();
     }
   }
@@ -5952,6 +7160,7 @@
             Math.min(0.56, alpha * 0.48 + 0.08), Math.atan2(dy, dx));
           continue;
         }
+        if (drawFormalCartoonLinearVfx(ctx, state, z, alpha, progress)) continue;
         drawSuiteNeonLine(ctx, state, z, alpha, progress);
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), z.x1, z.y1, z.x2, z.y2, z.width || 8, Math.min(0.94, alpha + 0.12));
         continue;
@@ -5962,6 +7171,7 @@
       if (z.type === "polygon" && profile.family === "sticky_note") continue;
       const radius = Math.max(24, z.radius || 44);
       const mechanicRadius = z.type === "ring" ? Math.max(8, ringCurrentRadius(z)) : radius;
+      if (drawFormalCartoonAreaVfx(ctx, state, z, alpha, progress, mechanicRadius)) continue;
       drawSuiteNeonArea(ctx, state, z, alpha, progress, mechanicRadius);
       if (drawV24AreaEvent(ctx, z, Math.min(0.9, alpha + 0.1), progress, mechanicRadius, state)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, z.x, z.y, radius, Math.min(0.9, alpha + 0.1))) continue;
@@ -5981,6 +7191,20 @@
       const activeLife = Math.min(duration, event.life == null ? duration : event.life);
       const alpha = event.debugHold ? 1 : clamp(activeLife / duration, 0, 1);
       const progress = event.debugHold ? (event.debugProgress == null ? 0.7 : event.debugProgress) : 1 - alpha;
+      if (event.kind === "formal_pickup_collect") {
+        const def = formalCartoonPickupDef(state, event.pickupType);
+        if (def && isSpriteReady(def.sprite)) {
+          const pulse = 1 + Math.sin(progress * Math.PI) * 0.48;
+          ctx.save();
+          ctx.translate(event.x, event.y - progress * 18);
+          ctx.rotate((progress - 0.5) * 0.22);
+          ctx.scale(pulse, pulse);
+          drawHorizontalSpriteFrame(ctx, def.sprite, def.frames, 2, 0, 0,
+            def.collectHeight, def.referenceHeight, clamp(alpha * 1.35, 0, 1), 1);
+          ctx.restore();
+        }
+        continue;
+      }
       const profile = event.visualProfile || eventVisual(event.source || event.kind);
       const sprite = generatedEffectSprite(profile, event.source, event.kind, event.visual);
       if (event.kind === "text") {
@@ -6001,6 +7225,7 @@
         continue;
       }
       if (event.primitive === "beam" || event.kind === "beam" || event.kind === "counter" || event.kind === "steam" || event.kind === "grid") {
+        if (drawFormalCartoonLinearVfx(ctx, state, event, alpha, progress)) continue;
         drawSuiteNeonLine(ctx, state, event, alpha, progress);
         if (drawV24LinearEvent(ctx, event, alpha, progress, state)) continue;
         drawGeneratedLine(ctx, generatedLineSprite(profile, sprite), event.x1, event.y1, event.x2, event.y2, event.width || 6, Math.min(0.98, alpha + 0.08));
@@ -6013,6 +7238,7 @@
         continue;
       }
       const radius = Math.max(26, event.radius || 44);
+      if (drawFormalCartoonAreaVfx(ctx, state, event, alpha, progress, radius)) continue;
       drawSuiteNeonArea(ctx, state, event, alpha, progress, radius);
       if (drawV24AreaEvent(ctx, event, Math.min(0.94, alpha + 0.1), progress, radius, state)) continue;
       if (drawGeneratedStatusSprite(ctx, sprite, event.x, event.y, radius, Math.min(0.94, alpha + 0.1))) continue;
@@ -6033,7 +7259,9 @@
       const alpha = clamp(z.life / Math.max(0.01, z.maxLife || z.life || 1), 0, 1);
       const progress = eventProgress(z);
       const radius = Math.max(8, ringCurrentRadius(z));
-      drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius, state);
+      if (!drawFormalCartoonAreaVfx(ctx, state, z, alpha, progress, radius)) {
+        drawV24AreaEvent(ctx, z, Math.min(0.94, alpha + 0.1), progress, radius, state);
+      }
     }
 
     for (const projectile of state.projectiles) {
@@ -6048,7 +7276,27 @@
     }
 
     for (const pickup of state.pickups) {
-      if (pickup.type === "material") drawAtlasCell(ctx, "office_atlas", 1, 1, pickup.x, pickup.y, 28, 28, 1, 0);
+      const def = formalCartoonPickupDef(state, pickup.type);
+      if (def && isSpriteReady(def.sprite)) {
+        const frame = pickup.formalDebugFrame == null
+          ? Math.floor(((pickup.visualAge || pickupMagnetTimer) + (pickup.visualSeed || 0)) / def.cadence) % def.frames
+          : clamp(pickup.formalDebugFrame, 0, def.frames - 1);
+        const magnetRatio = clamp(pickup.magnetRatio || 0, 0, 1);
+        const bob = Math.sin(((pickup.visualAge || 0) + (pickup.visualSeed || 0)) * 7.5) * (1.2 + magnetRatio * 1.8);
+        const travelTilt = magnetRatio > 0.02 ? Math.sin(pickup.magnetAngle || 0) * 0.12 * magnetRatio : 0;
+        ctx.save();
+        ctx.translate(pickup.x, pickup.y - bob);
+        ctx.rotate(travelTilt + Math.sin(((pickup.visualAge || 0) + (pickup.visualSeed || 0)) * 3.2) * 0.025);
+        ctx.scale(1 + magnetRatio * 0.18, 1 + magnetRatio * 0.18);
+        drawHorizontalSpriteFrame(ctx, def.sprite, def.frames, frame, 0, 0,
+          def.runtimeHeight, def.referenceHeight, 1, 1);
+        ctx.restore();
+        if (document.body) {
+          document.body.dataset.formalPickupType = pickup.type;
+          document.body.dataset.formalPickupFrame = String(frame);
+          document.body.dataset.formalPickupAsset = def.sprite;
+        }
+      } else if (pickup.type === "material") drawAtlasCell(ctx, "office_atlas", 1, 1, pickup.x, pickup.y, 28, 28, 1, 0);
       else if (pickup.type === "heal") drawAtlasCell(ctx, "office_atlas", 3, 1, pickup.x, pickup.y, 32, 32, 1, 0);
       else drawAtlasCell(ctx, "office_atlas", 2, 1, pickup.x, pickup.y, 26, 26, 1, 0);
     }
@@ -6135,6 +7383,26 @@
   function draw() {
     if (!ctx) return;
     const state = V2.getState();
+    if (typeof window !== "undefined" && window.location && state.mode === "combat") {
+      const search = new URLSearchParams(window.location.search || "");
+      const pose = search.get("debug") === "1" && search.get("screen") === "combat"
+        ? search.get("formalEnemyPose") || "" : "";
+      const pickupType = search.get("debug") === "1" && search.get("screen") === "combat"
+        ? search.get("formalPickup") || "" : "";
+      const pickupFrame = clamp(Number(search.get("formalPickupFrame") || 0), 0, 3);
+      const pickupCollected = search.get("formalPickupCollected") === "1";
+      const pickupPose = pickupType ? [pickupType, pickupFrame, pickupCollected ? 1 : 0].join(":") : "";
+      const runKey = state.runId + ":" + pose + ":" + pickupPose;
+      if (pickupPose && runKey !== formalDebugPoseRunKey) {
+        formalDebugPoseRunKey = runKey;
+        applyFormalPickupDebugPose(state, pickupType, pickupFrame, pickupCollected);
+        state.loop.running = false;
+      } else if (pose && runKey !== formalDebugPoseRunKey) {
+        formalDebugPoseRunKey = runKey;
+        applyFormalEnemyDebugPose(state, pose);
+        state.loop.running = false;
+      }
+    }
     updateCamera(state);
     drawIsolatedLayers(ctx, state, [
       { name: "background", world: false, draw: function () { drawBackground(ctx, state); } },
@@ -6145,7 +7413,8 @@
         world: true,
         draw: function () { drawPlayer(ctx, state); },
         fallback: function () { drawFallbackPlayer(ctx, state); }
-      }
+      },
+      { name: "scene_completion", world: false, draw: function () { drawFormalSceneCompletion(ctx, state); } }
     ]);
   }
 
@@ -6673,6 +7942,9 @@
     spawnEnemy,
     updateCamera,
     runMechanicLab,
+    applyFormalEnemyDebugPose,
+    applyFormalPickupDebugPose,
+    applyFormalVfxDebugPose,
     primitives: CombatPrimitives,
     qa: {
       resourceSources: FORM_RESOURCE_SOURCES,
@@ -6683,6 +7955,7 @@
       updateScissorsFixedActions,
       updateInput,
       updateEnemies,
+      updatePickups,
       drawIsolatedLayers,
       beginBossPattern,
       releaseBossPattern,
@@ -6702,7 +7975,9 @@
       scissorsLine,
       fireMarkerFixedTest,
       fireScissorsFixedTest,
-      fireSupportSkill
+      fireSupportSkill,
+      formalCartoonVfxFamily,
+      formalCartoonVfxRow
     }
   };
 })();

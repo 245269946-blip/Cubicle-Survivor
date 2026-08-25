@@ -563,6 +563,7 @@
     const fixedConfig = fixedTestConfig(state);
     const markerTest = fixedTestRuntime(state, fixedConfig);
     const markerFixed = !!(fixedConfig && markerTest);
+    const formalHud = !!((fixedConfig && fixedConfig.formalCartoonHudPass) || (state.demoV2 && state.demoV2.formalCartoonHudPass));
     const waveLabel = (phaseA || phaseB || markerFixed) && state.demoV2 && state.demoV2.waveId
       ? ({ queue: "队列波", cluster: "团块波", pursuit: "追逐波", review: "混合评审波" }[state.demoV2.waveId] || state.demoV2.waveId.replace(/-\d+$/, ""))
       : "";
@@ -590,11 +591,17 @@
       }
     }
     const transition = transitionView(state, markerTest, fixedConfig);
+    const fullStageMeta = phaseA || phaseB || markerFixed ? (markerFixed ? ((state.demoV2 && state.demoV2.suiteVersion) || fixedConfig.version) + " · 阶段 " + (markerTest.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关";
+    const compactStageMeta = markerFixed
+      ? "阶段 " + (markerTest.currentPhase || 1) + "/5 · " + (state.stage && state.stage.id || 1) + "/17"
+      : fullStageMeta;
+    const fullStageName = state.stage ? state.stage.name : "热身工位";
+    const compactStageName = String(fullStageName || "热身工位").replace(/^第\s*\d+\s*\/\s*17\s*关\s*·\s*/, "");
     return {
-      stageMeta: phaseA || phaseB || markerFixed ? (markerFixed ? ((state.demoV2 && state.demoV2.suiteVersion) || fixedConfig.version) + " · 阶段 " + (markerTest.currentPhase || 1) + "/5 · 第 " + (state.stage.id || 1) + "/17 关" : "Demo V2 · " + (phaseB ? "阶段 B" : "阶段 A") + (waveLabel ? " · " + waveLabel : "")) : state.stage ? "第 " + state.stage.id + " 关 · " + form.theme.phase.label + " · " + form.theme.phase.weaponStageShort : "第 1 关",
+      stageMeta: formalHud ? compactStageMeta : fullStageMeta,
       phaseMeta: form.theme.phase.label + " · " + form.theme.phase.weaponStageShort,
-      stageName: state.stage ? state.stage.name : "热身工位",
-      stageNote: state.stage ? [state.stage.note, markerFixed && state.warmupTime > 0 && !(markerTest && markerTest.collecting) ? state.stage.enemyPreview : state.stage.threatHint].filter(Boolean).join(" · ") : "",
+      stageName: formalHud ? compactStageName : fullStageName,
+      stageNote: formalHud ? "" : state.stage ? [state.stage.note, markerFixed && state.warmupTime > 0 && !(markerTest && markerTest.collecting) ? state.stage.enemyPreview : state.stage.threatHint].filter(Boolean).join(" · ") : "",
       time: fmtTime(markerTest && markerTest.collecting ? state.warmupTime : state.stageTime),
       remaining: markerFixed ? Math.max(0, (state.stage ? state.stage.targetKills : 0) - state.stageKills) : phaseA || phaseB ? state.enemies.length : Math.max(0, (state.stage ? state.stage.targetKills : 0) - state.stageKills),
       kills: markerFixed ? state.stageKills + "/" + (state.stage ? state.stage.targetKills : 0) : phaseA || phaseB ? String(state.stageKills) : state.stageKills + "/" + (state.stage ? state.stage.targetKills : 0),
@@ -607,6 +614,7 @@
       warmup: state.warmupTime,
       controlHint: markerTest && markerTest.collecting ? "10秒内自由移动回收经验与材料；结束时自动吸取遗漏资源。" : markerFixed && state.stage && state.stage.enemyPreview ? state.stage.enemyPreview : form.mechanicType === "manual_trap_detonate" ? "WASD 移动；开关贴装订后按空格同步引爆。" : "WASD 移动，武器自动攻击。",
       collecting: !!(markerTest && markerTest.collecting),
+      formalHud,
       transition,
       pendingExperiencePoints: markerTest ? markerTest.pendingExperiencePoints : 0,
       combatStatus: status,

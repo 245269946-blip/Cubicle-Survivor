@@ -29,12 +29,26 @@
 
 位置：`Cubicle-Survivor-demo/assets/cartoon-marker-slice/`
 
-- `office-arena-v1.webp`：暖纸色顶视角办公室战场；只对无透明背景做 WebP 体积优化。
-- `marker-worker-v1.png`：带马克笔与复写/留档墨盒的统一卡通员工。
-- `backlog-enemy-v1.png`：低速厚血积压纸堆怪。
-- `urgent-email-enemy-v1.png`：高机动、带冲刺预警的加急邮件怪。
+- `office-arena-v1.webp`：`runtime-ready`；1672×941 与 1280×720 同为 16:9，镜头和绘制比例匹配。
+- `marker-worker-v1.png`：`reference-only`；旧版单角度整合立绘，固定枪口与任意方向自动瞄准不一致，已退出运行时。
+- `marker-worker-body-v2.png`：`reference-only`；已完成身体/武器拆分验证，但被四方向 v3 身体集取代。
+- `marker-worker-down-v3.png`、`marker-worker-up-v3.png`、`marker-worker-left-v3.png`、`marker-worker-right-v3.png`：`prototype-cutout`；旧单帧方向参考，已退出运行时，不再承担角色走路或身份门禁。
+- `../cartoon-character-system/neutral-worker-walk-v1.png`：`runtime-ready`；P0 与主线共用的 3 列 × 4 行人物骨架，四方向均有 `idle / step-a / step-b`，以 132px 可见高度和 0.115 秒步频播放。
+- `../cartoon-character-system/marker-rig-back-v1.png`、`marker-rig-front-v1.png`：`runtime-ready`；逐格对齐共享人物的马克笔后/前穿戴层，运行时按背层 → 身体 → 前层合成，瞄准马克笔仍保持独立。
+- `marker-weapon-v2.png`：`runtime-ready`；真透明并紧裁切，78×19px 下可读，由真实 `aimAngle` 连续旋转，枪口、攻击起点和判定方向同源。
+- `backlog-enemy-v1.png`、`urgent-email-enemy-v1.png`：`reference-only`；保留原始单姿态身份参考，已退出运行时。
+- `backlog-enemy-actions-v2.png`：`runtime-ready`；移动跨步、接触攻击蓄力、受击后仰、归档成捆四个真实轮廓，100px 目标高度与 296px 图集脚底线已对齐。
+- `backlog-enemy-walk-v3.png`：`runtime-ready`；四帧沉重走路，左右压脚、纸堆重心与红色夹子均真实变化，正常移动按 0.115 秒节奏循环。
+- `backlog-enemy-slam-v3.png`：`runtime-ready`；五帧积压砸击，覆盖蓄力、压缩、起跳、落地和回收；只有落地帧进入判定时才造成 7 点接触伤害。
+- `urgent-email-enemy-actions-v2.png`：`runtime-ready`；奔跑、冲刺预备、受击踉跄、拍扁退场四个真实轮廓，88px 目标高度与同一脚底线已对齐。
+- `urgent-email-run-v3.png`：`runtime-ready`；四帧交替跑步，统一 320px 单格与 296px 脚底线，正常移动按 0.09 秒节奏循环。
+- `urgent-email-dash-v3.png`：`runtime-ready`；五帧冲刺序列，覆盖预备、压缩、发力、伸展和回收；预警期使用前两帧，0.48 秒冲刺使用后三帧。
 
-资产使用内置 ImageGen 生成；透明敌人源经过官方 chroma-key 清理流程转为 RGBA PNG。实装只使用项目内副本，不依赖生成目录。
+资产使用内置 ImageGen 生成；透明源经过官方 chroma-key 清理流程转为 RGBA PNG，并在接入前完成连通域拆分、统一缩放、alpha、目标尺寸与脚底锚点检查。运行时只引用项目内副本，不依赖生成目录。怪物动作源图没有按画面四等分直接裁切，因为生图中的拳头、鞋和纸角越过了名义格线；`scripts/build-cartoon-enemy-action-atlases.py` 按透明像素连通域识别真实姿态后再生成 4×1 正式图集，避免把概念排版误当可切片资产。
+
+本次审查的正式分类记录在 `Cubicle-Survivor-demo/assets/cartoon-marker-slice/asset-manifest.json`。权威共享人物系统已在 Demo V3.14 通过 640 项角色矩阵；本切片额外通过 12 项玩家方向/步态、4 项积压走路、5 项积压砸击、4 项邮件跑步、5 项邮件冲刺和 2 项左右朝向检查，32 项新动画画面指纹全部不同，原有 8 项敌人动作回归也继续通过。真实开局已完成第一次升级并继续战斗到剩余 9 份积压，控制台无错误；独立砸击判定探针确认蓄力期生命保持 100，落地后才降为 93。退场帧计时独立于升级弹窗暂停，避免尸体永久残留在选择页背后。
+
+积压与邮件动画的生成源、透明中间图与正式图集均已保存到项目；`scripts/build-office-chibi-animation-atlases.py` 按透明连通域识别姿态，统一尺度、脚底线和格子，再输出 `office-chibi-animation-contract.json`。浏览器证据与关键文件 SHA-256 记录在 `Cubicle-Survivor-demo/office-chibi-animation-runtime-report.json`，避免把“看起来像帧动画的概念横条”误报为可直接使用的游戏图集。
 
 ## 手感起点
 

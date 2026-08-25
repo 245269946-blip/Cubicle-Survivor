@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "entry": "demo-v3-15.html",
+  "phase": "four-weapon-v3-15",
+  "status": "passed",
+  "viewport": [1280, 720],
+  "production": {
+    "method": "deterministic-repo-native-pcm",
+    "generator": "../scripts/build-formal-cartoon-audio.py",
+    "reason": "each output is a directly loadable WAV with deterministic synthesis, exact format checks, no concept-art adaptation, and no external service dependency"
+  },
+  "contract": {
+    "cueCount": 21,
+    "sampleRate": 22050,
+    "channels": 1,
+    "bitsPerSample": 16,
+    "semanticGroups": { "weapons": 4, "normalEnemyActions": 8, "bossActions": 5, "defeats": 2, "completions": 2 },
+    "combatProgressionEconomyChanged": false
+  },
+  "browser": {
+    "v315": {
+      "url": "index.html?debug=1&quiet=1&screen=combat&weapon=marker&formalAudio=weapon_marker&demoV2=four-weapon-v3-15",
+      "gate": "true",
+      "requestedCue": "weapon_marker",
+      "discoveredWavs": 21,
+      "decodedWavs": 21,
+      "failedWavs": 0,
+      "contextState": "suspended",
+      "autoplayPolicyRespected": true,
+      "runtimeErrors": 0,
+      "consoleErrors": 0,
+      "note": "The automated in-app browser keeps Web Audio suspended; the runtime created the context and decoded all 21 files without bypassing autoplay. A real player click resumes through pointer, key, or click handlers."
+    },
+    "v314": {
+      "url": "index.html?debug=1&quiet=1&screen=combat&weapon=marker&formalAudio=weapon_marker&demoV2=four-weapon-v3-14",
+      "gate": "",
+      "auditEvents": 0,
+      "runtimeErrors": 0,
+      "consoleErrors": 0
+    }
+  },
+  "sourceHashes": {
+    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
+    "src/v2/audio/audio.js": "4cbdd4b8db94fd73a74b251e79d01cc32090a9330087bc2fbb8b319bbd61bd74",
+    "src/v2/demo-v2/marker-fixed.js": "6909d657c29897db3779c67f040f83694de8beca16bd36cf6a4c3d13f6411109",
+    "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
+    "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
+    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/ui/render.js": "949c36cfd0ef889e2fac0de36f394b25bf3ebcf706170322de277be7fbf7034f",
+    "assets/cartoon-office-audio/cartoon-office-audio-contract.json": "d725a237d5748efe725e217721a7027297bbcfd09d9f90c09f68988ed755386a"
+  },
+  "assertions": {
+    "runtimeReadyAssets": true,
+    "fourWeaponsCovered": true,
+    "thirteenEnemyIdentitiesCovered": true,
+    "defeatAndCompletionCovered": true,
+    "semanticHooksReachRuntime": true,
+    "allWavsDecoded": true,
+    "autoplayPolicyRespected": true,
+    "v314Unchanged": true,
+    "runtimeErrorsZero": true
+  },
+  "remainingBlockers": []
+}

@@ -6,7 +6,7 @@ const baseDir = __dirname;
 
 function makeElement() {
   return {
-    style: {},
+    style: { setProperty(name, value) { this[name] = value; } },
     classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
     dataset: {},
     textContent: "",
@@ -2011,9 +2011,9 @@ const v313IndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8"
 if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
   || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
   || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
-  || !v313IndexSource.includes("systems.js?v=80")
-  || !v313IndexSource.includes("state.js?v=26")
-  || !v313IndexSource.includes("four-weapon-fixed.js?v=9")) {
+  || !v313IndexSource.includes("systems.js?v=93")
+  || !v313IndexSource.includes("state.js?v=31")
+  || !v313IndexSource.includes("four-weapon-fixed.js?v=14")) {
   console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
   process.exit(1);
 }
@@ -2177,11 +2177,845 @@ V2.dispatch({ type: "START_RUN", weaponId: "marker" });
 const v314State = V2.getState();
 if (v314State.demoV2.suiteVersion !== "Demo V3.14"
   || !v314State.demoV2.decisionCompressionPass
+  || v314State.demoV2.formalCartoonPickupPass
+  || v314State.demoV2.formalCartoonHudPass
+  || v314State.demoV2.formalCartoonVfxPass
+  || v314State.demoV2.formalCartoonAudioPass
   || v314State.stage.demoV2Phase !== fourWeaponV314.childPhaseByWeapon.marker) {
   console.error("Demo V3.14 must preserve the isolated weapon route while carrying compact decision state", v314State.demoV2);
   process.exit(1);
 }
 console.log("OK Demo V3.14 decision density: V3.13 combat is preserved and the compact choice contract reaches runtime");
+
+const fourWeaponV315 = V2.demoV2 && V2.demoV2.fourWeaponV315;
+const v315EntrySource = fs.readFileSync(path.join(baseDir, "demo-v3-15.html"), "utf8");
+if (!fourWeaponV315 || fourWeaponV315.version !== "Demo V3.15"
+  || !fourWeaponV315.formalCartoonAssetPass
+  || !fourWeaponV315.formalCartoonScenePass
+  || !fourWeaponV315.formalCartoonPickupPass
+  || !fourWeaponV315.formalCartoonHudPass
+  || !fourWeaponV315.formalCartoonVfxPass
+  || !fourWeaponV315.formalCartoonAudioPass
+  || !fourWeaponV315.decisionCompressionPass
+  || !fourWeaponV315.allWeaponDesireLoopPass
+  || !fourWeaponV315.weaponParityPass
+  || !v315EntrySource.includes('params.set("demoV2", "four-weapon-v3-15")')) {
+  console.error("Demo V3.15 must inherit V3.14 and add only the gated formal-cartoon asset pass", fourWeaponV315);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-15" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+const v315State = V2.getState();
+if (v315State.demoV2.suiteVersion !== "Demo V3.15"
+  || !v315State.demoV2.formalCartoonAssetPass
+  || !v315State.demoV2.formalCartoonScenePass
+  || !v315State.demoV2.formalCartoonPickupPass
+  || !v315State.demoV2.formalCartoonHudPass
+  || !v315State.demoV2.formalCartoonVfxPass
+  || !v315State.demoV2.formalCartoonAudioPass
+  || !v315State.demoV2.decisionCompressionPass
+  || v315State.stage.demoV2Phase !== fourWeaponV315.childPhaseByWeapon.marker) {
+  console.error("Demo V3.15 must preserve V3.14 gameplay while carrying the formal-cartoon runtime flag", v315State.demoV2);
+  process.exit(1);
+}
+V2.ui.render();
+const formalHudSkinSource = fs.readFileSync(path.join(baseDir, "generated-skin.css"), "utf8");
+const formalHudIndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8");
+if (element.dataset.formalCartoonHud !== "true"
+  || element.dataset.formalCartoonVfx !== "true"
+  || element.dataset.formalCartoonAudio !== "true"
+  || !formalHudSkinSource.includes('[data-formal-cartoon-hud="true"]')
+  || !formalHudSkinSource.includes("--formal-hud-paper")
+  || !formalHudSkinSource.includes("> .objective-hud::before")
+  || !formalHudSkinSource.includes(".objective-row span:nth-child(3)")
+  || !formalHudSkinSource.includes("> .hud.top-right .hp-stat::before")
+  || !formalHudSkinSource.includes("> .warmup-overlay.transition-card")
+  || !formalHudSkinSource.includes("> .growth-feedback::before")
+  || !formalHudSkinSource.includes(".objective-hud .objective-alert")
+  || !formalHudSkinSource.includes('.warmup-overlay.transition-card.hidden')
+  || !formalHudSkinSource.includes('[data-health-state="critical"]')
+  || !formalHudSkinSource.includes('> #buildPanel')
+  || !formalHudIndexSource.includes("generated-skin.css?v=52")
+  || !formalHudIndexSource.includes("view-model.js?v=30")
+  || !formalHudIndexSource.includes("render.js?v=44")
+  || !formalHudIndexSource.includes("main.js?v=94")) {
+  console.error("Demo V3.15 formal combat HUD must reach runtime with paper-folder, first-aid, transition, and concise-copy contracts", {
+    dataset: element.dataset,
+    formalHudIndexSource: formalHudIndexSource.match(/(?:generated-skin|view-model|render|main)[^\"']+/g)
+  });
+  process.exit(1);
+}
+const v315LandingSource = fs.readFileSync(path.join(baseDir, "main.js"), "utf8");
+if (!v315LandingSource.includes('subtitle.textContent = "四把办公武器，17 关。选一种打法，开工。"')
+  || !v315LandingSource.includes('quickGuide.style.display = "none"')
+  || v315LandingSource.includes("未通过门禁的素材不会覆盖 V3.14")) {
+  console.error("Demo V3.15 landing must stay player-facing and must not expose production-gate copy");
+  process.exit(1);
+}
+if (!formalHudSkinSource.includes('[data-decision-density="compact"] #componentShopPanel .component-install-promise')
+  || !formalHudSkinSource.includes("display: none !important")
+  || formalHudSkinSource.includes('[data-decision-density="compact"] #moduleChoices .module-promise-line b {\n  font-size: 10px')
+  || formalHudSkinSource.includes('[data-decision-density="compact"] #componentShopPanel .marker-component-card .compare-line,\n.v2-game[data-decision-density="compact"] #componentShopPanel .component-install-promise')) {
+  console.error("Demo V3.15 compact decisions must not hide excess copy behind tiny text or secondary install-position prose");
+  process.exit(1);
+}
+const v315RenderSource = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.js"), "utf8");
+if (!v315RenderSource.includes("const immediateText = compactDecision ? choice.effect : choice.immediate")
+  || !v315RenderSource.includes('String(choice.terminalPromise || "").split("：")[0]')) {
+  console.error("Demo V3.15 module cards must use the immediate combat result plus one short future cue");
+  process.exit(1);
+}
+console.log("OK Demo V3.15 formal combat HUD: gated paper-folder materials, concise labels, health, transition, and growth feedback reach runtime");
+const formalTodoAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "todo-attack-3");
+const formalEmailDefeat = V2.combat.applyFormalEnemyDebugPose(v315State, "email-defeat");
+const formalMeetingAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "meeting-attack-3");
+const formalPingAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "ping-attack-3");
+const formalDeadlineAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "deadline-attack-3");
+const formalScopeAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "scope-attack-3");
+const formalApprovalAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "approval-attack-3");
+const formalClientAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "client-attack-3");
+const formalLeadLane = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-lead-lane-3");
+const formalDirectorBurst = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-director-burst-3");
+const formalBossClientAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-client-attack-3");
+const formalBossCeoAttack = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-ceo-attack-3");
+const formalBossCeoCharge = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-ceo-charge-3");
+if (!formalTodoAttack || formalTodoAttack.typeId !== "todo" || formalTodoAttack.contactAttackTime <= 0
+  || !formalEmailDefeat || formalEmailDefeat.typeId !== "email" || !formalEmailDefeat.dead || formalEmailDefeat.deathTime <= 0
+  || !formalMeetingAttack || formalMeetingAttack.typeId !== "meeting" || formalMeetingAttack.contactAttackTime <= 0
+  || !formalPingAttack || formalPingAttack.typeId !== "ping" || formalPingAttack.rangedAttackTime <= 0
+  || !formalDeadlineAttack || formalDeadlineAttack.typeId !== "deadline" || formalDeadlineAttack.chargeTime <= 0
+  || !formalScopeAttack || formalScopeAttack.typeId !== "scope" || formalScopeAttack.splitAttackTime <= 0
+  || !formalApprovalAttack || formalApprovalAttack.typeId !== "approval" || formalApprovalAttack.armorGuardTime <= 0
+  || !formalClientAttack || formalClientAttack.typeId !== "client" || formalClientAttack.rangedAttackTime <= 0
+  || !formalLeadLane || !formalLeadLane.boss || formalLeadLane.typeId !== "lead"
+  || formalLeadLane.formalBossDebugAction !== "lane" || formalLeadLane.formalBossDebugFrame !== 3
+  || !formalDirectorBurst || !formalDirectorBurst.boss || formalDirectorBurst.typeId !== "director"
+  || formalDirectorBurst.formalBossDebugAction !== "burst" || formalDirectorBurst.formalBossDebugFrame !== 3
+  || !formalBossClientAttack || !formalBossClientAttack.boss || formalBossClientAttack.typeId !== "client"
+  || formalBossClientAttack.formalBossDebugAction !== "attack" || formalBossClientAttack.formalBossDebugFrame !== 3
+  || formalBossClientAttack.rangedAttackTime <= 0
+  || !formalBossCeoAttack || !formalBossCeoAttack.boss || formalBossCeoAttack.typeId !== "ceo"
+  || formalBossCeoAttack.formalBossDebugAction !== "attack" || formalBossCeoAttack.formalBossDebugFrame !== 3
+  || formalBossCeoAttack.rangedAttackTime <= 0
+  || !formalBossCeoCharge || !formalBossCeoCharge.boss || formalBossCeoCharge.typeId !== "ceo"
+  || formalBossCeoCharge.formalBossDebugAction !== "charge" || formalBossCeoCharge.formalBossDebugFrame !== 3
+  || formalBossCeoCharge.chargeTime <= 0) {
+  console.error("Demo V3.15 formal enemy debug poses must reach real attack and defeat runtime states", {
+    formalTodoAttack,
+    formalEmailDefeat,
+    formalMeetingAttack,
+    formalPingAttack,
+    formalDeadlineAttack,
+    formalScopeAttack,
+    formalApprovalAttack,
+    formalClientAttack,
+    formalLeadLane,
+    formalDirectorBurst,
+    formalBossClientAttack,
+    formalBossCeoAttack,
+    formalBossCeoCharge
+  });
+  process.exit(1);
+}
+const formalImpactTodo = V2.combat.applyFormalEnemyDebugPose(v315State, "todo-move-0");
+formalImpactTodo.x = v315State.player.x + v315State.player.radius + formalImpactTodo.r - 2;
+formalImpactTodo.y = v315State.player.y;
+formalImpactTodo.speed = 0;
+formalImpactTodo.contactAttackTime = 0;
+formalImpactTodo.contactAttackMax = 0;
+formalImpactTodo.contactAttackCooldown = 0;
+formalImpactTodo.contactAttackHit = false;
+v315State.player.invuln = 0;
+const formalImpactHpBefore = v315State.hp;
+for (let formalPreImpactStep = 0; formalPreImpactStep < 4; formalPreImpactStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if (v315State.hp !== formalImpactHpBefore) {
+  console.error("Demo V3.15 formal contact damage must not occur before the authored impact frame", {
+    before: formalImpactHpBefore,
+    after: v315State.hp,
+    contactAttackTime: formalImpactTodo.contactAttackTime
+  });
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalImpactHpAfter = v315State.hp;
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (!(formalImpactHpAfter < formalImpactHpBefore) || v315State.hp !== formalImpactHpAfter) {
+  console.error("Demo V3.15 formal contact damage must occur once at the authored impact frame", {
+    before: formalImpactHpBefore,
+    afterImpact: formalImpactHpAfter,
+    afterFollowup: v315State.hp
+  });
+  process.exit(1);
+}
+const formalPingTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "ping-move-0");
+formalPingTiming.x = v315State.player.x + 250;
+formalPingTiming.y = v315State.player.y;
+formalPingTiming.speed = 0;
+formalPingTiming.shootCooldown = 0;
+formalPingTiming.rangedAttackTime = 0;
+formalPingTiming.rangedAttackMax = 0;
+formalPingTiming.rangedAttackFired = false;
+const formalPingShotsBefore = v315State.stats.enemyShots || 0;
+for (let formalPingPreReleaseStep = 0; formalPingPreReleaseStep < 4; formalPingPreReleaseStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if ((v315State.stats.enemyShots || 0) !== formalPingShotsBefore) {
+  console.error("Demo V3.15 Ping must not spawn its projectile before the authored release frame");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalPingShotsAfter = v315State.stats.enemyShots || 0;
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (formalPingShotsAfter !== formalPingShotsBefore + 1 || (v315State.stats.enemyShots || 0) !== formalPingShotsAfter) {
+  console.error("Demo V3.15 Ping must spawn exactly one projectile at the authored release frame", {
+    before: formalPingShotsBefore,
+    afterRelease: formalPingShotsAfter,
+    afterFollowup: v315State.stats.enemyShots || 0
+  });
+  process.exit(1);
+}
+const formalDeadlineTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "deadline-move-0");
+formalDeadlineTiming.x = v315State.player.x + 90;
+formalDeadlineTiming.y = v315State.player.y;
+formalDeadlineTiming.speed = 0;
+formalDeadlineTiming.chargeCooldown = 0;
+formalDeadlineTiming.chargeTime = 0;
+formalDeadlineTiming.chargeMax = 0;
+formalDeadlineTiming.chargeHit = false;
+v315State.player.invuln = 0;
+const formalDeadlineHpBefore = v315State.hp;
+for (let formalDeadlinePreHitStep = 0; formalDeadlinePreHitStep < 3; formalDeadlinePreHitStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if (v315State.hp !== formalDeadlineHpBefore) {
+  console.error("Demo V3.15 Deadline must not deal damage during its ring/compress anticipation", {
+    before: formalDeadlineHpBefore,
+    after: v315State.hp
+  });
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalDeadlineHpAfter = v315State.hp;
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (!(formalDeadlineHpAfter < formalDeadlineHpBefore) || v315State.hp !== formalDeadlineHpAfter || !formalDeadlineTiming.chargeHit) {
+  console.error("Demo V3.15 Deadline must deal exactly one hit during the authored dash window", {
+    before: formalDeadlineHpBefore,
+    afterDash: formalDeadlineHpAfter,
+    afterFollowup: v315State.hp,
+    chargeHit: formalDeadlineTiming.chargeHit
+  });
+  process.exit(1);
+}
+const formalScopeTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "scope-move-0");
+formalScopeTiming.hp = 1;
+const formalScopeFragmentsBefore = v315State.enemies.filter(function (enemy) { return enemy.fragment; }).length;
+V2.combat.qa.damageEnemy(v315State, formalScopeTiming, 2, "marker_test");
+if (v315State.enemies.filter(function (enemy) { return enemy.fragment; }).length !== formalScopeFragmentsBefore) {
+  console.error("Demo V3.15 Scope must not spawn child tasks before the authored paper-release frame");
+  process.exit(1);
+}
+for (let formalScopePreReleaseStep = 0; formalScopePreReleaseStep < 4; formalScopePreReleaseStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if (v315State.enemies.filter(function (enemy) { return enemy.fragment; }).length !== formalScopeFragmentsBefore) {
+  console.error("Demo V3.15 Scope must keep child tasks hidden during swell/compress/tear anticipation");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalScopeFragmentsAfter = v315State.enemies.filter(function (enemy) { return enemy.fragment; }).length;
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (formalScopeFragmentsAfter !== formalScopeFragmentsBefore + 2
+  || v315State.enemies.filter(function (enemy) { return enemy.fragment; }).length !== formalScopeFragmentsAfter) {
+  console.error("Demo V3.15 Scope must spawn exactly two child tasks at the authored release frame", {
+    before: formalScopeFragmentsBefore,
+    afterRelease: formalScopeFragmentsAfter
+  });
+  process.exit(1);
+}
+const formalApprovalTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "approval-move-0");
+formalApprovalTiming.x = v315State.player.x + 260;
+formalApprovalTiming.y = v315State.player.y;
+formalApprovalTiming.speed = 0;
+formalApprovalTiming.hp = 100;
+formalApprovalTiming.maxHp = 100;
+formalApprovalTiming.armorGuardMax = 10;
+formalApprovalTiming.armorGuardHp = 10;
+const formalApprovalHpBefore = formalApprovalTiming.hp;
+V2.combat.qa.damageEnemy(v315State, formalApprovalTiming, 10, "marker_test");
+if (Math.abs(formalApprovalTiming.hp - (formalApprovalHpBefore - 7.2)) > 0.001 || formalApprovalTiming.armorGuardTime <= 0) {
+  console.error("Demo V3.15 Approval must visibly guard while its 28% armor reduction is active", {
+    before: formalApprovalHpBefore,
+    after: formalApprovalTiming.hp,
+    guardTime: formalApprovalTiming.armorGuardTime
+  });
+  process.exit(1);
+}
+for (let formalApprovalBreakHit = 0; formalApprovalBreakHit < 3; formalApprovalBreakHit++) {
+  V2.combat.qa.damageEnemy(v315State, formalApprovalTiming, 10, "marker_test");
+}
+if (formalApprovalTiming.armorBrokenTime <= 0 || formalApprovalTiming.armorGuardHp > 0) {
+  console.error("Demo V3.15 Approval must enter a real vulnerable window at the authored break frame");
+  process.exit(1);
+}
+const formalApprovalBrokenHpBefore = formalApprovalTiming.hp;
+V2.combat.qa.damageEnemy(v315State, formalApprovalTiming, 5, "marker_test");
+if (Math.abs(formalApprovalTiming.hp - (formalApprovalBrokenHpBefore - 5)) > 0.001) {
+  console.error("Demo V3.15 Approval armor must stop reducing damage during the vulnerable window");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 1.35);
+if (formalApprovalTiming.armorBrokenTime > 0 || formalApprovalTiming.armorGuardHp !== formalApprovalTiming.armorGuardMax) {
+  console.error("Demo V3.15 Approval armor must recover after the visible vulnerable window");
+  process.exit(1);
+}
+const formalClientTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "client-move-0");
+formalClientTiming.x = v315State.player.x + 215;
+formalClientTiming.y = v315State.player.y;
+formalClientTiming.speed = 0;
+formalClientTiming.shootCooldown = 0;
+formalClientTiming.rangedAttackTime = 0;
+formalClientTiming.rangedAttackMax = 0;
+formalClientTiming.rangedAttackFired = false;
+const formalClientShotsBefore = v315State.stats.enemyShots || 0;
+for (let formalClientPreReleaseStep = 0; formalClientPreReleaseStep < 4; formalClientPreReleaseStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if ((v315State.stats.enemyShots || 0) !== formalClientShotsBefore) {
+  console.error("Demo V3.15 Client must keep both call projectiles hidden before the authored double-release frame");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalClientShotsAfter = v315State.stats.enemyShots || 0;
+const formalClientProjectiles = v315State.projectiles.slice(-2);
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (formalClientShotsAfter !== formalClientShotsBefore + 2
+  || (v315State.stats.enemyShots || 0) !== formalClientShotsAfter
+  || formalClientProjectiles.length !== 2
+  || formalClientProjectiles.some(function (projectile) { return projectile.x >= formalClientTiming.x; })
+  || Math.sign(formalClientProjectiles[0].vy) === Math.sign(formalClientProjectiles[1].vy)) {
+  console.error("Demo V3.15 Client must spawn exactly two separated projectiles from the handset at the authored release frame", {
+    before: formalClientShotsBefore,
+    afterRelease: formalClientShotsAfter,
+    afterFollowup: v315State.stats.enemyShots || 0,
+    projectiles: formalClientProjectiles
+  });
+  process.exit(1);
+}
+const formalLeadTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-lead-move-0");
+formalLeadTiming.formalBossDebugAction = "";
+formalLeadTiming.formalBossDebugFrame = 0;
+formalLeadTiming.bossPatternIndex = 0;
+formalLeadTiming.bossPatternKind = "";
+formalLeadTiming.bossPatternCooldown = 0;
+V2.combat.qa.beginBossPattern(v315State, formalLeadTiming);
+if (formalLeadTiming.bossPatternKind !== "lane" || formalLeadTiming.bossPatternMax !== formalLeadTiming.bossPatternTimer) {
+  console.error("Demo V3.15 Intern Mentor lane animation must own the real Boss warning window");
+  process.exit(1);
+}
+V2.combat.qa.releaseBossPattern(v315State, formalLeadTiming);
+if (formalLeadTiming.bossPatternKind || formalLeadTiming.bossPatternReleaseKind !== "lane"
+  || formalLeadTiming.bossPatternReleaseTime !== 0.28) {
+  console.error("Demo V3.15 Intern Mentor release frame must linger after the real lane volley");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.3);
+if (formalLeadTiming.bossPatternReleaseKind || formalLeadTiming.bossPatternReleaseTime > 0) {
+  console.error("Demo V3.15 Intern Mentor release recovery must clear after its authored linger");
+  process.exit(1);
+}
+const formalDirectorTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-director-move-0");
+formalDirectorTiming.hp = 100;
+formalDirectorTiming.maxHp = 100;
+const formalDirectorHpBefore = formalDirectorTiming.hp;
+V2.combat.qa.damageEnemy(v315State, formalDirectorTiming, 10, "marker_test");
+if (Math.abs(formalDirectorTiming.hp - (formalDirectorHpBefore - 7.4)) > 0.001
+  || formalDirectorTiming.hitFlash <= 0 || formalDirectorTiming.armor !== 0.26) {
+  console.error("Demo V3.15 Department Director approval screens must visibly own the existing 26% armor", {
+    before: formalDirectorHpBefore,
+    after: formalDirectorTiming.hp,
+    armor: formalDirectorTiming.armor,
+    hitFlash: formalDirectorTiming.hitFlash
+  });
+  process.exit(1);
+}
+formalDirectorTiming.formalBossDebugAction = "";
+formalDirectorTiming.formalBossDebugFrame = 0;
+formalDirectorTiming.bossPatternIndex = 0;
+formalDirectorTiming.bossPatternKind = "";
+formalDirectorTiming.bossPatternCooldown = 0;
+V2.combat.qa.beginBossPattern(v315State, formalDirectorTiming);
+if (formalDirectorTiming.bossPatternKind !== "burst"
+  || formalDirectorTiming.bossPatternMax !== formalDirectorTiming.bossPatternTimer) {
+  console.error("Demo V3.15 Department Director barrier ring must own the real first Boss warning window");
+  process.exit(1);
+}
+const formalDirectorProjectilesBefore = v315State.projectiles.length;
+V2.combat.qa.releaseBossPattern(v315State, formalDirectorTiming);
+if (formalDirectorTiming.bossPatternReleaseKind !== "burst"
+  || formalDirectorTiming.bossPatternReleaseTime !== 0.28
+  || v315State.projectiles.length <= formalDirectorProjectilesBefore) {
+  console.error("Demo V3.15 Department Director safe-gap release frame must own the real burst volley");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.3);
+formalDirectorTiming.bossPatternCooldown = 0;
+V2.combat.qa.beginBossPattern(v315State, formalDirectorTiming);
+if (formalDirectorTiming.bossPatternKind !== "lane") {
+  console.error("Demo V3.15 Department Director second authored pattern must be the real corridor callout");
+  process.exit(1);
+}
+const formalDeliveryDebug = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-delivery-charge-3");
+if (!formalDeliveryDebug || formalDeliveryDebug.formalBossDebugAction !== "charge"
+  || formalDeliveryDebug.formalBossDebugFrame !== 3) {
+  console.error("Demo V3.15 Independent Delivery charge atlas must expose its authored impact frame");
+  process.exit(1);
+}
+const formalDeliveryTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-delivery-move-0");
+formalDeliveryTiming.formalBossDebugAction = "";
+formalDeliveryTiming.formalBossDebugFrame = 0;
+formalDeliveryTiming.x = v315State.player.x + 46;
+formalDeliveryTiming.y = v315State.player.y;
+formalDeliveryTiming.speed = 0;
+formalDeliveryTiming.chargeCooldown = 0;
+formalDeliveryTiming.chargeTime = 0;
+formalDeliveryTiming.bossPatternCooldown = 999;
+v315State.hp = v315State.maxHp;
+v315State.player.invuln = 0;
+const formalDeliveryStartX = formalDeliveryTiming.x;
+const formalDeliveryHpBefore = v315State.hp;
+for (let formalDeliveryWindupStep = 0; formalDeliveryWindupStep < 3; formalDeliveryWindupStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if (formalDeliveryTiming.chargeMax !== 1.05 || formalDeliveryTiming.x !== formalDeliveryStartX
+  || v315State.hp !== formalDeliveryHpBefore || formalDeliveryTiming.chargeHit) {
+  console.error("Demo V3.15 Independent Delivery must keep movement and contact damage closed during its strap-and-seal windup", {
+    chargeMax: formalDeliveryTiming.chargeMax,
+    startX: formalDeliveryStartX,
+    currentX: formalDeliveryTiming.x,
+    hpBefore: formalDeliveryHpBefore,
+    hpAfter: v315State.hp,
+    chargeHit: formalDeliveryTiming.chargeHit
+  });
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+if (formalDeliveryTiming.x >= formalDeliveryStartX || v315State.hp >= formalDeliveryHpBefore
+  || !formalDeliveryTiming.chargeHit) {
+  console.error("Demo V3.15 Independent Delivery impact frame must own the real charging movement and one-hit contact window", {
+    startX: formalDeliveryStartX,
+    currentX: formalDeliveryTiming.x,
+    hpBefore: formalDeliveryHpBefore,
+    hpAfter: v315State.hp,
+    chargeHit: formalDeliveryTiming.chargeHit
+  });
+  process.exit(1);
+}
+formalDeliveryTiming.chargeTime = 0;
+formalDeliveryTiming.bossPatternIndex = 0;
+formalDeliveryTiming.bossPatternKind = "";
+formalDeliveryTiming.bossPatternCooldown = 0;
+const formalDeliveryPatternOrder = [];
+for (let formalDeliveryPatternStep = 0; formalDeliveryPatternStep < 3; formalDeliveryPatternStep++) {
+  V2.combat.qa.beginBossPattern(v315State, formalDeliveryTiming);
+  formalDeliveryPatternOrder.push(formalDeliveryTiming.bossPatternKind);
+  V2.combat.qa.releaseBossPattern(v315State, formalDeliveryTiming);
+}
+if (JSON.stringify(formalDeliveryPatternOrder) !== JSON.stringify(["lane", "lane", "burst"])) {
+  console.error("Demo V3.15 Independent Delivery must preserve its two corridor pressures before the safe-gap burst", formalDeliveryPatternOrder);
+  process.exit(1);
+}
+const formalBossClientTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-client-move-0");
+formalBossClientTiming.formalBossDebugAction = "";
+formalBossClientTiming.formalBossDebugFrame = 0;
+formalBossClientTiming.x = v315State.player.x + 220;
+formalBossClientTiming.y = v315State.player.y;
+formalBossClientTiming.speed = 0;
+formalBossClientTiming.shootCooldown = 0;
+formalBossClientTiming.rangedAttackTime = 0;
+formalBossClientTiming.rangedAttackMax = 0;
+formalBossClientTiming.rangedAttackFired = false;
+formalBossClientTiming.bossPatternCooldown = 999;
+const formalBossClientShotsBefore = v315State.stats.enemyShots || 0;
+for (let formalBossClientPreReleaseStep = 0; formalBossClientPreReleaseStep < 5; formalBossClientPreReleaseStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if ((v315State.stats.enemyShots || 0) !== formalBossClientShotsBefore) {
+  console.error("Demo V3.15 Big Client must keep its ordinary projectile hidden during listen, dial, and compression frames");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalBossClientShotsAfter = v315State.stats.enemyShots || 0;
+const formalBossClientProjectile = v315State.projectiles[v315State.projectiles.length - 1];
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (formalBossClientShotsAfter !== formalBossClientShotsBefore + 1
+  || (v315State.stats.enemyShots || 0) !== formalBossClientShotsAfter
+  || !formalBossClientTiming.rangedAttackFired
+  || !formalBossClientProjectile || formalBossClientProjectile.x >= formalBossClientTiming.x) {
+  console.error("Demo V3.15 Big Client must release exactly one ordinary projectile from the receiver on its authored call frame", {
+    before: formalBossClientShotsBefore,
+    afterRelease: formalBossClientShotsAfter,
+    afterFollowup: v315State.stats.enemyShots || 0,
+    fired: formalBossClientTiming.rangedAttackFired,
+    projectile: formalBossClientProjectile
+  });
+  process.exit(1);
+}
+formalBossClientTiming.rangedAttackTime = 0;
+formalBossClientTiming.bossPatternIndex = 0;
+formalBossClientTiming.bossPatternKind = "";
+formalBossClientTiming.bossPatternCooldown = 0;
+const formalBossClientPatternOrder = [];
+for (let formalBossClientPatternStep = 0; formalBossClientPatternStep < 3; formalBossClientPatternStep++) {
+  V2.combat.qa.beginBossPattern(v315State, formalBossClientTiming);
+  formalBossClientPatternOrder.push(formalBossClientTiming.bossPatternKind);
+  V2.combat.qa.releaseBossPattern(v315State, formalBossClientTiming);
+}
+if (JSON.stringify(formalBossClientPatternOrder) !== JSON.stringify(["burst", "lane", "burst"])) {
+  console.error("Demo V3.15 Big Client must preserve its safe-gap, corridor, safe-gap escalation order", formalBossClientPatternOrder);
+  process.exit(1);
+}
+const formalBossCeoTiming = V2.combat.applyFormalEnemyDebugPose(v315State, "boss-ceo-move-0");
+formalBossCeoTiming.formalBossDebugAction = "";
+formalBossCeoTiming.formalBossDebugFrame = 0;
+v315State.player.x = 600;
+v315State.player.y = 360;
+formalBossCeoTiming.x = 820;
+formalBossCeoTiming.y = 360;
+formalBossCeoTiming.speed = 0;
+formalBossCeoTiming.hp = 100;
+formalBossCeoTiming.maxHp = 100;
+const formalBossCeoArmoredHpBefore = formalBossCeoTiming.hp;
+V2.combat.qa.damageEnemy(v315State, formalBossCeoTiming, 10, "marker_test");
+if (Math.abs(formalBossCeoTiming.hp - (formalBossCeoArmoredHpBefore - 8.2)) > 0.001
+  || formalBossCeoTiming.armor !== 0.18 || formalBossCeoTiming.hitFlash <= 0) {
+  console.error("Demo V3.15 Final Approval CEO ledger shield must visibly own the existing 18% armor", {
+    before: formalBossCeoArmoredHpBefore,
+    after: formalBossCeoTiming.hp,
+    armor: formalBossCeoTiming.armor,
+    hitFlash: formalBossCeoTiming.hitFlash
+  });
+  process.exit(1);
+}
+formalBossCeoTiming.shootCooldown = 0;
+formalBossCeoTiming.rangedAttackTime = 0;
+formalBossCeoTiming.rangedAttackMax = 0;
+formalBossCeoTiming.rangedAttackFired = false;
+formalBossCeoTiming.chargeCooldown = 0;
+formalBossCeoTiming.chargeTime = 0;
+formalBossCeoTiming.chargeMax = 0;
+formalBossCeoTiming.chargeHit = false;
+formalBossCeoTiming.bossPatternCooldown = 999;
+const formalBossCeoShotsBefore = v315State.stats.enemyShots || 0;
+for (let formalBossCeoPreReleaseStep = 0; formalBossCeoPreReleaseStep < 5; formalBossCeoPreReleaseStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if ((v315State.stats.enemyShots || 0) !== formalBossCeoShotsBefore || formalBossCeoTiming.chargeTime > 0) {
+  console.error("Demo V3.15 Final Approval CEO must keep the memo hidden and prevent charge overlap during stamp windup");
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+const formalBossCeoShotsAfter = v315State.stats.enemyShots || 0;
+const formalBossCeoProjectile = v315State.projectiles[v315State.projectiles.length - 1];
+V2.combat.qa.updateEnemies(v315State, 0.05);
+if (formalBossCeoShotsAfter !== formalBossCeoShotsBefore + 1
+  || (v315State.stats.enemyShots || 0) !== formalBossCeoShotsAfter
+  || !formalBossCeoTiming.rangedAttackFired || formalBossCeoTiming.chargeTime > 0
+  || !formalBossCeoProjectile || formalBossCeoProjectile.x >= formalBossCeoTiming.x) {
+  console.error("Demo V3.15 Final Approval CEO stamp frame must release one memo without overlapping its charge", {
+    before: formalBossCeoShotsBefore,
+    afterRelease: formalBossCeoShotsAfter,
+    chargeTime: formalBossCeoTiming.chargeTime,
+    projectile: formalBossCeoProjectile
+  });
+  process.exit(1);
+}
+formalBossCeoTiming.x = v315State.player.x + 46;
+formalBossCeoTiming.y = v315State.player.y;
+formalBossCeoTiming.shootCooldown = 999;
+formalBossCeoTiming.rangedAttackTime = 0;
+formalBossCeoTiming.rangedAttackMax = 0;
+formalBossCeoTiming.chargeCooldown = 0;
+formalBossCeoTiming.chargeTime = 0;
+formalBossCeoTiming.chargeMax = 0;
+formalBossCeoTiming.chargeHit = false;
+v315State.hp = v315State.maxHp;
+v315State.player.invuln = 0;
+const formalBossCeoChargeStartX = formalBossCeoTiming.x;
+const formalBossCeoChargeHpBefore = v315State.hp;
+for (let formalBossCeoWindupStep = 0; formalBossCeoWindupStep < 4; formalBossCeoWindupStep++) {
+  V2.combat.qa.updateEnemies(v315State, 0.1);
+}
+if (formalBossCeoTiming.chargeMax !== 1.15 || formalBossCeoTiming.x !== formalBossCeoChargeStartX
+  || v315State.hp !== formalBossCeoChargeHpBefore || formalBossCeoTiming.chargeHit
+  || formalBossCeoTiming.rangedAttackTime > 0) {
+  console.error("Demo V3.15 Final Approval CEO must keep movement, contact damage, and ranged fire closed during drive-lever windup", {
+    chargeMax: formalBossCeoTiming.chargeMax,
+    startX: formalBossCeoChargeStartX,
+    currentX: formalBossCeoTiming.x,
+    hpBefore: formalBossCeoChargeHpBefore,
+    hpAfter: v315State.hp,
+    rangedAttackTime: formalBossCeoTiming.rangedAttackTime
+  });
+  process.exit(1);
+}
+V2.combat.qa.updateEnemies(v315State, 0.1);
+if (formalBossCeoTiming.x >= formalBossCeoChargeStartX || v315State.hp >= formalBossCeoChargeHpBefore
+  || !formalBossCeoTiming.chargeHit || formalBossCeoTiming.rangedAttackTime > 0) {
+  console.error("Demo V3.15 Final Approval CEO shield-impact frame must own one charge hit without ranged overlap", {
+    startX: formalBossCeoChargeStartX,
+    currentX: formalBossCeoTiming.x,
+    hpBefore: formalBossCeoChargeHpBefore,
+    hpAfter: v315State.hp,
+    chargeHit: formalBossCeoTiming.chargeHit,
+    rangedAttackTime: formalBossCeoTiming.rangedAttackTime
+  });
+  process.exit(1);
+}
+formalBossCeoTiming.chargeTime = 0;
+formalBossCeoTiming.bossPatternIndex = 0;
+formalBossCeoTiming.bossPatternKind = "";
+formalBossCeoTiming.bossPatternCooldown = 0;
+const formalBossCeoPatternOrder = [];
+for (let formalBossCeoPatternStep = 0; formalBossCeoPatternStep < 2; formalBossCeoPatternStep++) {
+  V2.combat.qa.beginBossPattern(v315State, formalBossCeoTiming);
+  formalBossCeoPatternOrder.push(formalBossCeoTiming.bossPatternKind);
+  V2.combat.qa.releaseBossPattern(v315State, formalBossCeoTiming);
+}
+if (JSON.stringify(formalBossCeoPatternOrder) !== JSON.stringify(["lane", "burst"])) {
+  console.error("Demo V3.15 Final Approval CEO must preserve corridor audit before safe-gap final review", formalBossCeoPatternOrder);
+  process.exit(1);
+}
+V2.dispatch({ type: "RESTART" });
+V2.dispatch({ type: "INIT", demoV2Phase: "four-weapon-v3-15" });
+V2.dispatch({ type: "START_RUN", weaponId: "marker" });
+const formalPickupState = V2.getState();
+formalPickupState.mode = "combat";
+const formalMagnetPickup = {
+  type: "xp", x: formalPickupState.player.x + 100, y: formalPickupState.player.y,
+  amount: 5, radius: 7
+};
+formalPickupState.pickups = [formalMagnetPickup];
+formalPickupState.formEvents = [];
+const formalMagnetDistanceBefore = Math.hypot(
+  formalPickupState.player.x - formalMagnetPickup.x,
+  formalPickupState.player.y - formalMagnetPickup.y
+);
+V2.combat.qa.updatePickups(formalPickupState, 0.1);
+const formalMagnetDistanceAfter = Math.hypot(
+  formalPickupState.player.x - formalMagnetPickup.x,
+  formalPickupState.player.y - formalMagnetPickup.y
+);
+if (!(formalMagnetDistanceAfter < formalMagnetDistanceBefore)
+  || formalPickupState.pickups.length !== 1
+  || formalMagnetPickup.visualAge !== 0.1
+  || formalMagnetPickup.magnetRatio <= 0) {
+  console.error("Demo V3.15 formal pickups must use the real magnet path and advance authored animation timing", {
+    before: formalMagnetDistanceBefore,
+    after: formalMagnetDistanceAfter,
+    pickup: formalMagnetPickup
+  });
+  process.exit(1);
+}
+const formalPickupCases = [
+  { type: "xp", amount: 5 },
+  { type: "material", amount: 2 },
+  { type: "heal", amount: 9 }
+];
+formalPickupCases.forEach(function (spec) {
+  formalPickupState.formEvents = [];
+  formalPickupState.pickups = [{
+    type: spec.type,
+    x: formalPickupState.player.x,
+    y: formalPickupState.player.y,
+    amount: spec.amount,
+    radius: spec.type === "material" ? 6 : spec.type === "heal" ? 8 : 7
+  }];
+  if (spec.type === "heal") formalPickupState.hp = formalPickupState.maxHp - 20;
+  const xpBefore = formalPickupState.stats.xpCollected;
+  const materialsBefore = formalPickupState.materials;
+  const materialStatsBefore = formalPickupState.stats.materialsCollected;
+  const hpBefore = formalPickupState.hp;
+  V2.combat.qa.updatePickups(formalPickupState, 0.016);
+  const rewardPassed = spec.type === "xp" ? formalPickupState.stats.xpCollected === xpBefore + spec.amount
+    : spec.type === "material" ? formalPickupState.materials === materialsBefore + spec.amount
+      && formalPickupState.stats.materialsCollected === materialStatsBefore + spec.amount
+      : formalPickupState.hp === Math.min(formalPickupState.maxHp, hpBefore + spec.amount);
+  if (formalPickupState.pickups.length || !rewardPassed
+    || !formalPickupState.formEvents.some(function (event) {
+      return event.kind === "formal_pickup_collect" && event.pickupType === spec.type;
+    })) {
+    console.error("Demo V3.15 formal pickup collection must preserve the real reward and emit its raster collect feedback", {
+      spec,
+      state: formalPickupState
+    });
+    process.exit(1);
+  }
+});
+const formalPickupDebug = V2.combat.applyFormalPickupDebugPose(formalPickupState, "all", 3, false);
+const formalPickupCollectDebug = V2.combat.applyFormalPickupDebugPose(formalPickupState, "heal", 2, true);
+if (!formalPickupDebug || formalPickupDebug.length !== 3
+  || formalPickupDebug.some(function (pickup) { return pickup.formalDebugFrame !== 3; })
+  || !formalPickupCollectDebug || !formalPickupCollectDebug.some(function (event) {
+    return event.kind === "formal_pickup_collect" && event.pickupType === "heal" && event.debugHold;
+  })) {
+  console.error("Demo V3.15 formal pickup browser harness must expose every frame and the collection beat", {
+    formalPickupDebug,
+    formalPickupCollectDebug
+  });
+  process.exit(1);
+}
+const formalPickupAssets = ["xp-pickup-idle-v1.png", "material-pickup-idle-v1.png", "heal-pickup-idle-v1.png"];
+if (formalPickupAssets.some(function (asset) {
+  return !combatVisualSource.includes(asset)
+    || !fs.existsSync(path.join(baseDir, "assets", "cartoon-office-pickups", asset));
+}) || !combatVisualSource.includes("function formalCartoonPickupDef")
+  || !combatVisualSource.includes("function addFormalPickupCollectEvent")
+  || !fs.readFileSync(path.join(baseDir, "main.js"), "utf8").includes('params.get("formalPickup")')) {
+  console.error("Demo V3.15 formal pickup family is missing assets, runtime gates, collection feedback, or deterministic browser poses");
+  process.exit(1);
+}
+console.log("OK Demo V3.15 formal pickup batch: XP, material, and healing use gated four-frame sprites, real magnet timing, rewards, and collect feedback");
+const formalVfxDir = path.join(baseDir, "assets", "cartoon-office-vfx");
+const formalVfxContract = JSON.parse(fs.readFileSync(path.join(formalVfxDir, "cartoon-office-vfx-contract.json"), "utf8"));
+const formalVfxCases = [
+  { pose: "marker-line", family: "marker", source: "marker_test_copy", asset: "marker-vfx-v2.png", row: 0, shape: "line" },
+  { pose: "marker-archive", family: "marker", source: "marker_test_archive", asset: "marker-vfx-v2.png", row: 1, shape: "line" },
+  { pose: "thermos-steam", family: "thermos", source: "thermos_test_base", asset: "thermos-vfx-v2.png", row: 0, shape: "line" },
+  { pose: "thermos-heat", family: "thermos", source: "thermos_test_kill_heatwave", asset: "thermos-vfx-v2.png", row: 1, shape: "area" },
+  { pose: "scissors-closed", family: "scissors", source: "scissors_test_thrust", asset: "scissors-vfx-v3.png", row: 0, shape: "line" },
+  { pose: "scissors-open", family: "scissors", source: "scissors_test_open", asset: "scissors-vfx-v3.png", row: 1, shape: "line" },
+  { pose: "correction-spray", family: "correction_fluid", source: "correction_test_spray", asset: "correction-vfx-v2.png", row: 0, shape: "line" },
+  { pose: "correction-error", family: "correction_fluid", source: "correction_test_system_crash", asset: "correction-vfx-v2.png", row: 1, shape: "area" }
+];
+const formalV314VfxState = makeVersionedWeaponState("four-weapon-v3-14", "marker");
+if (formalV314VfxState.demoV2.formalCartoonVfxPass
+  || V2.combat.applyFormalVfxDebugPose(formalV314VfxState, "marker-line", 0) !== null) {
+  console.error("Demo V3.14 must reject the V3.15 formal VFX renderer and debug harness");
+  process.exit(1);
+}
+const formalVfxState = makeVersionedWeaponState("four-weapon-v3-15", "marker");
+formalVfxCases.forEach(function (spec) {
+  const event = V2.combat.applyFormalVfxDebugPose(formalVfxState, spec.pose, 3);
+  if (!event || event.source !== spec.source || !event.debugHold || event.debugProgress !== 0.875
+    || V2.combat.qa.formalCartoonVfxFamily(formalVfxState, event.source) !== spec.family
+    || V2.combat.qa.formalCartoonVfxRow(spec.family, event.source) !== spec.row
+    || (spec.shape === "line" && (event.x1 == null || event.x2 == null))
+    || (spec.shape === "area" && (event.x == null || event.radius == null))) {
+    console.error("Demo V3.15 formal VFX debug pose must preserve real event source, geometry, family, row, and frame timing", spec, event);
+    process.exit(1);
+  }
+});
+const formalVfxAssetFiles = formalVfxCases.map(function (spec) { return spec.asset; }).filter(function (asset, index, list) {
+  return list.indexOf(asset) === index;
+});
+if (formalVfxContract.layout.columns !== 4 || formalVfxContract.layout.rows !== 2
+  || formalVfxContract.layout.cellWidth !== 256 || formalVfxContract.layout.cellHeight !== 256
+  || JSON.stringify(formalVfxContract.frameOrder) !== JSON.stringify(["anticipation", "release", "impact", "fade"])
+  || !formalVfxContract.runtimeRules.transparentByConstruction
+  || !formalVfxContract.runtimeRules.eventGeometryAuthoritative
+  || !formalVfxContract.runtimeRules.timelineDrivenFrameSelection
+  || !formalVfxContract.runtimeRules.scissorsCompleteWeaponEveryFrame
+  || !formalVfxContract.runtimeRules.noCanvasGeometrySubstitute
+  || !formalVfxContract.runtimeRules.v314GateOff
+  || !formalVfxContract.assets.some(function (item) {
+    return item.weapon === "scissors" && item.file === "scissors-vfx-v3.png"
+      && item.completeWeaponEveryFrame === true;
+  })
+  || formalVfxAssetFiles.some(function (asset) {
+    const png = fs.readFileSync(path.join(formalVfxDir, asset));
+    return !/-v[23]\.png$/.test(asset) || png.subarray(1, 4).toString("ascii") !== "PNG"
+      || png.readUInt32BE(16) !== 1024 || png.readUInt32BE(20) !== 512
+      || [4, 6].indexOf(png[25]) < 0 || png.length <= 100000;
+  })
+  || !combatVisualSource.includes('formal_marker_vfx_v2')
+  || !combatVisualSource.includes('formal_thermos_vfx_v2')
+  || !combatVisualSource.includes('formal_scissors_vfx_v3')
+  || !combatVisualSource.includes('formal_correction_vfx_v2')
+  || !combatVisualSource.includes('/_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"')
+  || !fs.readFileSync(path.join(baseDir, "main.js"), "utf8").includes('params.get("formalVfx")')) {
+  console.error("Demo V3.15 formal VFX family is missing atlas, transparent-grid, cache, browser-harness, or V3.14 isolation contracts");
+  process.exit(1);
+}
+console.log("OK Demo V3.15 formal weapon VFX: four gated 4x2 atlases drive eight real-source line/area identities through authored timing");
+const formalAudioDir = path.join(baseDir, "assets", "cartoon-office-audio");
+const formalAudioContract = JSON.parse(fs.readFileSync(path.join(formalAudioDir, "cartoon-office-audio-contract.json"), "utf8"));
+const formalAudioCueIds = Object.keys(formalAudioContract.cues || {});
+const formalAudioRuntimeCueIds = Object.keys(V2.formalAudioCues || {});
+if (formalAudioCueIds.length !== 21
+  || JSON.stringify(formalAudioCueIds.sort()) !== JSON.stringify(formalAudioRuntimeCueIds.sort())
+  || formalAudioCueIds.some(function (cueId) {
+    const cue = formalAudioContract.cues[cueId];
+    const runtimeCue = V2.getFormalAudioCue(cueId);
+    const filePath = path.join(formalAudioDir, cue.file);
+    return !runtimeCue || runtimeCue.file !== cue.file || runtimeCue.role !== cue.role
+      || !fs.existsSync(filePath) || fs.statSync(filePath).size <= 44;
+  })) {
+  console.error("Demo V3.15 formal audio contract and runtime cue table must expose the same 21 playable WAV assets");
+  process.exit(1);
+}
+const formalV314AudioState = makeVersionedWeaponState("four-weapon-v3-14", "marker");
+formalV314AudioState.stats.audioEvents = [];
+V2.audio.handleFormalEvent({ kind: "encounter_complete", source: "gate_probe" }, formalV314AudioState);
+if (formalV314AudioState.demoV2.formalCartoonAudioPass || formalV314AudioState.stats.audioEvents.length) {
+  console.error("Demo V3.14 must reject the V3.15 formal audio event path");
+  process.exit(1);
+}
+const formalAudioState = makeVersionedWeaponState("four-weapon-v3-15", "marker");
+formalAudioState.stats.audioEvents = [];
+[
+  { kind: "weapon", family: "marker" },
+  { kind: "weapon", family: "thermos" },
+  { kind: "weapon", family: "scissors" },
+  { kind: "weapon", family: "correction_fluid" },
+  ...formalAudioContract.enemyMapping.normal.map(function (enemyType) { return { kind: "enemy_action", enemyType, boss: false }; }),
+  ...formalAudioContract.enemyMapping.boss.map(function (enemyType) { return { kind: "enemy_action", enemyType, boss: true }; }),
+  { kind: "enemy_defeat", enemyType: "todo", boss: false, stage: "impact" },
+  { kind: "enemy_defeat", enemyType: "ceo", boss: true, stage: "impact" },
+  { kind: "encounter_complete", stage: "release" },
+  { kind: "run_complete", stage: "release" }
+].forEach(function (event, index) {
+  V2.audio.handleFormalEvent(Object.assign({ source: "formal_audio_probe_" + index }, event), formalAudioState);
+});
+if (!formalAudioState.demoV2.formalCartoonAudioPass
+  || formalAudioState.stats.audioEvents.length !== 21
+  || formalAudioState.stats.audioEvents.some(function (event) {
+    return !event.formal || !event.cue || !event.voice || !event.role || !event.stage || !event.reason;
+  })) {
+  console.error("Demo V3.15 formal audio semantic matrix did not reach the gated audit path", formalAudioState.stats.audioEvents);
+  process.exit(1);
+}
+console.log("OK Demo V3.15 formal audio: 21 runtime WAV cues cover four weapons, 13 enemy identities, defeat, encounter clear, and final clear behind an isolated gate");
+const formalEnemyAssets = [
+  "backlog-enemy-actions-v2.png", "backlog-enemy-walk-v3.png", "backlog-enemy-slam-v3.png",
+  "urgent-email-enemy-actions-v2.png", "urgent-email-run-v3.png", "urgent-email-dash-v3.png",
+  "meeting-enemy-actions-v3.png", "meeting-enemy-walk-v3.png", "meeting-enemy-slam-v3.png",
+  "ping-enemy-actions-v3.png", "ping-enemy-float-v3.png", "ping-enemy-send-v3.png",
+  "deadline-enemy-actions-v3.png", "deadline-enemy-run-v3.png", "deadline-enemy-charge-v3.png",
+  "scope-enemy-actions-v3.png", "scope-enemy-run-v3.png", "scope-enemy-split-v3.png",
+  "approval-enemy-actions-v3.png", "approval-enemy-walk-v3.png", "approval-enemy-guard-v3.png",
+  "client-enemy-actions-v3.png", "client-enemy-run-v3.png", "client-enemy-call-v3.png",
+  "lead-boss-actions-v1.png", "lead-boss-walk-v1.png", "lead-boss-lane-v1.png", "lead-boss-burst-v1.png",
+  "director-boss-actions-v1.png", "director-boss-walk-v1.png", "director-boss-lane-v1.png", "director-boss-burst-v1.png",
+  "delivery-boss-actions-v1.png", "delivery-boss-walk-v1.png", "delivery-boss-charge-v1.png",
+  "delivery-boss-lane-v1.png", "delivery-boss-burst-v1.png",
+  "client-boss-actions-v1.png", "client-boss-walk-v1.png", "client-boss-call-v1.png",
+  "client-boss-lane-v1.png", "client-boss-burst-v1.png",
+  "ceo-boss-actions-v1.png", "ceo-boss-walk-v1.png", "ceo-boss-stamp-v1.png",
+  "ceo-boss-charge-v1.png", "ceo-boss-lane-v1.png", "ceo-boss-burst-v1.png"
+];
+if (formalEnemyAssets.some(function (asset) {
+  return !combatVisualSource.includes(asset) || !fs.existsSync(path.join(baseDir, "assets", "cartoon-marker-slice", asset));
+}) || !combatVisualSource.includes("function updateFormalContactAttack")
+  || !combatVisualSource.includes("function drawFormalCartoonEnemy")
+  || !combatVisualSource.includes("enemy.deathTime = 0.34")
+  || !fs.readFileSync(path.join(baseDir, "main.js"), "utf8").includes('params.get("formalEnemyPose")')) {
+  console.error("Demo V3.15 first formal enemy batch is missing assets, real action timing, defeat linger, or deterministic browser poses");
+  process.exit(1);
+}
+console.log("OK Demo V3.15 formal enemy batch: all eight normal enemies and all five Bosses use gated authored runtime states");
 
 if (!combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_slash_v24"')
   || !combatVisualSource.includes('drawSpriteFrame(ctx, "scissors_strike_v27"')

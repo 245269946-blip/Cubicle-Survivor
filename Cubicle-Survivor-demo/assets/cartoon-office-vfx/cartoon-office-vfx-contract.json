@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "family": "formal-cartoon-office-vfx-v2",
+  "entry": "demo-v3-15.html",
+  "layout": { "columns": 4, "rows": 2, "cellWidth": 256, "cellHeight": 256, "width": 1024, "height": 512 },
+  "frameOrder": ["anticipation", "release", "impact", "fade"],
+  "assets": [
+    { "weapon": "marker", "file": "marker-vfx-v2.png", "source": "output/cartoon-office-vfx-v2/marker-vfx-source-v2.png", "row0": "copy line", "row1": "archive / retrieval", "rotationSafe": true },
+    { "weapon": "thermos", "file": "thermos-vfx-v2.png", "source": "output/cartoon-office-vfx-v2/thermos-vfx-source-v2.png", "row0": "steam fan", "row1": "heatwave", "rotationSafe": true },
+    { "weapon": "scissors", "file": "scissors-vfx-v3.png", "source": "output/cartoon-office-vfx-v2/scissors-vfx-source-v3.png", "row0": "complete-scissors closed thrust", "row1": "complete-scissors open cut", "rotationSafe": true, "completeWeaponEveryFrame": true },
+    { "weapon": "correction_fluid", "file": "correction-vfx-v2.png", "source": "output/cartoon-office-vfx-v2/correction-vfx-source-v2.png", "row0": "correction spray", "row1": "error / crash", "rotationSafe": true }
+  ],
+  "runtimeRules": {
+    "productionMethod": "image-generated chroma-key source, locally removed to real alpha, alpha-bounds normalized per cell",
+    "transparentByConstruction": true,
+    "eventGeometryAuthoritative": true,
+    "timelineDrivenFrameSelection": true,
+    "scissorsCompleteWeaponEveryFrame": true,
+    "noCanvasGeometrySubstitute": true,
+    "noGlobalHueRotate": true,
+    "v314GateOff": true
+  }
+}

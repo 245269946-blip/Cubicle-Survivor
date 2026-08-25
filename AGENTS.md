@@ -10,7 +10,7 @@ Before inspecting, planning, testing, or editing the game, read these files in o
 2. `docs/v2-core-review-principles.md`
 3. `docs/INDEX.md`
 
-For any fixed-suite planning or implementation, also read `docs/DEMO_V2_PRODUCTION_BRIEF.md` before acting. `Cubicle-Survivor-demo/` remains the only editable game source; Demo V3.14 is the current recommended four-weapon entry and older entries are regression snapshots.
+For any fixed-suite planning or implementation, also read `docs/DEMO_V2_PRODUCTION_BRIEF.md` before acting. `Cubicle-Survivor-demo/` remains the only editable game source; Demo V3.15 is the current recommended four-weapon entry and older entries are regression snapshots.
 
 Then run `git status --short --branch` and preserve every existing working-tree change.
 
@@ -41,6 +41,11 @@ Official terminology for all future work:
 - Purchase and choice pages are decision surfaces, not manuals: default to name + immediate result + at most one future/relationship cue.
 - If a card needs more than two short result-led lines to explain itself, remove, defer, or express the rest in combat; do not shrink the font to preserve prose.
 - Before changing any player-visible weapon, component or combat VFX, read `docs/WEAPON_VISUAL_DESIGN_STANDARD.md`. Every visible part must declare a physical owner, mount, follow rule and state source; every attack effect must share its origin and geometry with combat judgment.
+- A generated image is not a game-ready asset merely because it has transparency or is referenced by runtime code. Before calling it ready, it must pass the asset-entry gate in `docs/visual-qa-checklist.md`: declared runtime role and target size, camera/direction fit, tight alpha bounds, aspect-preserving draw, target-scale composite, and motion/judgment alignment. Label concept art `reference-only` and incomplete cutouts `prototype-cutout`; never report either as production-ready.
+- If image generation is unavailable, quota-limited, or fails the requested visual standard, mark the formal asset batch blocked/incomplete. Do not replace it with line-art SVG, Canvas geometry, concept art, or another placeholder and still call the result formal or `runtime-ready`.
+- Character motion may not be faked with whole-sprite bobbing. A runtime-ready directional character needs the shared identity, common anchors and at least `idle / step-a / step-b` for every supported direction; weapon states must reuse the shared body and aligned back/front rig layers instead of regenerating a different whole character.
+- Image-generated animation strips are source material, not sprite atlases. Copy the source into the project, remove the key to real alpha, split poses by actual alpha-connected bounds when limbs or props cross nominal cells, normalize scale/baseline/anchors, then pass fixed-frame and live-play browser checks before marking the derived atlas `runtime-ready`.
+- Audio is not `runtime-ready` merely because a file exists or a procedural preview sounds plausible. Require a committed playable format, semantic event hook, cooldown/mix budget, browser unlock-policy compliance, decode evidence and version-gate isolation before marking a formal cue complete.
 - Current optimization priority is player-facing combat feel, matching art assets, music/SFX, and readable Build expression. Steam release engineering is intentionally deferred.
 
 ## Demo V2 production lock

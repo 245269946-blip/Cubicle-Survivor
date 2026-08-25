@@ -1,0 +1,516 @@
+{
+  "schemaVersion": 1,
+  "layout": {
+    "columns": 4,
+    "rows": 1,
+    "cellWidth": 320,
+    "cellHeight": 320,
+    "width": 1280,
+    "height": 320,
+    "baselineY": 296,
+    "frameOrder": [
+      "move",
+      "attack",
+      "hit",
+      "defeat"
+    ]
+  },
+  "assets": [
+    {
+      "enemy": "backlog",
+      "file": "backlog-enemy-actions-v2.png",
+      "source": "backlog-enemy-actions-v2-alpha.png",
+      "runtimeHeight": 100,
+      "sharedScale": 0.610329,
+      "sourceWidth": 1672,
+      "sourceHeight": 941,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          397,
+          426
+        ],
+        [
+          0,
+          0,
+          369,
+          391
+        ],
+        [
+          0,
+          0,
+          404,
+          422
+        ],
+        [
+          0,
+          0,
+          406,
+          223
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          39,
+          36,
+          281,
+          296
+        ],
+        [
+          47,
+          57,
+          272,
+          296
+        ],
+        [
+          36,
+          38,
+          283,
+          296
+        ],
+        [
+          36,
+          160,
+          284,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "email",
+      "file": "urgent-email-enemy-actions-v2.png",
+      "source": "urgent-email-enemy-actions-v2-alpha.png",
+      "runtimeHeight": 88,
+      "sharedScale": 0.632479,
+      "sourceWidth": 1672,
+      "sourceHeight": 941,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          407,
+          390
+        ],
+        [
+          0,
+          0,
+          331,
+          289
+        ],
+        [
+          0,
+          0,
+          387,
+          326
+        ],
+        [
+          0,
+          0,
+          468,
+          130
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          31,
+          49,
+          288,
+          296
+        ],
+        [
+          55,
+          113,
+          264,
+          296
+        ],
+        [
+          37,
+          90,
+          282,
+          296
+        ],
+        [
+          12,
+          214,
+          308,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "meeting",
+      "file": "meeting-enemy-actions-v3.png",
+      "source": "meeting-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 112,
+      "sharedScale": 0.614108,
+      "sourceWidth": 2172,
+      "sourceHeight": 724,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          446,
+          350
+        ],
+        [
+          0,
+          0,
+          462,
+          379
+        ],
+        [
+          0,
+          0,
+          398,
+          405
+        ],
+        [
+          0,
+          0,
+          482,
+          223
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          23,
+          81,
+          297,
+          296
+        ],
+        [
+          18,
+          63,
+          302,
+          296
+        ],
+        [
+          38,
+          47,
+          282,
+          296
+        ],
+        [
+          12,
+          159,
+          308,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "ping",
+      "file": "ping-enemy-actions-v3.png",
+      "source": "ping-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 84,
+      "sharedScale": 0.493359,
+      "sourceWidth": 2076,
+      "sourceHeight": 758,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          377,
+          527
+        ],
+        [
+          0,
+          0,
+          460,
+          493
+        ],
+        [
+          0,
+          0,
+          404,
+          510
+        ],
+        [
+          0,
+          0,
+          389,
+          485
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          67,
+          36,
+          253,
+          296
+        ],
+        [
+          46,
+          53,
+          273,
+          296
+        ],
+        [
+          60,
+          44,
+          259,
+          296
+        ],
+        [
+          64,
+          57,
+          256,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "deadline",
+      "file": "deadline-enemy-actions-v3.png",
+      "source": "deadline-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 90,
+      "sharedScale": 0.55794,
+      "sourceWidth": 2172,
+      "sourceHeight": 724,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          444,
+          466
+        ],
+        [
+          0,
+          0,
+          400,
+          386
+        ],
+        [
+          0,
+          0,
+          476,
+          461
+        ],
+        [
+          0,
+          0,
+          482,
+          198
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          36,
+          36,
+          284,
+          296
+        ],
+        [
+          48,
+          81,
+          271,
+          296
+        ],
+        [
+          27,
+          39,
+          293,
+          296
+        ],
+        [
+          25,
+          186,
+          294,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "scope",
+      "file": "scope-enemy-actions-v3.png",
+      "source": "scope-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 94,
+      "sharedScale": 0.556863,
+      "sourceWidth": 2172,
+      "sourceHeight": 724,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          385,
+          426
+        ],
+        [
+          0,
+          0,
+          509,
+          510
+        ],
+        [
+          0,
+          0,
+          429,
+          401
+        ],
+        [
+          0,
+          0,
+          527,
+          310
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          53,
+          59,
+          267,
+          296
+        ],
+        [
+          18,
+          12,
+          301,
+          296
+        ],
+        [
+          40,
+          73,
+          279,
+          296
+        ],
+        [
+          13,
+          123,
+          306,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "approval",
+      "file": "approval-enemy-actions-v3.png",
+      "source": "approval-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 100,
+      "sharedScale": 0.513834,
+      "sourceWidth": 2172,
+      "sourceHeight": 724,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          460,
+          506
+        ],
+        [
+          0,
+          0,
+          458,
+          455
+        ],
+        [
+          0,
+          0,
+          486,
+          525
+        ],
+        [
+          0,
+          0,
+          511,
+          267
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          42,
+          36,
+          278,
+          296
+        ],
+        [
+          42,
+          62,
+          277,
+          296
+        ],
+        [
+          35,
+          26,
+          285,
+          296
+        ],
+        [
+          28,
+          159,
+          291,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "enemy": "client",
+      "file": "client-enemy-actions-v3.png",
+      "source": "client-enemy-actions-v3-alpha.png",
+      "runtimeHeight": 92,
+      "sharedScale": 0.622807,
+      "sourceWidth": 2079,
+      "sourceHeight": 756,
+      "sourceBounds": [
+        [
+          0,
+          0,
+          420,
+          390
+        ],
+        [
+          0,
+          0,
+          440,
+          456
+        ],
+        [
+          0,
+          0,
+          416,
+          424
+        ],
+        [
+          0,
+          0,
+          454,
+          378
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          29,
+          53,
+          291,
+          296
+        ],
+        [
+          23,
+          12,
+          297,
+          296
+        ],
+        [
+          30,
+          32,
+          289,
+          296
+        ],
+        [
+          18,
+          61,
+          301,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    }
+  ]
+}

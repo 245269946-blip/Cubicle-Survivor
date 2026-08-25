@@ -1,11 +1,17 @@
 # 文档索引
 
-## 当前推荐四武器体验：Demo V3.14
+## 当前推荐四武器体验：Demo V3.15
 
-- 入口：`../Cubicle-Survivor-demo/demo-v3-14.html`。
-- 范围：完整继承 Demo V3.13 的战斗、数值、17 关与成长，只压缩武器、经验、模块和组件决策页的信息密度。
-- 版本说明：`DEMO_V3_14_DECISION_DENSITY_PASS.md`。
-- Demo V3.13 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
+- 入口：`../Cubicle-Survivor-demo/demo-v3-15.html`。
+- 范围：完整继承 Demo V3.14 的战斗、数值、17 关、成长和轻量决策合同，正式接入统一卡通角色、敌人、Boss、场景、掉落物、HUD、四武器特效与音频。
+- 选择与购买页只保留名字、立即结果和最多一条未来/关系提示；正文不得靠缩小字号容纳说明。
+- 版本说明与证据：`DEMO_V3_15_CARTOON_ASSET_PRODUCTION.md`。
+- Demo V3.14 及更早入口继续作为回归快照保留；版本边界以 `CURRENT_BASELINE.md` 为准。
+
+## Demo V3.15 正式资产证据
+
+- 8 类普通敌人、5 类 Boss、5 阶段办公室场景、3 类掉落物、战斗 HUD、四武器正式特效与 21 个正式 WAV 均已接入并通过门禁。剪刀 v3 的合刃/张刃各 4 帧线上运行证据已补齐；迁移不改变战斗、成长或经济。
+- 生产合同与证据：`DEMO_V3_15_CARTOON_ASSET_PRODUCTION.md`、`../Cubicle-Survivor-demo/formal-cartoon-enemy-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-boss-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-scene-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-pickup-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-hud-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-vfx-runtime-report.json`、`../Cubicle-Survivor-demo/formal-cartoon-audio-runtime-report.json`。
 
 ## Demo V3.8 回归说明
 
@@ -22,6 +28,13 @@
 - 实验说明：`MARKER_DESIRE_LOOP_EXPERIMENT.md`。
 - 全武器复用规范：`WEAPON_VISUAL_DESIGN_STANDARD.md`，统一约束可见部件所有权、穿戴挂点、朝向、判定因果、霓虹状态语法与视觉验收。
 
+## 当前独立视觉实验：马克笔卡通完成感 P0
+
+- 入口：`../Cubicle-Survivor-demo/cartoon-marker-slice.html`；只保留为卡通方向、轻量战斗手感和“做完一件事”的历史验证，不替换 Demo V3.15。
+- 实验与资产分类：`CARTOON_MARKER_P0_SLICE.md`。办公室背景、独立瞄准马克笔、共享人物/马克笔穿戴层和敌人动作图集均为 `runtime-ready`；旧四张马克笔单帧方向身体只作为 `prototype-cutout` 参考保留，已退出运行时。
+- 跨武器角色门禁：`CHARACTER_WALK_STATE_MATRIX.md`。四武器共享人物已通过 640 项走路、成长与动作运行时矩阵；P0 直接复用同一身份，并额外通过玩家、两类怪物序列及左右朝向共 32 项固定帧检查。
+- 生成资产准入：`visual-qa-checklist.md`。透明或已被代码调用都不等于正式可用，必须通过目标尺寸、裁切、方向/动作和判定对齐门禁。
+
 ## 下一目标：Demo V2
 
 - `DEMO_V2_PRODUCTION_BRIEF.md`：Demo V2 的目标、三武器/六形态/六模块冻结范围、敌人生态、8–10 分钟节奏、制作门禁和明确不做事项。
@@ -29,7 +42,7 @@
 - `DEMO_V2_CORRECTION_FLUID_FIXED_TEST.md`：Demo V2.5 修正液的三层错误、错误扩散、致命纠错、组件与赛博故障视觉边界。
 - `DEMO_V2_6_FOUR_WEAPON_NEON_TEST.md`：Demo V2.6 四武器统一入口、机制隔离规则与疯狂办公室霓虹视觉合同。
 
-当前推荐公开试玩是 Demo V3.14 四武器固定套件；完整 Demo V1、Demo V2.6 和四个单武器入口继续作为机制与流程回归入口保留。
+当前推荐公开试玩是 Demo V3.15 四武器正式卡通版；Demo V3.14、完整 Demo V1、Demo V2.6 和四个单武器入口继续作为机制与流程回归入口保留。
 
 ## 当前可运行主线：Demo V1
 

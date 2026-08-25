@@ -448,4 +448,33 @@
 
   V2.demoV2.fourWeaponV314 = fourWeaponV314;
   V2.demoV2.fixedTests["four-weapon-v3-14"] = fourWeaponV314;
+
+  // Demo V3.15 keeps V3.14's complete combat, progression, economy and compact
+  // decision contract. It introduces the formal cartoon asset production gate
+  // behind a new entry so unfinished enemy batches never leak into V3.14.
+  const fourWeaponV315 = Object.assign({}, fourWeaponV314, {
+    id: "four-weapon-v3-15",
+    version: "Demo V3.15",
+    visualVersion: "正式卡通素材生产版",
+    title: "正式卡通素材生产版",
+    subtitle: "完整继承 V3.14；按敌人、Boss、场景、掉落、特效和 UI 的正式门禁逐批统一卡通素材。",
+    formalCartoonAssetPass: true,
+    formalCartoonScenePass: true,
+    formalCartoonPickupPass: true,
+    formalCartoonHudPass: true,
+    formalCartoonVfxPass: true,
+    formalCartoonAudioPass: true,
+    childPhaseByWeapon: Object.assign({}, fourWeaponV314.childPhaseByWeapon),
+    uiFramework: {
+      weaponSelection: {
+        activeIds: weaponCards.map(function (item) { return item.id; }),
+        cardCapacity: 8,
+        registryLabel: "Demo V3.15 可玩武器"
+      },
+      itemShop: { enabled: false, mountId: "itemOfferSection", offerCapacity: 4, reserved: true }
+    }
+  });
+
+  V2.demoV2.fourWeaponV315 = fourWeaponV315;
+  V2.demoV2.fixedTests["four-weapon-v3-15"] = fourWeaponV315;
 })();

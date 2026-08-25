@@ -7,6 +7,21 @@
   const H = canvas.height;
   const TOTAL = 30;
   const ASSET_ROOT = "assets/cartoon-marker-slice/";
+  const PLAYER_BODY_HEIGHT = 132;
+  const PLAYER_ATLAS_CELL_WIDTH = 420;
+  const PLAYER_ATLAS_CELL_HEIGHT = 620;
+  const PLAYER_ATLAS_VISIBLE_HEIGHT = 560;
+  const PLAYER_ATLAS_BASELINE = 590;
+  const PLAYER_ATLAS_DRAW_HEIGHT = PLAYER_BODY_HEIGHT * PLAYER_ATLAS_CELL_HEIGHT / PLAYER_ATLAS_VISIBLE_HEIGHT;
+  const PLAYER_FOOT_OFFSET_Y = 44;
+  const MARKER_WEAPON_WIDTH = 78;
+  const MARKER_WEAPON_PIVOT_X = 34;
+  const MARKER_WEAPON_PIVOT_Y = -8;
+  const MARKER_MUZZLE_DISTANCE = MARKER_WEAPON_WIDTH - MARKER_WEAPON_PIVOT_X;
+  const debugEnemyPose = new URLSearchParams(window.location.search).get("enemyPose");
+  const debugPlayerPose = new URLSearchParams(window.location.search).get("playerPose");
+  const debugEnemyFacing = new URLSearchParams(window.location.search).get("enemyFacing") === "left" ? -1 : 1;
+  const debugSlamProbe = new URLSearchParams(window.location.search).get("slamProbe") === "1";
 
   const ui = {
     start: document.getElementById("startPanel"),
@@ -27,9 +42,28 @@
   const images = {};
   const assetList = {
     office: "office-arena-v1.webp",
-    player: "marker-worker-v1.png",
-    backlog: "backlog-enemy-v1.png",
-    email: "urgent-email-enemy-v1.png"
+    playerBody: "../cartoon-character-system/neutral-worker-walk-v1.png",
+    markerRigBack: "../cartoon-character-system/marker-rig-back-v1.png",
+    markerRigFront: "../cartoon-character-system/marker-rig-front-v1.png",
+    markerWeapon: "marker-weapon-v2.png",
+    backlog: "backlog-enemy-actions-v2.png",
+    backlogWalk: "backlog-enemy-walk-v3.png",
+    backlogSlam: "backlog-enemy-slam-v3.png",
+    emailActions: "urgent-email-enemy-actions-v2.png",
+    emailRun: "urgent-email-run-v3.png",
+    emailDash: "urgent-email-dash-v3.png"
+  };
+  const playerDirectionRows = { down: 0, right: 1, up: 2, left: 3 };
+  const enemyActionAtlas = {
+    cell: 320,
+    baseline: 296,
+    frames: { move: 0, attack: 1, hit: 2, defeat: 3 },
+    backlog: { referenceHeight: 260, runtimeHeight: 100 },
+    backlogWalk: { referenceHeight: 260, runtimeHeight: 100, frames: 4 },
+    backlogSlam: { referenceHeight: 260, runtimeHeight: 100, frames: 5 },
+    email: { referenceHeight: 247, runtimeHeight: 88 },
+    emailRun: { referenceHeight: 262, runtimeHeight: 88, frames: 4 },
+    emailDash: { referenceHeight: 170, runtimeHeight: 88, frames: 5 }
   };
 
   let state;
@@ -62,7 +96,7 @@
       completeAt: 0,
       shake: 0,
       flash: 0,
-      player: { x: W * .5, y: H * .54, r: 27, hp: 100, speed: 228, attack: .3, recoil: 0, hit: 0, face: 1 },
+      player: { x: W * .5, y: H * .54, r: 27, hp: 100, speed: 228, attack: .3, recoil: 0, hit: 0, face: 1, aimAngle: 0, bodyDirection: "down", moving: false },
       enemies: [],
       attacks: [],
       particles: [],
@@ -82,6 +116,124 @@
     ui.buildName.textContent = "单线贯穿";
     ui.buildChip.classList.remove("upgraded");
     ui.controls.textContent = "WASD 移动 · 自动画线";
+  }
+
+  function applyDebugEnemyPose() {
+    const backlogSequenceMatch = /^backlog-(walk|slam)-([0-4])$/.exec(debugEnemyPose || "");
+    if (backlogSequenceMatch) {
+      const sequence = backlogSequenceMatch[1];
+      const frame = Number(backlogSequenceMatch[2]);
+      if ((sequence === "walk" && frame > 3) || (sequence === "slam" && frame > 4)) return;
+      state.phase = "debug-enemy";
+      state.time = .17;
+      state.player.x = 280;
+      state.player.y = H * .56;
+      state.enemies = [{
+        id: 1, type: "backlog", x: W * .58, y: H * .56, vx: 48 * debugEnemyFacing, vy: 0,
+        r: 31, hp: 38, maxHp: 38, speed: 45, hit: 0, squash: 0,
+        dashIn: 99, dashTime: 0, telegraph: 0, slamTime: 0, slamCooldown: 99, slamHit: false,
+        dead: false, deathTime: 0, debugSequence: sequence, debugFrame: frame
+      }];
+      ui.start.hidden = true;
+      ui.upgrade.hidden = true;
+      ui.complete.hidden = true;
+      document.body.dataset.debugEnemyPose = debugEnemyPose;
+      return;
+    }
+    const sequenceMatch = /^email-(run|dash)-([0-4])$/.exec(debugEnemyPose || "");
+    if (sequenceMatch) {
+      const sequence = sequenceMatch[1];
+      const frame = Number(sequenceMatch[2]);
+      if ((sequence === "run" && frame > 3) || (sequence === "dash" && frame > 4)) return;
+      state.phase = "debug-enemy";
+      state.time = .17;
+      state.player.x = 280;
+      state.player.y = H * .56;
+      state.enemies = [{
+        id: 1, type: "email", x: W * .58, y: H * .56, vx: 60 * debugEnemyFacing, vy: 0,
+        r: 25, hp: 23, maxHp: 23, speed: 78, hit: 0, squash: 0,
+        dashIn: 99, dashTime: 0, telegraph: 0, slamTime: 0, slamCooldown: 99, slamHit: false, dead: false, deathTime: 0,
+        debugSequence: sequence, debugFrame: frame
+      }];
+      ui.start.hidden = true;
+      ui.upgrade.hidden = true;
+      ui.complete.hidden = true;
+      document.body.dataset.debugEnemyPose = debugEnemyPose;
+      return;
+    }
+    const match = /^(backlog|email)-(move|attack|hit|defeat)$/.exec(debugEnemyPose || "");
+    if (!match) return;
+    const type = match[1];
+    const pose = match[2];
+    state.phase = "debug-enemy";
+    state.time = .17;
+    state.player.x = 280;
+    state.player.y = H * .56;
+    state.enemies = [{
+      id: 1,
+      type: type,
+      x: W * .58,
+      y: H * .56,
+      vx: pose === "move" ? 60 * debugEnemyFacing : 0,
+      vy: 0,
+      r: type === "email" ? 25 : 31,
+      hp: pose === "defeat" ? 0 : 20,
+      maxHp: type === "email" ? 23 : 38,
+      speed: type === "email" ? 78 : 45,
+      hit: pose === "hit" ? 1 : 0,
+      squash: pose === "hit" ? .45 : 0,
+      dashIn: 99,
+      dashTime: 0,
+      telegraph: pose === "attack" ? .72 : 0,
+      slamTime: 0,
+      slamCooldown: 99,
+      slamHit: false,
+      debugActionFrame: enemyActionAtlas.frames[pose],
+      dead: pose === "defeat",
+      deathTime: pose === "defeat" ? .22 : 0
+    }];
+    ui.start.hidden = true;
+    ui.upgrade.hidden = true;
+    ui.complete.hidden = true;
+    ui.progressState.textContent = "动作检查";
+    document.body.dataset.debugEnemyPose = debugEnemyPose;
+  }
+
+  function applyDebugPlayerPose() {
+    const match = /^(down|right|up|left)-(idle|a|b)$/.exec(debugPlayerPose || "");
+    if (!match) return;
+    state.phase = "debug-player";
+    state.time = match[2] === "a" ? .01 : match[2] === "b" ? .12 : 0;
+    state.player.bodyDirection = match[1];
+    state.player.moving = match[2] !== "idle";
+    state.enemies = [];
+    ui.start.hidden = true;
+    ui.upgrade.hidden = true;
+    ui.complete.hidden = true;
+    document.body.dataset.debugPlayerPose = debugPlayerPose;
+  }
+
+  function applyDebugSlamProbe() {
+    if (!debugSlamProbe || debugEnemyPose || debugPlayerPose) return;
+    state.phase = "playing";
+    state.spawned = TOTAL;
+    state.killed = TOTAL - 1;
+    state.upgradeShown = true;
+    state.spawnTimer = 99;
+    state.player.attack = 99;
+    state.enemies = [{
+      id: TOTAL, type: "backlog", x: state.player.x + 80, y: state.player.y, vx: 0, vy: 0,
+      r: 31, hp: 999, maxHp: 999, speed: 45, hit: 0, squash: 0,
+      dashIn: 99, dashTime: 0, telegraph: 0, slamTime: 0, slamCooldown: 0, slamHit: false,
+      dead: false, deathTime: 0
+    }];
+    ui.start.hidden = true;
+    ui.upgrade.hidden = true;
+    ui.complete.hidden = true;
+    ui.remaining.textContent = "1";
+    ui.progressFill.style.width = ((TOTAL - 1) / TOTAL * 100) + "%";
+    ui.progressState.textContent = "砸击判定检查";
+    document.body.dataset.debugSlamProbe = "1";
   }
 
   function start() {
@@ -142,7 +294,11 @@
       dashIn: email ? 1.5 + Math.random() * 1.6 : 99,
       dashTime: 0,
       telegraph: 0,
-      dead: false
+      slamTime: 0,
+      slamCooldown: email ? 99 : .25 + Math.random() * .3,
+      slamHit: false,
+      dead: false,
+      deathTime: 0
     });
     state.spawned += 1;
   }
@@ -152,6 +308,7 @@
     state.flash = Math.max(0, state.flash - dt * 3);
     state.shake = Math.max(0, state.shake - dt * 25);
     updateParticles(dt);
+    if (state.phase !== "debug-enemy") updateEnemyDefeats(dt);
     if (state.phase !== "playing") return;
     state.time += dt;
     updatePlayer(dt);
@@ -182,7 +339,10 @@
       if (Math.hypot(pdx, pdy) > 16) { dx += pdx; dy += pdy; }
     }
     const len = Math.hypot(dx, dy) || 1;
+    p.moving = Boolean(dx || dy);
     if (dx || dy) {
+      if (Math.abs(dx) > Math.abs(dy)) p.bodyDirection = dx < 0 ? "left" : "right";
+      else p.bodyDirection = dy < 0 ? "up" : "down";
       p.x += dx / len * p.speed * dt;
       p.y += dy / len * p.speed * dt;
     }
@@ -211,14 +371,15 @@
     if (!target) return;
     const angle = Math.atan2(target.y - p.y, target.x - p.x);
     p.face = Math.cos(angle) >= 0 ? 1 : -1;
+    p.aimAngle = angle;
     p.recoil = 1;
     p.attack = state.upgraded ? .57 : .68;
     const offsets = state.upgraded ? [-13, 13] : [0];
     offsets.forEach(function (offset, index) {
       const nx = -Math.sin(angle);
       const ny = Math.cos(angle);
-      const x1 = p.x + Math.cos(angle) * 31 + nx * offset;
-      const y1 = p.y + Math.sin(angle) * 31 + ny * offset;
+      const x1 = p.x + Math.cos(angle) * MARKER_MUZZLE_DISTANCE + nx * offset;
+      const y1 = p.y + MARKER_WEAPON_PIVOT_Y + Math.sin(angle) * MARKER_MUZZLE_DISTANCE + ny * offset;
       const length = 570;
       const x2 = x1 + Math.cos(angle) * length;
       const y2 = y1 + Math.sin(angle) * length;
@@ -254,6 +415,7 @@
   function killEnemy(e) {
     if (e.dead) return;
     e.dead = true;
+    e.deathTime = .34;
     state.killed += 1;
     state.shake = Math.max(state.shake, 4);
     burst(e.x, e.y, e.type === "email" ? "#e65b67" : "#38bdc1", 12);
@@ -269,6 +431,9 @@
       e.hit = Math.max(0, e.hit - dt * 5);
       e.squash = Math.max(0, e.squash - dt * 6);
       let speed = e.speed;
+      const dx = p.x - e.x;
+      const dy = p.y - e.y;
+      const len = Math.hypot(dx, dy) || 1;
       if (e.type === "email") {
         e.dashIn -= dt;
         if (e.dashIn <= .42 && e.dashIn > 0) e.telegraph = 1 - e.dashIn / .42;
@@ -278,10 +443,31 @@
           e.telegraph = 0;
         }
         if (e.dashTime > 0) { e.dashTime -= dt; speed = 175; }
+      } else {
+        e.slamCooldown = Math.max(0, e.slamCooldown - dt);
+        const slamRange = p.r + e.r + 32;
+        if (e.slamTime > 0) {
+          e.slamTime = Math.max(0, e.slamTime - dt);
+          speed = 6;
+          const slamProgress = 1 - e.slamTime / .68;
+          if (!e.slamHit && slamProgress >= .62) {
+            e.slamHit = true;
+            if (Math.hypot(dx, dy) < slamRange && p.hit <= 0) {
+              p.hp = Math.max(1, p.hp - 7);
+              p.hit = .85;
+              state.shake = 7;
+              burst(p.x, p.y, "#f4ca4c", 7);
+              ui.health.textContent = Math.ceil(p.hp);
+              tone(75, .13, "sawtooth", .04);
+            }
+          }
+          if (e.slamTime <= 0) e.slamCooldown = .48;
+        } else if (Math.hypot(dx, dy) < slamRange && e.slamCooldown <= 0) {
+          e.slamTime = .68;
+          e.slamHit = false;
+          speed = 6;
+        }
       }
-      const dx = p.x - e.x;
-      const dy = p.y - e.y;
-      const len = Math.hypot(dx, dy) || 1;
       e.vx += dx / len * speed * dt * 4;
       e.vy += dy / len * speed * dt * 4;
       const damping = Math.pow(.035, dt);
@@ -290,15 +476,21 @@
       e.x += e.vx * dt;
       e.y += e.vy * dt;
       const touch = Math.hypot(p.x - e.x, p.y - e.y);
-      if (touch < p.r + e.r - 6 && p.hit <= 0) {
-        p.hp = Math.max(1, p.hp - (e.type === "email" ? 12 : 7));
+      if (e.type === "email" && touch < p.r + e.r - 6 && p.hit <= 0) {
+        p.hp = Math.max(1, p.hp - 12);
         p.hit = .85;
         state.shake = 7;
         ui.health.textContent = Math.ceil(p.hp);
         tone(75, .13, "sawtooth", .04);
       }
     });
-    state.enemies = state.enemies.filter(function (e) { return !e.dead; });
+  }
+
+  function updateEnemyDefeats(dt) {
+    state.enemies.forEach(function (e) {
+      if (e.dead) e.deathTime = Math.max(0, e.deathTime - dt);
+    });
+    state.enemies = state.enemies.filter(function (e) { return !e.dead || e.deathTime > 0; });
   }
 
   function updateAttacks(dt) {
@@ -470,25 +662,128 @@
     });
   }
 
+  function enemyActionFrame(e) {
+    if (e.dead) return enemyActionAtlas.frames.defeat;
+    if (e.hit > 0) return enemyActionAtlas.frames.hit;
+    const attackDistance = state.player.r + e.r + (e.type === "email" ? 44 : 30);
+    const preparingContact = Math.hypot(state.player.x - e.x, state.player.y - e.y) < attackDistance;
+    if (e.telegraph > 0 || preparingContact) return enemyActionAtlas.frames.attack;
+    return enemyActionAtlas.frames.move;
+  }
+
+  function enemyVisual(e) {
+    if (e.type !== "email") {
+      if (Number.isInteger(e.debugActionFrame)) {
+        return { image: images.backlog, frame: e.debugActionFrame, config: enemyActionAtlas.backlog, sequence: "actions" };
+      }
+      if (e.debugSequence === "walk") {
+        return { image: images.backlogWalk, frame: e.debugFrame, config: enemyActionAtlas.backlogWalk, sequence: "walk" };
+      }
+      if (e.debugSequence === "slam") {
+        return { image: images.backlogSlam, frame: e.debugFrame, config: enemyActionAtlas.backlogSlam, sequence: "slam" };
+      }
+      if (e.dead || e.hit > 0) {
+        return { image: images.backlog, frame: enemyActionFrame(e), config: enemyActionAtlas.backlog, sequence: "actions" };
+      }
+      if (e.slamTime > 0) {
+        const progress = Math.max(0, Math.min(.999, 1 - e.slamTime / .68));
+        return {
+          image: images.backlogSlam,
+          frame: Math.min(4, Math.floor(progress * 5)),
+          config: enemyActionAtlas.backlogSlam,
+          sequence: "slam"
+        };
+      }
+      return {
+        image: images.backlogWalk,
+        frame: Math.floor(state.time / .115 + e.id * .61) % enemyActionAtlas.backlogWalk.frames,
+        config: enemyActionAtlas.backlogWalk,
+        sequence: "walk"
+      };
+    }
+    if (e.debugSequence === "run") {
+      return { image: images.emailRun, frame: e.debugFrame, config: enemyActionAtlas.emailRun, sequence: "run" };
+    }
+    if (e.debugSequence === "dash") {
+      return { image: images.emailDash, frame: e.debugFrame, config: enemyActionAtlas.emailDash, sequence: "dash" };
+    }
+    if (Number.isInteger(e.debugActionFrame)) {
+      return { image: images.emailActions, frame: e.debugActionFrame, config: enemyActionAtlas.email, sequence: "actions" };
+    }
+    if (e.dead || e.hit > 0) {
+      return { image: images.emailActions, frame: enemyActionFrame(e), config: enemyActionAtlas.email, sequence: "actions" };
+    }
+    if (e.telegraph > 0) {
+      return {
+        image: images.emailDash,
+        frame: e.telegraph < .5 ? 0 : 1,
+        config: enemyActionAtlas.emailDash,
+        sequence: "dash"
+      };
+    }
+    if (e.dashTime > 0) {
+      const progress = Math.max(0, Math.min(.999, 1 - e.dashTime / .48));
+      return {
+        image: images.emailDash,
+        frame: 2 + Math.min(2, Math.floor(progress * 3)),
+        config: enemyActionAtlas.emailDash,
+        sequence: "dash"
+      };
+    }
+    const attackDistance = state.player.r + e.r + 44;
+    if (Math.hypot(state.player.x - e.x, state.player.y - e.y) < attackDistance) {
+      return { image: images.emailActions, frame: enemyActionAtlas.frames.attack, config: enemyActionAtlas.email, sequence: "actions" };
+    }
+    return {
+      image: images.emailRun,
+      frame: Math.floor(state.time / .09 + e.id * .73) % enemyActionAtlas.emailRun.frames,
+      config: enemyActionAtlas.emailRun,
+      sequence: "run"
+    };
+  }
+
   function drawEnemies() {
     state.enemies.forEach(function (e) {
-      const img = e.type === "email" ? images.email : images.backlog;
-      const base = e.type === "email" ? 88 : 100;
-      const sx = 1 + e.squash * .22;
-      const sy = 1 - e.squash * .28;
+      const visual = enemyVisual(e);
+      const img = visual.image;
+      const config = visual.config;
+      const frameIndex = visual.frame;
+      const base = config.runtimeHeight;
+      const drawSize = base * enemyActionAtlas.cell / config.referenceHeight;
+      const stride = e.dead ? 0 : Math.sin(state.time * (e.type === "email" ? 12 : 8) + e.id * 1.73);
+      const moving = Math.hypot(e.vx, e.vy) > 8;
+      const facing = e.dead || Math.abs(e.vx) < 3 ? 1 : (e.vx < 0 ? -1 : 1);
+      const dashStretch = e.dashTime > 0 && visual.sequence !== "dash" ? .12 : 0;
+      const sx = 1 + e.squash * .08 + dashStretch;
+      const sy = 1 - e.squash * .1 - dashStretch * .45;
+      const footY = base * .38;
       ctx.save();
-      ctx.translate(e.x, e.y);
+      ctx.translate(e.x, e.y + (moving && visual.sequence === "actions" ? Math.abs(stride) * -2.4 : 0));
       if (e.telegraph > 0) {
         ctx.strokeStyle = "rgba(230,91,103," + (.35 + e.telegraph * .55) + ")";
         ctx.lineWidth = 5;
         ctx.beginPath(); ctx.arc(0, 0, e.r + 9 + e.telegraph * 7, 0, Math.PI * 2); ctx.stroke();
       }
-      ctx.scale(sx, sy);
-      ctx.globalAlpha = e.hit > 0 ? .72 : 1;
-      ctx.drawImage(img, -base / 2, -base * .62, base, base);
+      if (e.type === "backlog" && e.slamTime > 0) {
+        const slamProgress = Math.max(0, Math.min(1, 1 - e.slamTime / .68));
+        ctx.strokeStyle = "rgba(244,202,76," + (.28 + slamProgress * .55) + ")";
+        ctx.lineWidth = slamProgress >= .62 ? 6 : 3;
+        ctx.beginPath();
+        ctx.ellipse(0, 17, e.r + 12 + slamProgress * 8, 15 + slamProgress * 5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.rotate(moving && visual.sequence === "actions" && frameIndex === enemyActionAtlas.frames.move ? stride * .025 : 0);
+      ctx.scale(facing * sx, sy);
+      ctx.globalAlpha = e.dead ? Math.min(1, e.deathTime / .12) : (e.hit > 0 ? .78 : 1);
+      ctx.drawImage(
+        img,
+        frameIndex * enemyActionAtlas.cell, 0, enemyActionAtlas.cell, enemyActionAtlas.cell,
+        -drawSize / 2, footY - drawSize * enemyActionAtlas.baseline / enemyActionAtlas.cell,
+        drawSize, drawSize
+      );
       ctx.restore();
       const hp = Math.max(0, e.hp / e.maxHp);
-      if (hp < 1) {
+      if (!e.dead && hp < 1) {
         ctx.fillStyle = "rgba(23,38,59,.2)"; ctx.fillRect(e.x - 25, e.y + 31, 50, 6);
         ctx.fillStyle = e.type === "email" ? "#e65b67" : "#38bdc1"; ctx.fillRect(e.x - 25, e.y + 31, 50 * hp, 6);
       }
@@ -497,14 +792,48 @@
 
   function drawPlayer() {
     const p = state.player;
-    const bob = state.phase === "playing" ? Math.sin(state.time * 8) * 2 : 0;
     const recoil = p.recoil * 7;
-    const size = 138;
+    const drawX = p.x - Math.cos(p.aimAngle) * recoil;
+    const drawY = p.y - Math.sin(p.aimAngle) * recoil;
+    const weaponHeight = MARKER_WEAPON_WIDTH * images.markerWeapon.height / images.markerWeapon.width;
+    const hitAlpha = p.hit > 0 ? .55 + Math.sin(p.hit * 35) * .25 : 1;
+    const row = playerDirectionRows[p.bodyDirection] || 0;
+    const phase = p.moving ? 1 + (Math.floor(state.time / .115) % 2) : 0;
+
+    if (Math.sin(p.aimAngle) < -.15) drawMarkerWeapon(p, drawX, drawY, weaponHeight, hitAlpha);
+
+    drawPlayerAtlasLayer(images.markerRigBack, row, phase, drawX, drawY, hitAlpha);
+    drawPlayerAtlasLayer(images.playerBody, row, phase, drawX, drawY, hitAlpha);
+    drawPlayerAtlasLayer(images.markerRigFront, row, phase, drawX, drawY, hitAlpha);
+
+    if (Math.sin(p.aimAngle) >= -.15) drawMarkerWeapon(p, drawX, drawY, weaponHeight, hitAlpha);
+  }
+
+  function drawPlayerAtlasLayer(image, row, phase, drawX, drawY, alpha) {
+    const width = PLAYER_ATLAS_DRAW_HEIGHT * PLAYER_ATLAS_CELL_WIDTH / PLAYER_ATLAS_CELL_HEIGHT;
+    const top = drawY + PLAYER_FOOT_OFFSET_Y - PLAYER_ATLAS_DRAW_HEIGHT * PLAYER_ATLAS_BASELINE / PLAYER_ATLAS_CELL_HEIGHT;
     ctx.save();
-    ctx.translate(p.x - p.face * recoil, p.y + bob);
-    if (p.face < 0) ctx.scale(-1, 1);
-    if (p.hit > 0) ctx.globalAlpha = .55 + Math.sin(p.hit * 35) * .25;
-    ctx.drawImage(images.player, -size * .46, -size * .67, size, size * 1.07);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(
+      image,
+      phase * PLAYER_ATLAS_CELL_WIDTH, row * PLAYER_ATLAS_CELL_HEIGHT,
+      PLAYER_ATLAS_CELL_WIDTH, PLAYER_ATLAS_CELL_HEIGHT,
+      drawX - width / 2, top,
+      width, PLAYER_ATLAS_DRAW_HEIGHT
+    );
+    ctx.restore();
+  }
+
+  function drawMarkerWeapon(p, drawX, drawY, weaponHeight, hitAlpha) {
+    ctx.save();
+    ctx.translate(drawX, drawY + MARKER_WEAPON_PIVOT_Y);
+    ctx.rotate(p.aimAngle);
+    ctx.globalAlpha = hitAlpha;
+    ctx.drawImage(
+      images.markerWeapon,
+      -MARKER_WEAPON_PIVOT_X, -weaponHeight / 2,
+      MARKER_WEAPON_WIDTH, weaponHeight
+    );
     ctx.restore();
   }
 
@@ -556,6 +885,13 @@
 
   window.addEventListener("keydown", function (event) {
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(event.code)) event.preventDefault();
+    const inputDirection = {
+      KeyA: "left", ArrowLeft: "left",
+      KeyD: "right", ArrowRight: "right",
+      KeyW: "up", ArrowUp: "up",
+      KeyS: "down", ArrowDown: "down"
+    }[event.code];
+    if (state && inputDirection) state.player.bodyDirection = inputDirection;
     keys.add(event.code);
   });
   window.addEventListener("keyup", function (event) { keys.delete(event.code); });
@@ -579,7 +915,9 @@
         spawned: state.spawned,
         upgraded: state.upgraded,
         remaining: TOTAL - state.killed,
-        playerHp: state.player.hp
+        playerHp: state.player.hp,
+        bodyDirection: state.player.bodyDirection,
+        moving: state.player.moving
       } : null;
     },
     forceUpgrade: showUpgrade,
@@ -594,6 +932,9 @@
 
   loadAssets().then(function () {
     reset();
+    applyDebugEnemyPose();
+    applyDebugPlayerPose();
+    applyDebugSlamProbe();
     cancelAnimationFrame(animationId);
     animationId = requestAnimationFrame(frame);
   }).catch(function () {

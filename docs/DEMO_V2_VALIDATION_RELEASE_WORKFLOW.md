@@ -5,10 +5,10 @@ This is the persistent release gate for the active Cubicle Survivor V2 package. 
 ## Authoritative surfaces
 
 - Active source: `Cubicle-Survivor-demo/`
-- Recommended playable entry: `Cubicle-Survivor-demo/demo-v3-14.html`
+- Recommended playable entry: `Cubicle-Survivor-demo/demo-v3-15.html`
 - Public site project: `Cubicle-Survivor-sites/`
 - Hosted runtime copy: `Cubicle-Survivor-sites/public/play/`
-- Current design/audit baseline: `docs/DEMO_V3_13_ALL_WEAPON_DESIRE_CHAINS.md`
+- Current design/audit baseline: `docs/DEMO_V3_15_CARTOON_ASSET_PRODUCTION.md`
 
 The hosted runtime is generated from the active source by `node scripts/sync-demo-v2-site.mjs`. Never hand-edit `Cubicle-Survivor-sites/public/play/`.
 
@@ -41,9 +41,9 @@ The first command replaces only the verified `Cubicle-Survivor-sites/public/play
 4. All 17 authored encounter preview/roster/spawn contracts.
 5. All 68 weapon/encounter completion transitions.
 6. Eight real-timer 17-encounter pure-route progression soaks.
-7. Hosted-runtime hash and V2.9 entry checks.
+7. Hosted-runtime hash, V3.15 entry and formal-asset checks.
 8. Production Sites build and rendered-wrapper test.
-9. V3.13 playability guard: coherent cache tokens, world-centre spawn, immediate input/camera response, and render-layer isolation.
+9. V3.15 playability guard: coherent cache tokens, world-centre spawn, immediate input/camera response, compact decisions, and render-layer isolation.
 
 The eight progression soaks disable enemy outgoing damage only. Enemy count, role, movement, HP, targeting, player damage, timer, Boss kill condition, pickups and all public growth choices remain active. These soaks prove that the full route is reachable and cannot deadlock; they are not balance claims.
 
@@ -58,8 +58,8 @@ After the automated gate, inspect the deployed candidate at both a normal deskto
 - Encounter preview names the enemies that spawn and contains no weapon-specific instruction or internal test language.
 - Collection presents the 10-second pickup window, auto-collection explanation and next step.
 - XP presents four readable universal-stat choices with correct values.
-- Module selection shows two distinct branches, next level, immediate behavior and stacking direction.
-- Component shop shows slot exclusivity, install/upgrade/replace action, same-variant synthesis and readable full text.
+- Module selection shows two distinct branches and their immediate results; it may add only one short future/relationship cue.
+- Component shop shows part/action, immediate stat/result, cost and install/upgrade/replace state. Installation-location prose stays hidden on the compact surface.
 - Scissors shows charge, movement direction, attached outward cut and unobscured shelter.
 - Thermos shows short-wide control coverage and persistent slowing steam rather than a second long beam.
 - Correction Fluid shows readable error stacks, persistent spread fields and Boss-compatible route behavior.
@@ -72,14 +72,14 @@ Record any failure as a product issue. Do not waive a browser failure because au
 ## Release sequence
 
 1. Freeze scope and preserve unrelated user changes.
-2. Sync the active runtime into the Sites project.
+2. Sync the active runtime into the Sites project as a generated packaging copy.
 3. Run `node scripts/verify-demo-v2-release.mjs` until it passes.
 4. Complete the browser matrix.
 5. Update `docs/CURRENT_BASELINE.md`, the versioned audit document and the playable entry when the version changes.
 6. Commit only the intended game, validation, site and documentation files.
-7. Push the branch and open/update the GitHub pull request.
-8. Deploy the exact validated commit through the existing Sites project.
-9. Verify the public URL loads the current version and keep the deployed URL in the release handoff.
+7. Push the exact intended source branch.
+8. Publish the exact validated runtime to the repository's `gh-pages` branch. The Sites wrapper is a secondary packaging/build gate, not the primary public host.
+9. Verify both the GitHub Pages root and immutable version URL load the current version, then keep both URLs in the release handoff.
 
 ## Versioning rule
 

@@ -74,6 +74,242 @@
     };
   }
 
+  function debugWalkMatrixHash(canvas) {
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const size = 152;
+    const startX = Math.floor(canvas.width / 2 - size / 2);
+    const startY = Math.floor(canvas.height / 2 - size / 2);
+    const pixels = context.getImageData(startX, startY, size, size).data;
+    let hash = 2166136261 >>> 0;
+    let brightPixels = 0;
+    for (let offset = 0; offset < pixels.length; offset += 4) {
+      const red = pixels[offset];
+      const green = pixels[offset + 1];
+      const blue = pixels[offset + 2];
+      hash ^= (red >> 4) | ((green >> 4) << 4) | ((blue >> 4) << 8);
+      hash = Math.imul(hash, 16777619) >>> 0;
+      if (red + green + blue > 520) brightPixels += 1;
+    }
+    return {
+      hash: hash.toString(16).padStart(8, "0"),
+      brightPixels
+    };
+  }
+
+  function publishDebugWalkMatrixReport(report) {
+    let node = document.getElementById("walkMatrixReport");
+    if (!node) {
+      node = document.createElement("pre");
+      node.id = "walkMatrixReport";
+      node.hidden = true;
+      document.body.appendChild(node);
+    }
+    node.textContent = JSON.stringify(report);
+    document.body.dataset.walkMatrixStatus = report.status;
+    document.body.dataset.walkMatrixCases = String(report.totalCaseCount || report.caseCount || 0);
+  }
+
+  function runDebugWalkMatrix(canvas) {
+    const weapons = [
+      { id: "marker", label: "marker" },
+      { id: "thermos", label: "thermos" },
+      { id: "scissors", label: "scissors" },
+      { id: "correction_fluid", label: "correction" }
+    ];
+    const directions = ["down", "right", "up", "left"];
+    const phases = ["idle", "a", "b"];
+    const actions = ["neutral", "attack", "hit", "complete"];
+    const routes = [
+      { id: "base", a: 0, b: 0 },
+      { id: "a1", a: 1, b: 0 },
+      { id: "a2", a: 2, b: 0 },
+      { id: "a3", a: 3, b: 0 },
+      { id: "a4", a: 4, b: 0 },
+      { id: "b1", a: 0, b: 1 },
+      { id: "b2", a: 0, b: 2 },
+      { id: "b3", a: 0, b: 3 },
+      { id: "b4", a: 0, b: 4 },
+      { id: "mix11", a: 1, b: 1 },
+      { id: "mix41", a: 4, b: 1 },
+      { id: "mix14", a: 1, b: 4 }
+    ];
+    const cases = [];
+    const failures = [];
+    const startingErrorCount = (window._errors || []).length;
+
+    weapons.forEach(function (weapon) {
+      // startRun replaces the coordinator phase with the selected fixed test.
+      // Re-enter V3.14 before every weapon so all suite-level visual flags stay
+      // active instead of silently falling back to the preserved V2.1 body.
+      V2.dispatch({ type: "INIT", debug: true, demoV2Phase: "four-weapon-v3-14" });
+      V2.startRun({ weaponId: weapon.id });
+      const state = V2.getState();
+      state.mode = "combat";
+      state.warmupTime = 0;
+      if (V2.combat && V2.combat.stopLoop) V2.combat.stopLoop();
+      const config = V2.getDemoV2FixedTestConfig && V2.getDemoV2FixedTestConfig(state);
+      const runtime = config && state.demoV2 && state.demoV2[config.runtimeKey];
+      if (!config || !runtime) {
+        failures.push(weapon.label + ":missing-fixed-runtime");
+        return;
+      }
+      routes.forEach(function (route) {
+        runtime.modules.copy = route.a;
+        runtime.modules.archive = route.b;
+        if (config.rebuildParams) config.rebuildParams(state);
+        directions.forEach(function (direction, directionIndex) {
+          phases.forEach(function (phase) {
+            runtime.bodyFacing = directionIndex;
+            state.player.walkMoving = phase !== "idle";
+            state.player.walkClock = phase === "b" ? 0.116 : 0;
+            V2.combat.draw();
+            const fingerprint = debugWalkMatrixHash(canvas);
+            cases.push({
+              weapon: weapon.label,
+              route: route.id,
+              direction,
+              phase,
+              hash: fingerprint.hash,
+              brightPixels: fingerprint.brightPixels
+            });
+          });
+        });
+      });
+    });
+
+    let walkGroups = 0;
+    let distinctWalkGroups = 0;
+    weapons.forEach(function (weapon) {
+      routes.forEach(function (route) {
+        directions.forEach(function (direction) {
+          const group = cases.filter(function (item) {
+            return item.weapon === weapon.label && item.route === route.id && item.direction === direction;
+          });
+          walkGroups += 1;
+          if (new Set(group.map(function (item) { return item.hash; })).size === phases.length) distinctWalkGroups += 1;
+          else failures.push(weapon.label + ":" + route.id + ":" + direction + ":walk-phase-collision");
+        });
+      });
+    });
+
+    let routeGroups = 0;
+    let distinctRouteGroups = 0;
+    weapons.forEach(function (weapon) {
+      directions.forEach(function (direction) {
+        phases.forEach(function (phase) {
+          const group = cases.filter(function (item) {
+            return item.weapon === weapon.label && item.direction === direction && item.phase === phase;
+          });
+          routeGroups += 1;
+          if (new Set(group.map(function (item) { return item.hash; })).size === routes.length) distinctRouteGroups += 1;
+          else failures.push(weapon.label + ":" + direction + ":" + phase + ":route-state-collision");
+        });
+      });
+    });
+
+    const actionCases = [];
+    weapons.forEach(function (weapon) {
+      V2.dispatch({ type: "INIT", debug: true, demoV2Phase: "four-weapon-v3-14" });
+      V2.startRun({ weaponId: weapon.id });
+      const state = V2.getState();
+      state.mode = "combat";
+      state.warmupTime = 0;
+      if (V2.combat && V2.combat.stopLoop) V2.combat.stopLoop();
+      const config = V2.getDemoV2FixedTestConfig && V2.getDemoV2FixedTestConfig(state);
+      const runtime = config && state.demoV2 && state.demoV2[config.runtimeKey];
+      if (!config || !runtime) {
+        failures.push(weapon.label + ":missing-action-runtime");
+        return;
+      }
+      runtime.modules.copy = 1;
+      runtime.modules.archive = 1;
+      if (config.rebuildParams) config.rebuildParams(state);
+      directions.forEach(function (direction, directionIndex) {
+        actions.forEach(function (action) {
+          runtime.bodyFacing = directionIndex;
+          state.player.walkMoving = false;
+          state.player.walkClock = 0;
+          state.player.invuln = 0;
+          state.player.attackReactionTime = 0;
+          state.player.hitReactionTime = 0;
+          state.player.completionTime = 0;
+          if (action === "attack") state.player.attackReactionTime = 0.08;
+          if (action === "hit") {
+            state.player.hitReactionTime = 0.11;
+            state.player.invuln = 0.44;
+          }
+          if (action === "complete") state.player.completionTime = 0.41;
+          V2.combat.draw();
+          const fingerprint = debugWalkMatrixHash(canvas);
+          actionCases.push({
+            weapon: weapon.label,
+            direction,
+            action,
+            hash: fingerprint.hash,
+            brightPixels: fingerprint.brightPixels
+          });
+        });
+      });
+    });
+
+    let actionGroups = 0;
+    let distinctActionGroups = 0;
+    weapons.forEach(function (weapon) {
+      directions.forEach(function (direction) {
+        const group = actionCases.filter(function (item) {
+          return item.weapon === weapon.label && item.direction === direction;
+        });
+        actionGroups += 1;
+        if (new Set(group.map(function (item) { return item.hash; })).size === actions.length) distinctActionGroups += 1;
+        else failures.push(weapon.label + ":" + direction + ":action-state-collision");
+      });
+    });
+
+    const emptyCases = cases.filter(function (item) { return item.brightPixels < 40; });
+    const emptyActionCases = actionCases.filter(function (item) { return item.brightPixels < 40; });
+    emptyCases.slice(0, 12).forEach(function (item) {
+      failures.push(item.weapon + ":" + item.route + ":" + item.direction + ":" + item.phase + ":empty-player-crop");
+    });
+    emptyActionCases.slice(0, 12).forEach(function (item) {
+      failures.push(item.weapon + ":" + item.direction + ":" + item.action + ":empty-action-crop");
+    });
+    const newErrorCount = Math.max(0, (window._errors || []).length - startingErrorCount);
+    if (newErrorCount) failures.push("runtime-errors:" + newErrorCount);
+    const report = {
+      schemaVersion: 1,
+      entry: "demo-v3-14.html",
+      viewport: [canvas.width, canvas.height],
+      weaponCount: weapons.length,
+      directionCount: directions.length,
+      phaseCount: phases.length,
+      routeStateCount: routes.length,
+      expectedCaseCount: weapons.length * directions.length * phases.length * routes.length,
+      caseCount: cases.length,
+      walkGroups,
+      distinctWalkGroups,
+      routeGroups,
+      distinctRouteGroups,
+      expectedActionCaseCount: weapons.length * directions.length * actions.length,
+      actionCaseCount: actionCases.length,
+      totalCaseCount: cases.length + actionCases.length,
+      actionGroups,
+      distinctActionGroups,
+      emptyCaseCount: emptyCases.length,
+      emptyActionCaseCount: emptyActionCases.length,
+      runtimeErrorCount: newErrorCount,
+      failures: failures.slice(0, 40)
+    };
+    report.status = report.caseCount === report.expectedCaseCount &&
+      report.distinctWalkGroups === report.walkGroups &&
+      report.distinctRouteGroups === report.routeGroups &&
+      report.actionCaseCount === report.expectedActionCaseCount &&
+      report.distinctActionGroups === report.actionGroups &&
+      report.emptyCaseCount === 0 && report.emptyActionCaseCount === 0 &&
+      report.runtimeErrorCount === 0 && !report.failures.length ? "passed" : "failed";
+    publishDebugWalkMatrixReport(report);
+    if (V2.ui) V2.ui.render();
+  }
+
   function init() {
     try {
       exposePublicApi();
@@ -83,8 +319,21 @@
       const debugLab = params.get("lab");
       const debugScreen = params.get("screen");
       const debugLayer = params.get("layer") || "base";
+      const debugWalkPose = params.get("walkPose") || "";
+      const debugActionPose = params.get("actionPose") || "";
+      const debugFormalEnemyPose = params.get("formalEnemyPose") || "";
+      const debugFormalPickup = params.get("formalPickup") || "";
+      const debugFormalPickupFrame = Number(params.get("formalPickupFrame") || 0);
+      const debugFormalPickupCollected = params.get("formalPickupCollected") === "1";
+      const debugFormalScene = Number(params.get("formalScene") || 0);
+      const debugFormalSceneComplete = params.get("formalSceneComplete") === "1";
+      const debugFormalHud = params.get("formalHud") || "";
+      const debugFormalVfx = params.get("formalVfx") || "";
+      const debugFormalVfxFrame = Number(params.get("formalVfxFrame") || 0);
+      const debugFormalAudio = params.get("formalAudio") || "";
+      const debugWalkMatrix = debugEnabled && params.get("walkMatrix") === "1";
       const requestedDemoV2Phase = params.get("demoV2");
-      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" || requestedDemoV2Phase === "four-weapon-v3-12" || requestedDemoV2Phase === "four-weapon-v3-13" || requestedDemoV2Phase === "four-weapon-v3-14" ? requestedDemoV2Phase : "";
+      const demoV2Phase = requestedDemoV2Phase === "phase-a" || requestedDemoV2Phase === "phase-b" || requestedDemoV2Phase === "marker-fixed" || requestedDemoV2Phase === "thermos-fixed" || requestedDemoV2Phase === "scissors-fixed" || requestedDemoV2Phase === "correction-fluid-fixed" || requestedDemoV2Phase === "four-weapon-fixed" || requestedDemoV2Phase === "four-weapon-v3" || requestedDemoV2Phase === "four-weapon-v3-1" || requestedDemoV2Phase === "four-weapon-v3-2" || requestedDemoV2Phase === "four-weapon-v3-3" || requestedDemoV2Phase === "four-weapon-v3-4" || requestedDemoV2Phase === "four-weapon-v3-5" || requestedDemoV2Phase === "four-weapon-v3-6" || requestedDemoV2Phase === "four-weapon-v3-7" || requestedDemoV2Phase === "four-weapon-v3-8" || requestedDemoV2Phase === "four-weapon-v3-9" || requestedDemoV2Phase === "four-weapon-v3-10" || requestedDemoV2Phase === "four-weapon-v3-11" || requestedDemoV2Phase === "four-weapon-v3-12" || requestedDemoV2Phase === "four-weapon-v3-13" || requestedDemoV2Phase === "four-weapon-v3-14" || requestedDemoV2Phase === "four-weapon-v3-15" ? requestedDemoV2Phase : "";
       V2.dispatch({ type: "INIT", debug: debugEnabled, demoV2Phase });
       if (demoV2Phase === "phase-a") {
         document.title = "工位幸存者 Demo V2 · 阶段 A";
@@ -577,6 +826,19 @@
         }
         if (startButton) startButton.textContent = "进入 Demo V3.14 实战";
       }
+      if (demoV2Phase === "four-weapon-v3-15") {
+        document.title = "工位幸存者 Demo V3.15 · 正式版";
+        const stamp = document.querySelector(".title-stamp");
+        const shell = document.querySelector(".game-wrap");
+        const subtitle = document.querySelector(".title-hero .subtitle");
+        const quickGuide = document.querySelector(".quick-guide");
+        const startButton = document.getElementById("startButton");
+        if (stamp) stamp.textContent = "Demo V3.15 · 正式版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.15 正式版");
+        if (subtitle) subtitle.textContent = "四把办公武器，17 关。选一种打法，开工。";
+        if (quickGuide) quickGuide.style.display = "none";
+        if (startButton) startButton.textContent = "选择武器，开始";
+      }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
         const debugWeapon = params.get("weapon");
@@ -749,6 +1011,32 @@
                 debugState.stageKills = Math.min(6, Math.max(0, (debugState.stage && debugState.stage.targetKills || 1) - 1));
               }
             }
+            if (debugScreen === "combat" && debugState.demoV2 && debugState.demoV2.formalCartoonHudPass) {
+              if (debugFormalHud === "boss") {
+                const formalHudConfig = V2.getDemoV2FixedTestConfig(debugState);
+                if (formalHudConfig) formalHudConfig.startEncounter(debugState, 2);
+                debugState.mode = "combat";
+                debugState.warmupTime = 0;
+                debugState.stageTime = Math.max(18, Number(debugState.stage && debugState.stage.duration) || 0);
+                debugState.stageKills = Math.max(0, (debugState.stage && debugState.stage.targetKills || 1) - 1);
+              }
+              if (debugFormalHud === "danger") {
+                debugState.hp = Math.max(1, Math.round(debugState.maxHp * 0.22));
+                debugState.xp = Math.max(0, Math.round(debugState.xpNeed * 0.78));
+                debugState.materials = 37;
+              }
+              if (debugFormalHud === "growth") {
+                debugState.demoV2.growthFeedback = {
+                  kind: "component",
+                  family: debugState.selectedWeaponId === "thermos" ? "thermos" : debugState.selectedWeaponId === "scissors" ? "scissors" : debugState.selectedWeaponId === "correction_fluid" ? "correction" : "marker",
+                  title: "笔尖组件已装",
+                  detail: "下一轮攻击更宽。",
+                  time: 1.65,
+                  maxTime: 2.2
+                };
+              }
+              if (document.body) document.body.dataset.debugFormalHud = debugFormalHud || "normal";
+            }
             if (debugScreen === "result") {
               debugState.flags.won = true;
               if (params.get("resultFilled") === "1") {
@@ -777,6 +1065,72 @@
               debugState.mode = "paused";
             }
           }
+          const debugWalkMatch = /^(down|right|up|left)-(idle|a|b)$/.exec(debugWalkPose);
+          if (debugScreen === "combat" && debugWalkMatch && V2.getDemoV2FixedTestConfig) {
+            const directionIndex = { down: 0, right: 1, up: 2, left: 3 }[debugWalkMatch[1]];
+            const walkPhase = debugWalkMatch[2];
+            const debugWalkConfig = V2.getDemoV2FixedTestConfig(debugState);
+            const debugWalkRuntime = debugWalkConfig && debugState.demoV2[debugWalkConfig.runtimeKey];
+            if (debugWalkRuntime) debugWalkRuntime.bodyFacing = directionIndex;
+            debugState.player.walkMoving = walkPhase !== "idle";
+            debugState.player.walkClock = walkPhase === "b" ? 0.116 : 0;
+            if (document.body) document.body.dataset.debugWalkPose = debugWalkPose;
+          }
+          const debugActionMatch = /^(neutral|attack|hit|complete)$/.exec(debugActionPose);
+          if (debugScreen === "combat" && debugActionMatch) {
+            const action = debugActionMatch[1];
+            debugState.player.invuln = 0;
+            debugState.player.attackReactionTime = 0;
+            debugState.player.hitReactionTime = 0;
+            debugState.player.completionTime = 0;
+            if (action === "attack") debugState.player.attackReactionTime = 0.08;
+            if (action === "hit") {
+              debugState.player.hitReactionTime = 0.11;
+              debugState.player.invuln = 0.44;
+            }
+            if (action === "complete") debugState.player.completionTime = 0.41;
+            if (document.body) document.body.dataset.debugActionPose = action;
+          }
+          if (debugScreen === "combat" && debugFormalEnemyPose && V2.combat && V2.combat.applyFormalEnemyDebugPose) {
+            V2.combat.applyFormalEnemyDebugPose(debugState, debugFormalEnemyPose);
+            if (debugFormalHud) {
+              debugState.stageTime = debugFormalHud === "boss" ? 18 : Math.min(30, Number(debugState.stage && debugState.stage.duration) || 30);
+            }
+          }
+          if (debugScreen === "combat" && debugFormalPickup && V2.combat && V2.combat.applyFormalPickupDebugPose) {
+            V2.combat.applyFormalPickupDebugPose(debugState, debugFormalPickup, debugFormalPickupFrame, debugFormalPickupCollected);
+          }
+          if (debugScreen === "combat" && debugFormalVfx && V2.combat && V2.combat.applyFormalVfxDebugPose) {
+            V2.combat.applyFormalVfxDebugPose(debugState, debugFormalVfx, debugFormalVfxFrame);
+          }
+          if (debugScreen === "combat" && debugFormalAudio && V2.audio && V2.audio.handleFormalEvent) {
+            const publishFormalAudioStatus = function () {
+              if (!document.body) return;
+              document.body.dataset.debugFormalAudio = debugFormalAudio;
+              document.body.dataset.formalAudioStatus = JSON.stringify(V2.audio.getStatus());
+              document.body.dataset.formalAudioAudit = JSON.stringify((debugState.stats.audioEvents || []).slice(-2));
+            };
+            V2.audio.handleFormalEvent({ kind: "debug", cue: debugFormalAudio, source: "formal_audio_debug" }, debugState);
+            publishFormalAudioStatus();
+            let debugAudioGestureStarted = false;
+            const playDebugFormalAudio = function () {
+              if (debugAudioGestureStarted) return;
+              debugAudioGestureStarted = true;
+              const unlockedAudio = V2.audio.unlock();
+              V2.audio.prepareFormalAudio(debugState).then(publishFormalAudioStatus);
+              unlockedAudio.then(function () { return V2.audio.prepareFormalAudio(debugState); }).then(function () {
+                V2.audio.handleFormalEvent({ kind: "debug", cue: debugFormalAudio, source: "formal_audio_debug", stage: "release", force: true }, debugState);
+                publishFormalAudioStatus();
+              });
+            };
+            document.addEventListener("pointerdown", playDebugFormalAudio, { once: true, passive: true });
+            document.addEventListener("keydown", playDebugFormalAudio, { once: true, passive: true });
+            document.addEventListener("click", playDebugFormalAudio, { once: true, passive: true });
+          }
+          if (debugScreen === "combat" && debugFormalScene >= 1 && debugFormalScene <= 5 && debugState.demoV2) {
+            debugState.demoV2.formalSceneDebugPhase = debugFormalScene;
+            if (debugFormalSceneComplete) debugState.player.completionTime = 0.41;
+          }
           if (debugScreen && V2.combat && V2.combat.stopLoop) V2.combat.stopLoop();
           if (document.body) document.body.dataset.debugLayer = debugLayer;
         }
@@ -800,6 +1154,23 @@
         window.addEventListener("load", redrawStaticDebugFrame, { once: true });
         window.setTimeout(redrawStaticDebugFrame, 180);
         window.setTimeout(redrawStaticDebugFrame, 720);
+      }
+      if (debugWalkMatrix && debugScreen === "combat" && V2.combat) {
+        if (document.body) document.body.dataset.walkMatrixStatus = "running";
+        window.setTimeout(function () {
+          try {
+            runDebugWalkMatrix(canvas);
+          } catch (error) {
+            publishDebugWalkMatrixReport({
+              schemaVersion: 1,
+              entry: "demo-v3-14.html",
+              status: "failed",
+              caseCount: 0,
+              failures: [String(error && error.message || error)]
+            });
+            if (V2.reportError) V2.reportError(error);
+          }
+        }, 1100);
       }
     } catch (err) {
       if (V2.reportError) V2.reportError(err);

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-21",
+  "entry": "cartoon-marker-slice.html",
+  "viewport": [1280, 720],
+  "enemyTypes": ["backlog", "email"],
+  "actions": ["move", "attack", "hit", "defeat"],
+  "caseCount": 8,
+  "distinctCaseCount": 8,
+  "runtimeErrorCount": 0,
+  "liveRuntimeChecked": true,
+  "status": "passed",
+  "screenshotHashes": {
+    "backlog-move": "a9a619912d67bca3bf3fb2df418865022c852f20cafe49f9ac9ba0456e09f4c3",
+    "backlog-attack": "6f839479b20055b8feade66ef60e7f34a3ed3820081b551b3afe80b71e3b4728",
+    "backlog-hit": "3c02a18de85d982d1b5e92662e4a504fc2ddb8fd2d50b91426ef2aba7f9c18ee",
+    "backlog-defeat": "6b7c7079649b2a789ea28f7ca1af01121f823c06c5b533f0af59996023bac674",
+    "email-move": "ee33a6c897d074e6b95ce2e2b13862dc33385964a5a683cfcd7ce33631d3c25e",
+    "email-attack": "0449a612e3cedf1de4da4d0a5c1a0bc7ab45e41eef6bb9baf87ececad5f42c8c",
+    "email-hit": "360f9f544626310bca68e8fa17a049e314340f98b585459811636f47d23fa156",
+    "email-defeat": "72007bd61ff872992862662eafecaebe400433314fa8b7b65e131fef2d0aea9d"
+  },
+  "sourceHashes": {
+    "src/cartoon-marker-slice.js": "5b1db2e861058e690f27e2becc7f9ca19be7ba7b4d198ba2dd029d77939522b0",
+    "cartoon-marker-slice-qa.js": "f23c549d0ca8415f35c0c3fdc51712b40058be0b015336c593369f6705acb668",
+    "assets/cartoon-marker-slice/asset-manifest.json": "0ec8322edc05ec18686f4b1e1983916c2ec1e38bc0f15c19f26d1f698c8daaa4",
+    "assets/cartoon-marker-slice/enemy-action-atlas-contract.json": "c3d9487784a3e58de7670113ace6e41483592ccb1ae6cd1be32bf92d714348b6",
+    "assets/cartoon-marker-slice/backlog-enemy-actions-v2.png": "b47fb84d53f36d21aca9c6c1115b1833a64659da74b8ab438e0939115d27dbfa",
+    "assets/cartoon-marker-slice/urgent-email-enemy-actions-v2.png": "da8ef9cdcdffad3e4951a0a89784cdb247ee1285b04e0941379ab66070a18f9e",
+    "../scripts/build-cartoon-enemy-action-atlases.py": "63bb1294141f35782b3635f0edd0f44949b01d32d6ef1245e6f6e367f1958645"
+  },
+  "remainingBlockers": []
+}

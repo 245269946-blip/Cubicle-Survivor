@@ -1,6 +1,6 @@
 # 工位幸存者公开试玩站
 
-该站点包装当前可分享的 Demo V3.14 轻量决策版。游戏源文件来自 `../Cubicle-Survivor-demo/`，通过 `node ../scripts/sync-demo-v2-site.mjs` 同步到 `public/play/`；不要直接修改生成后的公开副本。
+该站点包装当前可分享的 Demo V3.15 正式卡通版。游戏源文件来自 `../Cubicle-Survivor-demo/`，通过 `node ../scripts/sync-demo-v2-site.mjs` 同步到 `public/play/`；不要直接修改生成后的公开副本。对外主发布目标是 GitHub Pages，Sites 工程用于打包与构建校验。
 
 完整验证与发布门禁见 `../docs/DEMO_V2_VALIDATION_RELEASE_WORKFLOW.md`。
 

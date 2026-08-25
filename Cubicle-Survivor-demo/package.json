@@ -2,7 +2,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "node test-runner.js",
-    "qa": "node test-runner.js && node demo-qa.js && node marker-desire-loop-qa.js && node cartoon-marker-slice-qa.js",
+    "qa": "node test-runner.js && node demo-qa.js && node marker-desire-loop-qa.js && node cartoon-marker-slice-qa.js && node character-walk-state-qa.js && node formal-cartoon-enemy-qa.js && node formal-cartoon-boss-qa.js && node formal-cartoon-scene-qa.js && node formal-cartoon-pickup-qa.js && node formal-cartoon-hud-qa.js && node formal-cartoon-vfx-qa.js && node formal-cartoon-audio-qa.js",
     "release:verify": "node ../scripts/verify-demo-v2-release.mjs"
   }
 }

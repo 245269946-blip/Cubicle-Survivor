@@ -840,6 +840,13 @@
     if (!test || !encounter) return;
     test.postCollectionRoute = "";
     if (encounter.id >= ENCOUNTER_COUNT) {
+      if (V2.audio && V2.audio.handleFormalEvent) {
+        V2.audio.handleFormalEvent({
+          kind: "run_complete",
+          source: "fixed_run_complete",
+          stage: "release"
+        }, state);
+      }
       state.flags.won = true;
       state.lastRewardReason = "马克笔完成：固定怪量、成长选择、组件制造与最终混合评审均已结束。";
       state.mode = "result";
@@ -893,6 +900,14 @@
     test.collectionTime = COLLECTION_DURATION;
     test.collectionStartedFor = encounter.id;
     test.enemiesDispersedAtCollection = state.enemies.filter(function (enemy) { return !enemy.dead; }).length;
+    if (V2.audio && V2.audio.handleFormalEvent) {
+      V2.audio.handleFormalEvent({
+        kind: "encounter_complete",
+        source: "fixed_encounter_" + encounter.id + "_complete",
+        stage: "release"
+      }, state);
+    }
+    state.player.completionTime = 0.82;
     state.warmupTime = COLLECTION_DURATION;
     state.stage.name = "第 " + encounter.id + "/" + ENCOUNTER_COUNT + " 关 · 资源回收";
     clearEncounterEntities(state);

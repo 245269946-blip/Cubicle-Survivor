@@ -12,6 +12,30 @@
   const STAGE_MIX = { anticipation: 0.62, release: 1, impact: 0.82, residual: 0.46, fade: 0.35 };
   const MAX_ACTIVE_VOICES = 12;
   const MAX_MUSIC_VOICES = 8;
+  const FORMAL_AUDIO_BASE = "assets/cartoon-office-audio/";
+  const FORMAL_AUDIO_CUES = {
+    weapon_marker: { file: "weapon-marker-v1.wav", role: "weapon_release", mix: 0.72, cooldown: 0.075 },
+    weapon_thermos: { file: "weapon-thermos-v1.wav", role: "weapon_release", mix: 0.74, cooldown: 0.12 },
+    weapon_scissors: { file: "weapon-scissors-v1.wav", role: "weapon_release", mix: 0.76, cooldown: 0.08 },
+    weapon_correction: { file: "weapon-correction-v1.wav", role: "weapon_release", mix: 0.72, cooldown: 0.11 },
+    enemy_todo: { file: "enemy-todo-v1.wav", role: "enemy_anticipation", mix: 0.42, cooldown: 0.18 },
+    enemy_email: { file: "enemy-email-v1.wav", role: "enemy_anticipation", mix: 0.42, cooldown: 0.18 },
+    enemy_meeting: { file: "enemy-meeting-v1.wav", role: "enemy_anticipation", mix: 0.46, cooldown: 0.2 },
+    enemy_ping: { file: "enemy-ping-v1.wav", role: "enemy_anticipation", mix: 0.42, cooldown: 0.18 },
+    enemy_deadline: { file: "enemy-deadline-v1.wav", role: "enemy_anticipation", mix: 0.46, cooldown: 0.2 },
+    enemy_scope: { file: "enemy-scope-v1.wav", role: "enemy_anticipation", mix: 0.43, cooldown: 0.18 },
+    enemy_approval: { file: "enemy-approval-v1.wav", role: "enemy_anticipation", mix: 0.45, cooldown: 0.2 },
+    enemy_client: { file: "enemy-client-v1.wav", role: "enemy_anticipation", mix: 0.43, cooldown: 0.2 },
+    boss_lead: { file: "boss-lead-v1.wav", role: "boss_anticipation", mix: 0.58, cooldown: 0.28 },
+    boss_director: { file: "boss-director-v1.wav", role: "boss_anticipation", mix: 0.6, cooldown: 0.28 },
+    boss_delivery: { file: "boss-delivery-v1.wav", role: "boss_anticipation", mix: 0.6, cooldown: 0.28 },
+    boss_client: { file: "boss-client-v1.wav", role: "boss_anticipation", mix: 0.58, cooldown: 0.28 },
+    boss_ceo: { file: "boss-ceo-v1.wav", role: "boss_anticipation", mix: 0.64, cooldown: 0.3 },
+    defeat_normal: { file: "defeat-normal-v1.wav", role: "defeat", mix: 0.34, cooldown: 0.055 },
+    defeat_boss: { file: "defeat-boss-v1.wav", role: "defeat", mix: 0.72, cooldown: 0.5 },
+    encounter_complete: { file: "encounter-complete-v1.wav", role: "completion", mix: 0.78, cooldown: 1.4 },
+    run_complete: { file: "run-complete-v1.wav", role: "completion", mix: 0.86, cooldown: 4 }
+  };
 
   const MUSIC_SCENES = {
     "weapon_intro:normal": { phase: "weapon_intro", variant: "normal", label: "工位热身", bpm: 84, root: 48, wave: "triangle", pattern: [0, null, 7, null, 3, null, 10, null], pulse: 4 },
@@ -149,6 +173,10 @@
   let musicTimer = 0;
   let musicBeatCount = 0;
   const lastPlayed = {};
+  const formalLastPlayed = {};
+  const formalBuffers = {};
+  const formalFailures = {};
+  let formalLoadPromise = null;
   const history = [];
   let muted = false;
 
@@ -163,8 +191,8 @@
   }
 
   function nowSeconds() {
-    if (context) return context.currentTime;
     if (window.performance && typeof window.performance.now === "function") return window.performance.now() / 1000;
+    if (context) return context.currentTime;
     return Date.now() / 1000;
   }
 
@@ -235,6 +263,133 @@
     source.start(at);
     source.stop(at + preset.duration + 0.01);
     return true;
+  }
+
+  function formalAudioEnabled(state) {
+    return !!(state && state.demoV2 && state.demoV2.formalCartoonAudioPass);
+  }
+
+  function decodeAudioData(arrayBuffer) {
+    return new Promise(function (resolve, reject) {
+      if (!context || typeof context.decodeAudioData !== "function") {
+        reject(new Error("decodeAudioData unavailable"));
+        return;
+      }
+      let settled = false;
+      const done = function (buffer) {
+        if (settled) return;
+        settled = true;
+        resolve(buffer);
+      };
+      const fail = function (error) {
+        if (settled) return;
+        settled = true;
+        reject(error || new Error("audio decode failed"));
+      };
+      try {
+        const result = context.decodeAudioData(arrayBuffer, done, fail);
+        if (result && typeof result.then === "function") result.then(done, fail);
+      } catch (error) {
+        fail(error);
+      }
+    });
+  }
+
+  function prepareFormalAudio(state) {
+    if (state && !formalAudioEnabled(state)) return Promise.resolve(false);
+    if (formalLoadPromise) return formalLoadPromise;
+    if (!ensureContext() || typeof window.fetch !== "function") return Promise.resolve(false);
+    const cueIds = Object.keys(FORMAL_AUDIO_CUES);
+    formalLoadPromise = Promise.all(cueIds.map(function (cueId) {
+      const cue = FORMAL_AUDIO_CUES[cueId];
+      return window.fetch(FORMAL_AUDIO_BASE + cue.file + "?v=315-audio-1")
+        .then(function (response) {
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          return response.arrayBuffer();
+        })
+        .then(decodeAudioData)
+        .then(function (buffer) { formalBuffers[cueId] = buffer; })
+        .catch(function (error) { formalFailures[cueId] = String(error && error.message || error); });
+    })).then(function () {
+      return Object.keys(formalBuffers).length === cueIds.length;
+    });
+    return formalLoadPromise;
+  }
+
+  function playFormalBuffer(cueId, gainScale) {
+    const buffer = formalBuffers[cueId];
+    if (!buffer || !context || !masterGain || activeVoices >= MAX_ACTIVE_VOICES) return false;
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    const at = context.currentTime + 0.006;
+    source.buffer = buffer;
+    gain.gain.setValueAtTime(Math.max(0.0002, gainScale), at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + Math.max(0.05, buffer.duration));
+    source.connect(gain);
+    gain.connect(masterGain);
+    voiceStarted(source);
+    source.start(at);
+    return true;
+  }
+
+  function formalCueForEvent(event) {
+    if (!event) return "";
+    if (event.cue && FORMAL_AUDIO_CUES[event.cue]) return event.cue;
+    if (event.kind === "weapon") {
+      const family = event.family === "correction_fluid" ? "correction" : event.family;
+      return FORMAL_AUDIO_CUES["weapon_" + family] ? "weapon_" + family : "";
+    }
+    if (event.kind === "enemy_action") {
+      const prefix = event.boss ? "boss_" : "enemy_";
+      return FORMAL_AUDIO_CUES[prefix + event.enemyType] ? prefix + event.enemyType : "";
+    }
+    if (event.kind === "enemy_defeat") return event.boss ? "defeat_boss" : "defeat_normal";
+    if (event.kind === "encounter_complete") return "encounter_complete";
+    if (event.kind === "run_complete") return "run_complete";
+    return "";
+  }
+
+  function handleFormalEvent(event, state) {
+    if (!formalAudioEnabled(state)) return false;
+    const cueId = formalCueForEvent(event);
+    const cue = FORMAL_AUDIO_CUES[cueId];
+    if (!cue) return false;
+    const now = nowSeconds();
+    const stage = event.stage || (cue.role === "completion" ? "release" : cue.role === "defeat" ? "impact" : "anticipation");
+    const cooldownKey = cueId + ":" + stage;
+    let reason = "played";
+    let played = false;
+    if (!event.force && formalLastPlayed[cooldownKey] != null && now - formalLastPlayed[cooldownKey] < cue.cooldown) {
+      reason = "cooldown";
+    } else {
+      formalLastPlayed[cooldownKey] = now;
+      if (muted) reason = "muted";
+      else if (!audioCtor()) reason = "unavailable";
+      else if (!unlocked || !context || context.state !== "running") reason = "locked";
+      else if (!formalBuffers[cueId]) {
+        prepareFormalAudio(state);
+        reason = formalFailures[cueId] ? "load_failed" : "loading";
+      } else if (activeVoices >= MAX_ACTIVE_VOICES) reason = "voice_budget";
+      else {
+        const stageMix = STAGE_MIX[stage] == null ? 0.8 : STAGE_MIX[stage];
+        played = playFormalBuffer(cueId, cue.mix * stageMix * (event.mix == null ? 1 : event.mix));
+        if (!played) reason = "voice_budget";
+      }
+    }
+    recordAudit(state, {
+      source: event.source || event.kind,
+      family: event.family || (cueId.indexOf("weapon_") === 0 ? cueId.slice(7) : event.boss ? "boss" : "enemy"),
+      role: cue.role,
+      voice: cueId,
+      cue: cueId,
+      stage,
+      eventType: event.kind,
+      enemyType: event.enemyType || "",
+      played,
+      reason,
+      formal: true
+    });
+    return played;
   }
 
   function hashPitch(source, type) {
@@ -368,6 +523,15 @@
     if (!profile) return false;
     const stage = profile.triggers[event.type];
     if (!stage) return false;
+    if (formalAudioEnabled(state)) {
+      return handleFormalEvent({
+        kind: "weapon",
+        source: profile.source,
+        family: profile.family,
+        stage,
+        mix: event.type === "hit" ? 0.38 : profile.mix
+      }, state);
+    }
     const now = nowSeconds();
     const cooldown = event.type === "hit" ? profile.hitCooldown : profile.cooldown;
     const key = profile.source + ":" + stage;
@@ -401,10 +565,14 @@
 
   function unlock() {
     if (!ensureContext()) return Promise.resolve(false);
+    prepareFormalAudio();
     const resume = context.state === "suspended" && context.resume ? context.resume() : Promise.resolve();
     return Promise.resolve(resume).then(function () {
       unlocked = context.state === "running";
-      if (unlocked) startMusicScheduler();
+      if (unlocked) {
+        startMusicScheduler();
+        prepareFormalAudio();
+      }
       return unlocked;
     }).catch(function () {
       unlocked = false;
@@ -441,7 +609,11 @@
       musicVariant: MUSIC_SCENES[desiredMusicKey] && MUSIC_SCENES[desiredMusicKey].variant,
       musicBpm: MUSIC_SCENES[desiredMusicKey] && MUSIC_SCENES[desiredMusicKey].bpm,
       musicMode,
-      musicBeatCount
+      musicBeatCount,
+      formalCueCount: Object.keys(FORMAL_AUDIO_CUES).length,
+      formalLoadedCount: Object.keys(formalBuffers).length,
+      formalFailedCount: Object.keys(formalFailures).length,
+      formalReady: Object.keys(formalBuffers).length === Object.keys(FORMAL_AUDIO_CUES).length
     };
   }
 
@@ -450,14 +622,19 @@
     const attempt = function () { if (!unlocked && !muted) unlock(); };
     document.addEventListener("pointerdown", attempt, { passive: true });
     document.addEventListener("keydown", attempt, { passive: true });
+    document.addEventListener("click", attempt, { passive: true });
   }
 
   V2.weaponAudioEvents = AUDIO_EVENTS;
   V2.musicScenes = MUSIC_SCENES;
+  V2.formalAudioCues = FORMAL_AUDIO_CUES;
   V2.getWeaponAudioEvent = function getWeaponAudioEvent(source) { return AUDIO_EVENTS[source] || null; };
+  V2.getFormalAudioCue = function getFormalAudioCue(cueId) { return FORMAL_AUDIO_CUES[cueId] || null; };
   V2.audio = {
     unlock,
     handleWeaponEvent,
+    handleFormalEvent,
+    prepareFormalAudio,
     setMuted,
     toggleMuted,
     syncMusic,

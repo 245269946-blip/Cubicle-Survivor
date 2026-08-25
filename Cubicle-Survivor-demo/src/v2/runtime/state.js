@@ -136,7 +136,10 @@
       maxHp: 100,
       world: { width: 2600, height: 1800 },
       camera: { x: 0, y: 0, width: 1280, height: 720 },
-      player: { x: 640, y: 360, vx: 0, vy: 0, speed: 220, radius: 16, invuln: 0 },
+      player: {
+        x: 640, y: 360, vx: 0, vy: 0, speed: 220, radius: 16, invuln: 0,
+        attackReactionTime: 0, hitReactionTime: 0, completionTime: 0
+      },
       enemies: [],
       projectiles: [],
       damageZones: [],
@@ -465,6 +468,12 @@
       state.demoV2.markerDesireLoopPass = !!coordinatorConfig.markerDesireLoopPass;
       state.demoV2.allWeaponDesireLoopPass = !!coordinatorConfig.allWeaponDesireLoopPass;
       state.demoV2.decisionCompressionPass = !!coordinatorConfig.decisionCompressionPass;
+      state.demoV2.formalCartoonAssetPass = !!coordinatorConfig.formalCartoonAssetPass;
+      state.demoV2.formalCartoonScenePass = !!coordinatorConfig.formalCartoonScenePass;
+      state.demoV2.formalCartoonPickupPass = !!coordinatorConfig.formalCartoonPickupPass;
+      state.demoV2.formalCartoonHudPass = !!coordinatorConfig.formalCartoonHudPass;
+      state.demoV2.formalCartoonVfxPass = !!coordinatorConfig.formalCartoonVfxPass;
+      state.demoV2.formalCartoonAudioPass = !!coordinatorConfig.formalCartoonAudioPass;
       state.demoV2.coordinatorPhase = coordinatorConfig.id;
     }
     state.demoV2[config.runtimeKey] = config.makeRuntime();
@@ -562,6 +571,12 @@
         state.demoV2.markerDesireLoopPass = !!requestedFixedConfig.markerDesireLoopPass;
         state.demoV2.allWeaponDesireLoopPass = !!requestedFixedConfig.allWeaponDesireLoopPass;
         state.demoV2.decisionCompressionPass = !!requestedFixedConfig.decisionCompressionPass;
+        state.demoV2.formalCartoonAssetPass = !!requestedFixedConfig.formalCartoonAssetPass;
+        state.demoV2.formalCartoonScenePass = !!requestedFixedConfig.formalCartoonScenePass;
+        state.demoV2.formalCartoonPickupPass = !!requestedFixedConfig.formalCartoonPickupPass;
+        state.demoV2.formalCartoonHudPass = !!requestedFixedConfig.formalCartoonHudPass;
+        state.demoV2.formalCartoonVfxPass = !!requestedFixedConfig.formalCartoonVfxPass;
+        state.demoV2.formalCartoonAudioPass = !!requestedFixedConfig.formalCartoonAudioPass;
         state.demoV2.coordinatorPhase = requestedFixedConfig.id;
       }
     }

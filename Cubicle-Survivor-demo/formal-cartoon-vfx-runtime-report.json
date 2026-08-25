@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 2,
+  "entry": "demo-v3-15.html",
+  "phase": "four-weapon-v3-15",
+  "status": "passed",
+  "viewport": [1280, 720],
+  "production": {
+    "method": "imagegen-raster-atlas",
+    "alphaPipeline": "chroma-key-to-real-alpha",
+    "normalization": "per-cell alpha bounds fitted into deterministic 256x256 cells",
+    "lineArtFallbackAllowed": false,
+    "quotaStatus": "available; Scissors V3 complete-weapon atlas regenerated",
+    "pendingBrowserCapture": "closed on the staged GitHub Pages runtime at commit 8ecf0ec; both Scissors actions exposed all four V3 frames with zero runtime errors"
+  },
+  "contract": {
+    "atlas": { "columns": 4, "rows": 2, "cell": [256, 256], "size": [1024, 512] },
+    "frameOrder": ["anticipation", "release", "impact", "fade"],
+    "rowMeaning": "base action in row 0; route/payoff action in row 1",
+    "geometry": "existing event x/y/x1/y1/x2/y2/radius remains authoritative",
+    "visualGrammar": ["painted-volume", "paper-and-ink", "warm-office-palette", "dark-brown-outline", "transparent-background"],
+    "combatProgressionEconomyChanged": false
+  },
+  "cases": [
+    { "pose": "marker-line", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "12d85d4342a23ed0b70715a28175336c5439c1b98290ad97e5ece6d579be7fac" },
+    { "pose": "marker-archive", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "45aac7ffab72c36b48464d93b5d8cc15e75a8309aeebcb51d6f713fa44d0efee" },
+    { "pose": "thermos-steam", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "ddfbe68364dc49a602b0ea0e0a1f386315b32feb9f50feac4d228f4df9194e9d" },
+    { "pose": "thermos-heat", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "7bd38e8ae06f34b166e39a75f0c342a604cd4625b7b26b91eeb29ea4ec0ff553" },
+    { "pose": "scissors-closed", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "8127540d06707bda9a369242ed4cb85ca6b93631a67da9fd8217780ab03a8f72" },
+    { "pose": "scissors-open", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "f7db08f1a0709c311666d7853e095a5f928fe595257fd25ac72851436f706e42" },
+    { "pose": "correction-spray", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "6b537f3bdaf314f2458b4fdc632b570f3b08b712a4af7e12fcd6e1a2d4caaee0" },
+    { "pose": "correction-error", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "0d33db40425af00dec7e4ad274474fc354c977114159edc9c72c12ddd18c22b1" }
+  ],
+  "frameAudit": [
+    { "pose": "marker-line", "distinct": 4, "hashes": ["292d732ff1022765", "73ea042ae1354b48", "12d85d4342a23ed0", "1ccd06cba282616f"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "thermos-steam", "distinct": 4, "hashes": ["3b0080afa2d456d1", "9470c2c999b28896", "ddfbe68364dc49a6", "19611b3b9f781f79"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "scissors-open", "distinct": 4, "hashes": ["2d369753233cb158", "bb177813aed9689a", "f7db08f1a0709c31", "00f1c3fe5574ffaa"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "correction-error", "distinct": 4, "hashes": ["4eefc5f471a40e60", "5d09d687a2bebba8", "0d33db40425af00d", "3f3ec39b72ac5c1b"], "runtimeErrors": [0, 0, 0, 0] }
+  ],
+  "onlineRuntimeEvidence": {
+    "url": "https://245269946-blip.github.io/Cubicle-Survivor/play/demo-v3-15.html",
+    "stagedCommit": "8ecf0ec",
+    "assetSha256": "b769cb4c8ec77579d7adcaf9232cbfefa6ab566ac75086d283fb9b3a73eebeac",
+    "localAssetMatched": true,
+    "hashKind": "RGBA atlas-cell hash; browser state separately proves runtime asset, pose, frame, gate, geometry, source and zero errors",
+    "scissorsFrames": [
+      { "pose": "scissors-closed", "frame": 0, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_thrust", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-closed", "frame": 1, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_thrust", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-closed", "frame": 2, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_thrust", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-closed", "frame": 3, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_thrust", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-open", "frame": 0, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_open", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-open", "frame": 1, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_open", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-open", "frame": 2, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_open", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 },
+      { "pose": "scissors-open", "frame": 3, "asset": "formal_scissors_vfx_v3", "source": "scissors_test_open", "geometry": "line", "vfxGate": "true", "runtimeErrors": 0 }
+    ]
+  },
+  "v314Isolation": { "formalVfxPose": "", "formalVfxAsset": "", "formalCartoonVfx": "", "matchingEvents": 0, "runtimeErrors": 0 },
+  "sourceHashes": {
+    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
+    "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
+    "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
+    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/ui/render.js": "949c36cfd0ef889e2fac0de36f394b25bf3ebcf706170322de277be7fbf7034f",
+    "assets/cartoon-office-vfx/cartoon-office-vfx-contract.json": "b6730e4a91c9dfe8b4eccfd274aeb340e8fc0d63cd56970ea02c008c28860d66",
+    "assets/cartoon-office-vfx/marker-vfx-v2.png": "b9dea281305a20d84adfbadb3784dd9408529bbbae932bd5574a823ecbf9567c",
+    "assets/cartoon-office-vfx/thermos-vfx-v2.png": "c35c166cf77b1a82a792f3bef1c6185c392819a785262611c9e256cacfd41936",
+    "assets/cartoon-office-vfx/scissors-vfx-v3.png": "b769cb4c8ec77579d7adcaf9232cbfefa6ab566ac75086d283fb9b3a73eebeac",
+    "assets/cartoon-office-vfx/correction-vfx-v2.png": "fbb6b0ed371bf5a42e5980ebdd857017fe2e841cc3ecfcc50dc257944566565a"
+  },
+  "assertions": {
+    "v314Unchanged": true,
+    "v315GateOnly": true,
+    "generatedRasterAtlases": true,
+    "lineArtFallbackForbidden": true,
+    "transparentAtlases": true,
+    "eightActionIdentitiesVisible": true,
+    "fourFrameAnimationVisible": true,
+    "eventGeometryPreserved": true,
+    "heatwaveLegacyOverlayRemoved": true,
+    "hudSafeAreaPreserved": true,
+    "runtimeErrorsZero": true
+  },
+  "remainingBlockers": []
+}
