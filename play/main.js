@@ -836,7 +836,7 @@
         if (stamp) stamp.textContent = "Demo V3.15 · 正式版";
         if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.15 正式版");
         if (subtitle) subtitle.textContent = "四把办公武器，17 关。选一种打法，开工。";
-        if (quickGuide) quickGuide.classList.add("hidden");
+        if (quickGuide) quickGuide.style.display = "none";
         if (startButton) startButton.textContent = "选择武器，开始";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
