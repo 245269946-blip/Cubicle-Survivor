@@ -29,7 +29,7 @@
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/thermos_station_v2.png" />
     <link rel="preload" as="image" href="assets/v2-weapon-vfx/sprites/sticky_note_v2.png" />
     <link rel="stylesheet" href="styles.css?v=42" />
-    <link rel="stylesheet" href="generated-skin.css?v=45" />
+    <link rel="stylesheet" href="generated-skin.css?v=51" />
   </head>
   <body>
     <script>
@@ -62,9 +62,9 @@
           <span id="objectiveStageMeta" class="stage-meta">第 1 关</span>
           <strong id="objectiveStageName">热身工位</strong>
           <div class="objective-row">
-            <span>倒计时 <b id="objectiveTime">00:00</b></span>
-            <span>剩余 <b id="objectiveRemaining">0</b></span>
-            <span>击破 <b id="objectiveKills">0</b></span>
+            <span><i id="objectiveTimeLabel">倒计时</i><b id="objectiveTime">00:00</b></span>
+            <span><i id="objectiveRemainingLabel">剩余</i><b id="objectiveRemaining">0</b></span>
+            <span><i id="objectiveKillsLabel">击破</i><b id="objectiveKills">0</b></span>
           </div>
           <div id="objectiveAlert" class="objective-alert">先熟悉移动和主武器节奏。</div>
         </div>
@@ -312,20 +312,20 @@
     <script src="src/core/build-state.js"></script>
     <script src="src/v2/data/weapon-forms.js?v=7"></script>
     <script src="src/v2/data/form-signatures.js?v=10"></script>
-    <script src="src/v2/audio/audio.js?v=6"></script>
+    <script src="src/v2/audio/audio.js?v=9"></script>
     <script src="src/v2/compat/legacy.js?v=3"></script>
     <script src="src/v2/demo-v2/phase-a.js?v=2"></script>
     <script src="src/v2/demo-v2/phase-b.js?v=3"></script>
-    <script src="src/v2/demo-v2/marker-fixed.js?v=9"></script>
+    <script src="src/v2/demo-v2/marker-fixed.js?v=10"></script>
     <script src="src/v2/demo-v2/thermos-fixed.js?v=4"></script>
     <script src="src/v2/demo-v2/scissors-fixed.js?v=4"></script>
     <script src="src/v2/demo-v2/correction-fluid-fixed.js?v=6"></script>
-    <script src="src/v2/demo-v2/four-weapon-fixed.js?v=9"></script>
-    <script src="src/v2/runtime/state.js?v=26"></script>
+    <script src="src/v2/demo-v2/four-weapon-fixed.js?v=14"></script>
+    <script src="src/v2/runtime/state.js?v=31"></script>
     <script src="src/v2/progression/progression.js?v=8"></script>
-  <script src="src/v2/combat/systems.js?v=80"></script>
-    <script src="src/v2/ui/view-model.js?v=29"></script>
-    <script src="src/v2/ui/render.js?v=39"></script>
-    <script src="main.js?v=83"></script>
+  <script src="src/v2/combat/systems.js?v=93"></script>
+    <script src="src/v2/ui/view-model.js?v=30"></script>
+    <script src="src/v2/ui/render.js?v=43"></script>
+    <script src="main.js?v=92"></script>
   </body>
 </html>

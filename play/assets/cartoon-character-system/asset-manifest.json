@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-08-20",
+  "compositeContract": [
+    "weapon-rig-back",
+    "neutral-worker-body",
+    "weapon-rig-front",
+    "aim-facing-weapon",
+    "route-state-effects"
+  ],
+  "sharedLayout": {
+    "width": 1260,
+    "height": 2480,
+    "mode": "RGBA",
+    "columns": 3,
+    "rows": 4,
+    "cellWidth": 420,
+    "cellHeight": 620,
+    "directionOrder": ["down", "right", "up", "left"],
+    "phaseOrder": ["idle", "step-a", "step-b"],
+    "frameCount": 12,
+    "visibleHeight": 560,
+    "footBaselineY": 590,
+    "bodyCenterX": 210,
+    "rightDirectionDerivedByMirroringLeft": true
+  },
+  "assets": [
+    {
+      "file": "neutral-worker-walk-v1.png",
+      "role": "shared-player-body-walk-atlas",
+      "readiness": "runtime-ready",
+      "evidence": {
+        "targetBoxesChecked": ["132px visible height", "78px visible height"],
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "footBaselineAligned": true,
+        "oppositeWalkStepsChecked": true,
+        "runtimeAtlasSelectionConnected": true,
+        "walkCadenceConnected": true,
+        "runtimeWalkMatrixChecked": true,
+        "runtimeWalkMatrixCases": 576,
+        "runtimeActionMatrixChecked": true,
+        "runtimeActionMatrixCases": 64,
+        "totalRuntimeMatrixCases": 640,
+        "motionJudgmentAligned": true
+      },
+      "generation": {
+        "mode": "built-in ImageGen with magenta chroma-key post-processing",
+        "promptSet": [
+          "same neutral office worker, front view, three-frame strip: idle, left-leg-forward walk, right-leg-forward walk",
+          "same neutral office worker, back view, three-frame strip: idle and two opposite walk steps",
+          "same neutral office worker, left profile, three-frame strip: idle and two clearly opposite walk steps"
+        ],
+        "negativeConstraints": [
+          "no backpack, straps, printer, cartridges, weapon, hose, text, shadow, frame divider or floor",
+          "flat magenta background; keep identity, clothing and proportions unchanged"
+        ]
+      },
+      "blockers": []
+    }
+  ],
+  "weaponRigSets": [
+    {
+      "weapon": "marker",
+      "backFile": "marker-rig-back-v1.png",
+      "frontFile": "marker-rig-front-v1.png",
+      "routeChannels": ["copy-yellow", "archive-cyan"],
+      "readiness": "runtime-ready"
+    },
+    {
+      "weapon": "thermos",
+      "backFile": "thermos-rig-back-v1.png",
+      "frontFile": "thermos-rig-front-v1.png",
+      "routeChannels": ["condensation-cyan", "heatwave-orange"],
+      "readiness": "runtime-ready"
+    },
+    {
+      "weapon": "scissors",
+      "backFile": "scissors-rig-back-v1.png",
+      "frontFile": "scissors-rig-front-v1.png",
+      "routeChannels": ["closed-cyan", "open-pink"],
+      "readiness": "runtime-ready"
+    },
+    {
+      "weapon": "correction",
+      "backFile": "correction-rig-back-v1.png",
+      "frontFile": "correction-rig-front-v1.png",
+      "routeChannels": ["spread-pink", "correction-cyan"],
+      "readiness": "runtime-ready"
+    }
+  ],
+  "rigSetEvidence": {
+    "builder": "scripts/build-cartoon-character-rigs.py",
+    "mode": "deterministic code-native raster layers",
+    "targetBoxesChecked": ["132px visible height", "78px visible height"],
+    "targetScaleChecked": true,
+    "alphaBoundsChecked": true,
+    "fourCornersTransparent": true,
+    "allBodyPixelsExcluded": true,
+    "fourDirectionsComposited": true,
+    "threePhasesComposited": true,
+    "sharedLayoutMatched": true,
+    "runtimeLayerSelectionConnected": true,
+    "mixedRouteRuntimeChecked": true,
+    "runtimeWalkMatrixChecked": true,
+    "runtimeWalkMatrixCases": 576,
+    "runtimeActionMatrixChecked": true,
+    "runtimeActionMatrixCases": 64,
+    "totalRuntimeMatrixCases": 640,
+    "motionJudgmentAligned": true
+  },
+  "rigSetBlockers": []
+}

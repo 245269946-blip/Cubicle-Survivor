@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "runtimeGate": "Demo V3.15 formalCartoonScenePass",
+  "worldSize": [
+    2600,
+    1800
+  ],
+  "worldAspect": "13:9",
+  "cameraSize": [
+    1280,
+    720
+  ],
+  "centralCombatField": {
+    "normalizedBounds": [
+      0.18,
+      0.18,
+      0.82,
+      0.82
+    ],
+    "requirements": [
+      "continuous walkable floor",
+      "no authored characters, enemies, weapons, pickups, projectiles, labels or UI",
+      "no high-contrast focal prop",
+      "edgeMean <= 8.0",
+      "lumaStdDev <= 32.0",
+      "82 <= meanLuma <= 236"
+    ]
+  },
+  "phaseMapping": {
+    "1": "morning onboarding",
+    "2": "midday badge definition",
+    "3": "late-afternoon independent delivery",
+    "4": "blue-hour cross-department collaboration",
+    "5": "late-night final review"
+  },
+  "completionFeedback": {
+    "source": "output/cartoon-office-scenes-v1/completion-check-source.png",
+    "sourceSha256": "fb8e91f8ebf6378b4f9c85309764264f11d907a017aab8753e07dbe1a1f27edc",
+    "asset": "assets/cartoon-office-scenes/completion-check-v1.png",
+    "assetSize": [
+      256,
+      256
+    ],
+    "assetSha256": "739dba1bd6c0b88ed1e1eb00df422543c930a87847e915df0633e25ed439fa3e",
+    "durationSeconds": 0.82,
+    "intent": "confirm the encounter has been settled without adding text or changing combat rules"
+  },
+  "scenes": [
+    {
+      "phase": 1,
+      "key": "morning",
+      "source": "output/cartoon-office-scenes-v1/office-phase-1-morning-source.png",
+      "sourceSize": [
+        1507,
+        1044
+      ],
+      "sourceSha256": "7bba3ed82e769e7682480dc0492a4a579f899d18e1685a12fb8f96e9dee53ada",
+      "asset": "assets/cartoon-office-scenes/office-phase-1-morning-v1.webp",
+      "assetSize": [
+        2600,
+        1800
+      ],
+      "assetSha256": "9e703dfe1f449a7ae44969ef8ef502f0766d57da7e0527c78b06d32242ff94dc",
+      "centerMetrics": {
+        "meanLuma": 221.076,
+        "lumaStdDev": 28.163,
+        "edgeMean": 5.13
+      }
+    },
+    {
+      "phase": 2,
+      "key": "midday",
+      "source": "output/cartoon-office-scenes-v1/office-phase-2-midday-source.png",
+      "sourceSize": [
+        1507,
+        1044
+      ],
+      "sourceSha256": "861964d3c2624ee13e53eaeb88c5c5f153a7e8d3d4efe340bbd54b6bcd7d2179",
+      "asset": "assets/cartoon-office-scenes/office-phase-2-midday-v1.webp",
+      "assetSize": [
+        2600,
+        1800
+      ],
+      "assetSha256": "af4e79973eb07a905c33b52c133b3a5af15b563c953bcbc1bc4251d031e7bd19",
+      "centerMetrics": {
+        "meanLuma": 223.163,
+        "lumaStdDev": 28.641,
+        "edgeMean": 6.075
+      }
+    },
+    {
+      "phase": 3,
+      "key": "afternoon",
+      "source": "output/cartoon-office-scenes-v1/office-phase-3-afternoon-source.png",
+      "sourceSize": [
+        1504,
+        1046
+      ],
+      "sourceSha256": "9c29c6794744e092de48525ae19e34d3a3ba9beef12b6c60de691fb211caabe1",
+      "asset": "assets/cartoon-office-scenes/office-phase-3-afternoon-v1.webp",
+      "assetSize": [
+        2600,
+        1800
+      ],
+      "assetSha256": "c5075290c0a1c05d9c12c11ce5b0cfd7561a29def4ceb215dbae05082408e872",
+      "centerMetrics": {
+        "meanLuma": 205.261,
+        "lumaStdDev": 29.749,
+        "edgeMean": 5.018
+      }
+    },
+    {
+      "phase": 4,
+      "key": "evening",
+      "source": "output/cartoon-office-scenes-v1/office-phase-4-evening-source.png",
+      "sourceSize": [
+        1507,
+        1044
+      ],
+      "sourceSha256": "6add2f8ce330cb0d03150dc4328f55b2040f10edb8af2230088a5cf4eb0f955e",
+      "asset": "assets/cartoon-office-scenes/office-phase-4-evening-v1.webp",
+      "assetSize": [
+        2600,
+        1800
+      ],
+      "assetSha256": "fc9748f827f37122304aae23c9fbde7250d9feba50529b8e23ad055823f5e71d",
+      "centerMetrics": {
+        "meanLuma": 185.529,
+        "lumaStdDev": 28.999,
+        "edgeMean": 4.702
+      }
+    },
+    {
+      "phase": 5,
+      "key": "night",
+      "source": "output/cartoon-office-scenes-v1/office-phase-5-night-source.png",
+      "sourceSize": [
+        1507,
+        1044
+      ],
+      "sourceSha256": "3959f04d2d69e8025153f73c2caded64215c7104cd665543d7cc87ce72e42661",
+      "asset": "assets/cartoon-office-scenes/office-phase-5-night-v1.webp",
+      "assetSize": [
+        2600,
+        1800
+      ],
+      "assetSha256": "389e1a70a0801a68c338a50f1fd7b8113125f84e75dc94443ad733b0bcfc7626",
+      "centerMetrics": {
+        "meanLuma": 134.137,
+        "lumaStdDev": 25.224,
+        "edgeMean": 4.193
+      }
+    }
+  ]
+}

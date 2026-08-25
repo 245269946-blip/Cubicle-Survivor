@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-08-21",
+  "entry": "cartoon-marker-slice.html",
+  "assets": [
+    {
+      "file": "office-arena-v1.webp",
+      "role": "background",
+      "readiness": "runtime-ready",
+      "source": { "width": 1672, "height": 941, "mode": "RGB" },
+      "evidence": {
+        "targetBox": "1280x720",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": false,
+        "motionJudgmentAligned": false
+      },
+      "blockers": []
+    },
+    {
+      "file": "marker-worker-v1.png",
+      "role": "player",
+      "readiness": "reference-only",
+      "source": { "width": 1214, "height": 1295, "mode": "RGBA", "alphaBounds": [19, 9, 1170, 1295] },
+      "evidence": {
+        "targetBox": "138x148",
+        "targetScaleChecked": true,
+        "cameraMatched": false,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "single three-quarter action pose, without directional or animation set",
+        "painted weapon direction does not follow arbitrary auto-aim direction",
+        "hero-illustration perspective does not fully match the arena camera"
+      ]
+    },
+    {
+      "file": "marker-worker-body-v2.png",
+      "role": "player-body",
+      "readiness": "reference-only",
+      "source": { "width": 638, "height": 1061, "mode": "RGBA", "alphaBounds": [30, 30, 608, 1031] },
+      "evidence": {
+        "targetBox": "79x132",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "superseded by the four-direction v3 runtime body set"
+      ]
+    },
+    {
+      "file": "marker-worker-down-v3.png",
+      "role": "player-body-down",
+      "readiness": "prototype-cutout",
+      "source": { "width": 282, "height": 535, "mode": "RGBA", "alphaBounds": [18, 18, 264, 517] },
+      "evidence": {
+        "targetBox": "70x132",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "single mid-step pose is direction-readable but does not form an idle/walk animation cycle",
+        "Marker printer equipment is baked into the body and has not been aligned with Thermos, Scissors, and Correction Fluid character states"
+      ]
+    },
+    {
+      "file": "marker-worker-up-v3.png",
+      "role": "player-body-up",
+      "readiness": "prototype-cutout",
+      "source": { "width": 289, "height": 544, "mode": "RGBA", "alphaBounds": [18, 18, 271, 526] },
+      "evidence": {
+        "targetBox": "70x132",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "single mid-step pose is direction-readable but does not form an idle/walk animation cycle",
+        "Marker printer equipment is baked into the body and has not been aligned with Thermos, Scissors, and Correction Fluid character states"
+      ]
+    },
+    {
+      "file": "marker-worker-left-v3.png",
+      "role": "player-body-left",
+      "readiness": "prototype-cutout",
+      "source": { "width": 311, "height": 495, "mode": "RGBA", "alphaBounds": [18, 18, 293, 477] },
+      "evidence": {
+        "targetBox": "83x132",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "single mid-step pose is direction-readable but does not form an idle/walk animation cycle",
+        "Marker printer equipment is baked into the body and has not been aligned with Thermos, Scissors, and Correction Fluid character states"
+      ]
+    },
+    {
+      "file": "marker-worker-right-v3.png",
+      "role": "player-body-right",
+      "readiness": "prototype-cutout",
+      "source": { "width": 318, "height": 500, "mode": "RGBA", "alphaBounds": [18, 18, 300, 482] },
+      "evidence": {
+        "targetBox": "84x132",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "single mid-step pose is direction-readable but does not form an idle/walk animation cycle",
+        "Marker printer equipment is baked into the body and has not been aligned with Thermos, Scissors, and Correction Fluid character states"
+      ]
+    },
+    {
+      "file": "marker-weapon-v2.png",
+      "role": "aiming-weapon",
+      "readiness": "runtime-ready",
+      "source": { "width": 1292, "height": 320, "mode": "RGBA", "alphaBounds": [20, 20, 1272, 300] },
+      "evidence": {
+        "targetBox": "78x19",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "blockers": []
+    },
+    {
+      "file": "backlog-enemy-v1.png",
+      "role": "enemy-reference",
+      "readiness": "reference-only",
+      "source": { "width": 1536, "height": 1024, "mode": "RGBA", "alphaBounds": [270, 28, 1223, 993] },
+      "evidence": {
+        "targetBox": "100x100",
+        "targetScaleChecked": true,
+        "cameraMatched": false,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "superseded by backlog-enemy-actions-v2.png"
+      ]
+    },
+    {
+      "file": "urgent-email-enemy-v1.png",
+      "role": "enemy-reference",
+      "readiness": "reference-only",
+      "source": { "width": 1536, "height": 1024, "mode": "RGBA", "alphaBounds": [307, 43, 1241, 964] },
+      "evidence": {
+        "targetBox": "88x88",
+        "targetScaleChecked": true,
+        "cameraMatched": false,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "motionJudgmentAligned": false
+      },
+      "blockers": [
+        "superseded by urgent-email-enemy-actions-v2.png"
+      ]
+    },
+    {
+      "file": "backlog-enemy-actions-v2.png",
+      "role": "enemy-action-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1280, "height": 320, "mode": "RGBA", "alphaBounds": [39, 36, 1244, 296] },
+      "evidence": {
+        "targetBox": "100px visible height",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["move", "attack", "hit", "defeat"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 4,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "blockers": []
+    },
+    {
+      "file": "urgent-email-enemy-actions-v2.png",
+      "role": "enemy-action-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1280, "height": 320, "mode": "RGBA", "alphaBounds": [31, 49, 1268, 296] },
+      "evidence": {
+        "targetBox": "88px visible height",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["move", "attack", "hit", "defeat"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 4,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "blockers": []
+    },
+    {
+      "file": "backlog-enemy-walk-v3.png",
+      "role": "enemy-walk-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1280, "height": 320, "mode": "RGBA", "alphaBounds": [34, 28, 1236, 296] },
+      "evidence": {
+        "targetBox": "100px visible height",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["contact-left", "pass-low", "contact-right", "pass-high"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 4,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "generation": {
+        "mode": "built-in ImageGen with green chroma-key post-processing",
+        "promptSet": ["same backlog-paper monster, four sequential heavy walk poses with alternating contacts and clip wobble"],
+        "negativeConstraints": ["no shadows, floor, dividers, overlap, detached parts or green character pixels"]
+      },
+      "blockers": []
+    },
+    {
+      "file": "backlog-enemy-slam-v3.png",
+      "role": "enemy-contact-slam-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1600, "height": 320, "mode": "RGBA", "alphaBounds": [36, 36, 1566, 296] },
+      "evidence": {
+        "targetBox": "100px scale family with low impact pose",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["anticipate", "compress", "launch", "impact", "recover"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 5,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "generation": {
+        "mode": "built-in ImageGen with green chroma-key post-processing",
+        "promptSet": ["same backlog-paper monster, five sequential heavy slam poses from anticipation through recovery"],
+        "negativeConstraints": ["no shadows, floor, dividers, overlap, detached parts, dust clouds or green character pixels"]
+      },
+      "blockers": []
+    },
+    {
+      "file": "urgent-email-run-v3.png",
+      "role": "enemy-run-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1280, "height": 320, "mode": "RGBA", "alphaBounds": [28, 34, 1247, 296] },
+      "evidence": {
+        "targetBox": "88px visible height",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["contact-left", "pass-low", "contact-right", "pass-high"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 4,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "generation": {
+        "mode": "built-in ImageGen with green chroma-key post-processing",
+        "promptSet": ["same urgent-email monster, four sequential run poses with alternating contacts and passing poses"],
+        "negativeConstraints": ["no shadows, floor, dividers, overlap, detached parts or green character pixels"]
+      },
+      "blockers": []
+    },
+    {
+      "file": "urgent-email-dash-v3.png",
+      "role": "enemy-dash-atlas",
+      "readiness": "runtime-ready",
+      "source": { "width": 1600, "height": 320, "mode": "RGBA", "alphaBounds": [59, 126, 1558, 296] },
+      "evidence": {
+        "targetBox": "88px scale family with horizontal dash stretch",
+        "targetScaleChecked": true,
+        "cameraMatched": true,
+        "aspectPreserved": true,
+        "alphaBoundsChecked": true,
+        "fourCornersTransparent": true,
+        "sharedBaselineChecked": true,
+        "frameOrderChecked": ["anticipate", "compress", "launch", "extend", "recover"],
+        "runtimePoseMatrixChecked": true,
+        "runtimePoseMatrixCases": 5,
+        "liveRuntimeChecked": true,
+        "motionJudgmentAligned": true
+      },
+      "generation": {
+        "mode": "built-in ImageGen with green chroma-key post-processing",
+        "promptSet": ["same urgent-email monster, five sequential dash poses from anticipation through recovery"],
+        "negativeConstraints": ["no shadows, floor, dividers, overlap, detached parts, speed-line objects or green character pixels"]
+      },
+      "blockers": []
+    }
+  ]
+}

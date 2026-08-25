@@ -232,6 +232,13 @@
     wrap.dataset.neonCity = neonCity ? "true" : "";
     wrap.dataset.neonBloom = state.demoV2 && state.demoV2.neonBloomPass ? "true" : "";
     wrap.dataset.decisionDensity = compactDecisionEnabled(state, fixedConfig) ? "compact" : "";
+    const formalHud = !!((fixedConfig && fixedConfig.formalCartoonHudPass) || (state.demoV2 && state.demoV2.formalCartoonHudPass));
+    wrap.dataset.formalCartoonHud = formalHud ? "true" : "";
+    wrap.dataset.formalCartoonVfx = state.demoV2 && state.demoV2.formalCartoonVfxPass ? "true" : "";
+    wrap.dataset.formalCartoonAudio = state.demoV2 && state.demoV2.formalCartoonAudioPass ? "true" : "";
+    wrap.dataset.transitionActive = state.mode === "combat" && state.warmupTime > 0 ? "true" : "";
+    const healthRatio = state.maxHp > 0 ? state.hp / state.maxHp : 0;
+    wrap.dataset.healthState = healthRatio <= 0.25 ? "critical" : healthRatio <= 0.5 ? "low" : "normal";
     const versionStamp = el("titleVersionStamp");
     if (versionStamp) versionStamp.textContent = (state.demoV2 && state.demoV2.suiteVersion) || (fixedConfig && fixedConfig.version) || "Demo V1";
     wrap.style.setProperty("--active-badge-color", theme.badgeColor || "#00e5ff");
@@ -278,12 +285,16 @@
     setText("objectiveTime", vm.time);
     setText("objectiveRemaining", vm.remaining);
     setText("objectiveKills", vm.kills);
+    setText("objectiveTimeLabel", vm.formalHud ? "时间" : "倒计时");
+    setText("objectiveRemainingLabel", vm.formalHud ? "待办" : "剩余");
+    setText("objectiveKillsLabel", vm.formalHud ? "完成" : "击破");
     setText("objectiveAlert", vm.stageNote);
     setText("levelText", vm.level);
     setText("materialLabel", "材料");
     setText("materialText", vm.materials);
     setText("formText", vm.formText);
     setText("hpText", vm.hp);
+    setText("buildToggle", vm.formalHud ? "构筑" : "构筑 B");
     const hpFill = el("hpFill");
     if (hpFill) hpFill.style.width = vm.hpPct + "%";
     const xpFill = el("xpFill");
@@ -322,7 +333,9 @@
         const feedbackProgress = Math.max(0, Math.min(1, growth.time / (growth.maxTime || 2.2)));
         growthFeedback.style.setProperty("--feedback-progress", feedbackProgress);
         growthFeedback.style.setProperty("--feedback-opacity", Math.min(1, feedbackProgress * 5));
-        setText("growthFeedbackKind", growth.kind === "module" ? "WORKFLOW MUTATION" : growth.kind === "component" ? "COMPONENT SYNC" : "ATTRIBUTE UPLINK");
+        setText("growthFeedbackKind", vm.formalHud
+          ? growth.kind === "module" ? "模块" : growth.kind === "component" ? "组件" : "能力"
+          : growth.kind === "module" ? "WORKFLOW MUTATION" : growth.kind === "component" ? "COMPONENT SYNC" : "ATTRIBUTE UPLINK");
         setText("growthFeedbackTitle", growth.title);
         setText("growthFeedbackDetail", growth.detail);
       }

@@ -1,0 +1,768 @@
+{
+  "schemaVersion": 1,
+  "cellWidth": 320,
+  "cellHeight": 320,
+  "baselineY": 296,
+  "assets": [
+    {
+      "sequence": "backlog-walk",
+      "file": "backlog-enemy-walk-v3.png",
+      "source": "backlog-walk-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "pass-high"
+      ],
+      "sourceSize": [
+        1983,
+        793
+      ],
+      "sharedScale": 0.648379,
+      "runtimeBounds": [
+        [
+          34,
+          36,
+          286,
+          296
+        ],
+        [
+          23,
+          98,
+          296,
+          296
+        ],
+        [
+          36,
+          45,
+          284,
+          296
+        ],
+        [
+          43,
+          28,
+          276,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "backlog-slam",
+      "file": "backlog-enemy-slam-v3.png",
+      "source": "backlog-slam-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "anticipate",
+        "compress",
+        "launch",
+        "impact",
+        "recover"
+      ],
+      "sourceSize": [
+        1983,
+        793
+      ],
+      "sharedScale": 0.738636,
+      "runtimeBounds": [
+        [
+          36,
+          36,
+          283,
+          296
+        ],
+        [
+          39,
+          134,
+          280,
+          296
+        ],
+        [
+          29,
+          67,
+          290,
+          296
+        ],
+        [
+          12,
+          128,
+          307,
+          296
+        ],
+        [
+          34,
+          63,
+          286,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "email-run",
+      "file": "urgent-email-run-v3.png",
+      "source": "urgent-email-run-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "pass-high"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.684073,
+      "runtimeBounds": [
+        [
+          28,
+          34,
+          291,
+          296
+        ],
+        [
+          39,
+          74,
+          281,
+          296
+        ],
+        [
+          34,
+          36,
+          286,
+          296
+        ],
+        [
+          32,
+          39,
+          287,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "email-dash",
+      "file": "urgent-email-dash-v3.png",
+      "source": "urgent-email-dash-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "anticipate",
+        "compress",
+        "launch",
+        "extend",
+        "recover"
+      ],
+      "sourceSize": [
+        1983,
+        793
+      ],
+      "sharedScale": 0.77635,
+      "runtimeBounds": [
+        [
+          59,
+          126,
+          261,
+          296
+        ],
+        [
+          41,
+          169,
+          279,
+          296
+        ],
+        [
+          30,
+          129,
+          289,
+          296
+        ],
+        [
+          9,
+          158,
+          311,
+          296
+        ],
+        [
+          42,
+          143,
+          278,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "meeting-walk",
+      "file": "meeting-enemy-walk-v3.png",
+      "source": "meeting-walk-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "chair-left",
+        "pass-low",
+        "chair-right",
+        "pass-high"
+      ],
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "sharedScale": 0.747525,
+      "runtimeBounds": [
+        [
+          13,
+          96,
+          306,
+          296
+        ],
+        [
+          9,
+          110,
+          311,
+          296
+        ],
+        [
+          13,
+          92,
+          306,
+          296
+        ],
+        [
+          13,
+          67,
+          306,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "meeting-slam",
+      "file": "meeting-enemy-slam-v3.png",
+      "source": "meeting-slam-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "brace",
+        "compress",
+        "open",
+        "impact",
+        "recover"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.68018,
+      "runtimeBounds": [
+        [
+          32,
+          100,
+          287,
+          296
+        ],
+        [
+          44,
+          140,
+          275,
+          296
+        ],
+        [
+          9,
+          18,
+          311,
+          296
+        ],
+        [
+          25,
+          84,
+          295,
+          296
+        ],
+        [
+          37,
+          108,
+          283,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ping-float",
+      "file": "ping-enemy-float-v3.png",
+      "source": "ping-float-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "hover-left",
+        "dip",
+        "hover-right",
+        "rise"
+      ],
+      "sourceSize": [
+        2161,
+        728
+      ],
+      "sharedScale": 0.51272,
+      "runtimeBounds": [
+        [
+          41,
+          34,
+          278,
+          296
+        ],
+        [
+          36,
+          62,
+          283,
+          296
+        ],
+        [
+          42,
+          43,
+          277,
+          296
+        ],
+        [
+          41,
+          29,
+          279,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ping-send",
+      "file": "ping-enemy-send-v3.png",
+      "source": "ping-send-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "gather",
+        "compress",
+        "charge",
+        "release",
+        "recover"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.641189,
+      "runtimeBounds": [
+        [
+          40,
+          49,
+          280,
+          296
+        ],
+        [
+          49,
+          71,
+          271,
+          296
+        ],
+        [
+          23,
+          57,
+          296,
+          296
+        ],
+        [
+          9,
+          45,
+          311,
+          296
+        ],
+        [
+          19,
+          53,
+          300,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "deadline-run",
+      "file": "deadline-enemy-run-v3.png",
+      "source": "deadline-run-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "airborne"
+      ],
+      "sourceSize": [
+        2166,
+        726
+      ],
+      "sharedScale": 0.455652,
+      "runtimeBounds": [
+        [
+          47,
+          34,
+          273,
+          296
+        ],
+        [
+          67,
+          43,
+          253,
+          296
+        ],
+        [
+          52,
+          39,
+          268,
+          296
+        ],
+        [
+          48,
+          62,
+          272,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "deadline-charge",
+      "file": "deadline-enemy-charge-v3.png",
+      "source": "deadline-charge-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "ring",
+        "compress",
+        "launch",
+        "dash",
+        "brake"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.59009,
+      "runtimeBounds": [
+        [
+          51,
+          34,
+          268,
+          296
+        ],
+        [
+          46,
+          90,
+          273,
+          296
+        ],
+        [
+          36,
+          56,
+          284,
+          296
+        ],
+        [
+          28,
+          67,
+          292,
+          296
+        ],
+        [
+          48,
+          43,
+          272,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "scope-run",
+      "file": "scope-enemy-run-v3.png",
+      "source": "scope-run-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "airborne"
+      ],
+      "sourceSize": [
+        2048,
+        768
+      ],
+      "sharedScale": 0.542443,
+      "runtimeBounds": [
+        [
+          40,
+          34,
+          280,
+          296
+        ],
+        [
+          47,
+          90,
+          272,
+          296
+        ],
+        [
+          40,
+          41,
+          279,
+          296
+        ],
+        [
+          42,
+          18,
+          277,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "scope-split",
+      "file": "scope-enemy-split-v3.png",
+      "source": "scope-split-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "swell",
+        "compress",
+        "tear-open",
+        "release",
+        "recover"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.475591,
+      "runtimeBounds": [
+        [
+          78,
+          127,
+          241,
+          296
+        ],
+        [
+          77,
+          162,
+          243,
+          296
+        ],
+        [
+          9,
+          69,
+          311,
+          296
+        ],
+        [
+          39,
+          145,
+          280,
+          296
+        ],
+        [
+          98,
+          157,
+          222,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "approval-walk",
+      "file": "approval-enemy-walk-v3.png",
+      "source": "approval-walk-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "shield-contact",
+        "pass-low",
+        "opposite-contact",
+        "pass-high"
+      ],
+      "sourceSize": [
+        2079,
+        756
+      ],
+      "sharedScale": 0.483395,
+      "runtimeBounds": [
+        [
+          58,
+          34,
+          262,
+          296
+        ],
+        [
+          59,
+          73,
+          260,
+          296
+        ],
+        [
+          60,
+          33,
+          260,
+          296
+        ],
+        [
+          59,
+          16,
+          260,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "approval-guard",
+      "file": "approval-enemy-guard-v3.png",
+      "source": "approval-guard-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "raise",
+        "brace",
+        "impact",
+        "break",
+        "vulnerable-recover"
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "sharedScale": 0.651741,
+      "runtimeBounds": [
+        [
+          36,
+          34,
+          284,
+          296
+        ],
+        [
+          41,
+          61,
+          278,
+          296
+        ],
+        [
+          18,
+          36,
+          302,
+          296
+        ],
+        [
+          22,
+          21,
+          298,
+          296
+        ],
+        [
+          41,
+          89,
+          278,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-run",
+      "file": "client-enemy-run-v3.png",
+      "source": "client-run-alpha-v3.png",
+      "frames": 4,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "airborne"
+      ],
+      "sourceSize": [
+        2079,
+        756
+      ],
+      "sharedScale": 0.588764,
+      "runtimeBounds": [
+        [
+          26,
+          34,
+          294,
+          296
+        ],
+        [
+          23,
+          75,
+          296,
+          296
+        ],
+        [
+          36,
+          41,
+          284,
+          296
+        ],
+        [
+          44,
+          37,
+          276,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-call",
+      "file": "client-enemy-call-v3.png",
+      "source": "client-call-alpha-v3.png",
+      "frames": 5,
+      "frameOrder": [
+        "dial",
+        "listen-compress",
+        "bubble-swell",
+        "double-release",
+        "recover"
+      ],
+      "sourceSize": [
+        1947,
+        808
+      ],
+      "sharedScale": 0.642157,
+      "runtimeBounds": [
+        [
+          64,
+          34,
+          255,
+          296
+        ],
+        [
+          64,
+          108,
+          255,
+          296
+        ],
+        [
+          32,
+          24,
+          288,
+          296
+        ],
+        [
+          11,
+          94,
+          308,
+          296
+        ],
+        [
+          68,
+          123,
+          252,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    }
+  ]
+}

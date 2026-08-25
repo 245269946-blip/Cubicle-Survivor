@@ -847,7 +847,7 @@ button:disabled,
 #weaponSelectPanel .weapon-card small {
   margin-top: auto !important;
   color: #83c7bd !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   font-weight: 800 !important;
   line-height: 1.35 !important;
 }
@@ -3837,7 +3837,7 @@ body[data-debug-quiet="1"] .debug-panel {
 .v2-game[data-decision-density="compact"] #moduleSelectPanel .panel-note,
 .v2-game[data-decision-density="compact"] #componentShopPanel .panel-note {
   color: #c7d3dc !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   font-weight: 750 !important;
 }
 
@@ -3869,37 +3869,783 @@ body[data-debug-quiet="1"] .debug-panel {
   min-height: 0 !important;
   padding: 11px 12px !important;
   color: #d6e0e7 !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   line-height: 1.42 !important;
 }
 
 .v2-game[data-decision-density="compact"] #moduleChoices .module-promise-line b {
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 
 .v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card {
   gap: 8px !important;
 }
 
-.v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card .compare-line,
-.v2-game[data-decision-density="compact"] #componentShopPanel .component-install-promise {
+.v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card .compare-line {
   color: #d7e0e6 !important;
-  font-size: 11px !important;
+  font-size: 14px !important;
   line-height: 1.38 !important;
 }
 
 .v2-game[data-decision-density="compact"] #componentShopPanel .component-install-promise {
-  padding: 7px 8px !important;
+  display: none !important;
 }
 
 .v2-game[data-decision-density="compact"] #upgradeChoices .learning-card .card-desc {
   color: #d4dde3 !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   line-height: 1.42 !important;
 }
 
 @media (max-width: 760px) {
   .v2-game[data-decision-density="compact"] #moduleChoices .module-promise-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Demo V3.15 formal combat HUD.
+   Dynamic values stay as native text and bars; the visual shell uses the same
+   paper, folder, paperclip and stamp grammar as the formal office assets. */
+.v2-game[data-formal-cartoon-hud="true"] {
+  --formal-hud-ink: #3d3932;
+  --formal-hud-paper: #fff3d2;
+  --formal-hud-paper-deep: #ead7a7;
+  --formal-hud-blue: #78bfd0;
+  --formal-hud-blue-deep: #3f8395;
+  --formal-hud-amber: #e7b65c;
+  --formal-hud-coral: #e97f70;
+  --formal-hud-shadow: rgba(73, 62, 49, 0.34);
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .xp-bar,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #pauseButton,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #buildToggle {
+  font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Two small sticky notes: only level and spendable material stay persistent. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left {
+  top: 16px !important;
+  right: auto !important;
+  left: 16px !important;
+  display: flex !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 170px !important;
+  gap: 7px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(1),
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(2) {
+  position: relative !important;
+  display: grid !important;
+  width: 66px !important;
+  min-width: 66px !important;
+  height: 48px !important;
+  align-content: center !important;
+  justify-items: center !important;
+  gap: 3px !important;
+  padding: 4px 7px 3px !important;
+  overflow: visible !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 5px 5px 8px 5px !important;
+  background: #f6df82 !important;
+  box-shadow: 3px 4px 0 var(--formal-hud-shadow) !important;
+  transform: rotate(-1.2deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(2) {
+  background: #efc574 !important;
+  transform: rotate(1deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(1)::after,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(2)::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 21px;
+  width: 24px;
+  height: 9px;
+  border: 1px solid rgba(103, 84, 54, 0.26);
+  background: rgba(255, 246, 209, 0.74);
+  transform: rotate(2deg);
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat:nth-child(3) {
+  display: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat span {
+  color: #75684f !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-left .stat strong {
+  color: var(--formal-hud-ink) !important;
+  font-size: 17px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+/* Centre task folder: stage, task name, time and pending work only. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud {
+  top: 15px !important;
+  right: auto !important;
+  left: 50% !important;
+  box-sizing: border-box !important;
+  width: min(350px, calc(100% - 490px)) !important;
+  min-width: 320px !important;
+  max-width: 350px !important;
+  height: 58px !important;
+  padding: 8px 10px 7px !important;
+  overflow: visible !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 7px 7px 11px 11px !important;
+  background: var(--formal-hud-paper) !important;
+  box-shadow: 4px 5px 0 var(--formal-hud-shadow) !important;
+  transform: translateX(-50%) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  top: -10px !important;
+  left: 12px !important;
+  width: 86px !important;
+  height: 18px !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-bottom: 0 !important;
+  border-radius: 7px 9px 0 0 !important;
+  background: var(--formal-hud-amber) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -6px !important;
+  right: 22px !important;
+  width: 22px !important;
+  height: 8px !important;
+  border: 2px solid #6d675e !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  transform: rotate(-8deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .stage-meta,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud > strong {
+  position: static !important;
+  display: block !important;
+  width: 145px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: var(--formal-hud-ink) !important;
+  line-height: 1.05 !important;
+  text-align: left !important;
+  text-overflow: ellipsis !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .stage-meta {
+  color: var(--formal-hud-blue-deep) !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud > strong {
+  margin-top: 5px !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-row {
+  position: absolute !important;
+  top: 8px !important;
+  right: 9px !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  width: 166px !important;
+  height: 40px !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-row span {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 5px 4px 4px !important;
+  overflow: hidden !important;
+  border: 1px solid #c7ae78 !important;
+  border-radius: 4px !important;
+  background: #f4e4b9 !important;
+  color: #786b55 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-row i {
+  color: #786b55 !important;
+  font-size: 9px !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-row span:nth-child(3) {
+  display: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-row b {
+  display: inline !important;
+  margin: 0 !important;
+  color: var(--formal-hud-ink) !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud .objective-alert {
+  display: none !important;
+}
+
+/* Health becomes a compact first-aid slip, not a system console. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right {
+  top: 16px !important;
+  right: 16px !important;
+  left: auto !important;
+  display: block !important;
+  width: 180px !important;
+  height: 54px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right .hp-stat {
+  position: relative !important;
+  display: grid !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100% !important;
+  align-content: center !important;
+  gap: 3px !important;
+  padding: 6px 10px 6px 42px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 8px !important;
+  background: #ffe4d8 !important;
+  box-shadow: 4px 5px 0 var(--formal-hud-shadow) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right .hp-stat::before {
+  content: "+" !important;
+  position: absolute !important;
+  top: 11px !important;
+  left: 11px !important;
+  display: grid !important;
+  width: 23px !important;
+  height: 23px !important;
+  place-items: center !important;
+  border: 2px solid #9a5048 !important;
+  border-radius: 50% !important;
+  background: #fff5df !important;
+  color: var(--formal-hud-coral) !important;
+  font-size: 20px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right .hp-stat > span {
+  color: #8f5d53 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-align: left !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right .hp-stat > strong {
+  color: var(--formal-hud-ink) !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: left !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right .hp-meter {
+  width: 100% !important;
+  height: 6px !important;
+  margin: 1px 0 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #a15d52 !important;
+  border-radius: 4px !important;
+  background: #f1c7ba !important;
+  box-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right #hpFill {
+  height: 100% !important;
+  margin: 0 !important;
+  background: var(--formal-hud-coral) !important;
+  box-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-health-state="low"] > .hud.top-right .hp-stat,
+.v2-game[data-formal-cartoon-hud="true"][data-health-state="critical"] > .hud.top-right .hp-stat {
+  background: #ffd8ca !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-health-state="critical"] > .hud.top-right .hp-stat {
+  border-color: #8f443e !important;
+  box-shadow: 4px 5px 0 rgba(122, 62, 53, 0.42) !important;
+  transform: rotate(0.8deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-health-state="critical"] > .hud.top-right #hpFill {
+  background: #d95f55 !important;
+}
+
+/* Physical stamp buttons. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #pauseButton,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #buildToggle {
+  position: absolute !important;
+  width: auto !important;
+  min-width: 58px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 5px !important;
+  background: #f7e7bd !important;
+  color: var(--formal-hud-ink) !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  box-shadow: 3px 4px 0 var(--formal-hud-shadow) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #pauseButton {
+  top: 16px !important;
+  right: 204px !important;
+  bottom: auto !important;
+  left: auto !important;
+  color: #8f4f48 !important;
+  transform: rotate(1deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #buildToggle {
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: 16px !important;
+  background: var(--formal-hud-amber) !important;
+  transform: rotate(-1deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #pauseButton:active,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #buildToggle:active {
+  box-shadow: 1px 2px 0 var(--formal-hud-shadow) !important;
+  translate: 2px 2px !important;
+}
+
+/* Build drawer is a real folder. Collapsed state shows one short identity. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel.collapsed {
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: 82px !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 198px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 6px 10px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 5px 8px 8px 5px !important;
+  background: #f2d891 !important;
+  box-shadow: 3px 4px 0 var(--formal-hud-shadow) !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel.collapsed .build-panel-head {
+  display: flex !important;
+  height: 100% !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 7px !important;
+  margin: 0 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel .build-panel-head span {
+  color: #796447 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel .build-panel-head strong {
+  color: var(--formal-hud-ink) !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) {
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: 16px !important;
+  box-sizing: border-box !important;
+  width: min(350px, calc(100% - 32px)) !important;
+  max-height: 61% !important;
+  padding: 17px !important;
+  overflow: auto !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-top: 12px solid var(--formal-hud-amber) !important;
+  border-radius: 5px 9px 9px 9px !important;
+  background: var(--formal-hud-paper) !important;
+  color: var(--formal-hud-ink) !important;
+  box-shadow: 5px 7px 0 var(--formal-hud-shadow) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .build-panel-head strong,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .build-panel-head span,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .v2-form-chip b,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .v2-form-chip em,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .build-list > div strong {
+  color: var(--formal-hud-ink) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .v2-form-chip,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .build-list > div {
+  border: 1px solid #c7ae78 !important;
+  border-left: 4px solid var(--formal-hud-blue-deep) !important;
+  background: #f4e4b9 !important;
+  box-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .v2-form-chip span,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .build-panel:not(.collapsed) .build-list > div span {
+  color: #76684f !important;
+}
+
+/* One compact mechanism note; its long explanation remains available in Build. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status {
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: 50% !important;
+  display: grid !important;
+  box-sizing: border-box !important;
+  width: min(390px, calc(100% - 600px)) !important;
+  min-width: 300px !important;
+  max-width: 390px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 7px 12px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-left: 9px solid var(--formal-hud-blue) !important;
+  border-radius: 5px 8px 8px 5px !important;
+  background: #e7f1de !important;
+  box-shadow: 3px 4px 0 var(--formal-hud-shadow) !important;
+  transform: translateX(-50%) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status strong,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status b {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  color: var(--formal-hud-ink) !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: left !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status b {
+  color: #517d70 !important;
+  text-align: right !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status span {
+  display: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-transition-active="true"] > .combat-status,
+.v2-game[data-formal-cartoon-hud="true"][data-transition-active="true"] > #buildToggle,
+.v2-game[data-formal-cartoon-hud="true"][data-transition-active="true"] > #buildPanel {
+  display: none !important;
+}
+
+/* XP is a thin blue filing strip, subordinate to play. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .xp-bar {
+  top: auto !important;
+  right: 14px !important;
+  bottom: 9px !important;
+  left: 14px !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  height: 9px !important;
+  min-height: 9px !important;
+  padding: 1px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-radius: 4px !important;
+  background: #d8e6d5 !important;
+  box-shadow: 2px 3px 0 var(--formal-hud-shadow) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .xp-bar #xpFill {
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: 2px !important;
+  background: var(--formal-hud-blue) !important;
+  box-shadow: none !important;
+}
+
+/* Growth confirmation is a stamped note with one immediate-result line. */
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback {
+  top: 124px !important;
+  box-sizing: border-box !important;
+  width: min(340px, calc(100% - 40px)) !important;
+  min-height: 62px !important;
+  gap: 2px !important;
+  padding: 9px 14px 10px 50px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-left: 9px solid var(--formal-hud-coral) !important;
+  border-radius: 5px 9px 9px 5px !important;
+  background: var(--formal-hud-paper) !important;
+  box-shadow: 4px 5px 0 var(--formal-hud-shadow) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback::before {
+  content: "✓" !important;
+  position: absolute !important;
+  top: 13px !important;
+  left: 13px !important;
+  display: grid !important;
+  width: 26px !important;
+  height: 26px !important;
+  place-items: center !important;
+  border: 2px solid #97635a !important;
+  border-radius: 50% !important;
+  color: var(--formal-hud-coral) !important;
+  font-size: 17px !important;
+  font-weight: 950 !important;
+  transform: rotate(-8deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback::after {
+  height: 3px !important;
+  background: var(--formal-hud-blue) !important;
+  box-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback > span {
+  color: #8b6456 !important;
+  font-size: 9px !important;
+  letter-spacing: 0.06em !important;
+  text-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback > strong {
+  color: var(--formal-hud-ink) !important;
+  font-size: 15px !important;
+  text-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .growth-feedback > p {
+  color: #746a5a !important;
+  font-size: 10px !important;
+}
+
+/* Stage prompt: a short completion stamp, never a paragraph panel. */
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner {
+  top: 124px !important;
+  left: 50% !important;
+  box-sizing: border-box !important;
+  width: min(350px, calc(100% - 40px)) !important;
+  min-width: 300px !important;
+  padding: 12px 18px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-left: 10px solid var(--formal-hud-coral) !important;
+  border-radius: 5px 9px 9px 5px !important;
+  background: var(--formal-hud-paper) !important;
+  color: var(--formal-hud-ink) !important;
+  box-shadow: 4px 5px 0 var(--formal-hud-shadow) !important;
+  transform: translateX(-50%) rotate(-0.5deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner span,
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner strong {
+  color: var(--formal-hud-ink) !important;
+  text-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner span {
+  color: #8f5c53 !important;
+  font-size: 10px !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner strong {
+  margin-top: 2px !important;
+  font-size: 22px !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .stage-banner p {
+  display: none !important;
+}
+
+/* Pre-stage card keeps only label, title, enemy tags and countdown. */
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card {
+  top: auto !important;
+  right: auto !important;
+  bottom: 20px !important;
+  left: 50% !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+  width: min(760px, calc(100% - 56px)) !important;
+  max-width: 760px !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  grid-template-columns: 56px minmax(0, 1fr) 58px !important;
+  grid-template-rows: auto 7px !important;
+  gap: 8px 13px !important;
+  padding: 11px 13px 10px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--formal-hud-ink) !important;
+  border-left: 11px solid var(--formal-hud-blue) !important;
+  border-radius: 6px 10px 10px 6px !important;
+  background: var(--formal-hud-paper) !important;
+  color: var(--formal-hud-ink) !important;
+  box-shadow: 5px 6px 0 var(--formal-hud-shadow) !important;
+  transform: translateX(-50%) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card.hidden {
+  display: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card[data-transition-kind="collection"] {
+  border-left-color: var(--formal-hud-amber) !important;
+  background: #fff0c6 !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay .transition-symbol {
+  width: 52px !important;
+  height: 52px !important;
+  border: 2px solid #5c7e7d !important;
+  border-radius: 50% !important;
+  background: #dcead9 !important;
+  color: #4c7775 !important;
+  font-size: 10px !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transform: rotate(-6deg) !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay .transition-eyebrow {
+  color: var(--formal-hud-blue-deep) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.04em !important;
+  text-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card #warmupTitle {
+  color: var(--formal-hud-ink) !important;
+  font-size: 17px !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card #warmupHint,
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay .transition-side {
+  display: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay .transition-tags span {
+  border: 1px solid #bfa970 !important;
+  border-radius: 4px !important;
+  background: #f0dfb1 !important;
+  color: #665b48 !important;
+  font-size: 9px !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card .transition-timer {
+  color: #a05b50 !important;
+  font-size: 23px !important;
+  text-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card .warmup-bar {
+  grid-column: 1 / -1 !important;
+  box-sizing: border-box !important;
+  height: 7px !important;
+  padding: 0 !important;
+  border: 1px solid var(--formal-hud-ink) !important;
+  border-radius: 3px !important;
+  background: #d9cfad !important;
+  box-shadow: none !important;
+}
+
+.v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card #warmupFill {
+  height: 100% !important;
+  margin: 0 !important;
+  background: var(--formal-hud-blue) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  .v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .objective-hud {
+    top: 84px !important;
+    width: calc(100% - 28px) !important;
+    min-width: 0 !important;
+  }
+
+  .v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .hud.top-right {
+    width: 154px !important;
+  }
+
+  .v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > #pauseButton {
+    top: 93px !important;
+  }
+
+  .v2-game[data-formal-cartoon-hud="true"][data-page-mode="combat"] > .combat-status {
+    width: min(300px, calc(100% - 32px)) !important;
+    min-width: 0 !important;
+  }
+
+  .v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay.transition-card {
+    width: calc(100% - 28px) !important;
+    grid-template-columns: 46px minmax(0, 1fr) 48px !important;
+  }
+
+  .v2-game[data-formal-cartoon-hud="true"] > .warmup-overlay .transition-symbol {
+    width: 42px !important;
+    height: 42px !important;
   }
 }

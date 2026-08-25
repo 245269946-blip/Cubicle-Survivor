@@ -1,0 +1,1195 @@
+{
+  "schemaVersion": 1,
+  "layout": {
+    "cell": 320,
+    "baselineY": 296
+  },
+  "assets": [
+    {
+      "sequence": "lead-actions",
+      "source": "lead-boss-actions-alpha-v1.png",
+      "output": "lead-boss-actions-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "patrol",
+        "point",
+        "hit",
+        "defeat"
+      ],
+      "sharedScale": 0.407855,
+      "sourceSize": [
+        2043,
+        770
+      ],
+      "runtimeBounds": [
+        [
+          67,
+          26,
+          253,
+          296
+        ],
+        [
+          62,
+          28,
+          257,
+          296
+        ],
+        [
+          51,
+          25,
+          269,
+          296
+        ],
+        [
+          78,
+          90,
+          242,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "lead-walk",
+      "source": "lead-boss-walk-alpha-v1.png",
+      "output": "lead-boss-walk-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "contact-left",
+        "pass-low",
+        "contact-right",
+        "airborne"
+      ],
+      "sharedScale": 0.398818,
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "runtimeBounds": [
+        [
+          81,
+          26,
+          239,
+          296
+        ],
+        [
+          84,
+          29,
+          236,
+          296
+        ],
+        [
+          83,
+          25,
+          236,
+          296
+        ],
+        [
+          80,
+          39,
+          239,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "lead-lane",
+      "source": "lead-boss-lane-alpha-v1.png",
+      "output": "lead-boss-lane-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "open",
+        "raise",
+        "aim",
+        "release",
+        "recover"
+      ],
+      "sourceSlices": [
+        0,
+        330,
+        790,
+        1215,
+        1750,
+        2078
+      ],
+      "sharedScale": 0.530452,
+      "sourceSize": [
+        2078,
+        757
+      ],
+      "runtimeBounds": [
+        [
+          78,
+          26,
+          242,
+          296
+        ],
+        [
+          45,
+          22,
+          274,
+          296
+        ],
+        [
+          52,
+          52,
+          267,
+          296
+        ],
+        [
+          18,
+          54,
+          302,
+          296
+        ],
+        [
+          78,
+          18,
+          241,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "lead-burst",
+      "source": "lead-boss-burst-alpha-v1.png",
+      "output": "lead-boss-burst-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "brace",
+        "flip",
+        "raise",
+        "safe-gap-release",
+        "recover"
+      ],
+      "sharedScale": 0.475874,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          90,
+          85,
+          229,
+          296
+        ],
+        [
+          65,
+          79,
+          255,
+          296
+        ],
+        [
+          68,
+          10,
+          251,
+          296
+        ],
+        [
+          41,
+          51,
+          278,
+          296
+        ],
+        [
+          84,
+          84,
+          235,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "director-actions",
+      "source": "director-boss-actions-alpha-v1.png",
+      "output": "director-boss-actions-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "patrol",
+        "command",
+        "shield-hit",
+        "defeat"
+      ],
+      "sharedScale": 0.483871,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          39,
+          26,
+          280,
+          296
+        ],
+        [
+          45,
+          25,
+          275,
+          296
+        ],
+        [
+          28,
+          36,
+          291,
+          296
+        ],
+        [
+          26,
+          77,
+          294,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "director-walk",
+      "source": "director-boss-walk-alpha-v1.png",
+      "output": "director-boss-walk-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "caster-left",
+        "pass-low",
+        "caster-right",
+        "airborne"
+      ],
+      "sharedScale": 0.522244,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          46,
+          26,
+          274,
+          296
+        ],
+        [
+          60,
+          45,
+          259,
+          296
+        ],
+        [
+          39,
+          31,
+          281,
+          296
+        ],
+        [
+          46,
+          25,
+          274,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "director-lane",
+      "source": "director-boss-lane-alpha-v1.png",
+      "output": "director-boss-lane-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "brake",
+        "align",
+        "aim",
+        "corridor-release",
+        "recover"
+      ],
+      "sharedScale": 0.617849,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          29,
+          26,
+          290,
+          296
+        ],
+        [
+          72,
+          21,
+          247,
+          296
+        ],
+        [
+          71,
+          33,
+          248,
+          296
+        ],
+        [
+          73,
+          33,
+          247,
+          296
+        ],
+        [
+          40,
+          27,
+          280,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "director-burst",
+      "source": "director-boss-burst-alpha-v1.png",
+      "output": "director-boss-burst-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "close",
+        "split",
+        "orbit",
+        "safe-gap-release",
+        "recover"
+      ],
+      "sharedScale": 0.65534,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          45,
+          26,
+          275,
+          296
+        ],
+        [
+          55,
+          29,
+          265,
+          296
+        ],
+        [
+          37,
+          27,
+          283,
+          296
+        ],
+        [
+          18,
+          30,
+          302,
+          296
+        ],
+        [
+          48,
+          33,
+          271,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "delivery-actions",
+      "source": "delivery-boss-actions-alpha-v1.png",
+      "output": "delivery-boss-actions-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "loaded-idle",
+        "seal-command",
+        "dented-hit",
+        "collapsed-defeat"
+      ],
+      "sharedScale": 0.45827,
+      "sourceSize": [
+        2135,
+        736
+      ],
+      "runtimeBounds": [
+        [
+          57,
+          45,
+          263,
+          296
+        ],
+        [
+          47,
+          13,
+          272,
+          296
+        ],
+        [
+          38,
+          33,
+          281,
+          296
+        ],
+        [
+          9,
+          109,
+          311,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "delivery-walk",
+      "source": "delivery-boss-walk-alpha-v1.png",
+      "output": "delivery-boss-walk-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "wheel-left",
+        "pass-low",
+        "wheel-right",
+        "airborne"
+      ],
+      "sharedScale": 0.560784,
+      "sourceSize": [
+        2117,
+        743
+      ],
+      "runtimeBounds": [
+        [
+          31,
+          37,
+          288,
+          296
+        ],
+        [
+          44,
+          35,
+          276,
+          296
+        ],
+        [
+          39,
+          41,
+          281,
+          296
+        ],
+        [
+          39,
+          10,
+          280,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "delivery-charge",
+      "source": "delivery-boss-charge-alpha-v1.png",
+      "output": "delivery-boss-charge-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "brace",
+        "seal",
+        "launch",
+        "impact-release",
+        "brake-recover"
+      ],
+      "sharedScale": 0.621399,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          61,
+          82,
+          258,
+          296
+        ],
+        [
+          48,
+          51,
+          272,
+          296
+        ],
+        [
+          31,
+          76,
+          288,
+          296
+        ],
+        [
+          9,
+          101,
+          311,
+          296
+        ],
+        [
+          40,
+          102,
+          280,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "delivery-lane",
+      "source": "delivery-boss-lane-alpha-v1.png",
+      "output": "delivery-boss-lane-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "brake",
+        "align",
+        "aim",
+        "corridor-release",
+        "recover"
+      ],
+      "sharedScale": 0.656522,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          46,
+          56,
+          274,
+          296
+        ],
+        [
+          28,
+          56,
+          291,
+          296
+        ],
+        [
+          30,
+          60,
+          289,
+          296
+        ],
+        [
+          9,
+          60,
+          311,
+          296
+        ],
+        [
+          51,
+          52,
+          269,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "delivery-burst",
+      "source": "delivery-boss-burst-alpha-v1.png",
+      "output": "delivery-boss-burst-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "lock",
+        "unseal",
+        "orbit",
+        "safe-gap-release",
+        "recover"
+      ],
+      "sharedScale": 0.637131,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          67,
+          77,
+          253,
+          296
+        ],
+        [
+          57,
+          23,
+          263,
+          296
+        ],
+        [
+          38,
+          87,
+          281,
+          296
+        ],
+        [
+          9,
+          49,
+          311,
+          296
+        ],
+        [
+          65,
+          77,
+          254,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-actions",
+      "source": "client-boss-actions-alpha-v1.png",
+      "output": "client-boss-actions-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "terminal-idle",
+        "call-command",
+        "screen-hit",
+        "slumped-defeat"
+      ],
+      "sharedScale": 0.44479,
+      "sourceSize": [
+        2020,
+        778
+      ],
+      "runtimeBounds": [
+        [
+          63,
+          26,
+          256,
+          296
+        ],
+        [
+          38,
+          10,
+          282,
+          296
+        ],
+        [
+          50,
+          22,
+          269,
+          296
+        ],
+        [
+          41,
+          54,
+          279,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-walk",
+      "source": "client-boss-walk-alpha-v1.png",
+      "output": "client-boss-walk-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "caster-left",
+        "pass-low",
+        "caster-right",
+        "airborne"
+      ],
+      "sharedScale": 0.563674,
+      "sourceSize": [
+        2087,
+        753
+      ],
+      "runtimeBounds": [
+        [
+          46,
+          26,
+          274,
+          296
+        ],
+        [
+          27,
+          87,
+          293,
+          296
+        ],
+        [
+          51,
+          17,
+          269,
+          296
+        ],
+        [
+          53,
+          20,
+          266,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-call",
+      "source": "client-boss-call-alpha-v1.png",
+      "output": "client-boss-call-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "listen",
+        "dial",
+        "compress",
+        "speech-release",
+        "recover"
+      ],
+      "sharedScale": 0.585683,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          50,
+          26,
+          270,
+          296
+        ],
+        [
+          46,
+          35,
+          274,
+          296
+        ],
+        [
+          70,
+          51,
+          249,
+          296
+        ],
+        [
+          23,
+          35,
+          296,
+          296
+        ],
+        [
+          53,
+          39,
+          266,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-lane",
+      "source": "client-boss-lane-alpha-v1.png",
+      "output": "client-boss-lane-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "stabilize",
+        "align",
+        "stack",
+        "corridor-release",
+        "recover"
+      ],
+      "sharedScale": 0.590998,
+      "sourceSize": [
+        2055,
+        765
+      ],
+      "runtimeBounds": [
+        [
+          65,
+          58,
+          255,
+          296
+        ],
+        [
+          60,
+          60,
+          259,
+          296
+        ],
+        [
+          64,
+          50,
+          255,
+          296
+        ],
+        [
+          9,
+          69,
+          311,
+          296
+        ],
+        [
+          80,
+          70,
+          239,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "client-burst",
+      "source": "client-boss-burst-alpha-v1.png",
+      "output": "client-boss-burst-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "mute",
+        "conference",
+        "orbit",
+        "safe-gap-release",
+        "recover"
+      ],
+      "sharedScale": 0.61242,
+      "sourceSize": [
+        2141,
+        734
+      ],
+      "runtimeBounds": [
+        [
+          67,
+          44,
+          252,
+          296
+        ],
+        [
+          50,
+          23,
+          269,
+          296
+        ],
+        [
+          30,
+          16,
+          290,
+          296
+        ],
+        [
+          36,
+          10,
+          283,
+          296
+        ],
+        [
+          68,
+          44,
+          252,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-actions",
+      "source": "ceo-boss-actions-alpha-v1.png",
+      "output": "ceo-boss-actions-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "armored-idle",
+        "final-command",
+        "shield-hit",
+        "collapsed-defeat"
+      ],
+      "sharedScale": 0.495082,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          52,
+          71,
+          267,
+          296
+        ],
+        [
+          58,
+          33,
+          261,
+          296
+        ],
+        [
+          39,
+          83,
+          281,
+          296
+        ],
+        [
+          9,
+          143,
+          311,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-walk",
+      "source": "ceo-boss-walk-alpha-v1.png",
+      "output": "ceo-boss-walk-v1.png",
+      "frames": 4,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "caster-left",
+        "pass-low",
+        "caster-right",
+        "airborne"
+      ],
+      "sharedScale": 0.599581,
+      "sourceSize": [
+        2149,
+        732
+      ],
+      "runtimeBounds": [
+        [
+          22,
+          45,
+          297,
+          296
+        ],
+        [
+          30,
+          63,
+          290,
+          296
+        ],
+        [
+          30,
+          10,
+          290,
+          296
+        ],
+        [
+          32,
+          38,
+          287,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-stamp",
+      "source": "ceo-boss-stamp-alpha-v1.png",
+      "output": "ceo-boss-stamp-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "scrutinize",
+        "load",
+        "compress",
+        "sealed-memo-release",
+        "recover"
+      ],
+      "sharedScale": 0.652968,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          44,
+          48,
+          276,
+          296
+        ],
+        [
+          44,
+          10,
+          276,
+          296
+        ],
+        [
+          43,
+          59,
+          277,
+          296
+        ],
+        [
+          29,
+          50,
+          291,
+          296
+        ],
+        [
+          48,
+          18,
+          272,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-charge",
+      "source": "ceo-boss-charge-alpha-v1.png",
+      "output": "ceo-boss-charge-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "brace",
+        "drive-lever",
+        "launch",
+        "shield-impact",
+        "brake-recover"
+      ],
+      "sharedScale": 0.590998,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          47,
+          67,
+          272,
+          296
+        ],
+        [
+          51,
+          97,
+          268,
+          296
+        ],
+        [
+          46,
+          93,
+          274,
+          296
+        ],
+        [
+          9,
+          151,
+          311,
+          296
+        ],
+        [
+          41,
+          91,
+          279,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-lane",
+      "source": "ceo-boss-lane-alpha-v1.png",
+      "output": "ceo-boss-lane-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "stabilize",
+        "rulers-open",
+        "align",
+        "corridor-release",
+        "recover"
+      ],
+      "sharedScale": 0.62268,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          59,
+          72,
+          260,
+          296
+        ],
+        [
+          9,
+          47,
+          311,
+          296
+        ],
+        [
+          52,
+          50,
+          267,
+          296
+        ],
+        [
+          41,
+          25,
+          278,
+          296
+        ],
+        [
+          58,
+          72,
+          262,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    },
+    {
+      "sequence": "ceo-burst",
+      "source": "ceo-boss-burst-alpha-v1.png",
+      "output": "ceo-boss-burst-v1.png",
+      "frames": 5,
+      "referenceHeight": 270,
+      "frameOrder": [
+        "shield-lock",
+        "fan-open",
+        "partial-orbit",
+        "safe-gap-release",
+        "recover"
+      ],
+      "sharedScale": 0.615054,
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "runtimeBounds": [
+        [
+          54,
+          79,
+          266,
+          296
+        ],
+        [
+          56,
+          22,
+          264,
+          296
+        ],
+        [
+          46,
+          22,
+          274,
+          296
+        ],
+        [
+          61,
+          10,
+          258,
+          296
+        ],
+        [
+          55,
+          81,
+          264,
+          296
+        ]
+      ],
+      "fourCornersTransparent": true
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "family": "formal-cartoon-office-pickups-v1",
+  "layout": {
+    "columns": 4,
+    "rows": 1,
+    "cellWidth": 320,
+    "cellHeight": 320,
+    "width": 1280,
+    "height": 320,
+    "baselineY": 286,
+    "referenceHeight": 228,
+    "frameOrder": [
+      "rest",
+      "lift",
+      "glint",
+      "settle"
+    ]
+  },
+  "assets": [
+    {
+      "type": "xp",
+      "identity": "cyan training memo with faceted star badge",
+      "file": "xp-pickup-idle-v1.png",
+      "source": "xp-pickup-alpha-v1.png",
+      "sourceSha256": "d7cc38dc936c374df13024359628aed0396a4905696e0e3871366a197c568c60",
+      "assetSha256": "91df6c7a51b6937deb00fe309510e40fe6ac12519d3f2b4738f6422fa0621853",
+      "runtimeHeight": 34,
+      "referenceHeight": 228,
+      "sharedScale": 0.664723,
+      "sourceSize": [
+        1983,
+        793
+      ],
+      "sourceBounds": [
+        [
+          0,
+          0,
+          333,
+          343
+        ],
+        [
+          0,
+          0,
+          393,
+          305
+        ],
+        [
+          0,
+          0,
+          403,
+          323
+        ],
+        [
+          0,
+          0,
+          348,
+          341
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          49,
+          58,
+          270,
+          286
+        ],
+        [
+          29,
+          83,
+          290,
+          286
+        ],
+        [
+          26,
+          71,
+          294,
+          286
+        ],
+        [
+          44,
+          59,
+          275,
+          286
+        ]
+      ],
+      "frameAlphaCoverage": [
+        0.356963,
+        0.394023,
+        0.41834,
+        0.357217
+      ],
+      "fourCornersTransparent": true,
+      "visibleGreenPixels": 0
+    },
+    {
+      "type": "material",
+      "identity": "amber supply envelope with paperclip and cog seal",
+      "file": "material-pickup-idle-v1.png",
+      "source": "material-pickup-alpha-v1.png",
+      "sourceSha256": "bc3528a159a004b249f6698b44e7e99eef054c5c260d53ca002e9399f9d2bb2e",
+      "assetSha256": "a127b69cd44d3f630ab0f5befab8556a1090672d7092e2dcecee926b46cfe393",
+      "runtimeHeight": 36,
+      "referenceHeight": 228,
+      "sharedScale": 0.629834,
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "sourceBounds": [
+        [
+          0,
+          0,
+          387,
+          362
+        ],
+        [
+          0,
+          0,
+          391,
+          353
+        ],
+        [
+          0,
+          0,
+          391,
+          377
+        ],
+        [
+          0,
+          0,
+          386,
+          368
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          38,
+          58,
+          282,
+          286
+        ],
+        [
+          37,
+          64,
+          283,
+          286
+        ],
+        [
+          37,
+          49,
+          283,
+          286
+        ],
+        [
+          38,
+          54,
+          281,
+          286
+        ]
+      ],
+      "frameAlphaCoverage": [
+        0.466904,
+        0.449512,
+        0.485488,
+        0.444775
+      ],
+      "fourCornersTransparent": true,
+      "visibleGreenPixels": 0
+    },
+    {
+      "type": "heal",
+      "identity": "coral first-aid tea pouch with heart bandage",
+      "file": "heal-pickup-idle-v1.png",
+      "source": "heal-pickup-alpha-v1.png",
+      "sourceSha256": "fcc8278e40f62d573996cbf97de2dfe8d99ff90beec95e8e46954831f1dcb213",
+      "assetSha256": "c223ee5620fc0d3803cf1efd5ed21ecb311105ba2350f1450191b2bb0709be15",
+      "runtimeHeight": 38,
+      "referenceHeight": 228,
+      "sharedScale": 0.680101,
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "sourceBounds": [
+        [
+          0,
+          0,
+          355,
+          297
+        ],
+        [
+          0,
+          0,
+          375,
+          294
+        ],
+        [
+          0,
+          0,
+          371,
+          397
+        ],
+        [
+          0,
+          0,
+          354,
+          299
+        ]
+      ],
+      "runtimeBounds": [
+        [
+          39,
+          84,
+          280,
+          286
+        ],
+        [
+          32,
+          86,
+          287,
+          286
+        ],
+        [
+          34,
+          16,
+          286,
+          286
+        ],
+        [
+          39,
+          83,
+          280,
+          286
+        ]
+      ],
+      "frameAlphaCoverage": [
+        0.389951,
+        0.421826,
+        0.489082,
+        0.390479
+      ],
+      "fourCornersTransparent": true,
+      "visibleGreenPixels": 0
+    }
+  ]
+}

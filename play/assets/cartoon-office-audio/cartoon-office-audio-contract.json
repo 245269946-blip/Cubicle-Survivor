@@ -1,0 +1,34 @@
+{
+  "version": "formal-cartoon-audio-v1",
+  "format": { "container": "WAV", "codec": "PCM signed 16-bit", "channels": 1, "sampleRate": 22050 },
+  "runtimeRule": "V3.15 only; load with Web Audio after a user gesture and fall back to the existing V3.14 synth only outside the formal gate.",
+  "mixRule": "Short dry cartoon-office transients; enemy anticipation stays below weapon release, defeat stays below completion, and no cue carries speech.",
+  "cues": {
+    "weapon_marker": { "file": "weapon-marker-v1.wav", "role": "weapon_release", "mix": 0.72, "cooldown": 0.075 },
+    "weapon_thermos": { "file": "weapon-thermos-v1.wav", "role": "weapon_release", "mix": 0.74, "cooldown": 0.12 },
+    "weapon_scissors": { "file": "weapon-scissors-v1.wav", "role": "weapon_release", "mix": 0.76, "cooldown": 0.08 },
+    "weapon_correction": { "file": "weapon-correction-v1.wav", "role": "weapon_release", "mix": 0.72, "cooldown": 0.11 },
+    "enemy_todo": { "file": "enemy-todo-v1.wav", "role": "enemy_anticipation", "mix": 0.42, "cooldown": 0.18 },
+    "enemy_email": { "file": "enemy-email-v1.wav", "role": "enemy_anticipation", "mix": 0.42, "cooldown": 0.18 },
+    "enemy_meeting": { "file": "enemy-meeting-v1.wav", "role": "enemy_anticipation", "mix": 0.46, "cooldown": 0.2 },
+    "enemy_ping": { "file": "enemy-ping-v1.wav", "role": "enemy_anticipation", "mix": 0.42, "cooldown": 0.18 },
+    "enemy_deadline": { "file": "enemy-deadline-v1.wav", "role": "enemy_anticipation", "mix": 0.46, "cooldown": 0.2 },
+    "enemy_scope": { "file": "enemy-scope-v1.wav", "role": "enemy_anticipation", "mix": 0.43, "cooldown": 0.18 },
+    "enemy_approval": { "file": "enemy-approval-v1.wav", "role": "enemy_anticipation", "mix": 0.45, "cooldown": 0.2 },
+    "enemy_client": { "file": "enemy-client-v1.wav", "role": "enemy_anticipation", "mix": 0.43, "cooldown": 0.2 },
+    "boss_lead": { "file": "boss-lead-v1.wav", "role": "boss_anticipation", "mix": 0.58, "cooldown": 0.28 },
+    "boss_director": { "file": "boss-director-v1.wav", "role": "boss_anticipation", "mix": 0.6, "cooldown": 0.28 },
+    "boss_delivery": { "file": "boss-delivery-v1.wav", "role": "boss_anticipation", "mix": 0.6, "cooldown": 0.28 },
+    "boss_client": { "file": "boss-client-v1.wav", "role": "boss_anticipation", "mix": 0.58, "cooldown": 0.28 },
+    "boss_ceo": { "file": "boss-ceo-v1.wav", "role": "boss_anticipation", "mix": 0.64, "cooldown": 0.3 },
+    "defeat_normal": { "file": "defeat-normal-v1.wav", "role": "defeat", "mix": 0.34, "cooldown": 0.055 },
+    "defeat_boss": { "file": "defeat-boss-v1.wav", "role": "defeat", "mix": 0.72, "cooldown": 0.5 },
+    "encounter_complete": { "file": "encounter-complete-v1.wav", "role": "completion", "mix": 0.78, "cooldown": 1.4 },
+    "run_complete": { "file": "run-complete-v1.wav", "role": "completion", "mix": 0.86, "cooldown": 4 }
+  },
+  "enemyMapping": {
+    "normal": ["todo", "email", "meeting", "ping", "deadline", "scope", "approval", "client"],
+    "boss": ["lead", "director", "delivery", "client", "ceo"]
+  },
+  "semanticEvents": ["weapon", "enemy_action", "enemy_defeat", "encounter_complete", "run_complete"]
+}
