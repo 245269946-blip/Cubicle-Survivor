@@ -3843,7 +3843,7 @@ body[data-debug-quiet="1"] .debug-panel {
 
 .v2-game[data-decision-density="compact"] #weaponSelectPanel .weapon-card p {
   color: #d4dde3 !important;
-  font-size: clamp(13px, 1vw, 15px) !important;
+  font-size: clamp(14px, 1.05vw, 16px) !important;
   line-height: 1.42 !important;
   -webkit-line-clamp: 2 !important;
 }
@@ -3851,6 +3851,7 @@ body[data-debug-quiet="1"] .debug-panel {
 .v2-game[data-decision-density="compact"] #weaponSelectPanel .weapon-card em {
   min-height: 0 !important;
   margin-bottom: 1.5% !important;
+  font-size: 14px !important;
 }
 
 .v2-game[data-decision-density="compact"] #moduleChoices .module-card {
@@ -3874,7 +3875,11 @@ body[data-debug-quiet="1"] .debug-panel {
 }
 
 .v2-game[data-decision-density="compact"] #moduleChoices .module-promise-line b {
-  font-size: 12px !important;
+  font-size: 13px !important;
+}
+
+.v2-game[data-decision-density="compact"] .route-tag {
+  font-size: 13px !important;
 }
 
 .v2-game[data-decision-density="compact"] #componentShopPanel .marker-component-card {

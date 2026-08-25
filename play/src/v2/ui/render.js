@@ -488,7 +488,12 @@
     setHtml("moduleFlow", decisionFlowHtml(["关卡完成", "10秒回收", "模块选择", "下一关"], 2));
     setHtml("moduleChoices", vm.choices.map(function (choice) {
       const compactSecondaryLabel = choice.mastery ? "专精" : choice.combo ? "协同" : "终局";
-      const compactSecondaryText = choice.mastery ? choice.effect : choice.combo ? choice.relationPromise : choice.terminalPromise;
+      const compactSecondaryText = choice.mastery
+        ? "强化已解锁的 Lv4 终局"
+        : choice.combo
+          ? String(choice.combo).replace(/^本次选择建立新关系：/, "建立").replace(/^当前混合关系：/, "已接通")
+          : String(choice.terminalPromise || "").split("：")[0];
+      const immediateText = compactDecision ? choice.effect : choice.immediate;
       return '<button class="choice learning-card module-card theme-card" type="button" data-module="' + escapeHtml(choice.id) + '"' + (choice.disabled ? " disabled" : "") + '>' +
         (markerFixed ? (fixedConfig.weaponId === "marker" ? markerGrowthIconHtml("build", choice.id, choice.name + "模块") : weaponIconHtml(fixedConfig.weaponId, choice.name + "模块")) : "") +
         '<span class="tag route-tag">' + escapeHtml(choice.family) + ' · ' + escapeHtml(choice.levelLabel || ("Lv." + (choice.level + 1))) + '</span>' +
@@ -496,7 +501,7 @@
         (simpleDesireChain ? "" : '<span class="card-desc">' + escapeHtml(choice.effect) + '</span>' +
           '<small>' + escapeHtml(choice.intent) + '</small>') +
         (choice.immediate ? '<div class="module-promise-grid">' +
-          '<span class="module-promise-line promise-now"><b>' + (simpleDesireChain ? "立刻" : "现在改变") + '</b>' + escapeHtml(choice.immediate) + '</span>' +
+          '<span class="module-promise-line promise-now"><b>' + (simpleDesireChain ? "立刻" : "现在改变") + '</b>' + escapeHtml(immediateText) + '</span>' +
           (compactDecision
             ? '<span class="module-promise-line ' + (choice.combo ? 'promise-relation' : 'promise-terminal') + '"><b>' + compactSecondaryLabel + '</b>' + escapeHtml(compactSecondaryText) + '</span>'
             : '<span class="module-promise-line promise-play"><b>' + (simpleDesireChain ? "怎么用" : "玩法要求") + '</b>' + escapeHtml(choice.playstyle) + '</span>' +
