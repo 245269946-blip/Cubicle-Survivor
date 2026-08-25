@@ -827,26 +827,17 @@
         if (startButton) startButton.textContent = "进入 Demo V3.14 实战";
       }
       if (demoV2Phase === "four-weapon-v3-15") {
-        document.title = "工位幸存者 Demo V3.15 · 正式卡通素材生产版";
+        document.title = "工位幸存者 Demo V3.15 · 正式版";
         const stamp = document.querySelector(".title-stamp");
         const shell = document.querySelector(".game-wrap");
         const subtitle = document.querySelector(".title-hero .subtitle");
-        const guideCards = document.querySelectorAll(".quick-guide .guide-card");
+        const quickGuide = document.querySelector(".quick-guide");
         const startButton = document.getElementById("startButton");
-        if (stamp) stamp.textContent = "Demo V3.15 · 正式卡通素材生产版";
-        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.15 正式卡通素材生产版");
-        if (subtitle) subtitle.textContent = "继承 V3.14 全部玩法；本轮开始把正式战斗素材统一为可验证的低帧办公室卡通。";
-        if (guideCards.length >= 4) {
-          guideCards[0].querySelector("strong").textContent = "同一个角色";
-          guideCards[0].querySelector("span:last-child").textContent = "四把武器继续复用共享员工与穿戴层。";
-          guideCards[1].querySelector("strong").textContent = "敌人真的会动";
-          guideCards[1].querySelector("span:last-child").textContent = "移动、预备、命中、受击和退场使用真实帧。";
-          guideCards[2].querySelector("strong").textContent = "动作就是判定";
-          guideCards[2].querySelector("span:last-child").textContent = "伤害只在动作命中帧发生。";
-          guideCards[3].querySelector("strong").textContent = "逐批正式替换";
-          guideCards[3].querySelector("span:last-child").textContent = "未通过门禁的素材不会覆盖 V3.14。";
-        }
-        if (startButton) startButton.textContent = "进入 Demo V3.15 实战";
+        if (stamp) stamp.textContent = "Demo V3.15 · 正式版";
+        if (shell) shell.setAttribute("aria-label", "工位幸存者 Demo V3.15 正式版");
+        if (subtitle) subtitle.textContent = "四把办公武器，17 关。选一种打法，开工。";
+        if (quickGuide) quickGuide.classList.add("hidden");
+        if (startButton) startButton.textContent = "选择武器，开始";
       }
       if (document.body) document.body.dataset.debugQuiet = debugQuiet ? "1" : "0";
       if (debugEnabled) {
