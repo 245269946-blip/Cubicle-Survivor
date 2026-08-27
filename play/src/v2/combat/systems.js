@@ -167,23 +167,25 @@
   const runtimeImages = {};
   const MAX_CONCURRENT_SPRITE_LOADS = 6;
   const MAX_SPRITE_LOAD_ATTEMPTS = 4;
-  const CRITICAL_SPRITE_IDS = [
+  const CRITICAL_SPRITE_IDS = [];
+  const SHARED_RUN_SPRITE_IDS = [
     "formal_office_phase_1_v1",
     "cartoon_worker_walk_v1",
-    "cartoon_marker_rig_back_v1", "cartoon_marker_rig_front_v1",
-    "cartoon_thermos_rig_back_v1", "cartoon_thermos_rig_front_v1",
-    "cartoon_scissors_rig_back_v1", "cartoon_scissors_rig_front_v1",
-    "cartoon_correction_rig_back_v1", "cartoon_correction_rig_front_v1",
     "formal_todo_actions_v1", "formal_todo_walk_v1", "formal_todo_slam_v1",
-    "formal_marker_vfx_v2", "formal_thermos_vfx_v2",
-    "formal_scissors_vfx_v3", "formal_correction_vfx_v2",
     "formal_pickup_xp_v1", "formal_pickup_material_v1", "formal_pickup_heal_v1",
     "combat_health_track_office", "combat_health_fill_office"
   ];
+  const WEAPON_RUN_SPRITE_IDS = {
+    marker: ["cartoon_marker_rig_back_v1", "cartoon_marker_rig_front_v1", "formal_marker_vfx_v2"],
+    thermos: ["cartoon_thermos_rig_back_v1", "cartoon_thermos_rig_front_v1", "formal_thermos_vfx_v2"],
+    scissors: ["cartoon_scissors_rig_back_v1", "cartoon_scissors_rig_front_v1", "formal_scissors_vfx_v3"],
+    correction_fluid: ["cartoon_correction_rig_back_v1", "cartoon_correction_rig_front_v1", "formal_correction_vfx_v2"]
+  };
   const spriteLoadState = {
     active: 0,
     queue: [],
     records: {},
+    activeRunIds: [],
     formalSecondaryQueued: false
   };
   const markerEmbodimentAssets = {
@@ -467,6 +469,9 @@
       criticalTotal: critical.length,
       criticalReady: count(critical, "ready"),
       criticalFailed: critical.filter(function (record) { return record.status === "failed"; }).map(function (record) { return record.id; }),
+      runTotal: spriteLoadState.activeRunIds.length,
+      runReady: spriteLoadState.activeRunIds.filter(function (id) { return spriteLoadRecord(id).status === "ready"; }).length,
+      runFailed: spriteLoadState.activeRunIds.filter(function (id) { return spriteLoadRecord(id).status === "failed"; }),
       queued: count(records, "queued"),
       loading: count(records, "loading"),
       ready: count(records, "ready"),
@@ -510,15 +515,19 @@
   function publishSpriteLoadState() {
     window.__cubicleAssetAudit = spriteLoadSnapshot;
     updateAssetGateUi();
+  }
+
+  function prefetchFormalSecondary() {
     if (!isFormalV315Runtime() || spriteLoadState.formalSecondaryQueued) return;
-    const snapshot = spriteLoadSnapshot();
-    if (snapshot.criticalReady < snapshot.criticalTotal) return;
     spriteLoadState.formalSecondaryQueued = true;
     window.setTimeout(function () {
       Object.keys(RUNTIME_SPRITES).forEach(function (id) {
         if (id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0) queueSpriteLoad(id, 3);
       });
-    }, 350);
+      ["status_shield_art", "status_root_art", "status_mark_art", "enemy_projectile_art"].forEach(function (id) {
+        queueSpriteLoad(id, 3);
+      });
+    }, 700);
   }
 
   function spriteUrl(id, attempt) {
@@ -613,7 +622,12 @@
   function queueSpriteLoad(id, priority, force) {
     if (!RUNTIME_SPRITES[id]) return;
     const record = spriteLoadRecord(id);
-    if (!force && (record.status === "ready" || record.status === "queued" || record.status === "loading" || record.status === "retrying")) return;
+    if (!force && record.status === "queued") {
+      record.priority = Math.min(record.priority, priority == null ? 5 : priority);
+      pumpSpriteLoads();
+      return;
+    }
+    if (!force && (record.status === "ready" || record.status === "loading" || record.status === "retrying")) return;
     record.priority = Math.min(record.priority, priority == null ? 5 : priority);
     record.status = "queued";
     spriteLoadState.queue.push(record);
@@ -632,12 +646,51 @@
     publishSpriteLoadState();
   }
 
+  function ensureWeaponAssets(weaponId) {
+    const weaponIds = WEAPON_RUN_SPRITE_IDS[weaponId] || [];
+    const ids = SHARED_RUN_SPRITE_IDS.concat(weaponIds);
+    spriteLoadState.activeRunIds = ids.slice();
+    ids.forEach(function (id) {
+      const record = spriteLoadRecord(id);
+      record.critical = true;
+      if (record.status === "failed") {
+        record.status = "idle";
+        record.attempts = 0;
+        record.error = "";
+      }
+      queueSpriteLoad(id, 0);
+    });
+    if (document.body) {
+      document.body.dataset.assetRunWeapon = weaponId;
+      document.body.dataset.assetRunStatus = "loading";
+      document.body.dataset.assetRunTotal = String(ids.length);
+    }
+    return new Promise(function (resolve) {
+      const poll = function () {
+        const ready = ids.filter(function (id) { return spriteLoadRecord(id).status === "ready"; }).length;
+        const failed = ids.filter(function (id) { return spriteLoadRecord(id).status === "failed"; });
+        if (document.body) {
+          document.body.dataset.assetRunReady = String(ready);
+          document.body.dataset.assetRunStatus = failed.length ? "failed" : ready === ids.length ? "ready" : "loading";
+        }
+        if (ready === ids.length) {
+          prefetchFormalSecondary();
+          resolve(true);
+          return;
+        }
+        if (failed.length) {
+          resolve(false);
+          return;
+        }
+        window.setTimeout(poll, 120);
+      };
+      poll();
+    });
+  }
+
   function loadVfxImages() {
     if (isFormalV315Runtime()) {
       CRITICAL_SPRITE_IDS.forEach(function (id) { queueSpriteLoad(id, 0); });
-      ["status_shield_art", "status_root_art", "status_mark_art", "enemy_projectile_art"].forEach(function (id) {
-        queueSpriteLoad(id, 1);
-      });
     } else {
       Object.keys(RUNTIME_SPRITES).forEach(function (id) { queueSpriteLoad(id, 2); });
     }
@@ -8151,6 +8204,7 @@
     applyFormalPickupDebugPose,
     applyFormalVfxDebugPose,
     getAssetLoadAudit: spriteLoadSnapshot,
+    ensureWeaponAssets,
     retryCriticalSprites,
     primitives: CombatPrimitives,
     qa: {

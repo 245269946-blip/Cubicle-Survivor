@@ -413,7 +413,23 @@
     document.querySelectorAll("[data-weapon]").forEach(function (button) {
       button.onclick = function () {
         if (supportMode) V2.dispatch({ type: "SET_SUPPORT_WEAPON", weaponId: button.getAttribute("data-weapon") });
-        else V2.dispatch({ type: "START_RUN", weaponId: button.getAttribute("data-weapon") });
+        else {
+          const weaponId = button.getAttribute("data-weapon");
+          if (!compactDecision || !V2.combat || !V2.combat.ensureWeaponAssets) {
+            V2.dispatch({ type: "START_RUN", weaponId: weaponId });
+            return;
+          }
+          document.querySelectorAll("[data-weapon]").forEach(function (choice) { choice.disabled = true; });
+          setText("weaponSelectNote", "正在准备" + V2.compat.weaponName(weaponId) + "…");
+          V2.combat.ensureWeaponAssets(weaponId).then(function (ready) {
+            if (ready) {
+              V2.dispatch({ type: "START_RUN", weaponId: weaponId });
+              return;
+            }
+            document.querySelectorAll("[data-weapon]").forEach(function (choice) { choice.disabled = false; });
+            setText("weaponSelectNote", "素材加载失败，点击重试。");
+          });
+        }
       };
     });
   }
