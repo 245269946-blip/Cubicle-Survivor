@@ -98,7 +98,7 @@
     "assets/cartoon-marker-slice/client-enemy-call-v3.png": { "width": 1600, "height": 320, "frames": 5, "sha256": "34045e21a92a10f675a9d11fa13d005c534148ecb1b627a5b2e4fc0b05966a12" }
   },
   "sourceHashes": {
-    "src/v2/combat/systems.js": "80c01be9a5dfdac6396c4dd8acb8816b2cc52e18f0c8f4f5890e011ce4c30de2",
+    "src/v2/combat/systems.js": "3c601a38a643d52967cfd0bce748b4e9a88a97194f0bd433ad032aab730eaf0e",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b"

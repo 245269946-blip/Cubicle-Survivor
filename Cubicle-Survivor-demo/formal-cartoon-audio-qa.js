@@ -122,7 +122,7 @@ check(main.includes('params.get("formalAudio")') && main.includes("playDebugForm
   "deterministic browser audio harness drifted");
 check(index.includes("audio.js?v=9") && index.includes("marker-fixed.js?v=10")
   && index.includes("four-weapon-fixed.js?v=14") && index.includes("state.js?v=31")
-  && index.includes("systems.js?v=94") && index.includes("render.js?v=46") && index.includes("main.js?v=94"),
+  && index.includes("systems.js?v=95") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
 "runtime cache versions drifted");
 
 Object.entries(report.sourceHashes || {}).forEach(([name, expected]) => {

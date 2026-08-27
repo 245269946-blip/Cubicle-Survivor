@@ -98,6 +98,10 @@ check(["formal_marker_vfx_v2", "formal_thermos_vfx_v2", "formal_scissors_vfx_v3"
 check(combat.includes('const MAX_CONCURRENT_SPRITE_LOADS = 6')
   && combat.includes('const MAX_SPRITE_LOAD_ATTEMPTS = 4')
   && combat.includes('strategy: "critical-first-limited-concurrency-retry"')
+  && combat.includes('const SHARED_RUN_SPRITE_IDS = [')
+  && combat.includes('const WEAPON_RUN_SPRITE_IDS = {')
+  && combat.includes('function ensureWeaponAssets(weaponId)')
+  && render.includes('V2.combat.ensureWeaponAssets(weaponId)')
   && combat.includes('window.__cubicleAssetAudit = spriteLoadSnapshot')
   && combat.includes('startButton.textContent = "正在准备画面 "')
   && combat.includes('img.onerror = function ()')
@@ -116,7 +120,7 @@ check(runtimeAssetRefs.length >= 120
 check(main.includes('params.get("formalVfx")') && main.includes('params.get("formalVfxFrame")'),
   "deterministic browser harness drifted");
 check(index.includes("four-weapon-fixed.js?v=14") && index.includes("state.js?v=31")
-  && index.includes("systems.js?v=94") && index.includes("render.js?v=46") && index.includes("main.js?v=94"),
+  && index.includes("systems.js?v=95") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more VFX assertions did not pass");
 check(Array.isArray(report.remainingBlockers) && report.remainingBlockers.length === 0, "cleared VFX blockers drifted");
