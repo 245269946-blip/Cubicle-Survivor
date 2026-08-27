@@ -95,16 +95,28 @@ check((config.match(/formalCartoonVfxPass:\s*true/g) || []).length === 1
 check(render.includes('dataset.formalCartoonVfx'), "render layer lost its formal VFX runtime gate");
 check(["formal_marker_vfx_v2", "formal_thermos_vfx_v2", "formal_scissors_vfx_v3", "formal_correction_vfx_v2"]
   .every((id) => combat.includes(id)), "one or more formal atlases left the runtime registry");
-check(combat.includes('/_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"')
+check(combat.includes('const MAX_CONCURRENT_SPRITE_LOADS = 6')
+  && combat.includes('const MAX_SPRITE_LOAD_ATTEMPTS = 4')
+  && combat.includes('strategy: "critical-first-limited-concurrency-retry"')
+  && combat.includes('window.__cubicleAssetAudit = spriteLoadSnapshot')
+  && combat.includes('startButton.textContent = "正在准备画面 "')
+  && combat.includes('img.onerror = function ()')
+  && combat.includes('finishSpriteLoad(record, img, "timeout")')
+  && combat.includes('/_vfx_v[23]$/.test(id) ? "v=315-vfx-5"')
   && combat.includes("function drawFormalCartoonLinearVfx")
   && combat.includes("function drawFormalCartoonAreaVfx")
   && combat.includes("function applyFormalVfxDebugPose")
   && combat.includes('if (!drawFormalCartoonAreaVfx(ctx, state, z, alpha, progress, radius))'),
 "cache, real-geometry renderers, debug harness, or heatwave overlay fix drifted");
+const runtimeAssetRefs = [...combat.matchAll(/:\s*"(assets\/[A-Za-z0-9_./-]+\.(?:png|webp|svg))"/g)]
+  .map((match) => match[1]);
+check(runtimeAssetRefs.length >= 120
+  && runtimeAssetRefs.every((ref) => fs.existsSync(path.join(root, ref))),
+"runtime sprite registry references a missing local asset");
 check(main.includes('params.get("formalVfx")') && main.includes('params.get("formalVfxFrame")'),
   "deterministic browser harness drifted");
 check(index.includes("four-weapon-fixed.js?v=14") && index.includes("state.js?v=31")
-  && index.includes("systems.js?v=93") && index.includes("render.js?v=44") && index.includes("main.js?v=94"),
+  && index.includes("systems.js?v=94") && index.includes("render.js?v=46") && index.includes("main.js?v=94"),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more VFX assertions did not pass");
 check(Array.isArray(report.remainingBlockers) && report.remainingBlockers.length === 0, "cleared VFX blockers drifted");

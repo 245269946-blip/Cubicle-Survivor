@@ -2011,7 +2011,7 @@ const v313IndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8"
 if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
   || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
   || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
-  || !v313IndexSource.includes("systems.js?v=93")
+  || !v313IndexSource.includes("systems.js?v=94")
   || !v313IndexSource.includes("state.js?v=31")
   || !v313IndexSource.includes("four-weapon-fixed.js?v=14")) {
   console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
@@ -2238,7 +2238,7 @@ if (element.dataset.formalCartoonHud !== "true"
   || !formalHudSkinSource.includes('> #buildPanel')
   || !formalHudIndexSource.includes("generated-skin.css?v=52")
   || !formalHudIndexSource.includes("view-model.js?v=30")
-  || !formalHudIndexSource.includes("render.js?v=44")
+  || !formalHudIndexSource.includes("render.js?v=46")
   || !formalHudIndexSource.includes("main.js?v=94")) {
   console.error("Demo V3.15 formal combat HUD must reach runtime with paper-folder, first-aid, transition, and concise-copy contracts", {
     dataset: element.dataset,
@@ -2934,7 +2934,9 @@ if (formalVfxContract.layout.columns !== 4 || formalVfxContract.layout.rows !== 
   || !combatVisualSource.includes('formal_thermos_vfx_v2')
   || !combatVisualSource.includes('formal_scissors_vfx_v3')
   || !combatVisualSource.includes('formal_correction_vfx_v2')
-  || !combatVisualSource.includes('/_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"')
+  || !combatVisualSource.includes('/_vfx_v[23]$/.test(id) ? "v=315-vfx-5"')
+  || !combatVisualSource.includes('const MAX_CONCURRENT_SPRITE_LOADS = 6')
+  || !combatVisualSource.includes('window.__cubicleAssetAudit = spriteLoadSnapshot')
   || !fs.readFileSync(path.join(baseDir, "main.js"), "utf8").includes('params.get("formalVfx")')) {
   console.error("Demo V3.15 formal VFX family is missing atlas, transparent-grid, cache, browser-harness, or V3.14 isolation contracts");
   process.exit(1);

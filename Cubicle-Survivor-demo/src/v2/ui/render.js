@@ -375,11 +375,23 @@
     setText("weaponSelectEyebrow", supportMode ? "跨技能学习" : suitePlayable ? publicVersion + " · 可玩版本" : markerFixed ? fixedConfig.version + " · " + fixedConfig.weaponName : phaseB ? "Demo V2 · 阶段 B" : phaseA ? "Demo V2 · 阶段 A" : "选择初始武器");
     const coordinator = !!(fixedConfig && fixedConfig.coordinator);
     setText("weaponSelectTitle", supportMode ? "选择一个副武器本质技能" : compactDecision ? "选一种打法" : coordinator ? "选择一种异化关系" : markerFixed ? "选择" + fixedConfig.weaponName + "开始本局" : phaseB ? "选择接受 3 分钟成长测试的武器" : phaseA ? "选择接受 60 秒压测的武器" : "先决定你怎么清场");
-    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : compactDecision ? "看攻击方式，选你想玩的。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
-    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : compactDecision ? "点击武器开始" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
+    setText("weaponSelectNote", supportMode ? "副武器只保留核心技能作为辅助，不会替代当前主武器形态。" : compactDecision ? "四选一，立即开打。" : coordinator ? "四把武器共用同一关卡与成长骨架，各自围绕路径、空间、自身位置或敌人状态形成不同打法。" : markerFixed ? fixedConfig.subtitle + " 经验、模块与组件三条成长线互不替代。" : phaseB ? "前 30 秒只用基础武器；随后自动定型唯一代表工牌，再进行三次轻模块选择。" : phaseA ? "本轮只有基础武器和四类敌群。它验证武器本身是否好玩，不用升级系统替它制造爽感。" : "武器决定基础战斗动词。下一步选择工牌后，同一把武器会变成不同形态。");
+    setText("weaponSelectFooter", supportMode ? "点击卡片学习副武器技能 · 主武器形态保持不变" : compactDecision ? "" : coordinator ? "选择一把武器进入 5 阶段 17 关挑战" : markerFixed ? "点击" + fixedConfig.weaponName + "进入 5 阶段 17 关挑战" : phaseB ? "选择后直接进入 3 分钟测试 · 不接入旧成长系统" : phaseA ? "选择后直接进入 60 秒测试 · 不开放工牌与成长" : "点击卡片确定武器 · 下一步选择工牌形态");
     setHtml("weaponSelectFlow", markerFixed
-      ? decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0)
+      ? (compactDecision ? "" : decisionFlowHtml(["主武器", "关卡战斗", "资源回收", "成长选择"], 0))
       : decisionFlowHtml(["主武器", "工牌形态", "关卡战斗", "成长选择"], supportMode ? 3 : 0));
+    const weaponSelectFlow = el("weaponSelectFlow");
+    const weaponSelectFooter = el("weaponSelectFooter");
+    if (weaponSelectFlow) {
+      weaponSelectFlow.classList.toggle("hidden", compactDecision);
+      weaponSelectFlow.hidden = compactDecision;
+      weaponSelectFlow.style.display = compactDecision ? "none" : "";
+    }
+    if (weaponSelectFooter) {
+      weaponSelectFooter.classList.toggle("hidden", compactDecision);
+      weaponSelectFooter.hidden = compactDecision;
+      weaponSelectFooter.style.display = compactDecision ? "none" : "";
+    }
     const rosterMeta = el("weaponRosterMeta");
     if (rosterMeta) {
       const showFramework = !!(framework && framework.weaponSelection && !compactDecision);
@@ -394,7 +406,7 @@
         '<strong>' + escapeHtml(w.name) + '</strong>' +
         '<em>' + escapeHtml(compactDecision ? quickWeaponLabel(w.id, w.tagDescription || w.motif) : w.motif) + '</em>' +
         vfxPreviewHtml(w.id, w.topology, "weapon-vfx-preview") +
-        '<p>' + escapeHtml(compactDecision ? quickWeaponCopy(w.id, w.description) : w.description) + '</p>' +
+        (compactDecision ? '' : '<p>' + escapeHtml(w.description) + '</p>') +
         (compactDecision ? '' : '<small>' + escapeHtml(w.signatureLabel) + ' · ' + escapeHtml(w.signatureProcess) + '</small>' + signatureTags(w.signatureFocus)) +
       '</button>';
     }).join(""));
@@ -524,11 +536,17 @@
     const fixedConfig = componentState && fixedTestConfig(componentState);
     const compactDecision = compactDecisionEnabled(componentState, fixedConfig);
     setText("componentShopEyebrow", vm.version + " · " + vm.weaponName + "组件商店");
-    setText("componentShopTitle", compactDecision ? "选组件，强化当前武器" : "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
+    setText("componentShopTitle", compactDecision ? "升级组件" : "只强化" + vm.weaponName + "基础属性，不解锁模块机制");
     setText("componentCreditsText", vm.materials);
-    setHtml("componentShopFlow", decisionFlowHtml(["关卡战斗", "10秒回收", "组件商店", vm.shopRound >= vm.shopCount ? "最终 Boss" : "下一关"], 2));
+    setHtml("componentShopFlow", compactDecision ? "" : decisionFlowHtml(["关卡战斗", "10秒回收", "组件商店", vm.shopRound >= vm.shopCount ? "最终 Boss" : "下一关"], 2));
+    const componentShopFlow = el("componentShopFlow");
+    if (componentShopFlow) {
+      componentShopFlow.classList.toggle("hidden", compactDecision);
+      componentShopFlow.hidden = compactDecision;
+      componentShopFlow.style.display = compactDecision ? "none" : "";
+    }
     setText("componentShopNote", compactDecision
-      ? "同名 2/4/8 件升级；换属性重置进度" + (vm.lockedCount ? " · 已锁 " + vm.lockedCount + " 件" : "")
+      ? "同名升级；换属性会重置。" + (vm.lockedCount ? " 已锁 " + vm.lockedCount + " 件。" : "")
       : "第 " + vm.shopRound + "/" + vm.shopCount + " 次商店 · 每个槽位只能选择一个属性方向 · 同属性累计 1/2/4/8 件升色 · 购买另一属性会替换并清空原进度。" + (vm.lockedCount ? " 已锁定 " + vm.lockedCount + " 件。" : ""));
     setHtml("componentSlotsStrip", vm.parts.map(function (part) {
       return '<div class="marker-component-slot" style="--quality-color:' + escapeHtml(part.quality.color) + '">' +
@@ -570,7 +588,7 @@
           '</div>' +
         '</div>' +
         '<span class="compare-line">' + escapeHtml(resultLine) + '</span>' +
-        (offer.mountText ? '<span class="component-install-promise"><b>' + (compactDecision ? '位置' : '实体位置') + '</b>' + escapeHtml(offer.mountText) + (compactDecision ? '' : '；' + escapeHtml(offer.visualPromise)) + '</span>' : '') +
+        (!compactDecision && offer.mountText ? '<span class="component-install-promise"><b>实体位置</b>' + escapeHtml(offer.mountText) + '；' + escapeHtml(offer.visualPromise) + '</span>' : '') +
         (compactDecision ? '' : '<span class="card-desc">' + (offer.action === "replace" ? "互斥替换：原属性与品质进度不会保留" : "只与同名组件合成；不会和另一属性混合") + '</span>') +
         '<span class="cost">材料 ' + offer.cost + '</span>' +
         '<div class="marker-component-actions">' +

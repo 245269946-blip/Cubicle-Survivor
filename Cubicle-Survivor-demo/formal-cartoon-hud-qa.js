@@ -52,7 +52,7 @@ check(Object.values(report.safeAreaProbe.topHudBottoms).every((value) => value <
 "combat display-space hard contract drifted");
 check(report.v314Isolation.formalCartoonHud === false && report.v314Isolation.runtimeErrors === 0
   && report.v314Isolation.stageMeta.startsWith("Demo V3.14"), "V3.14 isolation drifted");
-check(report.bossCacheRegression.coherentSingleCharacter && report.bossCacheRegression.assetQuery === "v=315-formal-2"
+check(report.bossCacheRegression.coherentSingleCharacter && report.bossCacheRegression.assetQuery === "v=315-formal-3"
   && report.bossCacheRegression.runtimeErrors === 0 && /^[a-f0-9]{64}$/.test(report.bossCacheRegression.sha256),
 "Boss sprite cache regression evidence is missing");
 
@@ -80,8 +80,8 @@ check(css.includes('--formal-hud-paper: #fff3d2')
   && css.includes('.warmup-overlay.transition-card.hidden')
   && css.includes('#warmupHint,')
   && css.includes('[data-health-state="critical"]'), "formal material or information-density CSS contract drifted");
-check(combat.includes('?v=315-formal-2') && combat.includes('id.indexOf("formal_") === 0')
-  && combat.includes('/_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"'),
+check(combat.includes('id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0 ? "v=315-formal-3"')
+  && combat.includes('/_vfx_v[23]$/.test(id) ? "v=315-vfx-5"'),
   "formal raster assets lost their shared cache fingerprint");
 check(vm.includes('formalHud') && vm.includes('? "阶段 " + (markerTest.currentPhase || 1) + "/5 · "'),
   "view model no longer emits the compact stage identity");
@@ -90,8 +90,8 @@ check(render.includes('dataset.formalCartoonHud') && render.includes('dataset.tr
 "render layer lost the formal HUD states or concise labels");
 check(main.includes('params.get("formalHud")') && main.includes('params.get("warmup") === "1"'),
   "deterministic HUD browser harness drifted");
-check(index.includes('generated-skin.css?v=52') && index.includes('systems.js?v=93')
-  && index.includes('view-model.js?v=30') && index.includes('render.js?v=44') && index.includes('main.js?v=94'),
+check(index.includes('generated-skin.css?v=52') && index.includes('systems.js?v=94')
+  && index.includes('view-model.js?v=30') && index.includes('render.js?v=46') && index.includes('main.js?v=94'),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more HUD assertions did not pass");
 check(Array.isArray(report.remainingBlockers) && report.remainingBlockers.length === 0, "cleared HUD blockers drifted");

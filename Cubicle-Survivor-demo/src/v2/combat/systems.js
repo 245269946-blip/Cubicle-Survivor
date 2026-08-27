@@ -165,6 +165,27 @@
     trap_link_control_zone: ["sticky_link_line", "sticky_notice_zone"]
   };
   const runtimeImages = {};
+  const MAX_CONCURRENT_SPRITE_LOADS = 6;
+  const MAX_SPRITE_LOAD_ATTEMPTS = 4;
+  const CRITICAL_SPRITE_IDS = [
+    "formal_office_phase_1_v1",
+    "cartoon_worker_walk_v1",
+    "cartoon_marker_rig_back_v1", "cartoon_marker_rig_front_v1",
+    "cartoon_thermos_rig_back_v1", "cartoon_thermos_rig_front_v1",
+    "cartoon_scissors_rig_back_v1", "cartoon_scissors_rig_front_v1",
+    "cartoon_correction_rig_back_v1", "cartoon_correction_rig_front_v1",
+    "formal_todo_actions_v1", "formal_todo_walk_v1", "formal_todo_slam_v1",
+    "formal_marker_vfx_v2", "formal_thermos_vfx_v2",
+    "formal_scissors_vfx_v3", "formal_correction_vfx_v2",
+    "formal_pickup_xp_v1", "formal_pickup_material_v1", "formal_pickup_heal_v1",
+    "combat_health_track_office", "combat_health_fill_office"
+  ];
+  const spriteLoadState = {
+    active: 0,
+    queue: [],
+    records: {},
+    formalSecondaryQueued: false
+  };
   const markerEmbodimentAssets = {
     riggedPersonVisuals: [],
     weaponCells: [],
@@ -412,32 +433,215 @@
     }
   }
 
-  function loadVfxImages() {
-    Object.keys(RUNTIME_SPRITES).forEach(function (id) {
-      if (runtimeImages[id]) return;
-      const img = new Image();
-      img.onload = function () {
-        if (id === "marker_person_printer_rig_v5" || id === "marker_weapon_directions_v4" || id === "marker_growth_parts") {
-          prepareMarkerEmbodimentAssets();
-        }
-        if (id === "thermos_person_pressure_rig_v1" || id === "thermos_weapon_directions_v1" || id === "thermos_route_packs_v2" || id === "thermos_backpressure_half_ring_v38") {
-          prepareThermosEmbodimentAssets();
-        }
-        if (id === "scissors_person_pivot_rig_v39" || id === "scissors_complete_directions_v39") {
-          prepareScissorsEmbodimentAssets();
-        }
-        if (id === "correction_person_reservoir_v39" || id === "correction_nozzle_directions_v39" || id === "correction_route_mutations_v39") {
-          prepareCorrectionEmbodimentAssets();
-        }
-        if (id.indexOf("cartoon_") === 0) prepareCartoonCharacterAssets();
-        const state = V2.getState();
-        if (state && state.loop && !state.loop.running) draw();
+  function isFormalV315Runtime() {
+    const state = V2.getState && V2.getState();
+    return !!(state && state.demoV2 && state.demoV2.phase === "four-weapon-v3-15");
+  }
+
+  function spriteLoadRecord(id) {
+    if (!spriteLoadState.records[id]) {
+      spriteLoadState.records[id] = {
+        id,
+        status: "idle",
+        attempts: 0,
+        priority: 9,
+        error: "",
+        critical: CRITICAL_SPRITE_IDS.indexOf(id) >= 0
       };
-      const formalCache = /_vfx_v[23]$/.test(id) ? "?v=315-vfx-4"
-        : id.indexOf("formal_") === 0 ? "?v=315-formal-2" : "";
-      img.src = RUNTIME_SPRITES[id] + formalCache;
-      runtimeImages[id] = img;
+    }
+    return spriteLoadState.records[id];
+  }
+
+  function spriteLoadSnapshot() {
+    const records = Object.keys(spriteLoadState.records).map(function (id) {
+      return spriteLoadState.records[id];
     });
+    const critical = CRITICAL_SPRITE_IDS.map(spriteLoadRecord);
+    const count = function (list, status) {
+      return list.filter(function (record) { return record.status === status; }).length;
+    };
+    return {
+      schemaVersion: 1,
+      strategy: "critical-first-limited-concurrency-retry",
+      maxConcurrent: MAX_CONCURRENT_SPRITE_LOADS,
+      criticalTotal: critical.length,
+      criticalReady: count(critical, "ready"),
+      criticalFailed: critical.filter(function (record) { return record.status === "failed"; }).map(function (record) { return record.id; }),
+      queued: count(records, "queued"),
+      loading: count(records, "loading"),
+      ready: count(records, "ready"),
+      retrying: count(records, "retrying"),
+      failed: records.filter(function (record) { return record.status === "failed"; }).map(function (record) {
+        return { id: record.id, attempts: record.attempts, error: record.error };
+      })
+    };
+  }
+
+  function updateAssetGateUi() {
+    const snapshot = spriteLoadSnapshot();
+    if (document.body) {
+      document.body.dataset.assetLoadStatus = snapshot.criticalFailed.length ? "failed"
+        : snapshot.criticalReady >= snapshot.criticalTotal ? "ready" : "loading";
+      document.body.dataset.assetCriticalReady = String(snapshot.criticalReady);
+      document.body.dataset.assetCriticalTotal = String(snapshot.criticalTotal);
+    }
+    if (!isFormalV315Runtime()) return;
+    const startButton = document.getElementById("startButton");
+    if (!startButton) return;
+    if (snapshot.criticalFailed.length) {
+      startButton.disabled = false;
+      startButton.removeAttribute("aria-busy");
+      startButton.textContent = "重试画面素材";
+      startButton.onclick = retryCriticalSprites;
+      return;
+    }
+    if (snapshot.criticalReady < snapshot.criticalTotal) {
+      startButton.disabled = true;
+      startButton.setAttribute("aria-busy", "true");
+      startButton.textContent = "正在准备画面 " + snapshot.criticalReady + "/" + snapshot.criticalTotal;
+      return;
+    }
+    startButton.disabled = false;
+    startButton.removeAttribute("aria-busy");
+    startButton.textContent = "选择武器，开始";
+    startButton.onclick = function () { V2.dispatch({ type: "OPEN_WEAPON_SELECT" }); };
+  }
+
+  function publishSpriteLoadState() {
+    window.__cubicleAssetAudit = spriteLoadSnapshot;
+    updateAssetGateUi();
+    if (!isFormalV315Runtime() || spriteLoadState.formalSecondaryQueued) return;
+    const snapshot = spriteLoadSnapshot();
+    if (snapshot.criticalReady < snapshot.criticalTotal) return;
+    spriteLoadState.formalSecondaryQueued = true;
+    window.setTimeout(function () {
+      Object.keys(RUNTIME_SPRITES).forEach(function (id) {
+        if (id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0) queueSpriteLoad(id, 3);
+      });
+    }, 350);
+  }
+
+  function spriteUrl(id, attempt) {
+    const base = RUNTIME_SPRITES[id];
+    const token = /_vfx_v[23]$/.test(id) ? "v=315-vfx-5"
+      : id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0 ? "v=315-formal-3" : "v=315-assets-2";
+    return base + "?" + token + (attempt > 1 ? "&retry=" + attempt : "");
+  }
+
+  function prepareLoadedSprite(id) {
+    if (id === "marker_person_printer_rig_v5" || id === "marker_weapon_directions_v4" || id === "marker_growth_parts") {
+      prepareMarkerEmbodimentAssets();
+    }
+    if (id === "thermos_person_pressure_rig_v1" || id === "thermos_weapon_directions_v1" || id === "thermos_route_packs_v2" || id === "thermos_backpressure_half_ring_v38") {
+      prepareThermosEmbodimentAssets();
+    }
+    if (id === "scissors_person_pivot_rig_v39" || id === "scissors_complete_directions_v39") {
+      prepareScissorsEmbodimentAssets();
+    }
+    if (id === "correction_person_reservoir_v39" || id === "correction_nozzle_directions_v39" || id === "correction_route_mutations_v39") {
+      prepareCorrectionEmbodimentAssets();
+    }
+    if (id.indexOf("cartoon_") === 0) prepareCartoonCharacterAssets();
+  }
+
+  function finishSpriteLoad(record, img, error) {
+    spriteLoadState.active = Math.max(0, spriteLoadState.active - 1);
+    if (!error && img && img.naturalWidth > 0) {
+      record.status = "ready";
+      record.error = "";
+      runtimeImages[record.id] = img;
+      prepareLoadedSprite(record.id);
+      const state = V2.getState();
+      if (state && state.loop && !state.loop.running) draw();
+    } else if (record.attempts < MAX_SPRITE_LOAD_ATTEMPTS) {
+      record.status = "retrying";
+      record.error = error || "image-load-error";
+      window.setTimeout(function () {
+        record.status = "idle";
+        queueSpriteLoad(record.id, record.priority, true);
+      }, 450 * Math.pow(2, record.attempts - 1));
+    } else {
+      record.status = "failed";
+      record.error = error || "image-load-error";
+    }
+    publishSpriteLoadState();
+    pumpSpriteLoads();
+  }
+
+  function startSpriteLoad(record) {
+    record.status = "loading";
+    record.attempts += 1;
+    spriteLoadState.active += 1;
+    const img = new Image();
+    img.decoding = "async";
+    img.fetchPriority = record.critical ? "high" : "low";
+    runtimeImages[record.id] = img;
+    let settled = false;
+    const timeout = window.setTimeout(function () {
+      if (settled) return;
+      settled = true;
+      img.onload = null;
+      img.onerror = null;
+      img.src = "";
+      finishSpriteLoad(record, img, "timeout");
+    }, 18000);
+    img.onload = function () {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      finishSpriteLoad(record, img, "");
+    };
+    img.onerror = function () {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      finishSpriteLoad(record, img, "network-error");
+    };
+    img.src = spriteUrl(record.id, record.attempts);
+  }
+
+  function pumpSpriteLoads() {
+    spriteLoadState.queue.sort(function (a, b) { return a.priority - b.priority; });
+    while (spriteLoadState.active < MAX_CONCURRENT_SPRITE_LOADS && spriteLoadState.queue.length) {
+      const record = spriteLoadState.queue.shift();
+      if (!record || record.status !== "queued") continue;
+      startSpriteLoad(record);
+    }
+    publishSpriteLoadState();
+  }
+
+  function queueSpriteLoad(id, priority, force) {
+    if (!RUNTIME_SPRITES[id]) return;
+    const record = spriteLoadRecord(id);
+    if (!force && (record.status === "ready" || record.status === "queued" || record.status === "loading" || record.status === "retrying")) return;
+    record.priority = Math.min(record.priority, priority == null ? 5 : priority);
+    record.status = "queued";
+    spriteLoadState.queue.push(record);
+    pumpSpriteLoads();
+  }
+
+  function retryCriticalSprites() {
+    CRITICAL_SPRITE_IDS.forEach(function (id) {
+      const record = spriteLoadRecord(id);
+      if (record.status !== "failed") return;
+      record.status = "idle";
+      record.attempts = 0;
+      record.error = "";
+      queueSpriteLoad(id, 0, true);
+    });
+    publishSpriteLoadState();
+  }
+
+  function loadVfxImages() {
+    if (isFormalV315Runtime()) {
+      CRITICAL_SPRITE_IDS.forEach(function (id) { queueSpriteLoad(id, 0); });
+      ["status_shield_art", "status_root_art", "status_mark_art", "enemy_projectile_art"].forEach(function (id) {
+        queueSpriteLoad(id, 1);
+      });
+    } else {
+      Object.keys(RUNTIME_SPRITES).forEach(function (id) { queueSpriteLoad(id, 2); });
+    }
+    publishSpriteLoadState();
   }
 
   function alphaCropCanvas(image, threshold) {
@@ -771,6 +975,7 @@
 
   function isSpriteReady(id) {
     const img = runtimeImages[id];
+    if (!img || !img.complete || img.naturalWidth <= 0) queueSpriteLoad(id, 0);
     return !!(img && img.complete && img.naturalWidth > 0);
   }
 
@@ -7945,6 +8150,8 @@
     applyFormalEnemyDebugPose,
     applyFormalPickupDebugPose,
     applyFormalVfxDebugPose,
+    getAssetLoadAudit: spriteLoadSnapshot,
+    retryCriticalSprites,
     primitives: CombatPrimitives,
     qa: {
       resourceSources: FORM_RESOURCE_SOURCES,

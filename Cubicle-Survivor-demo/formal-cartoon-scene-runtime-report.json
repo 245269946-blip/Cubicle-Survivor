@@ -24,11 +24,11 @@
     "assets/cartoon-office-scenes/office-phase-5-night-v1.webp": { "width": 2600, "height": 1800, "sha256": "389e1a70a0801a68c338a50f1fd7b8113125f84e75dc94443ad733b0bcfc7626" }
   },
   "sourceHashes": {
-    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/combat/systems.js": "80c01be9a5dfdac6396c4dd8acb8816b2cc52e18f0c8f4f5890e011ce4c30de2",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
-    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "index.html": "6ce4fc639e0dd0830ed7be3abf2445a25eae9108f7570da097d3d8e91cef9dbe",
     "../scripts/build-cartoon-office-scenes.py": "0cc80f598013adf7e5757ce1f37ce7fa788e81a7dea713e4756737905da6398b",
     "assets/cartoon-office-scenes/cartoon-office-scene-contract.json": "2ef922158305a5dbc1eed3ca4de6bee5fab69e3b254e75a6f442b3cbd9ce37c2"
   },

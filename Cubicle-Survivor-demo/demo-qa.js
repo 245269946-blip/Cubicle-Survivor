@@ -294,10 +294,10 @@ function assertPackageAssets() {
   const uiRender = fs.readFileSync(path.join(baseDir, "src/v2/ui/render.js"), "utf8");
   const decisionDensityContracts = [
     'wrap.dataset.decisionDensity = compactDecisionEnabled(state, fixedConfig) ? "compact" : ""',
-    'compactDecision ? "看攻击方式，选你想玩的。"',
+    'compactDecision ? "四选一，立即开打。"',
     '? "看本次变化，选完立即开打"',
     'const compactSecondaryLabel = choice.mastery ? "专精" : choice.combo ? "协同" : "终局"',
-    'compactDecision ? "选组件，强化当前武器"',
+    'compactDecision ? "升级组件"',
     'compactDecision ? "选一项，立即生效"'
   ];
   const missingDecisionDensityContracts = decisionDensityContracts.filter(contract => !uiRender.includes(contract));

@@ -22,11 +22,11 @@
     "assets/cartoon-office-pickups/heal-pickup-idle-v1.png": { "width": 1280, "height": 320, "sha256": "c223ee5620fc0d3803cf1efd5ed21ecb311105ba2350f1450191b2bb0709be15" }
   },
   "sourceHashes": {
-    "src/v2/combat/systems.js": "e8d83b56523f17580b7818179db1f622f99cbf4d7f79c7d7fef354af67d7ffdc",
+    "src/v2/combat/systems.js": "80c01be9a5dfdac6396c4dd8acb8816b2cc52e18f0c8f4f5890e011ce4c30de2",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
-    "index.html": "66d41ed2eb8ebced56674e623e7014332505bd9fb3a27866db84c925cee442b0",
+    "index.html": "6ce4fc639e0dd0830ed7be3abf2445a25eae9108f7570da097d3d8e91cef9dbe",
     "../scripts/build-cartoon-office-pickup-atlases.py": "aee505923a512c7944dd07ccec7b83f658678c2eb814f00e7af01068ee7ad79a",
     "assets/cartoon-office-pickups/cartoon-office-pickup-contract.json": "9f9765353206a27d1fb03b253337f86531af9f1791907ffdcec191ac2bb24b29"
   },
