@@ -21,6 +21,10 @@ check(report.production.method === "imagegen-raster-atlas"
   && report.production.lineArtFallbackAllowed === false,
 "formal VFX must remain generated raster atlases; line-art fallback is forbidden");
 check(report.contract.combatProgressionEconomyChanged === false, "VFX pass must remain presentation-only");
+check(report.displaySemantics.scissorsFanRenderCount === 1
+  && report.displaySemantics.rightFanEdgeModelSuppressed === true
+  && report.displaySemantics.lightStepGroundCueCount === 1,
+"Scissors range and Light Step display semantics drifted");
 check(report.contract.atlas.columns === 4 && report.contract.atlas.rows === 2
   && JSON.stringify(report.contract.frameOrder) === JSON.stringify(["anticipation", "release", "impact", "fade"]),
 "atlas or frame-order contract drifted");
@@ -108,6 +112,10 @@ check(combat.includes('const MAX_CONCURRENT_SPRITE_LOADS = 6')
   && combat.includes('finishSpriteLoad(record, img, "timeout")')
   && combat.includes('/_vfx_v[23]$/.test(id) ? "v=315-vfx-5"')
   && combat.includes("function drawFormalCartoonLinearVfx")
+  && combat.includes("function formalCartoonLinearVisualSpec")
+  && combat.includes('meta.edge && meta.edge !== "left"')
+  && combat.includes("function drawScissorsGroundIntent")
+  && combat.includes("function drawScissorsDashDirectionFrame")
   && combat.includes("function drawFormalCartoonAreaVfx")
   && combat.includes("function applyFormalVfxDebugPose")
   && combat.includes('if (!drawFormalCartoonAreaVfx(ctx, state, z, alpha, progress, radius))'),
@@ -120,7 +128,7 @@ check(runtimeAssetRefs.length >= 120
 check(main.includes('params.get("formalVfx")') && main.includes('params.get("formalVfxFrame")'),
   "deterministic browser harness drifted");
 check(index.includes("four-weapon-fixed.js?v=14") && index.includes("state.js?v=31")
-  && index.includes("systems.js?v=97") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
+  && index.includes("systems.js?v=98") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more VFX assertions did not pass");
 check(Array.isArray(report.remainingBlockers) && report.remainingBlockers.length === 0, "cleared VFX blockers drifted");

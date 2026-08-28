@@ -92,7 +92,7 @@
   "bossCacheRegression": {
     "pose": "boss-lead-move-0",
     "sha256": "483235640ded95b48278fac9d31522000aa32d2390317b24cc805b891c11be77",
-    "assetQuery": "v=315-formal-3",
+    "assetQuery": "v=315-formal-4",
     "coherentSingleCharacter": true,
     "runtimeErrors": 0
   },
@@ -103,11 +103,11 @@
   },
   "sourceHashes": {
     "generated-skin.css": "17aff8ad7398361061f53df05c651d1fbe2ce6a73d3d633283ed472890049191",
-    "index.html": "e72687e14f8243cc889b373665212fcf44f96118aaf5f03065bc096f284b36fd",
+    "index.html": "079e86aecc3cd2fe3ace456e9e24692ddc36c48f20c8fb61872557a77cbfd275",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
-    "src/v2/combat/systems.js": "fea505c5a0d84993d734bd7e1dceb235a7688a41aaba46b64b9d135cb3409f1a",
+    "src/v2/combat/systems.js": "8cc26ba8f8428dd2a00fe32a0faa1ecb4d9c60f1df8d9705a0205cbd15ec78a2",
     "src/v2/ui/view-model.js": "1630700841d60572abadacf4afb8fc095f2f944ebd802eab2482702e8358b185",
     "src/v2/ui/render.js": "33dba5290902a0359394c8dd0b67f4dd69f3f18e0b8e218fff795956894f0378"
   },

@@ -5,18 +5,19 @@
   "status": "passed",
   "worldSize": [2600, 1800],
   "viewport": [1280, 720],
-  "framing": { "mode": "viewport-stage-plate", "coverScale": 1.08, "cameraParallax": true },
+  "framing": { "mode": "world-anchored-map", "worldScale": 1, "cameraParallax": false, "navigationOverlay": true },
   "scenePhases": [1, 2, 3, 4, 5],
   "cases": [
-    { "phase": 1, "pose": "todo-move-0", "asset": "formal_office_phase_1_v1", "sha256": "d0c050894a63ddd5d0c5ee37bf95b5498c8b381551d07d6dbf93a0e7356d3735", "hudVisible": true, "runtimeError": false },
-    { "phase": 2, "pose": "meeting-attack-3", "asset": "formal_office_phase_2_v1", "sha256": "4615822e5291cb98bc13816788dce05418ed5b1673f76f24952a1f47d85264e6", "hudVisible": true, "runtimeError": false },
-    { "phase": 3, "pose": "boss-delivery-charge-3", "asset": "formal_office_phase_3_v1", "sha256": "c0e4bd37c0f344d3908a7a6d14deb7d4ae2d3eb7421399a2e99b62f9996136ca", "hudVisible": true, "runtimeError": false },
-    { "phase": 4, "pose": "boss-client-attack-3", "asset": "formal_office_phase_4_v1", "sha256": "a7ceeb48b36b99e9366b3993147dba3c0ac29ca346559439d37b1e7268a81f75", "hudVisible": true, "runtimeError": false },
-    { "phase": 5, "pose": "boss-ceo-attack-3", "asset": "formal_office_phase_5_v1", "sha256": "7823a76ca9e7b7acae00d7b59c885e03f10c44a75f94ea6b0ac13cbcfe8b2572", "hudVisible": true, "runtimeError": false },
-    { "phase": 5, "pose": "boss-ceo-defeat", "asset": "formal_office_phase_5_v1", "completionProgress": 0.5, "sha256": "4b186a2697256c4292109366c44a33fe0d5ac2189e3cce3902da4d969324601a", "hudVisible": true, "runtimeError": false }
+    { "phase": 1, "pose": "todo-move-0", "asset": "formal_office_phase_1_v1", "sha256": "f07bf883b3dc8e6d16c159f7bb8911291e2f32a328b9d0fe1c9628ef38b81dbd", "hudVisible": true, "runtimeError": false },
+    { "phase": 2, "pose": "meeting-attack-3", "asset": "formal_office_phase_2_v1", "sha256": "75e521afb766aa95833ca8d7748147bb349bdd84f50ab618a49ef7f00a38d07b", "hudVisible": true, "runtimeError": false },
+    { "phase": 3, "pose": "boss-delivery-charge-3", "asset": "formal_office_phase_3_v1", "sha256": "4bc8009932eb30dbe18948f9116a8a9949d8576d55bf93cdcc8ce6215adfe0d8", "hudVisible": true, "runtimeError": false },
+    { "phase": 4, "pose": "boss-client-attack-3", "asset": "formal_office_phase_4_v1", "sha256": "217cd3f491f1bb347ee232f5f54494ca01a85fda7e6273af32b424d71c7673f0", "hudVisible": true, "runtimeError": false },
+    { "phase": 5, "pose": "boss-ceo-attack-3", "asset": "formal_office_phase_5_v1", "sha256": "ab309465573deb1d5629bef974e5bc870fa4dc94e643c83b641743069adab359", "hudVisible": true, "runtimeError": false },
+    { "phase": 5, "pose": "boss-ceo-defeat", "asset": "formal_office_phase_5_v1", "completionProgress": 0.5, "sha256": "514b5dcfb93d7a2cb5f9addf82e095f9b530ac57c6124e6551d78f1a5f77f959", "hudVisible": true, "runtimeError": false }
   ],
   "assetFiles": {
     "assets/cartoon-office-scenes/completion-check-v1.png": { "width": 256, "height": 256, "sha256": "739dba1bd6c0b88ed1e1eb00df422543c930a87847e915df0633e25ed439fa3e" },
+    "assets/cartoon-office-scenes/office-map-overlay-v1.png": { "width": 1507, "height": 1044, "sha256": "212be3bdbb10042d2f111ee24034de979a3f0bc6360a198414253025193ff833" },
     "assets/cartoon-office-scenes/office-phase-1-morning-v1.webp": { "width": 2600, "height": 1800, "sha256": "9e703dfe1f449a7ae44969ef8ef502f0766d57da7e0527c78b06d32242ff94dc" },
     "assets/cartoon-office-scenes/office-phase-2-midday-v1.webp": { "width": 2600, "height": 1800, "sha256": "af4e79973eb07a905c33b52c133b3a5af15b563c953bcbc1bc4251d031e7bd19" },
     "assets/cartoon-office-scenes/office-phase-3-afternoon-v1.webp": { "width": 2600, "height": 1800, "sha256": "c5075290c0a1c05d9c12c11ce5b0cfd7561a29def4ceb215dbae05082408e872" },
@@ -24,11 +25,11 @@
     "assets/cartoon-office-scenes/office-phase-5-night-v1.webp": { "width": 2600, "height": 1800, "sha256": "389e1a70a0801a68c338a50f1fd7b8113125f84e75dc94443ad733b0bcfc7626" }
   },
   "sourceHashes": {
-    "src/v2/combat/systems.js": "fea505c5a0d84993d734bd7e1dceb235a7688a41aaba46b64b9d135cb3409f1a",
+    "src/v2/combat/systems.js": "8cc26ba8f8428dd2a00fe32a0faa1ecb4d9c60f1df8d9705a0205cbd15ec78a2",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
-    "index.html": "e72687e14f8243cc889b373665212fcf44f96118aaf5f03065bc096f284b36fd",
+    "index.html": "079e86aecc3cd2fe3ace456e9e24692ddc36c48f20c8fb61872557a77cbfd275",
     "../scripts/build-cartoon-office-scenes.py": "0cc80f598013adf7e5757ce1f37ce7fa788e81a7dea713e4756737905da6398b",
     "assets/cartoon-office-scenes/cartoon-office-scene-contract.json": "2ef922158305a5dbc1eed3ca4de6bee5fab69e3b254e75a6f442b3cbd9ce37c2"
   },
@@ -37,6 +38,8 @@
     "v315GateOnly": true,
     "fivePhaseMapping": true,
     "worldAspectCorrect": true,
+    "worldAnchoredMotion": true,
+    "navigationOverlayReadable": true,
     "centralCombatFieldReadable": true,
     "normalEnemyHierarchyReadable": true,
     "bossHierarchyReadable": true,

@@ -49,15 +49,16 @@ check(report.schemaVersion === 1 && report.entry === "demo-v3-15.html", "report 
 check(report.status === "passed" && report.phase === "four-weapon-v3-15", "scene runtime report did not pass");
 check(JSON.stringify(report.worldSize) === JSON.stringify([2600, 1800]) && JSON.stringify(report.viewport) === JSON.stringify([1280, 720]),
   "world or viewport geometry drifted");
-check(report.framing.mode === "viewport-stage-plate" && report.framing.coverScale === 1.08
-  && report.framing.cameraParallax === true, "formal office framing regressed to a blank world crop");
+check(report.framing.mode === "world-anchored-map" && report.framing.worldScale === 1
+  && report.framing.cameraParallax === false && report.framing.navigationOverlay === true,
+"formal office must remain a world-anchored navigable map");
 check(JSON.stringify(report.scenePhases) === JSON.stringify([1, 2, 3, 4, 5]), "five-phase mapping drifted");
 check(Array.isArray(report.cases) && report.cases.length === 6, "five phases plus completion need six browser cases");
 check(new Set(report.cases.map((item) => item.sha256)).size === 6, "scene browser cases must remain visually distinct");
 check(report.cases.every((item) => item.hudVisible && !item.runtimeError && /^[a-f0-9]{64}$/.test(item.sha256)),
   "scene evidence lost HUD visibility, hash identity or zero-error status");
 check(report.cases.at(-1).completionProgress === 0.5, "completion frame evidence drifted");
-check(Object.keys(report.assetFiles || {}).length === 6, "formal office family must contain five stages plus one completion icon");
+check(Object.keys(report.assetFiles || {}).length === 7, "formal office family must contain five stages, one map overlay, and one completion icon");
 
 Object.entries(report.assetFiles).forEach(([name, expected]) => {
   const file = path.join(root, name);
@@ -78,12 +79,13 @@ const configSource = fs.readFileSync(path.join(root, "src/v2/demo-v2/four-weapon
 const mainSource = fs.readFileSync(path.join(root, "main.js"), "utf8");
 check(configSource.includes("formalCartoonScenePass: true") && stateSource.includes("formalCartoonScenePass"),
   "V3.15 formal scene gate is missing");
-check(combatSource.includes("formal_office_phase_5_v1") && combatSource.includes("function drawFormalSceneCompletion"),
+check(combatSource.includes("formal_office_phase_5_v1") && combatSource.includes("formal_office_map_overlay_v1")
+  && combatSource.includes("function drawFormalSceneCompletion"),
   "scene family or completion renderer is missing");
-check(combatSource.includes("Math.max(W / img.width, H / img.height) * 1.08")
-  && combatSource.includes("const sceneX = -(drawWidth - W)")
-  && combatSource.includes("const sceneY = -(drawHeight - H)"),
-  "formal office must retain the viewport stage plate and camera parallax instead of cropping the blank centre");
+check(combatSource.includes("ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state))")
+  && combatSource.includes("ctx.drawImage(runtimeImages.formal_office_map_overlay_v1")
+  && !combatSource.includes("const sceneX = -(drawWidth - W)"),
+  "formal office must bind its background and map markings to world coordinates");
 check(combatSource.includes('search.get("formalScene")') && mainSource.includes('params.get("formalScene")'),
   "deterministic scene browser harness is missing");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more scene assertions did not pass");

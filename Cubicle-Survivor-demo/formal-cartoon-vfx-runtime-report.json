@@ -20,21 +20,28 @@
     "visualGrammar": ["painted-volume", "paper-and-ink", "warm-office-palette", "dark-brown-outline", "transparent-background"],
     "combatProgressionEconomyChanged": false
   },
+  "displaySemantics": {
+    "scissorsFanRenderCount": 1,
+    "scissorsRangeGrowth": "one complete scissors grows with fan judgment range and angle",
+    "rightFanEdgeModelSuppressed": true,
+    "lightStepGroundCueCount": 1,
+    "otherWeaponRangeGrowth": "geometry grows; authored model count remains stable"
+  },
   "cases": [
-    { "pose": "marker-line", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "12d85d4342a23ed0b70715a28175336c5439c1b98290ad97e5ece6d579be7fac" },
-    { "pose": "marker-archive", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "45aac7ffab72c36b48464d93b5d8cc15e75a8309aeebcb51d6f713fa44d0efee" },
-    { "pose": "thermos-steam", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "ddfbe68364dc49a602b0ea0e0a1f386315b32feb9f50feac4d228f4df9194e9d" },
-    { "pose": "thermos-heat", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "7bd38e8ae06f34b166e39a75f0c342a604cd4625b7b26b91eeb29ea4ec0ff553" },
-    { "pose": "scissors-closed", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "8127540d06707bda9a369242ed4cb85ca6b93631a67da9fd8217780ab03a8f72" },
-    { "pose": "scissors-open", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "f7db08f1a0709c311666d7853e095a5f928fe595257fd25ac72851436f706e42" },
-    { "pose": "correction-spray", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "6b537f3bdaf314f2458b4fdc632b570f3b08b712a4af7e12fcd6e1a2d4caaee0" },
-    { "pose": "correction-error", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "0d33db40425af00dec7e4ad274474fc354c977114159edc9c72c12ddd18c22b1" }
+    { "pose": "marker-line", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "1a7c7223c2432bebfdd60a19986db48723143415dbdff37096101d55f1f02c2c" },
+    { "pose": "marker-archive", "weapon": "marker", "asset": "formal_marker_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "f4a5b8b54addf9f76c6e09b198840f828d79ed9c5f85d159a96cf74b82c89bb5" },
+    { "pose": "thermos-steam", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "00cc992aafaf91ed0a70ba18513b7e214adbfdadd73a376deca3ffe13259025b" },
+    { "pose": "thermos-heat", "weapon": "thermos", "asset": "formal_thermos_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "b21a7b1145427215ac6dafe6ad288ef7706aa142abad9a57700257ef777360a8" },
+    { "pose": "scissors-closed", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "424ebc0b008b56b33258559439d3ffb9db28398ec4e93d0b8a423cb9d9e08799" },
+    { "pose": "scissors-open", "weapon": "scissors", "asset": "formal_scissors_vfx_v3", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "52098edd3ba8185e0668262bdeccfaa26fddd1af9f8a65e63c79622fb06698c6" },
+    { "pose": "correction-spray", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "line", "vfxGate": "true", "runtimeErrors": 0, "sha256": "ff88b3ba05a4da94dea1ffd053b29547eb98dd54a480fa8676936e79548327a8" },
+    { "pose": "correction-error", "weapon": "correction_fluid", "asset": "formal_correction_vfx_v2", "frame": 2, "geometry": "area", "vfxGate": "true", "runtimeErrors": 0, "sha256": "0f22ac712e37679b573d59b80cdac2901189106479795f5b0bd09787850442ea" }
   ],
   "frameAudit": [
-    { "pose": "marker-line", "distinct": 4, "hashes": ["292d732ff1022765", "73ea042ae1354b48", "12d85d4342a23ed0", "1ccd06cba282616f"], "runtimeErrors": [0, 0, 0, 0] },
-    { "pose": "thermos-steam", "distinct": 4, "hashes": ["3b0080afa2d456d1", "9470c2c999b28896", "ddfbe68364dc49a6", "19611b3b9f781f79"], "runtimeErrors": [0, 0, 0, 0] },
-    { "pose": "scissors-open", "distinct": 4, "hashes": ["2d369753233cb158", "bb177813aed9689a", "f7db08f1a0709c31", "00f1c3fe5574ffaa"], "runtimeErrors": [0, 0, 0, 0] },
-    { "pose": "correction-error", "distinct": 4, "hashes": ["4eefc5f471a40e60", "5d09d687a2bebba8", "0d33db40425af00d", "3f3ec39b72ac5c1b"], "runtimeErrors": [0, 0, 0, 0] }
+    { "pose": "marker-line", "distinct": 4, "hashes": ["87b2f647d2d4996f", "9defc7f4dc4b39ad", "04772dfa538771c8", "a799e67977da73d3"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "thermos-steam", "distinct": 4, "hashes": ["d3dad4c37bbaac48", "008c5cfef9183531", "68d2c3c9519c032e", "92e279e1a91b3113"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "scissors-open", "distinct": 4, "hashes": ["1a80aa6c7c2dd00f", "174876eba0b983fa", "44d49a46d3d9b35d", "bb4b0e760fcba93f"], "runtimeErrors": [0, 0, 0, 0] },
+    { "pose": "correction-error", "distinct": 4, "hashes": ["6f66789237d64e7f", "8124c06400315fd4", "0f22ac712e37679b", "5ac21a680704f707"], "runtimeErrors": [0, 0, 0, 0] }
   ],
   "onlineRuntimeEvidence": {
     "url": "https://245269946-blip.github.io/Cubicle-Survivor/play/demo-v3-15.html",
@@ -55,11 +62,11 @@
   },
   "v314Isolation": { "formalVfxPose": "", "formalVfxAsset": "", "formalCartoonVfx": "", "matchingEvents": 0, "runtimeErrors": 0 },
   "sourceHashes": {
-    "index.html": "e72687e14f8243cc889b373665212fcf44f96118aaf5f03065bc096f284b36fd",
+    "index.html": "079e86aecc3cd2fe3ace456e9e24692ddc36c48f20c8fb61872557a77cbfd275",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
-    "src/v2/combat/systems.js": "fea505c5a0d84993d734bd7e1dceb235a7688a41aaba46b64b9d135cb3409f1a",
+    "src/v2/combat/systems.js": "8cc26ba8f8428dd2a00fe32a0faa1ecb4d9c60f1df8d9705a0205cbd15ec78a2",
     "src/v2/ui/render.js": "33dba5290902a0359394c8dd0b67f4dd69f3f18e0b8e218fff795956894f0378",
     "assets/cartoon-office-vfx/cartoon-office-vfx-contract.json": "b6730e4a91c9dfe8b4eccfd274aeb340e8fc0d63cd56970ea02c008c28860d66",
     "assets/cartoon-office-vfx/marker-vfx-v2.png": "b9dea281305a20d84adfbadb3784dd9408529bbbae932bd5574a823ecbf9567c",
@@ -76,6 +83,9 @@
     "eightActionIdentitiesVisible": true,
     "fourFrameAnimationVisible": true,
     "eventGeometryPreserved": true,
+    "scissorsFanSingleCompleteWeapon": true,
+    "crossWeaponRangeCountStable": true,
+    "lightStepGroundCueReadable": true,
     "heatwaveLegacyOverlayRemoved": true,
     "hudSafeAreaPreserved": true,
     "runtimeErrorsZero": true

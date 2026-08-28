@@ -23,6 +23,7 @@
     formal_office_phase_3_v1: "assets/cartoon-office-scenes/office-phase-3-afternoon-v1.webp",
     formal_office_phase_4_v1: "assets/cartoon-office-scenes/office-phase-4-evening-v1.webp",
     formal_office_phase_5_v1: "assets/cartoon-office-scenes/office-phase-5-night-v1.webp",
+    formal_office_map_overlay_v1: "assets/cartoon-office-scenes/office-map-overlay-v1.png",
     formal_completion_check_v1: "assets/cartoon-office-scenes/completion-check-v1.png",
     formal_pickup_xp_v1: "assets/cartoon-office-pickups/xp-pickup-idle-v1.png",
     formal_pickup_material_v1: "assets/cartoon-office-pickups/material-pickup-idle-v1.png",
@@ -170,6 +171,7 @@
   const CRITICAL_SPRITE_IDS = [];
   const SHARED_RUN_SPRITE_IDS = [
     "formal_office_phase_1_v1",
+    "formal_office_map_overlay_v1",
     "cartoon_worker_walk_v1",
     "formal_todo_actions_v1", "formal_todo_walk_v1", "formal_todo_slam_v1",
     "combat_health_track_office", "combat_health_fill_office"
@@ -538,7 +540,7 @@
   function spriteUrl(id, attempt) {
     const base = RUNTIME_SPRITES[id];
     const token = /_vfx_v[23]$/.test(id) ? "v=315-vfx-5"
-      : id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0 ? "v=315-formal-3" : "v=315-assets-2";
+      : id.indexOf("formal_") === 0 || id.indexOf("cartoon_") === 0 ? "v=315-formal-4" : "v=315-assets-2";
     return base + "?" + token + (attempt > 1 ? "&retry=" + attempt : "");
   }
 
@@ -2018,6 +2020,34 @@
     return true;
   }
 
+  const SCISSORS_DASH_DIRECTION_BOUNDS = [
+    [235, 276, 145, 81],
+    [127, 263, 348, 107],
+    [66, 232, 498, 148],
+    [37, 214, 572, 186]
+  ];
+
+  function drawScissorsDashDirectionFrame(ctx, frame, x, y, width, height, alpha, rotation) {
+    const id = "scissors_dash_direction_v27";
+    if (!isSpriteReady(id)) return false;
+    const img = runtimeImages[id];
+    const index = clamp(Math.floor(frame || 0), 0, 3);
+    const cellWidth = Math.floor(img.naturalWidth / 2);
+    const cellHeight = Math.floor(img.naturalHeight / 2);
+    const bounds = SCISSORS_DASH_DIRECTION_BOUNDS[index];
+    const sourceX = index % 2 * cellWidth + bounds[0];
+    const sourceY = Math.floor(index / 2) * cellHeight + bounds[1];
+    ctx.save();
+    ctx.globalAlpha *= alpha == null ? 1 : alpha;
+    ctx.translate(x, y);
+    if (rotation) ctx.rotate(rotation);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, sourceX, sourceY, bounds[2], bounds[3], -width / 2, -height / 2, width, height);
+    ctx.restore();
+    return true;
+  }
+
   function drawGridSpriteFrame(ctx, id, columns, rows, frame, x, y, width, height, alpha, rotation, filter, composite) {
     if (!isSpriteReady(id)) return false;
     const img = runtimeImages[id];
@@ -2084,36 +2114,67 @@
     return "formal_" + family + "_vfx_v2";
   }
 
-  function drawFormalCartoonLinearVfx(ctx, state, item, alpha, progress) {
+  function formalCartoonLinearVisualSpec(state, item) {
     const source = item && item.source || "";
     const family = formalCartoonVfxFamily(state, source);
-    if (!family || item.x1 == null || item.x2 == null) return false;
-    const dx = item.x2 - item.x1;
-    const dy = item.y2 - item.y1;
-    const length = Math.hypot(dx, dy) || 1;
-    const angle = Math.atan2(dy, dx);
+    if (!family || item.x1 == null || item.x2 == null) return null;
+    const meta = item.meta || {};
+    if (family === "scissors" && meta.edge && meta.edge !== "left") {
+      return { handled: true, skip: true, family, source };
+    }
+    const baseDx = item.x2 - item.x1;
+    const baseDy = item.y2 - item.y1;
+    const isScissorsFan = family === "scissors"
+      && Number.isFinite(meta.lockedAngle) && Number.isFinite(meta.fanRange);
+    const angle = isScissorsFan ? meta.lockedAngle : Math.atan2(baseDy, baseDx);
+    const length = isScissorsFan ? Math.max(1, meta.fanRange) : Math.hypot(baseDx, baseDy) || 1;
+    const dx = Math.cos(angle) * length;
+    const dy = Math.sin(angle) * length;
     const row = formalCartoonVfxRow(family, source);
-    const frame = row * 4 + v24Frame(progress);
     let height = Math.max(42, (item.width || 8) * 3.2);
     let width = length * 1.12;
     let anchor = 0.5;
     if (family === "thermos") {
       height = source === "thermos_test_base"
-        ? Math.max(120, item.meta && item.meta.fanWidth || (item.width || 10) * 16)
+        ? Math.max(120, meta.fanWidth || (item.width || 10) * 16)
         : Math.max(62, (item.width || 10) * 6.6);
       width = length * 1.16;
     }
     if (family === "scissors") {
       const open = row === 1;
-      height = open ? Math.max(112, length * 0.92) : Math.max(72, (item.width || 18) * 3.2);
-      width = open ? Math.max(length * 1.34, height) : length * 1.22;
-      anchor = open ? 0.48 : 0.5;
+      const fanSpan = isScissorsFan
+        ? Math.sin(Math.max(0.08, meta.fanHalfAngle || 0.44)) * length * 2.05 : 0;
+      height = open ? Math.max(112, length * 0.74, fanSpan) : Math.max(72, (item.width || 18) * 3.2);
+      width = open ? Math.max(length * 1.42, height * 0.96) : length * 1.22;
+      anchor = open ? 0.5 : 0.5;
     }
     if (family === "correction_fluid") height = Math.max(58, (item.width || 18) * 3.35);
+    return {
+      handled: true,
+      skip: false,
+      family,
+      source,
+      row,
+      angle,
+      length,
+      width,
+      height,
+      x: item.x1 + dx * anchor,
+      y: item.y1 + dy * anchor,
+      renderCount: 1,
+      fanHalfAngle: isScissorsFan ? meta.fanHalfAngle || 0 : 0
+    };
+  }
+
+  function drawFormalCartoonLinearVfx(ctx, state, item, alpha, progress) {
+    const spec = formalCartoonLinearVisualSpec(state, item);
+    if (!spec) return false;
+    if (spec.skip) return true;
+    const frame = spec.row * 4 + v24Frame(progress);
     const filter = "drop-shadow(0 2px 1px rgba(64,56,47,.28))";
-    return drawGridSpriteFrame(ctx, formalCartoonVfxAsset(family), 4, 2, frame,
-      item.x1 + dx * anchor, item.y1 + dy * anchor, width, height,
-      Math.min(1, (alpha || 0.5) + 0.12), angle, filter, "source-over");
+    return drawGridSpriteFrame(ctx, formalCartoonVfxAsset(spec.family), 4, 2, frame,
+      spec.x, spec.y, spec.width, spec.height,
+      Math.min(1, (alpha || 0.5) + 0.12), spec.angle, filter, "source-over");
   }
 
   function drawFormalCartoonAreaVfx(ctx, state, item, alpha, progress, radius) {
@@ -6900,22 +6961,58 @@
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    if (state.demoV2 && state.demoV2.formalCartoonScenePass) {
-      const sceneScale = Math.max(W / img.width, H / img.height) * 1.08;
-      const drawWidth = img.width * sceneScale;
-      const drawHeight = img.height * sceneScale;
-      const cameraRangeX = Math.max(1, worldWidth(state) - W);
-      const cameraRangeY = Math.max(1, worldHeight(state) - H);
-      const sceneX = -(drawWidth - W) * clamp(camera.x / cameraRangeX, 0, 1);
-      const sceneY = -(drawHeight - H) * clamp(camera.y / cameraRangeY, 0, 1);
-      ctx.drawImage(img, sceneX, sceneY, drawWidth, drawHeight);
-    } else {
-      ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state));
+    ctx.drawImage(img, -camera.x, -camera.y, worldWidth(state), worldHeight(state));
+    if (state.demoV2 && state.demoV2.formalCartoonScenePass && isSpriteReady("formal_office_map_overlay_v1")) {
+      const overlayWidth = worldWidth(state) * 0.68;
+      const overlayHeight = worldHeight(state) * 0.68;
+      const overlayX = (worldWidth(state) - overlayWidth) * 0.5 - camera.x;
+      const overlayY = (worldHeight(state) - overlayHeight) * 0.5 - camera.y;
+      ctx.save();
+      ctx.globalAlpha = 0.56;
+      ctx.drawImage(runtimeImages.formal_office_map_overlay_v1,
+        overlayX, overlayY, overlayWidth, overlayHeight);
+      ctx.restore();
     }
     ctx.restore();
     if (document.body) {
       document.body.dataset.formalScenePhase = state.demoV2 && state.demoV2.formalCartoonScenePass ? String(phase) : "legacy";
       document.body.dataset.formalSceneAsset = asset;
+    }
+  }
+
+  function scissorsGroundIntentVisualState(state) {
+    const scissors = scissorsFixedRuntime(state);
+    if (!scissors) return { enabled: false, count: 0 };
+    const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
+    const moving = !!(state.input.left || state.input.right || state.input.up || state.input.down);
+    const angle = Number.isFinite(scissors.facingAngle) ? scissors.facingAngle : 0;
+    return {
+      enabled: true,
+      count: 1,
+      charge,
+      moving,
+      angle,
+      frame: scissors.dashReady ? 3 : moving ? 2 : 1,
+      distance: 118 + charge * 28,
+      width: 138 + charge * 48,
+      height: 58 + charge * 20,
+      alpha: moving ? 0.84 + charge * 0.14 : 0.62 + charge * 0.22
+    };
+  }
+
+  function drawScissorsGroundIntent(ctx, state) {
+    const spec = scissorsGroundIntentVisualState(state);
+    if (!spec.enabled) return;
+    const x = state.player.x + Math.cos(spec.angle) * spec.distance;
+    const y = state.player.y + Math.sin(spec.angle) * spec.distance;
+    drawScissorsDashDirectionFrame(ctx, spec.frame, x, y,
+      spec.width * 1.18, spec.height * 1.22, Math.min(0.3, spec.alpha * 0.34), spec.angle);
+    drawScissorsDashDirectionFrame(ctx, spec.frame, x, y,
+      spec.width, spec.height, spec.alpha, spec.angle);
+    if (document.body) {
+      document.body.dataset.scissorsLightStepGroundCue = "true";
+      document.body.dataset.scissorsLightStepCueCount = String(spec.count);
+      document.body.dataset.scissorsLightStepCharge = spec.charge.toFixed(2);
     }
   }
 
@@ -7009,18 +7106,6 @@
       }
       const charge = clamp(scissors.dashReady ? 1 : scissors.dashCharge || 0, 0, 1);
       drawCombatProgress(ctx, 0, 39, 82, 11, charge);
-      const moving = state.input.left || state.input.right || state.input.up || state.input.down;
-      const directionFrame = clamp(Math.floor(charge * 4), 0, 3);
-      // Project the dash intent onto the floor ahead of the held weapon. The
-      // shorter glyph starts beyond the weapon orbit, avoiding the old visual
-      // overlap while preserving a readable movement direction.
-      const directionDistance = 94 + charge * 18;
-      drawSpriteFrame(ctx, "scissors_dash_direction_v27", directionFrame,
-        Math.cos(scissors.facingAngle || 0) * directionDistance,
-        Math.sin(scissors.facingAngle || 0) * directionDistance,
-        62 + charge * 24, 36 + charge * 8,
-        moving ? 0.72 + charge * 0.26 : 0.42 + charge * 0.2,
-        scissors.facingAngle || 0);
       if (scissors.shelterActive) {
         const radius = state.activeFormParams.scissorsShelterRadius || 108;
         const duration = state.activeFormParams.scissorsShelterDuration || 3.2;
@@ -7674,6 +7759,7 @@
     updateCamera(state);
     drawIsolatedLayers(ctx, state, [
       { name: "background", world: false, draw: function () { drawBackground(ctx, state); } },
+      { name: "ground_cues", world: true, draw: function () { drawScissorsGroundIntent(ctx, state); } },
       { name: "effects", world: true, draw: function () { drawGeneratedEffects(ctx, state); } },
       { name: "enemies", world: true, draw: function () { drawEnemies(ctx, state); } },
       {
@@ -8248,7 +8334,9 @@
       fireScissorsFixedTest,
       fireSupportSkill,
       formalCartoonVfxFamily,
-      formalCartoonVfxRow
+      formalCartoonVfxRow,
+      formalCartoonLinearVisualSpec,
+      scissorsGroundIntentVisualState
     }
   };
 })();

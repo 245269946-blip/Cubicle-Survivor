@@ -1351,7 +1351,8 @@ for (const weaponId of Object.keys(v31ExpectedBase)) {
     process.exit(1);
   }
 }
-if (!combatVisualSource.includes("const directionDistance = 94 + charge * 18")
+if (!combatVisualSource.includes("function drawScissorsGroundIntent")
+  || !combatVisualSource.includes("distance: 118 + charge * 28")
   || !combatVisualSource.includes("ringSize * 1.16")
   || !combatVisualSource.includes('"热浪转发"')
   || !combatVisualSource.includes("markerEncounter.batchSize")) {
@@ -2011,7 +2012,7 @@ const v313IndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8"
 if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
   || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
   || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
-  || !v313IndexSource.includes("systems.js?v=97")
+  || !v313IndexSource.includes("systems.js?v=98")
   || !v313IndexSource.includes("state.js?v=31")
   || !v313IndexSource.includes("four-weapon-fixed.js?v=14")) {
   console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
@@ -2908,6 +2909,65 @@ formalVfxCases.forEach(function (spec) {
     process.exit(1);
   }
 });
+const formalScissorsVisualState = makeVersionedWeaponState("four-weapon-v3-15", "scissors");
+function scissorsFanVisual(range, edge) {
+  const halfAngle = 0.62;
+  const lockedAngle = 0.35;
+  const edgeAngle = lockedAngle + (edge === "right" ? halfAngle : -halfAngle);
+  return V2.combat.qa.formalCartoonLinearVisualSpec(formalScissorsVisualState, {
+    source: "scissors_test_open",
+    x1: 400,
+    y1: 360,
+    x2: 400 + Math.cos(edgeAngle) * range,
+    y2: 360 + Math.sin(edgeAngle) * range,
+    width: 7,
+    meta: { edge, lockedAngle, fanRange: range, fanHalfAngle: halfAngle }
+  });
+}
+const scissorsFanSmall = scissorsFanVisual(138, "left");
+const scissorsFanLarge = scissorsFanVisual(212, "left");
+const scissorsFanRight = scissorsFanVisual(212, "right");
+formalScissorsVisualState.demoV2.scissors.dashCharge = 0.2;
+formalScissorsVisualState.demoV2.scissors.dashReady = false;
+const lightStepCharging = V2.combat.qa.scissorsGroundIntentVisualState(formalScissorsVisualState);
+formalScissorsVisualState.demoV2.scissors.dashReady = true;
+const lightStepReady = V2.combat.qa.scissorsGroundIntentVisualState(formalScissorsVisualState);
+if (!scissorsFanSmall || scissorsFanSmall.skip || scissorsFanSmall.renderCount !== 1
+  || !scissorsFanLarge || scissorsFanLarge.skip || scissorsFanLarge.renderCount !== 1
+  || !scissorsFanRight || !scissorsFanRight.skip
+  || scissorsFanLarge.length <= scissorsFanSmall.length
+  || scissorsFanLarge.width <= scissorsFanSmall.width
+  || scissorsFanLarge.height <= scissorsFanSmall.height
+  || Math.abs(scissorsFanLarge.angle - 0.35) > 0.0001
+  || !lightStepCharging.enabled || lightStepCharging.count !== 1
+  || !lightStepReady.enabled || lightStepReady.count !== 1
+  || lightStepReady.width <= lightStepCharging.width
+  || lightStepReady.alpha <= lightStepCharging.alpha) {
+  console.error("Demo V3.15 scissors range must enlarge one complete scissors and one ground Light Step cue", {
+    scissorsFanSmall, scissorsFanLarge, scissorsFanRight, lightStepCharging, lightStepReady
+  });
+  process.exit(1);
+}
+console.log("OK Demo V3.15 scissors display semantics: range enlarges one complete scissors/fan and Light Step owns one readable ground cue");
+[
+  { source: "marker_test_copy", width: 8 },
+  { source: "thermos_test_base", width: 10, meta: { fanWidth: 120 } },
+  { source: "correction_test_spray", width: 18 }
+].forEach(function (probe) {
+  const shortSpec = V2.combat.qa.formalCartoonLinearVisualSpec(formalVfxState, {
+    source: probe.source, x1: 400, y1: 360, x2: 520, y2: 360, width: probe.width, meta: probe.meta || {}
+  });
+  const longSpec = V2.combat.qa.formalCartoonLinearVisualSpec(formalVfxState, {
+    source: probe.source, x1: 400, y1: 360, x2: 610, y2: 360, width: probe.width, meta: probe.meta || {}
+  });
+  if (!shortSpec || !longSpec || shortSpec.skip || longSpec.skip
+    || shortSpec.renderCount !== 1 || longSpec.renderCount !== 1
+    || longSpec.length <= shortSpec.length || longSpec.width <= shortSpec.width) {
+    console.error("Demo V3.15 weapon range display must scale geometry without multiplying the authored weapon/VFX model", probe, shortSpec, longSpec);
+    process.exit(1);
+  }
+});
+console.log("OK Demo V3.15 cross-weapon range audit: Marker, Thermos, and Correction Fluid scale geometry without hidden model-count growth");
 const formalVfxAssetFiles = formalVfxCases.map(function (spec) { return spec.asset; }).filter(function (asset, index, list) {
   return list.indexOf(asset) === index;
 });
