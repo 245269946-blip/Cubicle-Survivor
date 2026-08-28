@@ -180,6 +180,12 @@
     scissors: ["cartoon_scissors_rig_back_v1", "cartoon_scissors_rig_front_v1", "formal_scissors_vfx_v3"],
     correction_fluid: ["cartoon_correction_rig_back_v1", "cartoon_correction_rig_front_v1", "formal_correction_vfx_v2"]
   };
+  const WEAPON_RUN_LABELS = {
+    marker: "马克笔",
+    thermos: "保温杯",
+    scissors: "剪刀",
+    correction_fluid: "修正液"
+  };
   const spriteLoadState = {
     active: 0,
     queue: [],
@@ -675,7 +681,7 @@
         const note = document.getElementById("weaponSelectNote");
         const state = V2.getState && V2.getState();
         if (note && state && state.mode === "weapon_select" && ready < ids.length && !failed.length) {
-          note.textContent = "正在准备" + V2.compat.weaponName(weaponId) + " " + ready + "/" + ids.length;
+          note.textContent = "正在准备" + (WEAPON_RUN_LABELS[weaponId] || "武器") + " " + ready + "/" + ids.length;
         }
         if (ready === ids.length) {
           prefetchFormalSecondary();
