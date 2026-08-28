@@ -40,13 +40,13 @@
     }
   },
   "sourceHashes": {
-    "index.html": "2072e353240f75d06d22412a5a792226a52aa54d9cfa44696cefb03619dde9ad",
+    "index.html": "795b8c5157cb7a83e8993d7e8a742af7a597ff505f9735bf80c7ef4874320b2f",
     "main.js": "d3ef453d534237e6482f1a9f4cd7b5e97e3f24d12739e0310f295c5ed002b29d",
     "src/v2/audio/audio.js": "4cbdd4b8db94fd73a74b251e79d01cc32090a9330087bc2fbb8b319bbd61bd74",
     "src/v2/demo-v2/marker-fixed.js": "6909d657c29897db3779c67f040f83694de8beca16bd36cf6a4c3d13f6411109",
     "src/v2/demo-v2/four-weapon-fixed.js": "ee94a98dcb3da2147767dff4ca3d9e76f98b1048f20c50ce7e5e4ed93aad6a8b",
     "src/v2/runtime/state.js": "3759797c21b272eb8c9f185fa8c6e33c36c29658d3b630420523c2e5611802e6",
-    "src/v2/combat/systems.js": "3c601a38a643d52967cfd0bce748b4e9a88a97194f0bd433ad032aab730eaf0e",
+    "src/v2/combat/systems.js": "16dfb6bc91ca41a93b6851f67ddb37e4f9ebd2c664ae9fb023c1635d1008e268",
     "src/v2/ui/render.js": "33dba5290902a0359394c8dd0b67f4dd69f3f18e0b8e218fff795956894f0378",
     "assets/cartoon-office-audio/cartoon-office-audio-contract.json": "d725a237d5748efe725e217721a7027297bbcfd09d9f90c09f68988ed755386a"
   },

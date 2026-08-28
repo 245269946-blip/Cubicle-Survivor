@@ -120,7 +120,7 @@ check(runtimeAssetRefs.length >= 120
 check(main.includes('params.get("formalVfx")') && main.includes('params.get("formalVfxFrame")'),
   "deterministic browser harness drifted");
 check(index.includes("four-weapon-fixed.js?v=14") && index.includes("state.js?v=31")
-  && index.includes("systems.js?v=95") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
+  && index.includes("systems.js?v=96") && index.includes("render.js?v=47") && index.includes("main.js?v=94"),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more VFX assertions did not pass");
 check(Array.isArray(report.remainingBlockers) && report.remainingBlockers.length === 0, "cleared VFX blockers drifted");

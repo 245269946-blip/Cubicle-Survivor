@@ -90,7 +90,7 @@ check(render.includes('dataset.formalCartoonHud') && render.includes('dataset.tr
 "render layer lost the formal HUD states or concise labels");
 check(main.includes('params.get("formalHud")') && main.includes('params.get("warmup") === "1"'),
   "deterministic HUD browser harness drifted");
-check(index.includes('generated-skin.css?v=52') && index.includes('systems.js?v=95')
+check(index.includes('generated-skin.css?v=52') && index.includes('systems.js?v=96')
   && index.includes('view-model.js?v=30') && index.includes('render.js?v=47') && index.includes('main.js?v=94'),
 "runtime cache versions drifted");
 check(Object.values(report.assertions || {}).every(Boolean), "one or more HUD assertions did not pass");

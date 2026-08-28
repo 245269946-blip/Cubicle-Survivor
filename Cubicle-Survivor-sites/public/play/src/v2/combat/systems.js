@@ -172,7 +172,6 @@
     "formal_office_phase_1_v1",
     "cartoon_worker_walk_v1",
     "formal_todo_actions_v1", "formal_todo_walk_v1", "formal_todo_slam_v1",
-    "formal_pickup_xp_v1", "formal_pickup_material_v1", "formal_pickup_heal_v1",
     "combat_health_track_office", "combat_health_fill_office"
   ];
   const WEAPON_RUN_SPRITE_IDS = {
@@ -672,6 +671,11 @@
         if (document.body) {
           document.body.dataset.assetRunReady = String(ready);
           document.body.dataset.assetRunStatus = failed.length ? "failed" : ready === ids.length ? "ready" : "loading";
+        }
+        const note = document.getElementById("weaponSelectNote");
+        const state = V2.getState && V2.getState();
+        if (note && state && state.mode === "weapon_select" && ready < ids.length && !failed.length) {
+          note.textContent = "正在准备" + V2.compat.weaponName(weaponId) + " " + ready + "/" + ids.length;
         }
         if (ready === ids.length) {
           prefetchFormalSecondary();

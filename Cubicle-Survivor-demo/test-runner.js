@@ -2011,7 +2011,7 @@ const v313IndexSource = fs.readFileSync(path.join(baseDir, "index.html"), "utf8"
 if (!fourWeaponV313 || fourWeaponV313.version !== "Demo V3.13"
   || !fourWeaponV313.markerDesireLoopPass || !fourWeaponV313.allWeaponDesireLoopPass
   || !v313EntrySource.includes('params.set("demoV2", "four-weapon-v3-13")')
-  || !v313IndexSource.includes("systems.js?v=95")
+  || !v313IndexSource.includes("systems.js?v=96")
   || !v313IndexSource.includes("state.js?v=31")
   || !v313IndexSource.includes("four-weapon-fixed.js?v=14")) {
   console.error("Demo V3.13 must inherit the Marker experiment and extend it to all four weapons", fourWeaponV313);
